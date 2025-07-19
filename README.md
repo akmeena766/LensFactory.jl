@@ -1,4 +1,4 @@
 # LensFactory.jl
 
-[![Build status (Github Actions)](https://github.com/sylvaticus/MyAwesomePackage.jl/workflows/CI/badge.svg)](https://github.com/sylvaticus/MyAwesomePackage.jl/actions)
-[![codecov.io](http://codecov.io/github/sylvaticus/MyAwesomePackage.jl/coverage.svg?branch=main)](http://codecov.io/github/sylvaticus/MyAwesomePackage.jl?branch=main)
+[![Build status (Github Actions)](https://github.com/akmeena766/LensFactory.jl/workflows/CI/badge.svg)](https://github.com/akmeena766/LensFactory.jl/actions)
+[![codecov.io](http://codecov.io/github/akmeena766/LensFactory.jl/coverage.svg?branch=main)](http://codecov.io/githubakmeena766/LensFactory.jl?branch=main)
