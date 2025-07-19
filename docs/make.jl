@@ -4,9 +4,8 @@ using LensFactory
 push!(LOAD_PATH,"../src/")
 makedocs(
     sitename = "LensFactory.jl",
-    pages = [
-        "Index" => "index.md"
-    ],
+    modules = [LensFactory],
+    pages = ["Index" => "index.md"],
     format = Documenter.HTML(prettyurls = false),
 )
 
