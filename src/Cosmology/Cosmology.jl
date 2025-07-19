@@ -87,7 +87,7 @@ end
 
 Calculates age of the Universe (t_0).
 
-> Formula: t_0 = 1.0 / H0
+> Formula:  \$ t_0 = 1.0 / H0 \$
 
 # Arguments
 - `H0::Union{Int64, Float64}`: Hubble constant, in **km/s/Mpc**
