@@ -1,3 +1,9 @@
+"""
+    Cosmology
+
+Testing :-)
+
+"""
 module Cosmology
 
 # Using inbuilt Julia packages

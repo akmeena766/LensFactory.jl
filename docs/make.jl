@@ -5,7 +5,7 @@ push!(LOAD_PATH,"../src/")
 makedocs(
     sitename = "LensFactory.jl",
     pages = [
-        "Index" => "index.md",
+        "Index" => "index.md"
     ],
     format = Documenter.HTML(prettyurls = false),
 )

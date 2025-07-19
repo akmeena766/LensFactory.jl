@@ -1,3 +1,9 @@
+"""
+    LensFactory
+
+Testing :-)
+
+"""
 module LensFactory
 
 
