@@ -8,13 +8,13 @@ module LensFactory
 
 
 # Global constants
-# include("./LensFactoryUtils/Constants.jl")
-# export Constants
+include("./LensFactoryUtils/Constants.jl")
+export Constants
 
 
 # Module for cosmology
-# include("./Cosmology/Cosmology.jl")
-# export Cosmology
+include("./Cosmology/Cosmology.jl")
+export Cosmology
 
 
 end # module LensFactory

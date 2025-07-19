@@ -1,5 +1,5 @@
 """
-    Constants
+    LensFactory
 
 Testing :-)
 

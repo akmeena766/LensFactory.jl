@@ -10,8 +10,8 @@ module Cosmology
 using QuadGK
 
 # LensFactory modules to import
-include("../LensFactoryUtils/Constants.jl")
-using .Constants
+# include("../LensFactoryUtils/Constants.jl")
+using ..Constants
 
 # Functions to export
 export init_cosmology
@@ -61,7 +61,7 @@ end
 
 Calculates the scale factor at a given redshift.
 
-> Formula: `a = 1/(1+z)`
+> Formula: \$ a = \\frac{1}{1+z} \$
 
 # Arguments
 - `z::Union{Int64, Float64}`: Redshift
@@ -105,7 +105,7 @@ end
 
 Calculates radius of the observable Universe (R_H).
 
-> Formula: ``R_H = \\frac{c}{H0}``
+> Formula: ``\\R_H = \\frac{c}{H0}``
 
 # Arguments
 - `H0::Union{Int64, Float64}`: Hubble constant, in **km/s/Mpc**
