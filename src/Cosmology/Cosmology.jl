@@ -37,7 +37,7 @@ abstract type AbstractCosmology end
 An Abstract type to initialize cosmology.
 
 # Arguments
-- `H0::Union{Int64, Float64} = 70`: Hubble constant, in **km/s/Mpc**
+- `H0::Union{Int64, Float64} = 70.0`: Hubble constant, in **km/s/Mpc**
 - `w::Union{Int64, Float64} = -1.0`: Dark energy EOS parameter
 - `Ω_m0::Union{Int64, Float64} = 0.3`: Present matter density parameter
 - `Ω_r0::Union{Int64, Float64} = 0.0`: Present radiation density parameter
@@ -61,7 +61,7 @@ end
 
 Calculates the scale factor at a given redshift.
 
-> Formula: \$ a = \\frac{1}{1+z} \$
+> Formula: `` a = 1 / (1+z) ``
 
 # Arguments
 - `z::Union{Int64, Float64}`: Redshift
@@ -85,9 +85,9 @@ end
 """ 
    hubble_time(H0)
 
-Calculates age of the Universe (t_0).
+Calculates age of the Universe.
 
-> Formula:  \$ t_0 = 1.0 / H0 \$
+> Formula: `` t_H = 1 / {\\rm H_0} ``
 
 # Arguments
 - `H0::Union{Int64, Float64}`: Hubble constant, in **km/s/Mpc**
@@ -103,9 +103,9 @@ end
 """ 
    hubble_distance(H0)
 
-Calculates radius of the observable Universe (R_H).
+Calculates radius of the observable Universe.
 
-> Formula: ``\\R_H = \\frac{c}{H0}``
+> Formula: `` R_H = c/{\\rm H_0} ``
 
 # Arguments
 - `H0::Union{Int64, Float64}`: Hubble constant, in **km/s/Mpc**
@@ -142,7 +142,7 @@ end
 
 Calculates the critical density of the Universe at redshift `z`.
 
-> Formula: `\\rho_c(z) = \\frac{3 H^2(z)}{8\\pi G}`
+> Formula: ``\\rho_c(z) = \\frac{3 H^2(z)}{8 \\pi {\\rm G} }```
 
 # Arguments
 - `cosmology::AbstractCosmology`: Cosmology instance
