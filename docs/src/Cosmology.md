@@ -39,6 +39,10 @@ Cosmology.Omega_kz
 ## Distances
 ```@docs
 Cosmology.hubble_distance
+Cosmology.comoving_distance_radial
+Cosmology.comoving_distance_transverse
+Cosmology.luminosity_distance
+Cosmology.angular_diameter_distance
 Cosmology.distance_modulus
 Cosmology.angular_scale
 ```

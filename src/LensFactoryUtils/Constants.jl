@@ -23,8 +23,8 @@ const CONST_G = 6.6743E-11                          # Gravitational constant (in
 
 
 # Solar constants
-const MASS_SUN = 1.98855E+30                        # Mass of the Sun (in kg)
-const RADIUS_SUN = 696340E+03                       # Radius of the Sun (in meters)
+const MASS_SUN = 1.988409870698051E+30              # Mass of the Sun (in kg)
+const RADIUS_SUN = 695700000.0                      # Radius of the Sun (in meters)
 const LUMINOSITY_SUN = 3.828E26                     # Solar luminosity (in Watts = Joule/s)
 
 

@@ -10,8 +10,8 @@ CONST_G = 6.6743E-11                         # m^3 kg/s^2
 
 ## Solar constants
 ```
-MASS_SUN = 1.98855E+30                       # kg
-RADIUS_SUN = 696340E+03                      # meters
+MASS_SUN = 1.988409870698051E+30             # kg
+RADIUS_SUN = 695700000.0                     # meters
 LUMINOSITY_SUN = 3.828E26                    # Watts = Joule/s
 ```
 
