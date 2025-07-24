@@ -161,7 +161,7 @@ end
 """
     rho_cz(cosmology::AbstractCosmology, z::RV)::RV
 
-Calculates the critical density ``(\\rho_c)``, of the Universe at redshift ``z`` in ``{\\rm \\mathbf{kg/m^3}}``.
+Calculates the critical density ``(\\rho_c)`` of the Universe at redshift ``z`` in ``{\\rm \\mathbf{kg/m^3}}``.
 The formula is,
 ```math
 \\rho_c(z) = \\frac{3 H^2(z)}{8 \\pi {\\rm G} }
@@ -231,10 +231,11 @@ end
 """ 
     hubble_distance(H0::RV)::RV
 
-Calculates size of the observable Universe ``(D_H)`` in ``{\\rm \\mathbf{meters}}``. The formula is
+Calculates HUbble distance (i.e., size of the observable Universe) ``(D_H)`` in ``{\\rm \\mathbf{meters}}``. 
+The formula is
 
 ```math 
-R_H = \\frac{\\rm c}{\\rm H_0} 
+D_H = \\frac{\\rm c}{\\rm H_0} 
 ```
 """
 function hubble_distance(H0::RV)::RV
