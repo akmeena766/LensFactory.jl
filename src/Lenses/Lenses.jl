@@ -2,8 +2,6 @@ module Lenses
 
 
 # Inbuilt functions to import
-using SpecialFunctions
-using CairoMakie
 
 
 # Using cosmology from one level up (i.e., LensFactory.Main)

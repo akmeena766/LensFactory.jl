@@ -17,4 +17,8 @@ include("./Cosmology/Cosmology.jl")
 export Cosmology
 
 
+# Module for lens models
+include("./Lenses/Lenses.jl")
+export Lenses
+
 end
