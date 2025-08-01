@@ -11,31 +11,31 @@ module Lenses
 
 
 # Using cosmology from one level up (i.e., LensFactory.Main)
-using ..Cosmology
-using ..Constants
+using ....Constants
+using ....Cosmology
 
 
 # Include the lens types files
 include("./lens_types.jl")
-
+include("./PointLens.jl")
 
 # Various lensing function to export
 export get_meshgrid
 
 
 """
-    get_meshgrid(θx::RV, θy::RV, dθ::RV)
+    get_meshgrid(θx::RV, θy::RV, dθ::RV) --> Tuple{Matrix{<:Float64}, Matrix{<:Float64}}
 
     Generate a meshgrid of coordinates on which various quantities can be evaluated.
-    (-θx, -θy) +--- dθ --- dθ ---+ (+θx, -θy)  
-               |        |        |  
-               dθ       |        dθ  
-               |        |        |  
-               +--- dθ --- dθ ---+  
-               |        |        |  
-               dθ       |        dθ  
-               |        |        |  
-    (-θx, +θy) +--- dθ --- dθ ---+ (+θx, +θy)  
+    (-θx, -θy) +--- dθ --- dθ ---+ (+θx, -θy)
+               |        |        |
+               dθ       |        dθ
+               |        |        |
+               +--- dθ --- dθ ---+
+               |        |        |
+               dθ       |        dθ
+               |        |        |
+    (-θx, +θy) +--- dθ --- dθ ---+ (+θx, +θy)
 """
 function get_meshgrid(θx::RV, θy::RV, dθ::RV)::Tuple{Matrix{<:Float64}, Matrix{<:Float64}}
    if θx <= 0 || θy <= 0 || dθ <= 0

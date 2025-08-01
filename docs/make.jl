@@ -7,10 +7,14 @@ makedocs(
     modules = [LensFactory, Constants, Cosmology, Lenses],
     format = Documenter.HTML(;prettyurls = get(ENV, "CI", nothing) == "true"),
     pages = [
-        "Home" => "index.md",
-        "Constants" => "Constants.md",
-        "Cosmology" => "Cosmology.md",
-        "Lenses" => "Lenses.md",
+            "Home" => "index.md",
+            "Constants" => "Constants.md",
+            "Cosmology" => "Cosmology.md",
+            "Lenses" => [
+                        "Basics" => "Lenses.md",
+                        "Point Lens" => "PointLens.md",
+                        "SIS Lens" => "SISLens.md",
+                        ],
         ],
 )
 
