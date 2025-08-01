@@ -2,12 +2,6 @@
 Cosmology
 ```
 
-## Module Index
-```@index
-Modules = [Cosmology]
-Order   = [:constant, :type, :function, :macro]
-```
-
 ## Initialization
 ```@docs
 Cosmology.init_cosmology

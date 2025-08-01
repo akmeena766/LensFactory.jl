@@ -4,12 +4,13 @@ using LensFactory
 push!(LOAD_PATH,"../src/")
 makedocs(
     sitename = "LensFactory.jl",
-    modules = [LensFactory, Constants, Cosmology],
+    modules = [LensFactory, Constants, Cosmology, Lenses],
     format = Documenter.HTML(;prettyurls = get(ENV, "CI", nothing) == "true"),
     pages = [
         "Home" => "index.md",
         "Constants" => "Constants.md",
         "Cosmology" => "Cosmology.md",
+        "Lenses" => "Lenses.md",
         ],
 )
 
