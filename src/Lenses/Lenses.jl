@@ -11,7 +11,7 @@ module Lenses
 
 
 # Using cosmology from one level up (i.e., LensFactory.Main)
-using ....Constants
+using ..Constants
 using ....Cosmology
 
 

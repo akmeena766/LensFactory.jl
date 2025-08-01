@@ -5,7 +5,7 @@ push!(LOAD_PATH,"../src/")
 makedocs(
     sitename = "LensFactory.jl",
     modules = [LensFactory, Constants, Cosmology, Lenses],
-    format = Documenter.HTML(;prettyurls = get(ENV, "CI", nothing) == "true"),
+    format = Documenter.HTML(;collapselevel = 1, prettyurls = get(ENV, "CI", nothing) == "true"),
     pages = [
             "Home" => "index.md",
             "Constants" => "Constants.md",
@@ -13,9 +13,9 @@ makedocs(
             "Lenses" => [
                         "Basics" => "Lenses.md",
                         "Point Lens" => "PointLens.md",
-                        "SIS Lens" => "SISLens.md",
-                        ],
-        ],
+                        "SIS Lens" => "SISLens.md"
+                        ]
+        ]
 )
 
 # Documenter can also automatically deploy documentation to gh-pages.
