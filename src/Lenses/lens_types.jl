@@ -1,3 +1,6 @@
+export init_PointLens
+export init_SISLens
+
 abstract type AbstractLens end
 
 
@@ -7,7 +10,7 @@ abstract type AbstractLens end
 Initialize a point lens with the given parameters.
 """
 @kwdef struct init_PointLens <: AbstractLens
-   _lens_::String = "PointLens"
+   _lens_::Symbol = :PointLens
    _lid_::Int = 1
    D_d::Real = NaN
    x_c::Real = 0.0
@@ -22,7 +25,7 @@ end
 Initialize a Singular Isothermal Sphere (SIS) lens with the given parameters.
 """
 @kwdef struct init_SISLens <: AbstractLens
-   _lens_::String = "SISLens"
+   _lens_::Symbol = :SISLens
    _lid_::Int = 2
    D_d::Real = NaN
    x_c::Real = 0.0
@@ -210,7 +213,7 @@ end
 
 
 @kwdef struct init_CompositeLens <: AbstractLens
-   _lens_::String = "CompositeLens"
+   _lens_::Symbol = :CompositeLens
    _lid_::Int = 111
    _components_ = Vector{AbstractLens}()
 end
@@ -321,40 +324,31 @@ end
 
 
 # Dictionary to map lens types to their initialization functions and arguments
-lens_init_functions = Dict(
-   "ExternalEffects" => (init_ExternalEffects, [:k_ext, :g1_ext, :g2_ext]),
-   "PointLens"       => (init_PointLens,       [:x_c, :y_c, :mass]),
-   "PlummerLens"     => (init_PlummerLens,     [:x_c, :y_c, :x_s, :mass]),
-   "SISLens"         => (init_SISLens,         [:x_c, :y_c, :v_d]),
-   "NSISPLens"       => (init_NSISPLens,       [:x_c, :y_c, :x_s, :v_d]),
-   "NSISMDLens"      => (init_NSISMDLens,      [:x_c, :y_c, :x_s, :v_d]),
-   "PIEPLens"        => (init_PIEPLens,        [:x_c, :y_c, :x_s, :v_d, :eps, :p_a, :n_a]),
-   "SIEMDLens"       => (init_SIEMDLens,       [:x_c, :y_c, :x_s, :v_d, :eps, :p_a]),
-   "PJEMDLens"       => (init_PJEMDLens,       [:x_c, :y_c, :x_s, :x_t, :v_d, :eps, :p_a]),
-   "HernquistLens"   => (init_HernquistLens,   [:x_c, :y_c, :x_s, :mass]),
-   "NFWLens"         => (init_NFWLens,         [:x_c, :y_c, :x_s, :c, :mass])
-)
-
+const lens_init_functions = Dict(
+   :PointLens       => (init_PointLens,        [:x_c, :y_c, :mass]),
+   :SISLens         => (init_SISLens,          [:x_c, :y_c, :v_d])
+   )
 # Constructor for composite lens
-function init_CompositeLens(D_d::Real, lens::Vector{<:Any})
-   # Empty component vector
+function init_CompositeLens(D_d::Real, lens::Vector{<:NamedTuple})
+   # Define an component vector
    lens_components = AbstractLens[]
 
-   # Run over the available lens components
+   # Run over the lens components in the composite lens
    for component in lens
-      # Check if the lens component is available
-      if haskey(lens_init_functions, component.lens)            
-         # Get the compoent init_* function and arguments
-         init_func, init_args = lens_init_functions[component.lens]         
-         
-         # Create a dict of args to pass to the init_* function
-         kwargs = Dict(arg => getproperty(component, arg) for arg in init_args)
-         
-         # Push the component into the vector
-         push!(lens_components, init_func(; D_d, kwargs...))  
-      else   
-         throw(ArgumentError("Unknown lens type ** $(component.lens) **"))
+      # Check and get the lens component if available otherwise throw an error
+      val = get(lens_init_functions, component.lens, nothing)
+      if val === nothing
+         throw(ArgumentError("Unknown lens type: $(component.lens). Available lens models are $(keys(lens_init_functions))"))
       end
+
+      # Get the compoent init_* function and arguments
+      init_func, init_args = val
+
+      # Create a dict of args to pass to the init_* function
+      kwargs = Dict(arg => getproperty(component, arg) for arg in init_args)
+
+      # Push the component into the vector
+      push!(lens_components, init_func(; D_d, kwargs...))
    end
    return init_CompositeLens(_components_=lens_components)
 end

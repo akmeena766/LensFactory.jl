@@ -12,10 +12,10 @@ export einstein_angle
 function potential!(ψ::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where {T <: ROA}
    θE2::Float64 = 2.0 * CONST_G * mass / CONST_C^2 / Dol
    
-   ax1, ax2 = axes(θx, 1), axes(θx, 2)
-   @inbounds for j in ax2
-      @inbounds for i in ax1
-         ψ[i, j] = ψ[i, j] + θE2 * log((θx[i, j] - θxc)^2 + (θy[i, j] - θyc)^2)
+   ax2, ax1 = axes(θx, 1), axes(θx, 2)
+   @inbounds for i in ax1
+      @inbounds for j in ax2
+         ψ[j, i] = ψ[j, i] + θE2 * log((θx[j, i] - θxc)^2 + (θy[j, i] - θyc)^2)
       end
    end
 end

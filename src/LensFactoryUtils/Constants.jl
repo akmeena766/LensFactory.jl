@@ -15,7 +15,8 @@ export YEAR2SECOND, YEAR2HOUR, YEAR2DAY, DAY2HOUR, DAY2SECOND
 
 # Manual definition of types that LensFactory can work with
 const  RV = Union{Int64, Float64}
-const ROA = Union{Vector{<:RV}, Matrix{<:RV}}
+const ROA = Union{Vector{T}, Matrix{T}} where T <: RV
+
 
 # Natural constants
 const CONST_C = 299792458.0                         # Speed of light value (in m/s)
