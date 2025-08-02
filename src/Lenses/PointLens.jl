@@ -57,8 +57,8 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, Dol::RV, θxc::RV,
    θ2::Float64 = 0
 
    ax2, ax1 = axes(θx, 1), axes(θx, 2)
-   @inbounds for i in ax2
-      @inbounds for j in ax1
+   @inbounds for i in ax1
+      @inbounds for j in ax2
          θ1 = θx[j, i] - θxc
          θ2 = θy[j, i] - θyc
          θr = (θ1^2 + θ2^2)^2

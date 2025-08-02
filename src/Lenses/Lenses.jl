@@ -69,9 +69,10 @@ end
     get_critical_density(Dd::RV, Dds::RV, Ds::RV; unit="kg_m2")::RV
 
 Calculate the critical surface density ``(\\Sigma_{\\rm cr})`` given the angular diameter distances.
-The result can be returned in different units: "kg\\_m2" ``{\\rm (i.e., kg/m^2)}``, 
-"msun\\_pc2" ``{\\rm (i.e., M_{\\odot}/pc^2)}``, 
-or "msun\\_arcsec2" ``{\\rm (i.e., M_{\\odot}/arcsec^2)}``.
+The result can be returned in different units: 
+"kg\\_m2" ``{\\rm (i. \\: e., \\: kg/m^2)}``, 
+"msun\\_pc2" ``{\\rm (i. \\: e., \\: M_{\\odot}/pc^2)}``, 
+or "msun\\_arcsec2" ``{\\rm (i. \\: e., \\: M_{\\odot}/arcsec^2)}``.
 """   
 function get_critical_density(Dd::RV, Dds::RV, Ds::RV; unit::String="kg_m2")::RV
    # Calculate Σ_cr in kg/m^2
@@ -157,7 +158,7 @@ function deflection_helper!(ψx::ROA, ψy::ROA, lens::AbstractLens, θ_x::ROA, �
 end
 
 """
-    get_potential(lens::AbstractLens, θ_x::ROA, θ_y::ROA) --> ROA
+    get_deflection(lens::AbstractLens, θ_x::ROA, θ_y::ROA) --> Tuple{ROA, ROA}
 """
 function get_deflection(lens::AbstractLens, θ_x::ROA, θ_y::ROA)::Tuple{ROA, ROA}
    # Check if the input coordinates are of the same type and size
@@ -180,5 +181,52 @@ function get_deflection(lens::AbstractLens, θ_x::ROA, θ_y::ROA)::Tuple{ROA, RO
    end
 end
 
+
+
+# Define lens_map globally (module-level or script-level)
+const jacobian_map = Dict(
+   :PointLens => (PointLens, [:D_d, :x_c, :y_c, :mass])
+)
+function jacobian_helper!(ψxx::ROA, ψyy::ROA, ψxy::ROA, lens::AbstractLens, θ_x::ROA, θ_y::ROA)
+   # Check if the lens type is in the jacobian_map otherwise throw an error
+   entry = get(jacobian_map, lens._lens_, nothing)
+   if entry === nothing
+      throw(ArgumentError("Unknown lens type ** $(lens._lens_) **"))
+   end
+
+   # Get the function and arguments from the map
+   module_name, properties = entry
+
+   # Extract fields from lens
+   args = [getfield(lens, p) for p in properties]
+
+   # Call the jacobian function for specific model
+   return getfield(module_name, :jacobian!)(ψxx, ψyy, ψxy, θ_x, θ_y, args...)
+end
+
+"""
+    get_jacobian(lens::AbstractLens, θ_x::ROA, θ_y::ROA) --> Tuple{ROA, ROA, ROA}
+"""
+function get_jacobian(lens::AbstractLens, θ_x::ROA, θ_y::ROA)::Tuple{ROA, ROA, ROA}
+   # Check if the input coordinates are of the same type and size
+   if typeof(θ_x) != typeof(θ_y) || size(θ_x) != size(θ_y)
+      throw(ArgumentError("Input coordinates must be of the same type and size."))
+   end
+
+   # Initialize zero-valued potential array
+   ψxx::ROA = zero(θ_x)
+   ψyy::ROA = zero(θ_x)
+   ψxy::ROA = zero(θ_x)
+
+   if lens._lens_ == :CompositeLens
+      for component in lens._components_
+         jacobian_helper!(ψxx, ψyy, ψxy, component, θ_x, θ_y)
+      end
+      return ψxx, ψyy, ψxy
+   else
+      jacobian_helper!(ψxx, ψyy, ψxy, lens, θ_x, θ_y)
+      return ψxx, ψyy, ψxy
+   end
+end
 
 end
