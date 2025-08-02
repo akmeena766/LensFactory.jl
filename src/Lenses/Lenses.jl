@@ -39,7 +39,7 @@ export get_potential
                |        |        |
     (-θx, +θy) +--- dθ --- dθ ---+ (+θx, +θy)
 """
-function get_meshgrid(θx::RV, θy::RV, dθ::RV)#::Tuple{Matrix{<:Float64}, Matrix{<:Float64}}
+function get_meshgrid(θx::RV, θy::RV, dθ::RV)::Tuple{Matrix{<:Float64}, Matrix{<:Float64}}
    # Making sure that grid and pixel size are positive
    if θx <= 0 || θy <= 0 || dθ <= 0
       throw(ArgumentError("All arguments must be positive."))
@@ -90,7 +90,31 @@ function get_critical_density(Dd::RV, Dds::RV, Ds::RV; unit::String="kg_m2")::RV
 end
 
 
-function get_potential(lens::AbstractLens, θ_x::ROA, θ_y::ROA)
+# Define lens_map globally (module-level or script-level)
+const potential_map = Dict(
+   :PointLens => (PointLens, [:D_d, :x_c, :y_c, :mass])
+)
+function potential_helper!(ψ::ROA, lens::AbstractLens, θ_x::ROA, θ_y::ROA)
+   # Check if the lens type is in the potential_map otherwise throw an error
+   entry = get(potential_map, lens._lens_, nothing)
+   if entry === nothing
+      throw(ArgumentError("Unknown lens type ** $(lens._lens_) **"))
+   end
+
+   # Get the function and arguments from the map
+   module_name, properties = entry
+
+   # Extract fields from lens
+   args = [getfield(lens, p) for p in properties]
+
+   # Call the potential function for specific model
+   return getfield(module_name, :potential!)(ψ, θ_x, θ_y, args...)
+end
+
+"""
+    get_potential(lens::AbstractLens, θ_x::ROA, θ_y::ROA) --> ROA
+"""
+function get_potential(lens::AbstractLens, θ_x::ROA, θ_y::ROA)::ROA
    # Check if the input coordinates are of the same type and size
    if typeof(θ_x) != typeof(θ_y) || size(θ_x) != size(θ_y)
       throw(ArgumentError("Input coordinates must be of the same type and size."))
@@ -106,19 +130,20 @@ function get_potential(lens::AbstractLens, θ_x::ROA, θ_y::ROA)
       return ψ
    else
       potential_helper!(ψ, lens, θ_x, θ_y)
+      return ψ
    end
 end
 
 
 # Define lens_map globally (module-level or script-level)
-const potential_map = Dict(
+const deflection_map = Dict(
    :PointLens => (PointLens, [:D_d, :x_c, :y_c, :mass])
 )
-function potential_helper!(ψ::ROA, lens::AbstractLens, θ_x::ROA, θ_y::ROA)
-   # Check if the lens type is in the potential_map otherwise throw an error
-   entry = get(potential_map, lens._lens_, nothing)
+function deflection_helper!(ψx::ROA, ψy::ROA, lens::AbstractLens, θ_x::ROA, θ_y::ROA)
+   # Check if the lens type is in the deflection_map otherwise throw an error
+   entry = get(deflection_map, lens._lens_, nothing)
    if entry === nothing
-      throw(ArgumentError("Unknown lens type ** $(lens._lens_type) **"))
+      throw(ArgumentError("Unknown lens type ** $(lens._lens_) **"))
    end
 
    # Get the function and arguments from the map
@@ -128,7 +153,31 @@ function potential_helper!(ψ::ROA, lens::AbstractLens, θ_x::ROA, θ_y::ROA)
    args = [getfield(lens, p) for p in properties]
 
    # Call the potential function for specific model
-   return getfield(module_name, :potential!)(ψ, θ_x, θ_y, args...)
+   return getfield(module_name, :deflection!)(ψx, ψy, θ_x, θ_y, args...)
+end
+
+"""
+    get_potential(lens::AbstractLens, θ_x::ROA, θ_y::ROA) --> ROA
+"""
+function get_deflection(lens::AbstractLens, θ_x::ROA, θ_y::ROA)::Tuple{ROA, ROA}
+   # Check if the input coordinates are of the same type and size
+   if typeof(θ_x) != typeof(θ_y) || size(θ_x) != size(θ_y)
+      throw(ArgumentError("Input coordinates must be of the same type and size."))
+   end
+
+   # Initialize zero-valued potential array
+   ψx::ROA = zero(θ_x)
+   ψy::ROA = zero(θ_x)
+
+   if lens._lens_ == :CompositeLens
+      for component in lens._components_
+         deflection_helper!(ψx, ψy, component, θ_x, θ_y)
+      end
+      return ψx, ψy
+   else
+      deflection_helper!(ψx, ψy, lens, θ_x, θ_y)
+      return ψx, ψy
+   end
 end
 
 
