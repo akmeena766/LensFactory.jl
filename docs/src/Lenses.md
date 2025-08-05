@@ -8,4 +8,5 @@ Lenses.get_critical_density
 Lenses.get_potential
 Lenses.get_deflection
 Lenses.get_jacobian
+Lenses.get_time_delay
 ```

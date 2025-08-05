@@ -24,6 +24,8 @@ include("./PointLens.jl")
 export get_meshgrid
 export get_critical_density
 export get_potential
+export get_deflection
+export get_jacobian
 
 """
     get_meshgrid(θx::RV, θy::RV, dθ::RV) --> Tuple{Matrix{<:Float64}, Matrix{<:Float64}}
@@ -69,10 +71,10 @@ end
     get_critical_density(Dd::RV, Dds::RV, Ds::RV; unit="kg_m2")::RV
 
 Calculate the critical surface density ``(\\Sigma_{\\rm cr})`` given the angular diameter distances.
-The result can be returned in different units: 
-"kg\\_m2" ``{\\rm (i. \\: e., \\: kg/m^2)}``, 
-"msun\\_pc2" ``{\\rm (i. \\: e., \\: M_{\\odot}/pc^2)}``, 
-or "msun\\_arcsec2" ``{\\rm (i. \\: e., \\: M_{\\odot}/arcsec^2)}``.
+The result can be returned in different units,
+- "kg\\_m2" ``\\Rightarrow{\\rm kg/m^2}``, 
+- "msun\\_pc2" ``\\Rightarrow{\\rm M_{\\odot}/pc^2}``, 
+- "msun\\_arcsec2" ``\\Rightarrow{\\rm M_{\\odot}/arcsec^2}``.
 """   
 function get_critical_density(Dd::RV, Dds::RV, Ds::RV; unit::String="kg_m2")::RV
    # Calculate Σ_cr in kg/m^2
@@ -159,6 +161,9 @@ end
 
 """
     get_deflection(lens::AbstractLens, θ_x::ROA, θ_y::ROA) --> Tuple{ROA, ROA}
+
+Calculates the deflection angles (i.e., the gradient of the potential) for a given lens model. 
+Returns a tuple of deflection components, i.e., ``(\\psi_x, \\psi_y)``.
 """
 function get_deflection(lens::AbstractLens, θ_x::ROA, θ_y::ROA)::Tuple{ROA, ROA}
    # Check if the input coordinates are of the same type and size
@@ -206,6 +211,19 @@ end
 
 """
     get_jacobian(lens::AbstractLens, θ_x::ROA, θ_y::ROA) --> Tuple{ROA, ROA, ROA}
+
+Calculates the jacobian (i.e., deformation tensor) of the lens mapping for a given lens model.
+The jacobian is a ``2\\times2`` matrix composed of the second derivatives of the potential, 
+which is given as,
+```math
+\\mathcal{A} =
+\\begin{pmatrix}
+\\psi_{xx} & \\psi_{xy} \\\\
+\\psi_{xy} & \\psi_{yy}
+\\end{pmatrix}.
+```
+Since the jacobian is symmetric (for single lens plane), only three components are returned, 
+i.e., ``(\\psi_{xx}, \\psi_{yy}, \\psi_{xy})``.
 """
 function get_jacobian(lens::AbstractLens, θ_x::ROA, θ_y::ROA)::Tuple{ROA, ROA, ROA}
    # Check if the input coordinates are of the same type and size
@@ -228,5 +246,35 @@ function get_jacobian(lens::AbstractLens, θ_x::ROA, θ_y::ROA)::Tuple{ROA, ROA,
       return ψxx, ψyy, ψxy
    end
 end
+
+
+"""
+    get_time_delay(lens::AbstractLens, θ_x::ROA, θ_y::ROA) --> ROA
+
+Calculates the time delay for a given lens model. The corresponding expression is given as,
+```math
+t_d(\\pmb{\\theta}; \\pmb{\\beta}) = \\frac{1+z_l}{\\rm c} \\frac{D_d D_s}{D_{ds}}
+   \\left[ \\frac{(\\pmb{\\theta} - \\pmb{\\beta})^2}{2} - \\frac{D_{ds}}{D_s} \\psi(\\pmb{\\theta}) \\right]
+```
+"""
+function get_time_delay(lens::AbstractLens, θ_x::ROA, θ_y::ROA, zl::RV, adis::RV, β::NTuple{2, RV})::ROA
+   # Constant multiplicative factor
+   constant_factor::Float64 =  ( (1.0 + zl) / CONST_C ) * lens.D_d / adis
+
+   # Initialize zero-valued arrays to store time delay
+   ϕ::ROA = zero(θ_x)
+
+   # Get time delay components
+   ϕ_potential::ROA = get_potential(lens, θ_x, θ_y)
+
+   ax2, ax1 = axes(θ_x, 1), axes(θ_x, 2)
+   @inbounds for i in ax1
+      @inbounds for j in ax2
+         ϕ[j, i] = constant_factor * ( 0.5 * ((θ_x[j, i] - β[1])^2 + (θ_y[j, i] - β[2])^2) - adis * ϕ_potential[j, i] )
+      end
+   end
+   return ϕ
+end
+
 
 end
