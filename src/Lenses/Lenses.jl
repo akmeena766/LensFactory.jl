@@ -249,6 +249,28 @@ end
 
 
 """
+    get_magnification(lens::AbstractLens, θ_x::ROA, θ_y::ROA) --> ROA
+
+Calculates the magnification for a given lens model. The corresponding expression is given as,
+```math
+\\mu = \\frac{1}{\\det \\mathcal{A}} = \\frac{1}{(1 - \\kappa)^2 - \\gamma^2}
+```
+"""
+function get_magnification(lens::AbstractLens, θ_x::ROA, θ_y::ROA, adis::Float64)::ROA
+   # Get the jacobian components
+   ψxx, ψyy, ψxy = get_jacobian(lens, θ_x, θ_y)
+
+   # Scale the deformation tensor
+   ψxx .*= adis
+   ψyy .*= adis
+   ψxy .*= adis
+
+   # Magnification is the inverse of the determinant
+   return 1.0 ./ (1.0 .+ ψxx .* ψyy .- ψxx .- ψyy .- ψxy.^2)
+end
+
+
+"""
     get_time_delay(lens::AbstractLens, θ_x::ROA, θ_y::ROA) --> ROA
 
 Calculates the time delay for a given lens model. The corresponding expression is given as,
