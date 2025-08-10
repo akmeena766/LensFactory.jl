@@ -7,6 +7,5 @@ LensFactory
 ```
 
 ```@docs
-show_progress
 cpu_vs_gpu
 ```
