@@ -12,8 +12,9 @@ module Lenses
 
 # Using cosmology from one level up (i.e., LensFactory.Main)
 using ..Constants
-using ....Cosmology
+using ..Cosmology
 
+import ..cpu_vs_gpu
 
 # Include the lens types files
 include("./lens_types.jl")
