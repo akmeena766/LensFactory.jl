@@ -321,7 +321,7 @@ function get_image(lens::AbstractLens, θ_x::ROA, θ_y::ROA, adis::Float64, β::
    for contour_1 in RXC
       for contour_2 in RYC
          # Find the intersection points
-         intersect_points = ContourFinder.get_intersection( first.(contour_1), last.(contour_1), first.(contour_2), last.(contour_2) )
+         intersect_points = IntersectionFinder.get_intersection( first.(contour_1), last.(contour_1), first.(contour_2), last.(contour_2) )
          
          # Store the intersection points in the image_position vector
          for point in intersect_points
