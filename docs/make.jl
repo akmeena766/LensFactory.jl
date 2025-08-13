@@ -14,7 +14,8 @@ makedocs(
                         "Basics" => "Lenses.md",
                         "Point Lens" => "PointLens.md",
                         "SIS Lens" => "SISLens.md"
-                        ]
+                        ],
+            "Sources" => "Sources.md",
         ]
 )
 
