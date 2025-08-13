@@ -20,10 +20,10 @@ export einstein_angle
 function potential!(ψ::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where {T <: ROA}
    θE2::Float64 = 2.0 * CONST_G * mass / CONST_C^2 / Dol
    
-   ax2, ax1 = axes(θx, 1), axes(θx, 2)
+   ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for i in ax1
       @inbounds for j in ax2
-         ψ[j, i] = ψ[j, i] + θE2 * log((θx[j, i] - θxc)^2 + (θy[j, i] - θyc)^2)
+         ψ[i, j] = ψ[i, j] + θE2 * log((θx[i, j] - θxc)^2 + (θy[i, j] - θyc)^2 + 1.0E-15)
       end
    end
 end
@@ -36,12 +36,12 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV
    θE2::Float64 = 4.0 * CONST_G * mass / CONST_C^2 / Dol
    θr::Float64 = 0
 
-   ax2, ax1 = axes(θx, 1), axes(θx, 2)
-   @inbounds for i in ax1
-      @inbounds for j in ax2
-         θr = (θx[j, i] - θxc)^2 + (θy[j, i] - θyc)^2
-         ψx[j, i] = ψx[j, i] + θE2 * (θx[j, i] - θxc) / θr
-         ψy[j, i] = ψy[j, i] + θE2 * (θy[j, i] - θyc) / θr
+   ax1, ax2 = axes(θx, 1), axes(θx, 2)
+   @inbounds for j in ax2
+      @inbounds for i in ax1
+         θr = (θx[i, j] - θxc)^2 + (θy[i, j] - θyc)^2 + 1.0E-15
+         ψx[i, j] = ψx[i, j] + θE2 * (θx[i, j] - θxc) / θr
+         ψy[i, j] = ψy[i, j] + θE2 * (θy[i, j] - θyc) / θr
       end
    end
 end
@@ -53,18 +53,18 @@ end
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where {T <: ROA}
    θE2::RV = 4.0 * CONST_G * mass / CONST_C^2 / Dol
    θr::Float64 = 0
-   θ1::Float64 = 0
-   θ2::Float64 = 0
+   dx::Float64 = 0
+   dy::Float64 = 0
 
-   ax2, ax1 = axes(θx, 1), axes(θx, 2)
-   @inbounds for i in ax1
-      @inbounds for j in ax2
-         θ1 = θx[j, i] - θxc
-         θ2 = θy[j, i] - θyc
-         θr = (θ1^2 + θ2^2)^2
-         ψxx[j, i] = ψxx[j, i] - θE2 * (θ1^2 - θ2^2) / θr
-         ψyy[j, i] = ψyy[j, i] + θE2 * (θ1^2 - θ2^2) / θr
-         ψxy[j, i] = ψxy[j, i] - θE2 * 2.0 * θ1 * θ2 / θr
+   ax1, ax2 = axes(θx, 1), axes(θx, 2)
+   @inbounds for j in ax2
+      @inbounds for i in ax1
+         dx = θx[i, j] - θxc
+         dy = θy[i, j] - θyc
+         θr = (dx^2 + dy^2)^2 + 1.0E-15
+         ψxx[i, j] = ψxx[i, j] - θE2 * (dx^2 - dy^2) / θr
+         ψyy[i, j] = ψyy[i, j] + θE2 * (dx^2 - dy^2) / θr
+         ψxy[i, j] = ψxy[i, j] - θE2 * 2.0 * dx * dy / θr
       end
    end
 end

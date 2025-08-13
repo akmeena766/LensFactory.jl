@@ -10,11 +10,14 @@ module Lenses
 # Julia inbuilt functions to import
 
 
-# Using cosmology from one level up (i.e., LensFactory.Main)
+# LensFactory modules to use
+import ..cpu_vs_gpu
+
 using ..Constants
 using ..Cosmology
+using ..ContourFinder
+using ..IntersectionFinder
 
-import ..cpu_vs_gpu
 
 # Include the lens types files
 include("./lens_types.jl")
@@ -27,20 +30,16 @@ export get_critical_density
 export get_potential
 export get_deflection
 export get_jacobian
+export get_time_delay
+export get_magnification
+export get_image
 
 """
     get_meshgrid(θx::RV, θy::RV, dθ::RV) --> Tuple{Matrix{<:Float64}, Matrix{<:Float64}}
 
-    Generate a meshgrid of coordinates on which various quantities can be evaluated.
-    (-θx, -θy) +--- dθ --- dθ ---+ (+θx, -θy)
-               |        |        |
-               dθ       |        dθ
-               |        |        |
-               +--- dθ --- dθ ---+
-               |        |        |
-               dθ       |        dθ
-               |        |        |
-    (-θx, +θy) +--- dθ --- dθ ---+ (+θx, +θy)
+Generate a meshgrid of coordinates on which various quantities can be evaluated. At present,
+this function only generates square pixels. In future if the need arises, it can be extended 
+to generate rectangular pixels as well.
 """
 function get_meshgrid(θx::RV, θy::RV, dθ::RV)::Tuple{Matrix{<:Float64}, Matrix{<:Float64}}
    # Making sure that grid and pixel size are positive
@@ -49,19 +48,19 @@ function get_meshgrid(θx::RV, θy::RV, dθ::RV)::Tuple{Matrix{<:Float64}, Matri
    end
 
    # Number of pixels along x- and y-directions
-   nx::Int64 = floor(Int64, 2.0*θx/dθ + 1.5)
-   ny::Int64 = floor(Int64, 2.0*θy/dθ + 1.5)
+   nx::Int64 = round(Int64, 2.0*θx/dθ + 1.0)
+   ny::Int64 = round(Int64, 2.0*θy/dθ + 1.0)
 
    # Initialize an empty nx x ny grid
-   grid_x = Matrix{Float64}(undef, ny, nx)
-   grid_y = Matrix{Float64}(undef, ny, nx)
+   grid_x = Matrix{Float64}(undef, nx, ny)
+   grid_y = Matrix{Float64}(undef, nx, ny)
 
    # Filling the empty grid with positions
-   @inbounds for i = 1:nx     # Loop over x-dimension (i.e., rows)
-      x_val = - θx + (i - 1.0) * dθ
-      @inbounds for j = 1:ny  # Loop over y-dimension (i.e., columns)
-         grid_x[j, i] = x_val
-         grid_y[j, i] = - θy + (j - 1.0) * dθ
+   @inbounds for j = 1:ny     # Loop over y-dimension (i.e., columns)
+      y_val = - θy + (j - 1.0) * dθ
+      @inbounds for i = 1:nx  # Loop over y-dimension (i.e., rows)
+         grid_x[i, j] = - θx + (i - 1.0) * dθ
+         grid_y[i, j] = y_val
       end
    end
    return grid_x, grid_y
@@ -250,6 +249,35 @@ end
 
 
 """
+    get_time_delay(lens::AbstractLens, θ_x::ROA, θ_y::ROA) --> ROA
+
+Calculates the time delay for a given lens model. The corresponding expression is given as,
+```math
+t_d(\\pmb{\\theta}; \\pmb{\\beta}) = \\frac{1+z_l}{\\rm c} \\frac{D_d D_s}{D_{ds}}
+   \\left[ \\frac{(\\pmb{\\theta} - \\pmb{\\beta})^2}{2} - \\frac{D_{ds}}{D_s} \\psi(\\pmb{\\theta}) \\right]
+```
+"""
+function get_time_delay(lens::AbstractLens, θ_x::ROA, θ_y::ROA, zl::RV, adis::Float64, β::NTuple{2, RV})::ROA
+   # Constant multiplicative factor
+   constant_factor::Float64 =  ( (1.0 + zl) / CONST_C ) * lens.D_d / adis
+
+   # Initialize zero-valued arrays to store time delay
+   ϕ::ROA = zero(θ_x)
+
+   # Get time delay components
+   ϕ_potential::ROA = get_potential(lens, θ_x, θ_y)
+
+   ax2, ax1 = axes(θ_x, 1), axes(θ_x, 2)
+   @inbounds for i in ax1
+      @inbounds for j in ax2
+         ϕ[j, i] = constant_factor * ( 0.5 * ((θ_x[j, i] - β[1])^2 + (θ_y[j, i] - β[2])^2) - adis * ϕ_potential[j, i] )
+      end
+   end
+   return ϕ
+end
+
+
+"""
     get_magnification(lens::AbstractLens, θ_x::ROA, θ_y::ROA) --> ROA
 
 Calculates the magnification for a given lens model. The corresponding expression is given as,
@@ -272,31 +300,74 @@ end
 
 
 """
-    get_time_delay(lens::AbstractLens, θ_x::ROA, θ_y::ROA) --> ROA
+    get_image(lens::AbstractLens, θ_x::ROA, θ_y::ROA, adis::Float64, β::NTuple{2, RV})::Vector{NTuple{2, RV}}
+    get_image(lens::AbstractLens, θ_x::ROA, θ_y::ROA, adis::Float64, β::Matrix{<:RV})::Matrix{<:RV}
 
-Calculates the time delay for a given lens model. The corresponding expression is given as,
+Calculates the image position for a given lens model by solving the lens equation,
 ```math
-t_d(\\pmb{\\theta}; \\pmb{\\beta}) = \\frac{1+z_l}{\\rm c} \\frac{D_d D_s}{D_{ds}}
-   \\left[ \\frac{(\\pmb{\\theta} - \\pmb{\\beta})^2}{2} - \\frac{D_{ds}}{D_s} \\psi(\\pmb{\\theta}) \\right]
+\\pmb{\\beta} = \\pmb{\\theta} - \\frac{D_{ds}}{D_s} \\nabla \\psi(\\pmb{\\theta})
 ```
 """
-function get_time_delay(lens::AbstractLens, θ_x::ROA, θ_y::ROA, zl::RV, adis::RV, β::NTuple{2, RV})::ROA
-   # Constant multiplicative factor
-   constant_factor::Float64 =  ( (1.0 + zl) / CONST_C ) * lens.D_d / adis
+function get_image(lens::AbstractLens, θ_x::ROA, θ_y::ROA, adis::Float64, β::NTuple{2, RV})::Vector{NTuple{2, RV}}
+   # Get the potential gradient
+   ψx, ψy = get_deflection(lens, θ_x, θ_y)
 
-   # Initialize zero-valued arrays to store time delay
-   ϕ::ROA = zero(θ_x)
+   # Get grid for contour
+   RXC = ContourFinder.get_contour(θ_x, θ_y, β[1] .- θ_x .+ adis .* ψx, 0.0)
+   RYC = ContourFinder.get_contour(θ_x, θ_y, β[2] .- θ_y .+ adis .* ψy, 0.0)
 
-   # Get time delay components
-   ϕ_potential::ROA = get_potential(lens, θ_x, θ_y)
-
-   ax2, ax1 = axes(θ_x, 1), axes(θ_x, 2)
-   @inbounds for i in ax1
-      @inbounds for j in ax2
-         ϕ[j, i] = constant_factor * ( 0.5 * ((θ_x[j, i] - β[1])^2 + (θ_y[j, i] - β[2])^2) - adis * ϕ_potential[j, i] )
+   # Initialize empty Vector of tuples to store image positions
+   image_position::Vector{NTuple{2, RV}} = []
+   for contour_1 in RXC
+      for contour_2 in RYC
+         # Find the intersection points
+         intersect_points = ContourFinder.get_intersection( first.(contour_1), last.(contour_1), first.(contour_2), last.(contour_2) )
+         
+         # Store the intersection points in the image_position vector
+         for point in intersect_points
+            push!(image_position, point)
+         end
       end
    end
-   return ϕ
+   return image_position
+end
+
+function get_image(lens::AbstractLens, θ_x::ROA, θ_y::ROA, adis::Float64, β::Matrix{<:RV})::Matrix{<:RV}
+   # Get the potential gradient
+   ψx, ψy = get_deflection(lens, θ_x, θ_y)
+
+   # Create an empty image map
+   image_map::Matrix{<:RV} = zero(θ_x)
+
+   # Grid size
+   ny, nx = size(θ_x)
+   pixel_h::Float64 = abs(θ_x[2, 1] - θ_x[1, 1])
+
+   beta_x::Float64 = 0
+   beta_y::Float64 = 0
+   pixel_x::Int64 = 0
+   pixel_y::Int64 = 0
+
+   # Loop over the image plane and assign values from source
+   ax1, ax2 = axes(θ_x, 1), axes(θ_x, 2)
+
+   @inbounds for j in ax2
+      @inbounds for i in ax1
+         # Get source plane position in radians
+         beta_x = θ_x[i, j] - adis * ψx[i, j]
+         beta_y = θ_y[i, j] - adis * ψy[i, j]
+
+         # Get pixel position from radians
+         pixel_x = round(Int64, beta_x / pixel_h + 0.5 * nx + 1.0)
+         pixel_y = round(Int64, beta_y / pixel_h + 0.5 * ny + 1.0)
+
+         # make sure pixel position is within bounds
+         if (1 <= pixel_x <= nx) && (1 <= pixel_y <= ny)
+            image_map[i, j] = β[pixel_x, pixel_y]
+         end
+      end
+   end
+   return image_map
 end
 
 
