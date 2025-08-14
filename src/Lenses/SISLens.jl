@@ -10,6 +10,14 @@ export deflection!
 export jacobian!
 export einstein_angle
 
+
+"""
+    potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
+
+```math
+ψ(\\pmb{θ}) = 4 π \\left(\\frac{v_d}{c} \\right)^2 |\\pmb{θ} - \\pmb{θ}_c|
+```
+"""
 function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
    θE::Float64 = 4.0 * pi * (vd / CONST_C)^2
    
@@ -21,6 +29,10 @@ function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <
    end
 end
 
+
+"""
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
+"""
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
    θE::Float64 = 4.0 * pi * (vd / CONST_C)^2 
    θr::Float64 = 0.0
@@ -36,6 +48,10 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV)
    end
 end
 
+
+"""
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
+"""
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
    θE::Float64 = 4.0 * pi * (vd / CONST_C)^2 
    
@@ -57,7 +73,15 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
    end
 end
 
-function einstein_angle(Dds::RV, Ds::RV, vd::RV)
+
+"""
+    einstein_angle(Dds::RV, Ds::RV, vd::RV)::RV
+
+```math
+θ_E = 4 π \\frac{D_{ds}}{D_s} \\left(\\frac{v_d}{c} \\right)^2
+```
+"""
+function einstein_angle(Dds::RV, Ds::RV, vd::RV)::RV
    return 4.0 * pi * ( vd / CONST_C )^2 * (Dds / Ds)
 end
 

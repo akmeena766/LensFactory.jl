@@ -20,26 +20,16 @@ end
 
 
 """
-    init_SISLens(D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, v_d::Real=NaN)
+    init_SISLens(x_c::Real=0.0, y_c::Real=0.0, v_d::Real=NaN)
 
 Initialize a Singular Isothermal Sphere (SIS) lens with the given parameters.
 """
 @kwdef struct init_SISLens <: AbstractLens
    _lens_::Symbol = :SISLens
    _lid_::Int = 2
-   D_d::Real = NaN
    x_c::Real = 0.0
    y_c::Real = 0.0
    v_d::Real = NaN
-end
-
-
-@kwdef struct init_ExternalEffects <: AbstractLens
-   _lens_::String = "ExternalEffects"
-   _lid_::Int = 1
-   k_ext::Real  = NaN
-   g1_ext::Real = NaN
-   g2_ext::Real = NaN
 end
 
 
@@ -54,7 +44,13 @@ end
 end
 
 
-
+@kwdef struct init_ExternalEffects <: AbstractLens
+   _lens_::String = "ExternalEffects"
+   _lid_::Int = 1
+   k_ext::Real  = NaN
+   g1_ext::Real = NaN
+   g2_ext::Real = NaN
+end
 
 
 @kwdef struct init_NSISPLens <: AbstractLens
