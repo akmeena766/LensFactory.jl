@@ -95,9 +95,10 @@ end
 
 # Define lens_map globally (module-level or script-level)
 const potential_map = Dict(
-   :PointLens => (PointLens, [:D_d, :x_c, :y_c, :mass])
+   :PointLens => (PointLens, [:D_d, :x_c, :y_c, :mass]),
+   :SISLens   => (SISLens,   [:D_d, :x_c, :y_c, :vd])
 )
-function potential_helper!(ψ::ROA, lens::AbstractLens, θ_x::ROA, θ_y::ROA)
+function potential_helper!(ψ::ROA, lens::AbstractLens, θx::ROA, θy::ROA)
    # Check if the lens type is in the potential_map otherwise throw an error
    entry = get(potential_map, lens._lens_, nothing)
    if entry === nothing
@@ -111,28 +112,28 @@ function potential_helper!(ψ::ROA, lens::AbstractLens, θ_x::ROA, θ_y::ROA)
    args = [getfield(lens, p) for p in properties]
 
    # Call the potential function for specific model
-   return getfield(module_name, :potential!)(ψ, θ_x, θ_y, args...)
+   return getfield(module_name, :potential!)(ψ, θx, θy, args...)
 end
 
 """
-    get_potential(lens::AbstractLens, θ_x::ROA, θ_y::ROA) --> ROA
+    get_potential(lens::AbstractLens, θx::ROA, θy::ROA) --> ROA
 """
-function get_potential(lens::AbstractLens, θ_x::ROA, θ_y::ROA)::ROA
+function get_potential(lens::AbstractLens, θx::ROA, θy::ROA)::ROA
    # Check if the input coordinates are of the same type and size
-   if typeof(θ_x) != typeof(θ_y) || size(θ_x) != size(θ_y)
+   if typeof(θx) != typeof(θy) || size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same type and size."))
    end
 
    # Initialize zero-valued potential array
-   ψ::ROA = zero(θ_x)
+   ψ::ROA = zero(θx)
 
    if lens._lens_ == :CompositeLens
       for component in lens._components_
-         potential_helper!(ψ, component, θ_x, θ_y)
+         potential_helper!(ψ, component, θx, θy)
       end
       return ψ
    else
-      potential_helper!(ψ, lens, θ_x, θ_y)
+      potential_helper!(ψ, lens, θx, θy)
       return ψ
    end
 end
@@ -140,9 +141,10 @@ end
 
 # Define lens_map globally (module-level or script-level)
 const deflection_map = Dict(
-   :PointLens => (PointLens, [:D_d, :x_c, :y_c, :mass])
+   :PointLens => (PointLens, [:D_d, :x_c, :y_c, :mass]),
+   :SISLens   => (SISLens,   [:D_d, :x_c, :y_c, :vd])
 )
-function deflection_helper!(ψx::ROA, ψy::ROA, lens::AbstractLens, θ_x::ROA, θ_y::ROA)
+function deflection_helper!(ψx::ROA, ψy::ROA, lens::AbstractLens, θx::ROA, θy::ROA)
    # Check if the lens type is in the deflection_map otherwise throw an error
    entry = get(deflection_map, lens._lens_, nothing)
    if entry === nothing
@@ -156,32 +158,32 @@ function deflection_helper!(ψx::ROA, ψy::ROA, lens::AbstractLens, θ_x::ROA, �
    args = [getfield(lens, p) for p in properties]
 
    # Call the potential function for specific model
-   return getfield(module_name, :deflection!)(ψx, ψy, θ_x, θ_y, args...)
+   return getfield(module_name, :deflection!)(ψx, ψy, θx, θy, args...)
 end
 
 """
-    get_deflection(lens::AbstractLens, θ_x::ROA, θ_y::ROA) --> Tuple{ROA, ROA}
+    get_deflection(lens::AbstractLens, θx::ROA, θy::ROA) --> Tuple{ROA, ROA}
 
 Calculates the deflection angles (i.e., the gradient of the potential) for a given lens model. 
 Returns a tuple of deflection components, i.e., ``(\\psi_x, \\psi_y)``.
 """
-function get_deflection(lens::AbstractLens, θ_x::ROA, θ_y::ROA)::Tuple{ROA, ROA}
+function get_deflection(lens::AbstractLens, θx::ROA, θy::ROA)::Tuple{ROA, ROA}
    # Check if the input coordinates are of the same type and size
-   if typeof(θ_x) != typeof(θ_y) || size(θ_x) != size(θ_y)
+   if typeof(θx) != typeof(θy) || size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same type and size."))
    end
 
    # Initialize zero-valued potential array
-   ψx::ROA = zero(θ_x)
-   ψy::ROA = zero(θ_x)
+   ψx::ROA = zero(θx)
+   ψy::ROA = zero(θx)
 
    if lens._lens_ == :CompositeLens
       for component in lens._components_
-         deflection_helper!(ψx, ψy, component, θ_x, θ_y)
+         deflection_helper!(ψx, ψy, component, θx, θy)
       end
       return ψx, ψy
    else
-      deflection_helper!(ψx, ψy, lens, θ_x, θ_y)
+      deflection_helper!(ψx, ψy, lens, θx, θy)
       return ψx, ψy
    end
 end
@@ -190,9 +192,10 @@ end
 
 # Define lens_map globally (module-level or script-level)
 const jacobian_map = Dict(
-   :PointLens => (PointLens, [:D_d, :x_c, :y_c, :mass])
+   :PointLens => (PointLens, [:D_d, :x_c, :y_c, :mass]),
+   :SISLens   => (SISLens,   [:D_d, :x_c, :y_c, :vd])
 )
-function jacobian_helper!(ψxx::ROA, ψyy::ROA, ψxy::ROA, lens::AbstractLens, θ_x::ROA, θ_y::ROA)
+function jacobian_helper!(ψxx::ROA, ψyy::ROA, ψxy::ROA, lens::AbstractLens, θx::ROA, θy::ROA)
    # Check if the lens type is in the jacobian_map otherwise throw an error
    entry = get(jacobian_map, lens._lens_, nothing)
    if entry === nothing
@@ -206,11 +209,11 @@ function jacobian_helper!(ψxx::ROA, ψyy::ROA, ψxy::ROA, lens::AbstractLens, �
    args = [getfield(lens, p) for p in properties]
 
    # Call the jacobian function for specific model
-   return getfield(module_name, :jacobian!)(ψxx, ψyy, ψxy, θ_x, θ_y, args...)
+   return getfield(module_name, :jacobian!)(ψxx, ψyy, ψxy, θx, θy, args...)
 end
 
 """
-    get_jacobian(lens::AbstractLens, θ_x::ROA, θ_y::ROA) --> Tuple{ROA, ROA, ROA}
+    get_jacobian(lens::AbstractLens, θx::ROA, θy::ROA) --> Tuple{ROA, ROA, ROA}
 
 Calculates the jacobian (i.e., deformation tensor) of the lens mapping for a given lens model.
 The jacobian is a ``2\\times2`` matrix composed of the second derivatives of the potential, 
@@ -225,24 +228,24 @@ which is given as,
 Since the jacobian is symmetric (for single lens plane), only three components are returned, 
 i.e., ``(\\psi_{xx}, \\psi_{yy}, \\psi_{xy})``.
 """
-function get_jacobian(lens::AbstractLens, θ_x::ROA, θ_y::ROA)::Tuple{ROA, ROA, ROA}
+function get_jacobian(lens::AbstractLens, θx::ROA, θy::ROA)::Tuple{ROA, ROA, ROA}
    # Check if the input coordinates are of the same type and size
-   if typeof(θ_x) != typeof(θ_y) || size(θ_x) != size(θ_y)
+   if typeof(θx) != typeof(θy) || size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same type and size."))
    end
 
    # Initialize zero-valued potential array
-   ψxx::ROA = zero(θ_x)
-   ψyy::ROA = zero(θ_x)
-   ψxy::ROA = zero(θ_x)
+   ψxx::ROA = zero(θx)
+   ψyy::ROA = zero(θx)
+   ψxy::ROA = zero(θx)
 
    if lens._lens_ == :CompositeLens
       for component in lens._components_
-         jacobian_helper!(ψxx, ψyy, ψxy, component, θ_x, θ_y)
+         jacobian_helper!(ψxx, ψyy, ψxy, component, θx, θy)
       end
       return ψxx, ψyy, ψxy
    else
-      jacobian_helper!(ψxx, ψyy, ψxy, lens, θ_x, θ_y)
+      jacobian_helper!(ψxx, ψyy, ψxy, lens, θx, θy)
       return ψxx, ψyy, ψxy
    end
 end
@@ -257,7 +260,7 @@ t_d(\\pmb{\\theta}; \\pmb{\\beta}) = \\frac{1+z_l}{\\rm c} \\frac{D_d D_s}{D_{ds
    \\left[ \\frac{(\\pmb{\\theta} - \\pmb{\\beta})^2}{2} - \\frac{D_{ds}}{D_s} \\psi(\\pmb{\\theta}) \\right]
 ```
 """
-function get_time_delay(lens::AbstractLens, θ_x::ROA, θ_y::ROA, zl::RV, adis::Float64, β::NTuple{2, RV})::ROA
+function get_time_delay(lens::AbstractLens, θx::ROA, θy::ROA, zl::RV, adis::Float64, β::NTuple{2, RV})::ROA
    # Constant multiplicative factor
    constant_factor::Float64 =  ( (1.0 + zl) / CONST_C ) * lens.D_d / adis
 
@@ -270,7 +273,7 @@ function get_time_delay(lens::AbstractLens, θ_x::ROA, θ_y::ROA, zl::RV, adis::
    ax2, ax1 = axes(θ_x, 1), axes(θ_x, 2)
    @inbounds for i in ax1
       @inbounds for j in ax2
-         ϕ[j, i] = constant_factor * ( 0.5 * ((θ_x[j, i] - β[1])^2 + (θ_y[j, i] - β[2])^2) - adis * ϕ_potential[j, i] )
+         ϕ[j, i] = constant_factor * ( 0.5 * ((θx[j, i] - β[1])^2 + (θy[j, i] - β[2])^2) - adis * ϕ_potential[j, i] )
       end
    end
    return ϕ
@@ -278,16 +281,16 @@ end
 
 
 """
-    get_magnification(lens::AbstractLens, θ_x::ROA, θ_y::ROA) --> ROA
+    get_magnification(lens::AbstractLens, θx::ROA, θy::ROA) --> ROA
 
 Calculates the magnification for a given lens model. The corresponding expression is given as,
 ```math
 \\mu = \\frac{1}{\\det \\mathcal{A}} = \\frac{1}{(1 - \\kappa)^2 - \\gamma^2}
 ```
 """
-function get_magnification(lens::AbstractLens, θ_x::ROA, θ_y::ROA, adis::Float64)::ROA
+function get_magnification(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64)::ROA
    # Get the jacobian components
-   ψxx, ψyy, ψxy = get_jacobian(lens, θ_x, θ_y)
+   ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
 
    # Scale the deformation tensor
    ψxx .*= adis
@@ -300,21 +303,21 @@ end
 
 
 """
-    get_image(lens::AbstractLens, θ_x::ROA, θ_y::ROA, adis::Float64, β::NTuple{2, RV})::Vector{NTuple{2, RV}}
-    get_image(lens::AbstractLens, θ_x::ROA, θ_y::ROA, adis::Float64, β::Matrix{<:RV})::Matrix{<:RV}
+    get_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64, β::NTuple{2, RV})::Vector{NTuple{2, RV}}
+    get_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64, β::Matrix{<:RV})::Matrix{<:RV}
 
 Calculates the image position for a given lens model by solving the lens equation,
 ```math
 \\pmb{\\beta} = \\pmb{\\theta} - \\frac{D_{ds}}{D_s} \\nabla \\psi(\\pmb{\\theta})
 ```
 """
-function get_image(lens::AbstractLens, θ_x::ROA, θ_y::ROA, adis::Float64, β::NTuple{2, RV})::Vector{NTuple{2, RV}}
+function get_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64, β::NTuple{2, RV})::Vector{NTuple{2, RV}}
    # Get the potential gradient
-   ψx, ψy = get_deflection(lens, θ_x, θ_y)
+   ψx, ψy = get_deflection(lens, θx, θy)
 
    # Get grid for contour
-   RXC = ContourFinder.get_contour(θ_x, θ_y, β[1] .- θ_x .+ adis .* ψx, 0.0)
-   RYC = ContourFinder.get_contour(θ_x, θ_y, β[2] .- θ_y .+ adis .* ψy, 0.0)
+   RXC = ContourFinder.get_contour(θx, θy, β[1] .- θx .+ adis .* ψx, 0.0)
+   RYC = ContourFinder.get_contour(θx, θy, β[2] .- θy .+ adis .* ψy, 0.0)
 
    # Initialize empty Vector of tuples to store image positions
    image_position::Vector{NTuple{2, RV}} = []
@@ -332,16 +335,16 @@ function get_image(lens::AbstractLens, θ_x::ROA, θ_y::ROA, adis::Float64, β::
    return image_position
 end
 
-function get_image(lens::AbstractLens, θ_x::ROA, θ_y::ROA, adis::Float64, β::Matrix{<:RV})::Matrix{<:RV}
+function get_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64, β::Matrix{<:RV})::Matrix{<:RV}
    # Get the potential gradient
-   ψx, ψy = get_deflection(lens, θ_x, θ_y)
+   ψx, ψy = get_deflection(lens, θx, θy)
 
    # Create an empty image map
-   image_map::Matrix{<:RV} = zero(θ_x)
+   image_map::Matrix{<:RV} = zero(θx)
 
    # Grid size
-   ny, nx = size(θ_x)
-   pixel_h::Float64 = abs(θ_x[2, 1] - θ_x[1, 1])
+   ny, nx = size(θx)
+   pixel_h::Float64 = abs(θx[2, 1] - θx[1, 1])
 
    beta_x::Float64 = 0
    beta_y::Float64 = 0
@@ -349,17 +352,17 @@ function get_image(lens::AbstractLens, θ_x::ROA, θ_y::ROA, adis::Float64, β::
    pixel_y::Int64 = 0
 
    # Loop over the image plane and assign values from source
-   ax1, ax2 = axes(θ_x, 1), axes(θ_x, 2)
+   ax1, ax2 = axes(θx, 1), axes(θx, 2)
 
    @inbounds for j in ax2
       @inbounds for i in ax1
          # Get source plane position in radians
-         beta_x = θ_x[i, j] - adis * ψx[i, j]
-         beta_y = θ_y[i, j] - adis * ψy[i, j]
+         βx = θx[i, j] - adis * ψx[i, j]
+         βy = θy[i, j] - adis * ψy[i, j]
 
          # Get pixel position from radians
-         pixel_x = round(Int64, beta_x / pixel_h + 0.5 * nx + 1.0)
-         pixel_y = round(Int64, beta_y / pixel_h + 0.5 * ny + 1.0)
+         pixel_x = round(Int64, βx / pixel_h + 0.5 * nx + 1.0)
+         pixel_y = round(Int64, βy / pixel_h + 0.5 * ny + 1.0)
 
          # make sure pixel position is within bounds
          if (1 <= pixel_x <= nx) && (1 <= pixel_y <= ny)

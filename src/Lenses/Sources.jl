@@ -14,12 +14,13 @@ export gaussian
 
 
 """
-    disk(θ_x::ROA, θ_y::ROA, r::Float64, β::NTuple{2, RV}) --> Matrix{<:RV}
+    disk(θ_x::ROA, θ_y::ROA, r::Float64, β::NTuple{2, RV}; A::RV=1.0) --> Matrix{<:RV}
+
 Creates a disk source profile of radius `r` on a grid defined by `θ_x` and `θ_y`. 
-`β` is the center of the disk. Within the disk, the source profile is constant and every
-pixel has a value of 1.0.
+`β` is the center of the disk. By default, the source profile is constant and every
+pixel has a value of 1.0 and we can scale it using the amplitude `A`.
 """
-function disk(θ_x::ROA, θ_y::ROA, radius::Float64, β::NTuple{2, RV})::Matrix{<:RV}
+function disk(θ_x::ROA, θ_y::ROA, radius::Float64, β::NTuple{2, RV}; A::RV=1.0)::Matrix{<:RV}
    # Initialize an empty source grid
    src = zero(θ_x)
 
@@ -32,7 +33,7 @@ function disk(θ_x::ROA, θ_y::ROA, radius::Float64, β::NTuple{2, RV})::Matrix{
       @inbounds for i in ax1
          dx = θ_x[i, j] - β[1]
          dy = θ_y[i, j] - β[2]
-         src[i, j] = (dx^2 + dy^2 <= radius^2) ? 1.0 : 0.0
+         src[i, j] = (dx^2 + dy^2 <= radius^2) ? A * 1.0 : 0.0
       end
    end
    return src
@@ -41,6 +42,7 @@ end
 
 """
     gaussian(θ_x::ROA, θ_y::ROA, σ_x::RV, σ_y::RV, β::NTuple{2, RV}; A::RV=1.0) --> Matrix{<:RV}
+
 Creates a Gaussian source profile on a grid defined by `θ_x` and `θ_y`. Standard deviation along 
 (x, y) axis is given by (`σ_x`, `σ_y`). The center of the Gaussian is at `β`. The overall 
 normalization is determined by `A`.
@@ -52,7 +54,7 @@ function gaussian(θ_x::ROA, θ_y::ROA, σ_x::RV, σ_y::RV, β::NTuple{2, RV}; A
    # Local variables for calculations
    dx::Float64 = 0.0
    dy::Float64 = 0.0
-   amplitude::Float64 = A / (2π * σ_x * σ_y)
+   amplitude::Float64 = A / (2.0 * π * σ_x * σ_y)
 
    ax1, ax2 = axes(θ_x, 1), axes(θ_x, 2)
    @inbounds for j in ax2
