@@ -71,11 +71,11 @@ end
 """
     get_critical_density(Dd::RV, Dds::RV, Ds::RV; unit="kg_m2")::RV
 
-Calculate the critical surface density ``(\\Sigma_{\\rm cr})`` given the angular diameter distances.
+Calculate the critical surface density ``(Σ_{\\rm cr})`` given the angular diameter distances.
 The result can be returned in different units,
 - "kg\\_m2" ``\\Rightarrow{\\rm kg/m^2}``, 
-- "msun\\_pc2" ``\\Rightarrow{\\rm M_{\\odot}/pc^2}``, 
-- "msun\\_arcsec2" ``\\Rightarrow{\\rm M_{\\odot}/arcsec^2}``.
+- "msun\\_pc2" ``\\Rightarrow{\\rm M_⊙/pc^2}``, 
+- "msun\\_arcsec2" ``\\Rightarrow{\\rm M_⊙/arcsec^2}``.
 """   
 function get_critical_density(Dd::RV, Dds::RV, Ds::RV; unit::String="kg_m2")::RV
    # Calculate Σ_cr in kg/m^2
@@ -166,7 +166,7 @@ end
     get_deflection(lens::AbstractLens, θx::ROA, θy::ROA) --> Tuple{ROA, ROA}
 
 Calculates the deflection angles (i.e., the gradient of the potential) for a given lens model. 
-Returns a tuple of deflection components, i.e., ``(\\psi_x, \\psi_y)``.
+Returns a tuple of deflection components, i.e., ``(ψ_x, ψ_y)``.
 """
 function get_deflection(lens::AbstractLens, θx::ROA, θy::ROA)::Tuple{ROA, ROA}
    # Check if the input coordinates are of the same type and size
@@ -222,12 +222,12 @@ which is given as,
 ```math
 \\mathcal{A} =
 \\begin{pmatrix}
-\\psi_{xx} & \\psi_{xy} \\\\
-\\psi_{xy} & \\psi_{yy}
+ψ_{xx} & ψ_{xy} \\\\
+ψ_{xy} & ψ_{yy}
 \\end{pmatrix}.
 ```
-Since the jacobian is symmetric (for single lens plane), only three components are returned, 
-i.e., ``(\\psi_{xx}, \\psi_{yy}, \\psi_{xy})``.
+Since the jacobian is symmetric (for single lens plane), only three components are returned,
+i.e., ``(ψ_{xx}, ψ_{yy}, ψ_{xy})``.
 """
 function get_jacobian(lens::AbstractLens, θx::ROA, θy::ROA)::Tuple{ROA, ROA, ROA}
    # Check if the input coordinates are of the same type and size
@@ -257,8 +257,8 @@ end
 
 Calculates the time delay for a given lens model. The corresponding expression is given as,
 ```math
-t_d(\\pmb{\\theta}; \\pmb{\\beta}) = \\frac{1+z_l}{\\rm c} \\frac{D_d D_s}{D_{ds}}
-   \\left[ \\frac{(\\pmb{\\theta} - \\pmb{\\beta})^2}{2} - \\frac{D_{ds}}{D_s} \\psi(\\pmb{\\theta}) \\right]
+t_d(\\pmb{θ}; \\pmb{β}) = \\frac{1+z_l}{\\rm c} \\frac{D_d D_s}{D_{ds}}
+   \\left[ \\frac{(\\pmb{θ} - \\pmb{β})^2}{2} - \\frac{D_{ds}}{D_s} \\psi(\\pmb{θ}) \\right]
 ```
 """
 function get_time_delay(lens::AbstractLens, θx::ROA, θy::ROA, zl::RV, adis::Float64, β::NTuple{2, RV})::ROA
@@ -286,7 +286,7 @@ end
 
 Calculates the magnification for a given lens model. The corresponding expression is given as,
 ```math
-\\mu = \\frac{1}{\\det \\mathcal{A}} = \\frac{1}{(1 - \\kappa)^2 - \\gamma^2}
+\\mu = \\frac{1}{\\det \\mathcal{A}} = \\frac{1}{(1 - κ)^2 - γ^2}
 ```
 """
 function get_magnification(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64)::ROA
@@ -309,7 +309,7 @@ end
 
 Calculates the image position for a given lens model by solving the lens equation,
 ```math
-\\pmb{\\beta} = \\pmb{\\theta} - \\frac{D_{ds}}{D_s} \\nabla \\psi(\\pmb{\\theta})
+\\pmb{β} = \\pmb{θ} - \\frac{D_{ds}}{D_s} ∇\\psi(\\pmb{θ})
 ```
 """
 function get_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64, β::NTuple{2, RV})::Vector{NTuple{2, RV}}
