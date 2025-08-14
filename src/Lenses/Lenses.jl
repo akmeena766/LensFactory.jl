@@ -298,7 +298,7 @@ function get_magnification(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64
    ψyy .*= adis
    ψxy .*= adis
 
-   # Magnification is the inverse of the determinant
+   # Magnification is the inverse of the determinant of jacobian
    return 1.0 ./ (1.0 .+ ψxx .* ψyy .- ψxx .- ψyy .- ψxy.^2)
 end
 
@@ -372,6 +372,53 @@ function get_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64, β::Ma
       end
    end
    return image_map
+end
+
+
+function get_critical_curve(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64)
+   # Get the jacobian components
+   ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
+
+   # Scale the deformation tensor
+   ψxx .*= adis
+   ψyy .*= adis
+   ψxy .*= adis
+
+   # Convergence and shear components
+   κ::ROA = 0.5 * (ψxx + ψyy)
+   γ1::ROA = 0.5 * (ψxx - ψyy)
+   γ2::ROA = ψxy
+
+   # Get the zero eigenvalue contours
+   critical_tan = ContourFinder.get_contour(θx, θy, 1.0 .- κ .- sqrt.(γ1.^2 .+ γ2.^2), 0)
+   critical_rad = ContourFinder.get_contour(θx, θy, 1.0 .- κ .+ sqrt.(γ1.^2 .+ γ2.^2), 0)
+   println(critical_tan)
+   return critical_tan, critical_rad   
+end
+
+
+function get_caustic(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64)
+   # Generate critical curves
+   critical_tan, critical_rad = get_critical_curve(lens, θx, θy, adis)
+
+   # Get tangential caustics
+   caustics_tan::Vector{Vector{Vector{Float64}}} = []
+   for curve in critical_tan
+      ψ_x, ψ_y = get_deflection(lens, first.(curve), last.(curve))
+      src_x = first.(curve) .- adis .* ψ_x
+      src_y =  last.(curve) .- adis .* ψ_y
+      push!(caustics_tan, [[x, y] for (x, y) in zip(src_x, src_y)])
+   end
+ 
+   # Get radial caustics
+   caustics_rad::Vector{Vector{Vector{Float64}}} = []
+   for curve in critical_rad
+      ψ_x, ψ_y = get_deflection(lens, first.(curve), last.(curve))
+      src_x = first.(curve) .- adis .* ψ_x
+      src_y =  last.(curve) .- adis .* ψ_y
+      push!(caustics_rad, [[x, y] for (x, y) in zip(src_x, src_y)])
+   end
+   return caustics_tan, caustics_rad
 end
 
 

@@ -321,11 +321,11 @@ end
 
 # Dictionary to map lens types to their initialization functions and arguments
 const lens_init_functions = Dict(
-   :PointLens       => (init_PointLens,        [:x_c, :y_c, :mass]),
+   :PointLens       => (init_PointLens,        [:D_d, :x_c, :y_c, :mass]),
    :SISLens         => (init_SISLens,          [:x_c, :y_c, :v_d])
    )
 # Constructor for composite lens
-function init_CompositeLens(D_d::Real, lens::Vector{<:NamedTuple})
+function init_CompositeLens(lens::Vector{<:NamedTuple})
    # Define an component vector
    lens_components = AbstractLens[]
 
@@ -344,7 +344,7 @@ function init_CompositeLens(D_d::Real, lens::Vector{<:NamedTuple})
       kwargs = Dict(arg => getproperty(component, arg) for arg in init_args)
 
       # Push the component into the vector
-      push!(lens_components, init_func(; D_d, kwargs...))
+      push!(lens_components, init_func(; kwargs...))
    end
    return init_CompositeLens(_components_=lens_components)
 end

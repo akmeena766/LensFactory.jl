@@ -40,4 +40,8 @@ export Sources
 include("./Lenses/Lenses.jl")
 export Lenses
 
+# Module for plot utilities
+include("./Lenses/PlotUtils.jl")
+export PlotUtils
+
 end
