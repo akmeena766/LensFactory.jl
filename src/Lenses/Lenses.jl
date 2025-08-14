@@ -22,6 +22,7 @@ using ..IntersectionFinder
 # Include the lens types files
 include("./lens_types.jl")
 include("./PointLens.jl")
+include("./SISLens.jl")
 
 
 # Various lensing function to export
@@ -96,7 +97,7 @@ end
 # Define lens_map globally (module-level or script-level)
 const potential_map = Dict(
    :PointLens => (PointLens, [:D_d, :x_c, :y_c, :mass]),
-   :SISLens   => (SISLens,   [:D_d, :x_c, :y_c, :vd])
+   :SISLens   => (SISLens,   [:x_c, :y_c, :v_d])
 )
 function potential_helper!(ψ::ROA, lens::AbstractLens, θx::ROA, θy::ROA)
    # Check if the lens type is in the potential_map otherwise throw an error
@@ -142,7 +143,7 @@ end
 # Define lens_map globally (module-level or script-level)
 const deflection_map = Dict(
    :PointLens => (PointLens, [:D_d, :x_c, :y_c, :mass]),
-   :SISLens   => (SISLens,   [:D_d, :x_c, :y_c, :vd])
+   :SISLens   => (SISLens,   [:x_c, :y_c, :v_d])
 )
 function deflection_helper!(ψx::ROA, ψy::ROA, lens::AbstractLens, θx::ROA, θy::ROA)
    # Check if the lens type is in the deflection_map otherwise throw an error
@@ -193,7 +194,7 @@ end
 # Define lens_map globally (module-level or script-level)
 const jacobian_map = Dict(
    :PointLens => (PointLens, [:D_d, :x_c, :y_c, :mass]),
-   :SISLens   => (SISLens,   [:D_d, :x_c, :y_c, :vd])
+   :SISLens   => (SISLens,   [:x_c, :y_c, :v_d])
 )
 function jacobian_helper!(ψxx::ROA, ψyy::ROA, ψxy::ROA, lens::AbstractLens, θx::ROA, θy::ROA)
    # Check if the lens type is in the jacobian_map otherwise throw an error

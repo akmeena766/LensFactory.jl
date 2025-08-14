@@ -1,8 +1,8 @@
+
 module SISLens
 
 # LensFactory modules to import
-include("../LensFactoryUtils/Constants.jl")
-using .Constants
+using ..Constants
 
 # Functions to export
 export potential!
@@ -16,7 +16,7 @@ function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
-         ψ[i, j] = ψ[i, j] + θE * sqrt( (θx[i, j] - θxc)^2 + (θy[i, j] - θyc)^2 )
+         ψ[i, j] = ψ[i, j] + θE * sqrt( (θx[i, j] - θxc)^2 + (θy[i, j] - θyc)^2 ) + 1.0E-15
       end
    end
 end
@@ -28,7 +28,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV)
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
-         θr = sqrt( (θx[i, j] - θxc)^2 + (θy[i, j] - θyc)^2 )
+         θr = sqrt( (θx[i, j] - θxc)^2 + (θy[i, j] - θyc)^2 ) + 1.0E-15
 
          ψx[i, j] = ψx[i, j] + θE * (θx[i, j] - θxc) / θr
          ψy[i, j] = ψy[i, j] + θE * (θy[i, j] - θyc) / θr
@@ -48,7 +48,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
       @inbounds for i in ax1
          dy = θx[i, j] - θxc
          dy = θy[i, j] - θyc
-         θr = (dx^2 + dy^2)^(3/2)
+         θr = (dx^2 + dy^2)^(3/2) + 1.0E-15
 
          ψxx[i, j] = ψxx[i, j] + θE * dy^2 / θr
          ψyy[i, j] = ψyy[i, j] + θE * dx^2 / θr
