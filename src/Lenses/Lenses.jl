@@ -77,17 +77,17 @@ The result can be returned in different units,
 - "msun\\_pc2" ``\\Rightarrow{\\rm M_⊙/pc^2}``, 
 - "msun\\_arcsec2" ``\\Rightarrow{\\rm M_⊙/arcsec^2}``.
 """   
-function get_critical_density(Dd::RV, Dds::RV, Ds::RV; unit::String="kg_m2")::RV
+function get_critical_density(; D_d::RV=NaN, adis::RV=NaN, unit::Symbol=:kg_m2)::RV
    # Calculate Σ_cr in kg/m^2
-   Σ_cr::Float64 = ( CONST_C^2 / 4.0 / π / CONST_G ) * ( Ds / Dd / Dds )
+   Σ_cr::Float64 = ( CONST_C^2 / 4.0 / π / CONST_G ) * ( 1.0 / D_d / adis )
    
    # Convert to the requested unit
-   if unit == "kg_m2"
+   if unit == :kg_m2
       return Σ_cr
-   elseif unit == "msun_pc2"
+   elseif unit == :msun_pc2
       return Σ_cr * ( DIST_PC^2 / MASS_SUN )
-   elseif unit == "msun_arcsec2"
-      return Σ_cr * ( Dol^2 * ANGLE_ARCSEC^2 / MASS_SUN )
+   elseif unit == :msun_arcsec2
+      return Σ_cr * ( D_d^2 * ANGLE_ARCSEC^2 / MASS_SUN )
    else
       error( "Invalid unit: $unit. Must be 'kg_m2' or 'msun_pc2' or 'msun_arcsec2'." )
    end
