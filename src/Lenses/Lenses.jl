@@ -23,6 +23,7 @@ using ..IntersectionFinder
 include("./lens_types.jl")
 include("./PointLens.jl")
 include("./SISLens.jl")
+include("./PlummerLens.jl")
 
 
 # Various lensing function to export
@@ -95,13 +96,14 @@ end
 
 
 # Define lens_map globally (module-level or script-level)
-const potential_map = Dict(
-   :PointLens => (PointLens, [:D_d, :x_c, :y_c, :mass]),
-   :SISLens   => (SISLens,   [:x_c, :y_c, :v_d])
+const lens_map = Dict(
+   :PointLens => (PointLens,     [:D_d, :x_c, :y_c, :mass]),
+   :PlummerLens => (PlummerLens, [:D_d, :x_c, :y_c, :mass, :x_s]),
+   :SISLens   => (SISLens,       [:x_c, :y_c, :v_d])
 )
 function potential_helper!(ψ::ROA, lens::AbstractLens, θx::ROA, θy::ROA)
-   # Check if the lens type is in the potential_map otherwise throw an error
-   entry = get(potential_map, lens._lens_, nothing)
+   # Check if the lens type is in the lens_map otherwise throw an error
+   entry = get(lens_map, lens._lens_, nothing)
    if entry === nothing
       throw(ArgumentError("Unknown lens type ** $(lens._lens_) **"))
    end
@@ -140,14 +142,9 @@ function get_potential(lens::AbstractLens, θx::ROA, θy::ROA)::ROA
 end
 
 
-# Define lens_map globally (module-level or script-level)
-const deflection_map = Dict(
-   :PointLens => (PointLens, [:D_d, :x_c, :y_c, :mass]),
-   :SISLens   => (SISLens,   [:x_c, :y_c, :v_d])
-)
 function deflection_helper!(ψx::ROA, ψy::ROA, lens::AbstractLens, θx::ROA, θy::ROA)
-   # Check if the lens type is in the deflection_map otherwise throw an error
-   entry = get(deflection_map, lens._lens_, nothing)
+   # Check if the lens type is in the lens_map otherwise throw an error
+   entry = get(lens_map, lens._lens_, nothing)
    if entry === nothing
       throw(ArgumentError("Unknown lens type ** $(lens._lens_) **"))
    end
@@ -190,15 +187,9 @@ function get_deflection(lens::AbstractLens, θx::ROA, θy::ROA)::Tuple{ROA, ROA}
 end
 
 
-
-# Define lens_map globally (module-level or script-level)
-const jacobian_map = Dict(
-   :PointLens => (PointLens, [:D_d, :x_c, :y_c, :mass]),
-   :SISLens   => (SISLens,   [:x_c, :y_c, :v_d])
-)
 function jacobian_helper!(ψxx::ROA, ψyy::ROA, ψxy::ROA, lens::AbstractLens, θx::ROA, θy::ROA)
-   # Check if the lens type is in the jacobian_map otherwise throw an error
-   entry = get(jacobian_map, lens._lens_, nothing)
+   # Check if the lens type is in the lens_map otherwise throw an error
+   entry = get(lens_map, lens._lens_, nothing)
    if entry === nothing
       throw(ArgumentError("Unknown lens type ** $(lens._lens_) **"))
    end

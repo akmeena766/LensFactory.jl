@@ -1,4 +1,5 @@
 export init_PointLens
+export init_PlummerLens
 export init_SISLens
 
 abstract type AbstractLens end
@@ -20,27 +21,32 @@ end
 
 
 """
+    init_PlummerLens(D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_s::Real=NaN)
+
+Initialize a Plummer lens with the given parameters.
+"""
+@kwdef struct init_PlummerLens <: AbstractLens
+   _lens_::Symbol = :PlummerLens
+   _lid_::Int = 2
+   D_d::Real = NaN
+   x_c::Real = 0.0
+   y_c::Real = 0.0
+   x_s::Real = NaN
+   mass::Real= NaN
+end
+
+
+"""
     init_SISLens(x_c::Real=0.0, y_c::Real=0.0, v_d::Real=NaN)
 
 Initialize a Singular Isothermal Sphere (SIS) lens with the given parameters.
 """
 @kwdef struct init_SISLens <: AbstractLens
    _lens_::Symbol = :SISLens
-   _lid_::Int = 2
+   _lid_::Int = 3
    x_c::Real = 0.0
    y_c::Real = 0.0
    v_d::Real = NaN
-end
-
-
-@kwdef struct init_PlummerLens <: AbstractLens
-   _lens_::String = "PlummerLens"
-   _lid_::Int = 3
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   x_s::Real = NaN
-   mass::Real= NaN
 end
 
 
@@ -322,6 +328,7 @@ end
 # Dictionary to map lens types to their initialization functions and arguments
 const lens_init_functions = Dict(
    :PointLens       => (init_PointLens,        [:D_d, :x_c, :y_c, :mass]),
+   :PlummerLens     => (init_PlummerLens,      [:D_d, :x_c, :y_c, :mass, :x_s]),
    :SISLens         => (init_SISLens,          [:x_c, :y_c, :v_d])
    )
 # Constructor for composite lens
