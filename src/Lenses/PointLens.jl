@@ -19,8 +19,8 @@ export einstein_angle
 """
 function potential!(ψ::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
    θE2::Float64 = 2.0 * CONST_G * mass / CONST_C^2 / Dol
-   dx::Float64 = 0
-   dy::Float64 = 0
+   dx::Float64 = 0.0
+   dy::Float64 = 0.0
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for i in ax1
@@ -39,9 +39,9 @@ end
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
    θE2::Float64 = 4.0 * CONST_G * mass / CONST_C^2 / Dol
    
-   dx::Float64 = 0
-   dy::Float64 = 0
-   θr::Float64 = 0
+   dx::Float64 = 0.0
+   dy::Float64 = 0.0
+   θr::Float64 = 0.0
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2

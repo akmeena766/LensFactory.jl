@@ -1,4 +1,3 @@
-
 module SISLens
 
 # LensFactory modules to import
@@ -20,8 +19,8 @@ export einstein_angle
 """
 function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
    θE::Float64 = 4.0 * pi * (vd / CONST_C)^2
-   dx::Float64 = 0
-   dy::Float64 = 0
+   dx::Float64 = 0.0
+   dy::Float64 = 0.0
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -40,8 +39,8 @@ end
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
    θE::Float64 = 4.0 * pi * (vd / CONST_C)^2 
 
-   dx::Float64 = 0
-   dy::Float64 = 0
+   dx::Float64 = 0.0
+   dy::Float64 = 0.0``
    θr::Float64 = 0.0
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
