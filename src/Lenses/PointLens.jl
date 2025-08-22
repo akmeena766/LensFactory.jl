@@ -35,6 +35,10 @@ end
 
 """
     deflection!(ψx::T, ψy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
+
+```math
+\\pmb{\\hat{α}} (\\pmb{θ}) = \\frac{4{\\rm G}M}{{\\rm c}^2} \\frac{1}{D_d} \\frac{\\pmb{θ} - \\pmb{θ}_c}{|\\pmb{θ} - \\pmb{θ}_c|^2}
+```
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
    θE2::Float64 = 4.0 * CONST_G * mass / CONST_C^2 / Dol
@@ -58,6 +62,12 @@ end
 
 """
     jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
+
+```math
+ψ_{xx} (\\pmb{θ}) = \\frac{4{\\rm G}M}{{\\rm c}^2} \\frac{1}{D_d} \\frac{(\\pmb{θ}_y - \\pmb{θ}_{yc})^2 - (\\pmb{θ}_x - \\pmb{θ}_{xc})^2}{|\\pmb{θ} - \\pmb{θ}_c|^4} \\\\
+ψ_{yy} (\\pmb{θ}) = \\frac{4{\\rm G}M}{{\\rm c}^2} \\frac{1}{D_d} \\frac{(\\pmb{θ}_x - \\pmb{θ}_{xc})^2 - (\\pmb{θ}_y - \\pmb{θ}_{yc})^2}{|\\pmb{θ} - \\pmb{θ}_c|^4} \\\\
+ψ_{xy} (\\pmb{θ}) = \\frac{4{\\rm G}M}{{\\rm c}^2} \\frac{1}{D_d} \\frac{-2 \\: (\\pmb{θ}_x - \\pmb{θ}_{xc}) \\: (\\pmb{θ}_y - \\pmb{θ}_{yc})}{|\\pmb{θ} - \\pmb{θ}_c|^4}
+```
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
    θE2::RV = 4.0 * CONST_G * mass / CONST_C^2 / Dol

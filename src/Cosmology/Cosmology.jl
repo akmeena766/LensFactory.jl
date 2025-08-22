@@ -67,7 +67,7 @@ end
 Calculates the dimensionless Hubble parameter ``(E)`` at redshift, ``z``. 
 The formula is,
 ```math
-E(z) = \\sqrt{ \\Omega_{m0} (1+z)^2 + \\Omega_{r0} (1+z)^4 + \\Omega_{k0} (1+z)^2 + \\Omega_{w0} (1+z)^{3(1+w)} }
+E(z) = \\sqrt{ Ω_{m0} (1+z)^2 + Ω_{r0} (1+z)^4 + Ω_{k0} (1+z)^2 + Ω_{w0} (1+z)^{3(1+w)} }
 ```
 """
 function Ez(cosmo::AbstractCosmology, z::RV)::RV
