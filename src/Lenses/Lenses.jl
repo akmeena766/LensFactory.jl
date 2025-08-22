@@ -11,7 +11,7 @@ module Lenses
 
 
 # LensFactory modules to use
-import ..cpu_vs_gpu
+# import ..cpu_vs_gpu
 
 using ..Constants
 using ..Cosmology

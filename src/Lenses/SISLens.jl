@@ -40,7 +40,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV)
    θE::Float64 = 4.0 * pi * (vd / CONST_C)^2 
 
    dx::Float64 = 0.0
-   dy::Float64 = 0.0``
+   dy::Float64 = 0.0
    θr::Float64 = 0.0
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)

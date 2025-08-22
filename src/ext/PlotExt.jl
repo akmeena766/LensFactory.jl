@@ -1,40 +1,12 @@
-# module PlotUtils
+module PlotExt
+
+using LensFactory
+using Makie
 
 
-# # Julia inbuilt packages to import
-# using GLMakie
-
-
-# # LensFactory modules to use
-# using ..Constants
-# using ..Lenses
-
-
-# # Functions to export
+# Functions to export
 # export plot_image_plane
 # export plot_surface_density
-
-
-# function set_plotKws!(ax)
-#    ax.xtickalign = 1
-#    ax.xticksmirrored = true
-#    ax.ytickalign = 1
-#    ax.yticksmirrored = true
-
-#    ax.xminorticksvisible = true
-#    ax.xminortickalign = 1
-#    ax.xminorticksize = 6
-#    ax.xminorgridwidth = 2
-#    ax.yminorticksvisible = true
-#    ax.yminortickalign = 1
-#    ax.yminorticksize = 6
-#    ax.yminorgridwidth = 2
-
-#    ax.xticksize = 10
-#    ax.xtickwidth = 2
-#    ax.yticksize = 10
-#    ax.ytickwidth = 2
-# end
 
 
 # function plot_image_plane(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::RV; 
@@ -258,4 +230,25 @@
 #    return fig, ax
 # end
 
-# end
+function set_plotKws!(ax)
+   ax.xtickalign = 1
+   ax.xticksmirrored = true
+   ax.ytickalign = 1
+   ax.yticksmirrored = true
+
+   ax.xminorticksvisible = true
+   ax.xminortickalign = 1
+   ax.xminorticksize = 6
+   ax.xminorgridwidth = 2
+   ax.yminorticksvisible = true
+   ax.yminortickalign = 1
+   ax.yminorticksize = 6
+   ax.yminorgridwidth = 2
+
+   ax.xticksize = 10
+   ax.xtickwidth = 2
+   ax.yticksize = 10
+   ax.ytickwidth = 2
+end
+
+end

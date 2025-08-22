@@ -84,7 +84,7 @@ end
 Calculates the Hubble parameter ``(H)`` at redshift ``z`` in ``{\\rm \\mathbf{km/s/Mpc}}``. 
 The formula is,
 ```math
-H(z) = H_0\\:E(z)
+H(z) = H_0 \\: E(z)
 ```
 """
 function hubble_parameter(cosmo::AbstractCosmology, z::RV)::RV
@@ -166,11 +166,11 @@ end
 Calculates the critical density ``(\\rho_c)`` of the Universe at redshift ``z`` in ``{\\rm \\mathbf{kg/m^3}}``.
 The formula is,
 ```math
-\\rho_c(z) = \\frac{3 H^2(z)}{8 \\pi {\\rm G} }
+\\rho_c(z) = \\frac{3 H^2(z)}{8 π {\\rm G} }
 ```
 """
 function rho_cz(cosmo::AbstractCosmology, z::RV)::RV
-   return (3.0 / 8.0 / pi / CONST_G) * hubble_parameter(cosmo, z)^2 * (1.0E3 / DIST_MPC)^2
+   return (3.0 / 8.0 / π / CONST_G) * hubble_parameter(cosmo, z)^2 * (1.0E3 / DIST_MPC)^2
 end
 
 
@@ -180,7 +180,7 @@ end
 Calculates the matter density parameter ``(\\Omega_{m})`` at redshift `z`. The formula is,
 
 ```math
-\\Omega_{m}(z) = \\Omega_{m}(0) \\: (1+z)^3 \\left( \\frac{H0}{H(z)} \\right)^2
+Ω_{m}(z) = Ω_{m}(0) \\: (1+z)^3 \\left( \\frac{H0}{H(z)} \\right)^2
 ```
 """
 function Omega_mz(cosmo::AbstractCosmology, z::RV)::RV
@@ -193,8 +193,8 @@ end
 
 Calculates the matter density parameter ``(\\Omega_{r})`` at redshift `z`. The formula is,
 
-```math 
-\\Omega_{r}(z) = \\Omega_{r}(0) \\: (1+z)^4 \\left( \\frac{H_0}{H(z)} \\right)^2 
+```math
+Ω_{r}(z) = Ω_{r}(0) \\: (1+z)^4 \\left( \\frac{H_0}{H(z)} \\right)^2
 ```
 """
 function Omega_rz(cosmo::AbstractCosmology, z::RV)::RV
@@ -207,8 +207,8 @@ end
 
 Calculates the dark energy density parameter ``(\\Omega_{w})`` at redshift `z`. The formula is,
 
-```math 
-\\Omega_{w}(z) = \\Omega_{w0} (1+z)^{3(1+w)} \\left( \\frac{H_0}{H(z)} \\right)^2 
+```math
+Ω_{w}(z) = Ω_{w0} (1+z)^{3(1+w)} \\left( \\frac{H_0}{H(z)} \\right)^2
 ```
 """
 function Omega_wz(cosmo::AbstractCosmology, z::RV)::RV
@@ -222,7 +222,7 @@ end
 Calculates the curvature density parameter ``(\\Omega_{k})`` at redshift `z`. The formula is,
 
 ```math 
-\\Omega_{k}(z) = \\Omega_{k0} (1+z)^2 \\left( \\frac{H_0}{H(z)} \\right)^2 
+Ω_{k}(z) = Ω_{k0} (1+z)^2 \\left( \\frac{H_0}{H(z)} \\right)^2
 ```
 """
 function Omega_kz(cosmo::AbstractCosmology, z::RV)::RV
@@ -393,11 +393,11 @@ Calculates the total comving volume up to redshift ``z`` in ``{\\rm \\mathbf{Gpc
 The formula is,
 ```math
 V_C = \\begin{cases} 
-\\frac{4\\pi}{2} \\frac{D_H^3}{\\Omega_k}   \\left[ \\frac{D_M}{D_H} \\sqrt{1+\\Omega_k \\left(\\frac{D_M}{D_H}\\right)^2} 
-      - \\frac{1}{\\sqrt{|\\Omega_k|}} {\\rm arcsinh}\\left( \\sqrt{|\\Omega_k|} \\frac{D_M}{D_H}  \\right) \\right] & \\text{if } \\Omega_k > 0 \\\\
-\\frac{4\\pi}{3} D_M^3                                                  & \\text{if } \\Omega_k = 0 \\\\
-\\frac{4\\pi}{2} \\frac{D_H^3}{|\\Omega_k|} \\left[ \\frac{D_M}{D_H} \\sqrt{1+\\Omega_k \\left(\\frac{D_M}{D_H}\\right)^2} 
-      - \\frac{1}{\\sqrt{|\\Omega_k|}} \\arcsin\\left( \\sqrt{|\\Omega_k|} \\frac{D_M}{D_H}  \\right) \\right] & \\text{if } \\Omega_k < 0 \\\\
+\\frac{4π}{2} \\frac{D_H^3}{Ω_k}   \\left[ \\frac{D_M}{D_H} \\sqrt{1+Ω_k \\left(\\frac{D_M}{D_H}\\right)^2} 
+      - \\frac{1}{\\sqrt{|Ω_k|}} {\\rm arcsinh}\\left( \\sqrt{|Ω_k|} \\frac{D_M}{D_H}  \\right) \\right] & \\text{if } Ω_k > 0 \\\\
+\\frac{4π}{3} D_M^3                                                  & \\text{if } Ω_k = 0 \\\\
+\\frac{4π}{2} \\frac{D_H^3}{|Ω_k|} \\left[ \\frac{D_M}{D_H} \\sqrt{1+Ω_k \\left(\\frac{D_M}{D_H}\\right)^2} 
+      - \\frac{1}{\\sqrt{|Ω_k|}} \\arcsin\\left( \\sqrt{|Ω_k|} \\frac{D_M}{D_H}  \\right) \\right] & \\text{if } Ω_k < 0 \\\\
 \\end{cases}
 ```
 """

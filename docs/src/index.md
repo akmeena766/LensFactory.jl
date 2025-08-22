@@ -7,5 +7,4 @@ LensFactory
 ```
 
 ```@docs
-cpu_vs_gpu
 ```

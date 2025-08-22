@@ -7,13 +7,13 @@ Testing :-)
 module LensFactory
 
 
-export cpu_vs_gpu
-"""
-    cpu_vs_gpu::Symbol = :cpu
+# export cpu_vs_gpu
+# """
+#     cpu_vs_gpu::Symbol = :cpu
 
-A symbol that controls whether computations run on CPU or GPU.
-"""
-cpu_vs_gpu::Symbol = :cpu
+# A symbol that controls whether computations run on CPU or GPU.
+# """
+# cpu_vs_gpu::Symbol = :cpu
 
 
 # Global constants
@@ -39,6 +39,8 @@ export Sources
 # Module for lens models
 include("./Lenses/Lenses.jl")
 export Lenses
+
+function plot_image_plane end
 
 
 end
