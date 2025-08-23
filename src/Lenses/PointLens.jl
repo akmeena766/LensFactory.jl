@@ -23,8 +23,8 @@ function potential!(ψ::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV
    dy::Float64 = 0.0
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
-   @inbounds for i in ax1
-      @inbounds for j in ax2
+   @inbounds for j in ax2
+      @inbounds for i in ax1
          dx = θx[i, j] - θxc + 1.0E-20
          dy = θy[i, j] - θyc + 1.0E-20
          ψ[i, j] = ψ[i, j] + θE2 * log(dx^2 + dy^2)
