@@ -40,7 +40,9 @@ export Sources
 include("./Lenses/Lenses.jl")
 export Lenses
 
+
 function plot_image_plane end
+function plot_surface_density end
 
 
 end

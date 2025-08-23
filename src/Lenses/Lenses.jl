@@ -386,7 +386,7 @@ function get_critical_curve(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float6
    # Get the zero eigenvalue contours
    critical_tan = ContourFinder.get_contour(θx, θy, 1.0 .- κ .- sqrt.(γ1.^2 .+ γ2.^2), 0)
    critical_rad = ContourFinder.get_contour(θx, θy, 1.0 .- κ .+ sqrt.(γ1.^2 .+ γ2.^2), 0)
-   println(critical_tan)
+
    return critical_tan, critical_rad   
 end
 
