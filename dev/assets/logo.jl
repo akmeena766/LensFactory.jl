@@ -100,7 +100,7 @@ function create_lensfactory_logo()
 	   return Point(x, y)
    end
 
-   sethue(RGB(0.0, 0.0, 0.0))#sethue(RGB(0.22, 0.596, 0.149))
+   sethue(RGB(1.0, 1.0, 1.0))#sethue(RGB(0.22, 0.596, 0.149))
    for j in axes(img,2)
       for i in axes(img,1)
          if img[i, j] == 1 
@@ -137,14 +137,14 @@ function create_lensfactory_logo()
 	end
 	
    setdash("solid")
-	sethue(RGB(0.0, 0.0, 0.0))#sethue(RGB(0.584, 0.345, 0.698))
+	sethue(RGB(1.0, 1.0, 1.0))#sethue(RGB(0.584, 0.345, 0.698))
 	setline(5)
 	
 	points = [scale_point2(t, y) for (t, y) in zip(ts, amps)]
 	poly(points, :stroke)
 
    # Weak lensing
-   sethue(RGB(0.0, 0.0, 0.0))#sethue(RGB(0.796, 0.235, 0.2))
+   sethue(RGB(1.0, 1.0, 1.0))#sethue(RGB(0.796, 0.235, 0.2))
    setline(2)
    # Draw ellipses at regular intervals around the circle
     num_ellipses = 12
