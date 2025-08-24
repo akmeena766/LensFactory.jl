@@ -224,7 +224,8 @@ end
 function LensFactory.plot_surface_density(lens::Lenses.AbstractLens, θx::ROA, θy::ROA; 
                               D_d::RV=NaN, adis::RV=NaN,
                               unit::Symbol = :kg_m2,
-                              figure_size::Tuple{Int, Int} = (500, 400),
+                              limit::NTuple{2, RV} = (0, 6),
+                              figure_size::NTuple{2, RV} = (500, 400),
                               plot_contour::Bool = false,
                               save_plot::Bool = false,
                               plot_name::String = "surface_density.png",
@@ -249,7 +250,7 @@ function LensFactory.plot_surface_density(lens::Lenses.AbstractLens, θx::ROA, �
    # Plot surface density
    hm = heatmap!(ax, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, log10.(Σ);
                                     colormap=:Greys, 
-                                    colorrange=(log10.(minimum(Σ)), 6))
+                                    colorrange=(limit[1], limit[2]))
 
    # Colorbar specification
    cb = Colorbar(fig[1, 2], hm; label=L"\text{Log_{10} Σ}", 

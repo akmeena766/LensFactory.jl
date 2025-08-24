@@ -19,6 +19,10 @@ using ..ContourFinder
 using ..IntersectionFinder
 
 
+include("../LensFactoryUtils/AreaFinder.jl")
+using .AreaFinder
+
+
 # Include the lens types files
 include("./lens_types.jl")
 include("./PointLens.jl")
@@ -35,6 +39,9 @@ export get_jacobian
 export get_time_delay
 export get_magnification
 export get_image
+export get_critical_curve
+export get_caustic
+export get_critical_area
 
 """
     get_meshgrid(θx::RV, θy::RV, dθ::RV) --> Tuple{Matrix{<:Float64}, Matrix{<:Float64}}
@@ -413,6 +420,20 @@ function get_caustic(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64)
       push!(caustics_rad, [[x, y] for (x, y) in zip(src_x, src_y)])
    end
    return caustics_tan, caustics_rad
+end
+
+
+function get_critical_area(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64)::Float64
+   area::Float64 = 0.0
+
+   # Get tangential critical curves
+   critical_tan, _ = get_critical_curve(lens, θx, θy, adis)
+
+   # Run a loop over all tangential critical curves
+   for curve in critical_tan
+      area += shoelace(curve)
+   end
+   return area
 end
 
 
