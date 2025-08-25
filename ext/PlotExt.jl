@@ -10,6 +10,9 @@ export plot_image_plane
 export plot_surface_density
 
 
+"""
+    LensFactory.plot_image_plane
+"""
 function LensFactory.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::RV; 
                            two_panel::Bool = false,
                            plot_caustic::Bool = true,
@@ -222,11 +225,13 @@ end
 
 
 function LensFactory.plot_surface_density(lens::Lenses.AbstractLens, θx::ROA, θy::ROA; 
-                              D_d::RV=NaN, adis::RV=NaN,
+                              D_d::RV=NaN, 
+                              adis::RV=NaN,
                               unit::Symbol = :kg_m2,
-                              limit::NTuple{2, RV} = (0, 6),
                               figure_size::NTuple{2, RV} = (500, 400),
+                              heatmap_kws::NamedTuple = (colormap=:cubehelix, colorrange=(0, 6)),
                               plot_contour::Bool = false,
+                              contour_kws::NamedTuple = (levels=0.5:0.2:1.5, labels=false),
                               save_plot::Bool = false,
                               plot_name::String = "surface_density.png",
                               resolution::Int = 2)
@@ -235,8 +240,24 @@ function LensFactory.plot_surface_density(lens::Lenses.AbstractLens, θx::ROA, �
    ψxx .*= adis
    ψyy .*= adis
 
+   if unit == :convergence
+      cb_label = L"\kappa"
+   elseif unit == :kg_m2
+      cb_label = L"\text{Log_{10} Σ (in kg/m}^2\text{)}"
+   elseif unit == :msun_pc2
+      cb_label = L"\text{Log_{10} Σ (in M}_{\odot}\text{/pc}^2\text{)}"
+   elseif unit == :msun_arcsec2
+      cb_label = L"\text{Log_{10} Σ (in M}_{\odot}\text{/arcsec}^2\text{)}"
+   else
+      error("Invalid unit: $unit. Must be :convergence or :kg_m2 or :msun_pc2 or :msun_arcsec2.")
+   end
+
    # Get critical density
-   Σ_cr = Lenses.get_critical_density(D_d=D_d, adis=adis, unit=unit)
+   if unit == :convergence
+      Σ_cr = 1.0
+   else
+      Σ_cr = Lenses.get_critical_density(D_d=D_d, adis=adis, unit=unit)
+   end
 
    # Get surface density
    Σ = 0.5 .* (ψxx .+ ψyy) .* Σ_cr
@@ -248,36 +269,18 @@ function LensFactory.plot_surface_density(lens::Lenses.AbstractLens, θx::ROA, �
    ax = Axis(fig[1, 1])
 
    # Plot surface density
-   hm = heatmap!(ax, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, log10.(Σ);
-                                    colormap=:Greys, 
-                                    colorrange=(limit[1], limit[2]))
-
-   # Colorbar specification
-   cb = Colorbar(fig[1, 2], hm; label=L"\text{Log_{10} Σ}", 
-                                    labelpadding=5, 
-                                    width=20, 
-                                    tickalign=1, 
-                                    ticksize=10, 
-                                    tickwidth=1.5, 
-                                    labelrotation=3*pi/2)
-   if unit == :kg_m2
-      cb.label = L"\text{Log_{10} Σ (in kg/m}^2\text{)}"
-   elseif unit == :msun_pc2
-      cb.label = L"\text{Log_{10} Σ (in M}_{\odot}\text{/pc}^2\text{)}"
-   elseif unit == :msun_arcsec2
-      cb.label = L"\text{Log_{10} Σ (in M}_{\odot}\text{/arcsec}^2\text{)}"
+   if unit == :convergence
+      hm = heatmap!(ax, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, Σ; heatmap_kws...)
    else
-      error("Invalid unit: $unit. Must be :kg_m2 or :msun_pc2 or :msun_arcsec2.")
+      hm = heatmap!(ax, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, log10.(Σ); heatmap_kws...)
    end
 
+   # Colorbar specification
+   cb = Colorbar(fig[1, 2], hm; label=cb_label, labelpadding=5, width=20, tickalign=1, ticksize=10, tickwidth=1.5, labelrotation=3*pi/2)
+   
    # Plot contours
    if plot_contour
-      levels = collect(0.5:0.5:2)
-      contour!(ax, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, Σ ./ Σ_cr; 
-                                    levels=levels, 
-                                    labels=true, 
-                                    color=:black,
-                                    labelsize = 15)
+      contour!(ax, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, Σ; contour_kws...)
    end
 
    # Set plot keywords

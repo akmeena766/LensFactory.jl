@@ -1,4 +1,4 @@
-module AreaFinder
+module PolygonOps
 
 export shoelace
 

@@ -8,3 +8,5 @@ LensFactory
 
 ```@docs
 ```
+
+## Citation

@@ -1,10 +1,16 @@
 using Documenter
 using LensFactory
+using Makie
 
-push!(LOAD_PATH,"../src/")
+push!(LOAD_PATH, "../src/")
 makedocs(
     sitename = "LensFactory.jl",
-    modules = [LensFactory, Constants, Cosmology, Lenses],
+    modules = [LensFactory, 
+                Constants, 
+                Cosmology, 
+                Lenses, 
+                Sources,
+                isdefined(Base, :get_extension) ? Base.get_extension(LensFactory, :PlotExt) : LensFactory.PlotExt],
     format = Documenter.HTML(;collapselevel = 1, prettyurls = get(ENV, "CI", nothing) == "true"),
     pages = [
             "Home" => "index.md",
@@ -17,6 +23,7 @@ makedocs(
                         "SIS Lens" => "SISLens.md"
                         ],
             "Sources" => "Sources.md",
+            "Plot Extension" => "PlotExt.md",
         ]
 )
 

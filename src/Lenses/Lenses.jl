@@ -19,8 +19,8 @@ using ..ContourFinder
 using ..IntersectionFinder
 
 
-include("../LensFactoryUtils/AreaFinder.jl")
-using .AreaFinder
+include("../LensFactoryUtils/PolygonOps.jl")
+using .PolygonOps
 
 
 # Include the lens types files
@@ -434,6 +434,11 @@ function get_critical_area(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64
       area += shoelace(curve)
    end
    return area
+end
+
+
+function get_einstein_angle(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64)::Float64
+   return √(get_critical_area(lens, θx, θy, adis) / π)
 end
 
 
