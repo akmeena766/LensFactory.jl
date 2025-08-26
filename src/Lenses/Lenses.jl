@@ -9,15 +9,19 @@ module Lenses
 
 # Julia inbuilt functions to import
 
-
 # LensFactory modules to use
 # import ..cpu_vs_gpu
 
 using ..Constants
 using ..Cosmology
-using ..ContourFinder
-using ..IntersectionFinder
 
+# Modules for contour finding on a 2D grid
+include("../LensFactoryUtils/ContourFinder.jl")
+using .ContourFinder
+
+# Module to get intersection points of two contours
+include("../LensFactoryUtils/IntersectionFinder.jl")
+using .IntersectionFinder
 
 include("../LensFactoryUtils/PolygonOps.jl")
 using .PolygonOps
@@ -306,16 +310,43 @@ function get_magnification_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::F
 end
 
 
-function get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Float64)::T where T <: Matrix{<:RV}
+function get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Float64; rays_per_pixel::Int64=1)::T where T <: Matrix{<:RV}
    # Deflection field
-   def_x, def_y = get_deflection_vector(lens, θ_x, θ_y)
+   αx, αy = get_deflection(lens, θx, θy)
 
-   # Get magnification map in image plane
-   μ_image = get_magnification(lens, θx, θy, adis)
+   # Pixel size
+   nx, ny = size(θx)
+   pixel_h::Float64 = abs(θx[2, 1] - θx[1, 1])
+
+   # Area per pixel in the image plane
+   area_per_ray::Float64 = 1.0 / rays_per_pixel
 
    # Initialize an empty source plane magnification map
-   μ_source::AbstractMatrix{<:RV} = zero(θ_x)
+   μ_source::AbstractMatrix{<:RV} = zero(θx)
 
+   ax1, ax2 = axes(θx, 1), axes(θx, 2)
+   @inbounds for _ in ax2
+      @inbounds  for _ in ax1
+         # Draw random pixel numbers equal to rays_per_pixel
+         rand_x = 1.0 .+ rand(Float64, rays_per_pixel) .* (nx - 1.0)
+         rand_y = 1.0 .+ rand(Float64, rays_per_pixel) .* (ny - 1.0)
+
+         for k in 1:rays_per_pixel
+            # Get the source plane position
+            βx = interpolation(rand_x[k], rand_y[k], θx) - adis * interpolation(rand_x[k], rand_y[k], αx)
+            βy = interpolation(rand_x[k], rand_y[k], θy) - adis * interpolation(rand_x[k], rand_y[k], αy)
+
+            # Get the corresponding pixel values
+            βx_p = round(Int64, βx/pixel_h + nx/2.0)
+            βy_p = round(Int64, βy/pixel_h + ny/2.0)
+
+            # make sure pixel position is within bounds
+            if (1 <= βx_p <= nx) && (1 <= βy_p <= ny)
+               μ_source[βx_p, βy_p] += area_per_ray
+            end
+         end
+      end
+   end
    return μ_source
 end
 
@@ -361,7 +392,7 @@ function get_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64, β::Ma
    image_map::Matrix{<:RV} = zero(θx)
 
    # Grid size
-   ny, nx = size(θx)
+   nx, ny = size(θx)
    pixel_h::Float64 = abs(θx[2, 1] - θx[1, 1])
 
    beta_x::Float64 = 0
@@ -458,6 +489,20 @@ function get_einstein_angle(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float6
 end
 
 
+function interpolation(x::Float64, y::Float64, df::Matrix{<:RV})::Float64
+   px::Int64 = floor(Int64, x)
+   py::Int64 = floor(Int64, y)
 
+   df_00::Float64 = df[px + 0, py + 0]
+   df_01::Float64 = df[px + 0, py + 1]
+   df_10::Float64 = df[px + 1, py + 0]
+   df_11::Float64 = df[px + 1, py + 1]
+
+   df_interpolated::Float64 = df_00 * (px + 1 - x) * (py + 1 - y) + 
+                              df_01 * (px + 1 - x) * (y - py - 0) +
+                              df_10 * (x - px - 0) * (py + 1 - y) + 
+                              df_11 * (x - px - 0) * (y - py - 0)
+   return df_interpolated
+end
 
 end

@@ -5,11 +5,6 @@ using LensFactory.Constants
 using Makie
 
 
-# Functions to export
-export plot_image_plane
-export plot_surface_density
-
-
 """
     LensFactory.plot_image_plane
 """
@@ -95,7 +90,7 @@ function LensFactory.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA, θy::
             heatmap!(ax2, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, image, 
                                        colormap=image_kws.heatmap)
          else
-            error("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}.")
+            ArgumentError("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}.")
          end
       end
 
@@ -223,10 +218,10 @@ function LensFactory.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA, θy::
    end
 end
 
-
-function LensFactory.plot_surface_density(lens::Lenses.AbstractLens, θx::ROA, θy::ROA; 
-                              D_d::RV=NaN, 
-                              adis::RV=NaN,
+"""
+    LensFactory.plot_surface_density
+"""
+function LensFactory.plot_surface_density(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64, D_d::Float64;
                               unit::Symbol = :kg_m2,
                               figure_size::NTuple{2, RV} = (500, 400),
                               heatmap_kws::NamedTuple = (colormap=:cubehelix, colorrange=(0, 6)),
@@ -249,7 +244,7 @@ function LensFactory.plot_surface_density(lens::Lenses.AbstractLens, θx::ROA, �
    elseif unit == :msun_arcsec2
       cb_label = L"\text{Log_{10} Σ (in M}_{\odot}\text{/arcsec}^2\text{)}"
    else
-      error("Invalid unit: $unit. Must be :convergence or :kg_m2 or :msun_pc2 or :msun_arcsec2.")
+      ArgumentError("Invalid unit: $unit. Must be :convergence or :kg_m2 or :msun_pc2 or :msun_arcsec2.")
    end
 
    # Get critical density
@@ -282,6 +277,49 @@ function LensFactory.plot_surface_density(lens::Lenses.AbstractLens, θx::ROA, �
    if plot_contour
       contour!(ax, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, Σ; contour_kws...)
    end
+
+   # Set plot keywords
+   set_plotKws!(ax)
+
+   # Set axis labels and limits
+   ax.xlabel = L"\theta_1 \text{(in arcseconds)}"
+   ax.ylabel = L"\theta_2 \text{(in arcseconds)}"
+   xlims!(minimum(θx) / ANGLE_ARCSEC, maximum(θx) / ANGLE_ARCSEC)
+   ylims!(minimum(θy) / ANGLE_ARCSEC, maximum(θy) / ANGLE_ARCSEC)
+
+   if save_plot
+      save(plot_name, fig, px_per_unit=resolution)
+   end
+   return fig, ax
+end
+
+
+function LensFactory.plot_magnification_map(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::RV;
+                              plane::Symbol = :image,
+                              rays_per_pixel::Int64 = 1,
+                              figure_size::NTuple{2, RV} = (500, 400),
+                              heatmap_kws::NamedTuple = (colormap=:binary, colorrange=(1, 100)),
+                              save_plot::Bool = false,
+                              plot_name::String = "magnification_map.png",
+                              resolution::Int = 2
+                              )
+   # Get the magnification map
+   if plane == :image
+      μ = Lenses.get_magnification_image(lens, θx, θy, adis)
+   elseif plane == :source
+      μ = Lenses.get_magnification_source(lens, θx, θy, adis, rays_per_pixel=rays_per_pixel)
+   else
+      ArgumentError("Invalid plane: $plane. Must be :image or :source.")
+   end
+
+   # Initialize empty figure
+   fig = Figure(size=figure_size, figure_padding=15, fontsize=20, fonts=(; regular="Times New Roman"))
+
+   # Axis for the plot
+   ax = Axis(fig[1, 1])
+
+   # Plot the magnification map
+   heatmap!(ax, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, abs.(μ); heatmap_kws...)
 
    # Set plot keywords
    set_plotKws!(ax)

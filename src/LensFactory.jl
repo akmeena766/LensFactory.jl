@@ -20,14 +20,6 @@ module LensFactory
 include("./LensFactoryUtils/Constants.jl")
 export Constants
 
-# Modules for contour finding on a 2D grid
-include("./LensFactoryUtils/ContourFinder.jl")
-export ContourFinder
-
-# Module to get intersection points of two contours
-include("./LensFactoryUtils/IntersectionFinder.jl")
-export IntersectionFinder
-
 # Module for cosmology
 include("./Cosmology/Cosmology.jl")
 export Cosmology
@@ -43,9 +35,11 @@ export Lenses
 
 export plot_image_plane
 export plot_surface_density
+export plot_magnification_map
 
 function plot_image_plane end
 function plot_surface_density end
+function plot_magnification_map end
 
 
 end
