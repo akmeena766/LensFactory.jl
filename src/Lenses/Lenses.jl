@@ -37,7 +37,8 @@ export get_potential
 export get_deflection
 export get_jacobian
 export get_time_delay
-export get_magnification
+export get_magnification_image
+export get_magnification_source
 export get_image
 export get_critical_curve
 export get_caustic
@@ -291,7 +292,7 @@ Calculates the magnification for a given lens model. The corresponding expressio
 \\mu = \\frac{1}{\\det \\mathcal{A}} = \\frac{1}{(1 - κ)^2 - γ^2}
 ```
 """
-function get_magnification(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64)::ROA
+function get_magnification_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64)::ROA
    # Get the jacobian components
    ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
 
@@ -302,6 +303,20 @@ function get_magnification(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64
 
    # Magnification is the inverse of the determinant of jacobian
    return 1.0 ./ (1.0 .+ ψxx .* ψyy .- ψxx .- ψyy .- ψxy.^2)
+end
+
+
+function get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Float64)::T where T <: Matrix{<:RV}
+   # Deflection field
+   def_x, def_y = get_deflection_vector(lens, θ_x, θ_y)
+
+   # Get magnification map in image plane
+   μ_image = get_magnification(lens, θx, θy, adis)
+
+   # Initialize an empty source plane magnification map
+   μ_source::AbstractMatrix{<:RV} = zero(θ_x)
+
+   return μ_source
 end
 
 
@@ -377,7 +392,7 @@ function get_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64, β::Ma
 end
 
 
-function get_critical_curve(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64)
+function get_critical_curve(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64)::Tuple{Vector{Vector{Vector{<:RV}}}, Vector{Vector{Vector{<:RV}}}}
    # Get the jacobian components
    ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
 
@@ -399,7 +414,7 @@ function get_critical_curve(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float6
 end
 
 
-function get_caustic(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64)
+function get_caustic(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64)::Tuple{Vector{Vector{Vector{<:RV}}}, Vector{Vector{Vector{<:RV}}}}
    # Generate critical curves
    critical_tan, critical_rad = get_critical_curve(lens, θx, θy, adis)
 
@@ -441,6 +456,8 @@ end
 function get_einstein_angle(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64)::Float64
    return √(get_critical_area(lens, θx, θy, adis) / π)
 end
+
+
 
 
 end
