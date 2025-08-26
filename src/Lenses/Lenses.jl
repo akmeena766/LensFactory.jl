@@ -42,6 +42,7 @@ export get_image
 export get_critical_curve
 export get_caustic
 export get_critical_area
+export get_einstein_angle
 
 """
     get_meshgrid(θx::RV, θy::RV, dθ::RV) --> Tuple{Matrix{<:Float64}, Matrix{<:Float64}}
