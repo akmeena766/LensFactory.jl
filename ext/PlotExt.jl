@@ -294,6 +294,9 @@ function LensFactory.plot_surface_density(lens::Lenses.AbstractLens, θx::ROA, �
 end
 
 
+"""
+    LensFactory.plot_magnification_map
+"""
 function LensFactory.plot_magnification_map(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::RV;
                               plane::Symbol = :image,
                               rays_per_pixel::Int64 = 1,
@@ -301,8 +304,7 @@ function LensFactory.plot_magnification_map(lens::Lenses.AbstractLens, θx::ROA,
                               heatmap_kws::NamedTuple = (colormap=:binary, colorrange=(1, 100)),
                               save_plot::Bool = false,
                               plot_name::String = "magnification_map.png",
-                              resolution::Int = 2
-                              )
+                              resolution::Int = 2)
    # Get the magnification map
    if plane == :image
       μ = Lenses.get_magnification_image(lens, θx, θy, adis)
@@ -337,6 +339,68 @@ function LensFactory.plot_magnification_map(lens::Lenses.AbstractLens, θx::ROA,
 end
 
 
+"""
+    LensFactory.plot_magnification_profile
+"""
+function LensFactory.plot_magnification_profile(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::RV;
+                              plane::Symbol = :image,
+                              mu_range::StepRange{<:RV, <:RV} = 1:5:500,
+                              unit::Float64 = ANGLE_ARCMIN^2,
+                              rays_per_pixel::Int64 = 1,
+                              figure_size::NTuple{2, RV} = (500, 400),
+                              plot_kws::NamedTuple = (color=:black, linewidth=2, linestyle=:solid),
+                              save_plot::Bool = false,
+                              plot_name::String = "magnification_profile.png",
+                              resolution::Int = 2)
+   # Get the magnification map
+   if plane == :image
+      μ = Lenses.get_magnification_image(lens, θx, θy, adis)
+   elseif plane == :source
+      μ = Lenses.get_magnification_source(lens, θx, θy, adis, rays_per_pixel=rays_per_pixel)
+   else
+      ArgumentError("Invalid plane: $plane. Must be :image or :source.")
+   end
+
+   # Pixel size
+   pixel_h::Float64 = abs(θx[2, 1] - θx[1, 1])
+
+   # Get the magnification bins
+   μ_bins = collect(mu_range)
+
+   # Flatten the magnification map and get the area for each bin
+   μ_flatten = abs.(vec(μ))
+   μ_area = [sum(μ_flatten .>= t) * pixel_h^2 for t in μ_bins]
+
+   # Convert to proper units
+   μ_area .*= 1.0 / unit
+
+   # Initialize empty figure
+   fig = Figure(size=figure_size, figure_padding=15, fontsize=20, fonts=(; regular="Times New Roman"))
+
+   # Axis for the plot
+   ax = Axis(fig[1, 1])
+
+   lines!(ax, μ_bins, μ_area; plot_kws...)
+
+   # Set plot keywords
+   set_plotKws!(ax)
+
+   # Set axis labels and limits
+   ax.xlabel = L"|\mu|"
+   ax.ylabel = L"\text{Area ≥ |μ| [arcmin^2]}"
+   xlims!(minimum(μ_bins), maximum(μ_bins))
+   ylims!(1E-5, maximum(μ_area)*2)
+
+   ax.xscale = log10
+   ax.yscale = log10
+
+   if save_plot
+      save(plot_name, fig, px_per_unit=resolution)
+   end
+   return fig, ax
+end
+
+
 function set_plotKws!(ax)
    ax.xtickalign = 1
    ax.xticksmirrored = true
@@ -357,5 +421,6 @@ function set_plotKws!(ax)
    ax.yticksize = 10
    ax.ytickwidth = 2
 end
+
 
 end

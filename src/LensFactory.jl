@@ -36,10 +36,11 @@ export Lenses
 export plot_image_plane
 export plot_surface_density
 export plot_magnification_map
+export plot_magnification_profile
 
 function plot_image_plane end
 function plot_surface_density end
 function plot_magnification_map end
-
+function plot_magnification_profile end
 
 end
