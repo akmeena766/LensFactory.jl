@@ -26,6 +26,8 @@ export Sources
 include("./Lenses/Lenses.jl")
 export Lenses
 
+include("./LensFactoryUtils/PolygonOps.jl")
+export PolygonOps
 
 export plot_image_plane
 export plot_surface_density

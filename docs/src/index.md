@@ -5,9 +5,8 @@
 [![arXiv aaaa.bbbbb](https://img.shields.io/badge/arXiv-aaaa.bbbbb%20-yellowgreen.svg)](https://arxiv.org/abs/aaaa.bbbbb)
 
 ---
-
 ## Installation
-To install, activate the `pkg` mode by typing `]` in julia REPL and type:
+To install, activate `pkg` mode by pressing `]` in julia REPL and then type:
 
 ```julia-repl
 pkg> add LensFactory
@@ -17,5 +16,8 @@ Then, to use the `LensFactory` package in your current session, type:
 julia> using LensFactory
 ```
 
+---
+## Examples
 
+---
 ## Citation

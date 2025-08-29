@@ -6,7 +6,19 @@ using Makie
 
 
 """
-    LensFactory.plot_image_plane
+    LensFactory.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::RV)
+# keyword arguments and their default values
+- `two_panel::Bool = false` -- Whether to create a two-panel plot with source plane on the left and image plane on the right.
+- `plot_caustic::Bool = true` -- Whether to plot the caustics.
+- `caustic_kws::NamedTuple = (color_tan = :green, color_rad = :green, linewidth = 2)`
+- `plot_critical::Bool =true`
+- `critical_kws::NamedTuple = (color_tan = :red, color_rad = :red, linewidth = 2)`
+- `source::Union{Nothing, NTuple{2, RV}, Matrix{<:RV}} = nothing`
+- `source_kws::NamedTuple = (color=:red, markersize=10, marker=:star5, heatmap=cgrad([:white, :blue]))`
+- `image_kws::NamedTuple = (color=:blue, markersize=10, marker=:star5, heatmap=cgrad([:white, :red]))`
+- `save_plot::Bool = false`
+- `plot_name::String = "image_plane.png"`
+- `resolution::Int = 2`
 """
 function LensFactory.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::RV; 
                            two_panel::Bool = false,
