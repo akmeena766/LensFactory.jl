@@ -19,6 +19,7 @@ julia> using LensFactory
 
 ---
 ## Examples
+To understand the use of various modules and functtions in `LensFactory`, readers are encouraged to go through the examples here: [LensFactory_Examples](https://github.com/akmeena766/LensFactory_Examples.git).
 
 ---
 ## Citation

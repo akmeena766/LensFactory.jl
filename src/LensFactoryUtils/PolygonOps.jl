@@ -22,8 +22,12 @@ end
 
 function hao_sun(point, polygon)
    """
-   Algorithm by Hao and Sun (2018):
-   https://doi.org/10.3390/sym10100477
+   Algorithm to find determine if a point is in the given polygon.
+   Taken from Hao and Sun (2018): https://doi.org/10.3390/sym10100477
+   outputs:
+      -1: on the edge
+       0: outside
+       1: inside
    """
    
    k = 0
