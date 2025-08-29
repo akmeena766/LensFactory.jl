@@ -10,7 +10,7 @@ makedocs(
                 Cosmology, 
                 Lenses, 
                 Sources,
-                isdefined(Base, :get_extension) ? Base.get_extension(LensFactory, :PlotExt) : LensFactory.PlotExt],
+                Base.get_extension(LensFactory, :PlotExt)],
     format = Documenter.HTML(;collapselevel = 1, prettyurls = get(ENV, "CI", nothing) == "true"),
     pages = [
             "Home" => "index.md",
@@ -24,6 +24,7 @@ makedocs(
                         ],
             "Sources" => "Sources.md",
             "Plot Extension" => "PlotExt.md",
+            "History" => "History.md",
         ]
 )
 
