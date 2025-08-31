@@ -2,7 +2,6 @@ using Documenter
 using LensFactory
 using Makie
 
-push!(LOAD_PATH, "../src/")
 makedocs(
     sitename = "LensFactory.jl",
     modules = [LensFactory, 
@@ -31,7 +30,8 @@ makedocs(
 # Documenter can also automatically deploy documentation to gh-pages.
 # See "Hosting Documentation" and deploydocs() in the Documenter manual
 # for more information.
-deploydocs(
+deploydocs(;
     repo = "github.com/akmeena766/LensFactory.jl.git",
-    devbranch = "main"
+    devbranch = "main",
+    branch = "gh-pages"
 )

@@ -4,14 +4,17 @@
 [![codecov.io](http://codecov.io/github/akmeena766/LensFactory.jl/coverage.svg?branch=main)](http://codecov.io/github/akmeena766/LensFactory.jl?branch=main)
 [![arXiv aaaa.bbbbb](https://img.shields.io/badge/arXiv-aaaa.bbbbb%20-yellowgreen.svg)](https://arxiv.org/abs/aaaa.bbbbb)
 
+
+---
+## Introduction
+
 ---
 ## Installation
-To install, activate `pkg` mode by pressing `]` in julia REPL and then type:
-
+To install, activate `pkg` mode by pressing `]` in julia REPL and then type: 
 ```julia-repl
 pkg> add LensFactory
 ```
-Then, to use the `LensFactory` package in your current session, type:
+To use the `LensFactory` package in your current julia session, type: 
 ```julia-repl
 julia> using LensFactory
 ```
