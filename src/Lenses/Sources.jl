@@ -17,8 +17,7 @@ export gaussian
 
 Creates a disk source profile of radius ``r`` on a grid defined by ``[θ_x, θ_y]``. 
 The center of the disk is at ``\\pmb{β} = (β_x, β_y)``. By default, the source profile is constant and every
-pixel has a value of 1.0 and we can scale it using the amplitude ``A``.
-
+pixel has a value of 1.0 and we can scale it using the amplitude ``A``. The corresponding formula is:
 ```math
 S(θ_x, θ_y) =
 \\begin{cases}
@@ -52,7 +51,7 @@ end
 
 Creates a Gaussian source profile on a grid defined by ``[θ_x, θ_y]``. Standard deviations along 
 ``(x, y)`` axis are given by ``(σ_x, σ_y)``. The center of the Gaussian is at ``\\pmb{β} = (β_x, β_y)``. 
-The overall normalization is determined by ``A``. The 
+The overall normalization is determined by ``A``. The corresponding formula is:
 ```math
 S(θ_x, θ_y) = \\frac{A}{2 π σ_x σ_y} \\exp\\left[-\\frac{1}{2} \\left(\\frac{(θ_x - β_x)^2}{σ_x^2} + \\frac{(θ_y - β_y)^2}{σ_y^2}\\right)\\right]
 ```
