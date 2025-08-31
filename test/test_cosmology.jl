@@ -1,6 +1,6 @@
 @testset "Cosmology" begin
    @testset "flat LCDM" begin
-      # Tests for default flat LCDM cosmology module (AGAINST ASTROPY)
+      # Tests for default flat (Ωk = 0) LCDM cosmology module (AGAINST ASTROPY)
       cosmo = Cosmology.init_cosmology()
       z = 1.0
 
@@ -21,13 +21,15 @@
       @test Cosmology.comoving_distance_radial(cosmo, 0.0, z)/Constants.DIST_MPC ≈ 3303.8288058874678
       @test Cosmology.luminosity_distance(cosmo, z)/Constants.DIST_MPC ≈ 6607.6576117749355
       @test Cosmology.angular_diameter_distance(cosmo, 0.0, z)/Constants.DIST_MPC ≈ 1651.9144029437339
+      @test Cosmology.distance_modulus(cosmo, z) ≈ 44.10023765554372
+      @test Cosmology.angular_scale(cosmo, z) ≈ 8.008707025690128
 
       @test Cosmology.comoving_volume_element(cosmo, z) ≈ 26.550755712253192
       @test Cosmology.comoving_volume(cosmo, z) ≈ 151.05712532061932
    end
 
    @testset "open LCDM" begin
-      # Tests for default flat LCDM cosmology module (AGAINST ASTROPY)
+      # Tests for open (Ωk > 0) LCDM cosmology module (AGAINST ASTROPY)
       cosmo = Cosmology.init_cosmology(Omega_m0=0.26)
       z = 1.0
 
@@ -49,7 +51,7 @@
    end
 
    @testset "closed CDM" begin
-      # Tests for default flat LCDM cosmology module (AGAINST ASTROPY)
+      # Tests for closed (Ωk < 0) LCDM cosmology module (AGAINST ASTROPY)
       cosmo = Cosmology.init_cosmology(Omega_m0=0.34)
       z = 1.0
 

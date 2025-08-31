@@ -80,16 +80,16 @@ end
 
 
 """
-    get_critical_density(Dd::RV, Dds::RV, Ds::RV; unit="kg_m2")::RV
+    get_critical_density(Dd::RV, Dds::RV, Ds::RV; unit::Symbol=:kg_m2)::RV
 
 Calculate the critical surface density,
 ```math
 Σ_{\\rm cr} = \\frac{c^2}{4 π {\\rm G}} \\frac{D_s}{D_d D_{ds}},
 ```
 given the angular diameter distances. The result can be returned in different units,
-- "kg\\_m2" ``\\Rightarrow{\\rm kg/m^2}``, 
-- "msun\\_pc2" ``\\Rightarrow{\\rm M_⊙/pc^2}``, 
-- "msun\\_arcsec2" ``\\Rightarrow{\\rm M_⊙/arcsec^2}``.
+- `:kg_m2` ``\\Rightarrow{\\rm kg/m^2}``, 
+- `:msun_pc2` ``\\Rightarrow{\\rm M_⊙/pc^2}``, 
+- `:msun_arcsec2` ``\\Rightarrow{\\rm M_⊙/arcsec^2}``.
 """   
 function get_critical_density(; D_d::RV=NaN, adis::RV=NaN, unit::Symbol=:kg_m2)::RV
    # Calculate Σ_cr in kg/m^2
