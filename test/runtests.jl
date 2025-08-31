@@ -1,4 +1,5 @@
 using Test
-using LensFactory
+using LensFactory, LensFactory.Constants
 
 include("./test_cosmology.jl")
+include("./test_constants.jl")
