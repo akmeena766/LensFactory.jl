@@ -12,7 +12,6 @@ export einstein_angle
 
 """
     potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
-
 ```math
 ψ(\\pmb{θ}) = 4 π \\left(\\frac{v_d}{c} \\right)^2 |\\pmb{θ} - \\pmb{θ}_c|
 ```
@@ -35,6 +34,9 @@ end
 
 """
     deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
+```math
+\\pmb{\\hat{α}} (\\pmb{θ}) = 4 π \\left(\\frac{v_d}{c} \\right)^2 \\frac{\\pmb{θ} - \\pmb{θ}_c}{|\\pmb{θ} - \\pmb{θ}_c|}
+```
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
    θE::Float64 = 4.0 * pi * (vd / CONST_C)^2 
@@ -58,6 +60,11 @@ end
 
 """
     jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
+```math
+ψ_{xx} (\\pmb{θ}) = 4 π \\left(\\frac{v_d}{c} \\right)^2 \\frac{(\\pmb{θ}_y - \\pmb{θ}_{yc})^2}{|\\pmb{θ} - \\pmb{θ}_c|^3} \\\\
+ψ_{yy} (\\pmb{θ}) = 4 π \\left(\\frac{v_d}{c} \\right)^2 \\frac{(\\pmb{θ}_x - \\pmb{θ}_{xc})^2}{|\\pmb{θ} - \\pmb{θ}_c|^3} \\\\
+ψ_{xy} (\\pmb{θ}) = 4 π \\left(\\frac{v_d}{c} \\right)^2 \\frac{- \\: (\\pmb{θ}_x - \\pmb{θ}_{xc}) \\: (\\pmb{θ}_y - \\pmb{θ}_{yc})}{|\\pmb{θ} - \\pmb{θ}_c|^3}
+```
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
    θE::Float64 = 4.0 * pi * (vd / CONST_C)^2 

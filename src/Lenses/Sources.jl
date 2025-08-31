@@ -1,6 +1,5 @@
 """
     Sources
-Testing :-)
 """
 module Sources
 

@@ -1,8 +1,5 @@
 """
     Cosmology
-
-Testing :-)
-
 """
 module Cosmology
 

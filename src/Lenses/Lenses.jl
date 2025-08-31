@@ -1,8 +1,5 @@
 """
     Lenses
-
-Testing :-)
-
 """
 module Lenses
 

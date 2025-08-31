@@ -10,7 +10,8 @@ makedocs(
                 Lenses, 
                 Sources,
                 Base.get_extension(LensFactory, :PlotExt)],
-    format = Documenter.HTML(;collapselevel = 1, prettyurls = get(ENV, "CI", nothing) == "true"),
+    format = Documenter.HTML(;collapselevel = 1, 
+                              prettyurls = get(ENV, "CI", nothing) == "true"),
     pages = [
             "Home" => "index.md",
             "Constants" => "Constants.md",

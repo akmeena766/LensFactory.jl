@@ -1,8 +1,5 @@
 """
     Constants
-
-Testing :-)
-
 """
 module Constants
 
