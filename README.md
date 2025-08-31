@@ -19,7 +19,14 @@ julia> using LensFactory
 
 ---
 ## Examples
-To understand the use of various modules and functtions in `LensFactory`, readers are encouraged to go through the examples here: [LensFactory_Examples](https://github.com/akmeena766/LensFactory_Examples.git).
+To understand the use of various modules and functtions in `LensFactory`, readers are encouraged to
+go through the examples here: [LensFactory_Examples](https://github.com/akmeena766/LensFactory_Examples.git).
+
+
+---
+## Feedback
+I would be very happy to receive any suggestions, comments, or questions regarding `LensFactory`.
+Please feel free to drop an email to: [ashishmeena766@gmail.com](mailto:ashishmeena766@gmail.com) 
 
 ---
 ## Citation

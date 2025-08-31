@@ -7,20 +7,21 @@ using Makie
 
 """
     LensFactory.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::RV)
-# keyword arguments and their default values
-- `two_panel::Bool = false` -- Whether to create a two-panel plot with source plane on the left and image plane on the right.
-- `plot_caustic::Bool = true` -- Whether to plot the caustics.
-- `caustic_kws::NamedTuple = (color_tan = :green, color_rad = :green, linewidth = 2)`
+
+# Additional keyword arguments and their default values
+- `two_panel::Bool = false` -- Whether to create a two-panel plot with source plane on the left and image plane on the right
+- `plot_caustic::Bool = true`
+   - `caustic_kws::NamedTuple = (color_tan = :green, color_rad = :green, linewidth = 2)`
 - `plot_critical::Bool =true`
-- `critical_kws::NamedTuple = (color_tan = :red, color_rad = :red, linewidth = 2)`
+   - `critical_kws::NamedTuple = (color_tan = :red, color_rad = :red, linewidth = 2)`
 - `source::Union{Nothing, NTuple{2, RV}, Matrix{<:RV}} = nothing`
-- `source_kws::NamedTuple = (color=:red, markersize=10, marker=:star5, heatmap=cgrad([:white, :blue]))`
-- `image_kws::NamedTuple = (color=:blue, markersize=10, marker=:star5, heatmap=cgrad([:white, :red]))`
+   - `source_kws::NamedTuple = (color=:red, markersize=10, marker=:star5, heatmap=cgrad([:white, :blue]))`
+   - `image_kws::NamedTuple = (color=:blue, markersize=10, marker=:star5, heatmap=cgrad([:white, :red]))`
 - `save_plot::Bool = false`
-- `plot_name::String = "image_plane.png"`
-- `resolution::Int = 2`
+   - `plot_name::String = "image_plane.png"`
+   - `resolution::Int = 2`
 """
-function LensFactory.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::RV; 
+function LensFactory.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64; 
                            two_panel::Bool = false,
                            plot_caustic::Bool = true,
                            caustic_kws::NamedTuple = (color_tan = :green, color_rad = :green, linewidth = 2),
@@ -231,7 +232,17 @@ function LensFactory.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA, θy::
 end
 
 """
-    LensFactory.plot_surface_density
+    LensFactory.plot_surface_density(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64, D_d::Float64)
+
+# Additional keyword arguments and their default values
+- `unit::Symbol = :kg_m2` -- Unit for surface density. Options are :convergence, :kg_m2, :msun_pc2, :msun_arcsec2
+- `figure_size::NTuple{2, RV} = (500, 400)`
+- `heatmap_kws::NamedTuple = (colormap=:cubehelix, colorrange=(0, 6))`
+- `plot_contour::Bool = false`
+   - `contour_kws::NamedTuple = (levels=0.5:0.2:1.5, labels=false)`
+- `save_plot::Bool = false`
+   - `plot_name::String = "surface_density.png"`
+   - `resolution::Int = 2`
 """
 function LensFactory.plot_surface_density(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64, D_d::Float64;
                               unit::Symbol = :kg_m2,
@@ -284,6 +295,7 @@ function LensFactory.plot_surface_density(lens::Lenses.AbstractLens, θx::ROA, �
 
    # Colorbar specification
    cb = Colorbar(fig[1, 2], hm; label=cb_label, labelpadding=5, width=20, tickalign=1, ticksize=10, tickwidth=1.5, labelrotation=3*pi/2)
+   colgap!(fig.layout, 5)
    
    # Plot contours
    if plot_contour
@@ -307,9 +319,18 @@ end
 
 
 """
-    LensFactory.plot_magnification_map
+    LensFactory.plot_magnification_map(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64)
+
+# Additional keyword arguments and their default values
+- `plane::Symbol = :image` -- Whether to plot |μ| map in `:image` or `:source` plane
+- `rays_per_pixel::Int64 = 1` -- Only relevant if `plane = :source`
+- `figure_size::NTuple{2, RV} = (500, 400)`
+- `heatmap_kws::NamedTuple = (colormap=:binary, colorrange=(1, 100))`
+- `save_plot::Bool = false`
+   - `plot_name::String = "magnification_map.png"`
+   - `resolution::Int = 2`
 """
-function LensFactory.plot_magnification_map(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::RV;
+function LensFactory.plot_magnification_map(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64;
                               plane::Symbol = :image,
                               rays_per_pixel::Int64 = 1,
                               figure_size::NTuple{2, RV} = (500, 400),
@@ -333,7 +354,11 @@ function LensFactory.plot_magnification_map(lens::Lenses.AbstractLens, θx::ROA,
    ax = Axis(fig[1, 1])
 
    # Plot the magnification map
-   heatmap!(ax, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, abs.(μ); heatmap_kws...)
+   hm = heatmap!(ax, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, abs.(μ); heatmap_kws...)
+
+   # Colorbar specification
+   cb = Colorbar(fig[1, 2], hm; label=L"|μ|", labelpadding=5, width=20, tickalign=1, ticksize=10, tickwidth=1.5, labelrotation=3*pi/2)
+   colgap!(fig.layout, 5)
 
    # Set plot keywords
    set_plotKws!(ax)
@@ -352,13 +377,24 @@ end
 
 
 """
-    LensFactory.plot_magnification_profile
+    LensFactory.plot_magnification_profile(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64)
+
+# Additional keyword arguments and their default values
+- `plane::Symbol = :image` -- Whether to plot |μ| map in `:image` or `:source` plane
+- `rays_per_pixel::Int64 = 1` -- Only relevant if `plane = :source`
+- `mu_range::StepRange{<:RV, <:RV} = 1:5:500`
+- `unit::Float64 = ANGLE_ARCMIN^2`
+- `figure_size::NTuple{2, RV} = (500, 400)`
+- `plot_kws::NamedTuple = (color=:black, linewidth=2, linestyle=:solid)`
+- `save_plot::Bool = false`
+   - `plot_name::String = "magnification_profile.png"`
+   - `resolution::Int = 2`
 """
-function LensFactory.plot_magnification_profile(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::RV;
+function LensFactory.plot_magnification_profile(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64;
                               plane::Symbol = :image,
+                              rays_per_pixel::Int64 = 1,
                               mu_range::StepRange{<:RV, <:RV} = 1:5:500,
                               unit::Float64 = ANGLE_ARCMIN^2,
-                              rays_per_pixel::Int64 = 1,
                               figure_size::NTuple{2, RV} = (500, 400),
                               plot_kws::NamedTuple = (color=:black, linewidth=2, linestyle=:solid),
                               save_plot::Bool = false,

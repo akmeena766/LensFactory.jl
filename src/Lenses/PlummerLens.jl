@@ -25,8 +25,8 @@ function potential!(ψ::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
-         dx = θx[i, j] - θxc + 1.0E-20
-         dy = θy[i, j] - θyc + 1.0E-20
+         dx = θx[i, j] - θxc
+         dy = θy[i, j] - θyc
          ψ[i, j] = ψ[i, j] + θE2 * log(θs^2 + dx^2 + dy^2)
       end
    end
@@ -49,8 +49,8 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
-         dx = θx[i, j] - θxc + 1.0E-20
-         dy = θy[i, j] - θyc + 1.0E-20
+         dx = θx[i, j] - θxc
+         dy = θy[i, j] - θyc
          θr = θs^2 + dx^2 + dy^2
          ψx[i, j] = ψx[i, j] + θE2 * dx / θr
          ψy[i, j] = ψy[i, j] + θE2 * dy / θr
@@ -78,8 +78,8 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, Dol::RV, θxc::RV,
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
-         dx = θx[i, j] - θxc + 1.0E-20
-         dy = θy[i, j] - θyc + 1.0E-20
+         dx = θx[i, j] - θxc
+         dy = θy[i, j] - θyc
          θr = (θs^2 + dx^2 + dy^2)^2
          ψxx[i, j] = ψxx[i, j] + θE2 * (θs^2 - dx^2 + dy^2) / θr
          ψyy[i, j] = ψyy[i, j] + θE2 * (θs^2 + dx^2 - dy^2) / θr
