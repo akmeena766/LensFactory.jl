@@ -7,13 +7,17 @@
 [![arXiv aaaa.bbbbb](https://img.shields.io/badge/arXiv-aaaa.bbbbb%20-yellowgreen.svg)](https://arxiv.org/abs/aaaa.bbbbb)
 
 ---
-## Installation
-To install, activate `pkg` mode by pressing `]` in julia REPL and then type:
+## Introduction
+`LensFactory` is a gravitational lensing package developed in julia. At present it has support for 
+basic lensing and as we go along it is expected to have more features.
 
+---
+## Installation
+To install, activate `pkg` mode by pressing `]` in julia REPL and then type: 
 ```julia-repl
 pkg> add LensFactory
 ```
-To use the `LensFactory` package in your current julia session, type:
+To use the `LensFactory` package in your current julia session, type: 
 ```julia-repl
 julia> using LensFactory
 ```
