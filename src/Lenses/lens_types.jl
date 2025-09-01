@@ -31,8 +31,8 @@ Initialize a Plummer lens with the given parameters.
    D_d::Real = NaN
    x_c::Real = 0.0
    y_c::Real = 0.0
-   x_s::Real = NaN
    mass::Real= NaN
+   x_s::Real = NaN
 end
 
 
@@ -50,34 +50,45 @@ Initialize a Singular Isothermal Sphere (SIS) lens with the given parameters.
 end
 
 
+"""
+    init_NSISPLens(x_c::Real=0.0, y_c::Real=0.0, v_d::Real=NaN, x_s::Real=NaN)
+
+Initialize a Non-Singular Isothermal Sphere potential (NSISP) lens with the given parameters.
+"""
+@kwdef struct init_NSISPLens <: AbstractLens
+   _lens_::Symbol = :NSISPLens
+   _lid_::Int = 4
+   D_d::Real = NaN
+   x_c::Real = 0.0
+   y_c::Real = 0.0
+   v_d::Real = NaN
+   x_s::Real = NaN
+end
+
+
+"""
+    init_NSISMDLens(x_c::Real=0.0, y_c::Real=0.0, v_d::Real=NaN, x_s::Real=NaN)
+
+Initialize a Non-Singular Isothermal Sphere mass distribution (NSISMD) lens with the given parameters.
+"""
+@kwdef struct init_NSISMDLens <: AbstractLens
+   _lens_::Symbol = :NSISMDLens
+   _lid_::Int = 5
+   D_d::Real = NaN
+   x_c::Real = 0.0
+   y_c::Real = 0.0
+   v_d::Real = NaN
+   x_s::Real = NaN
+end
+
+
+
 @kwdef struct init_ExternalEffects <: AbstractLens
    _lens_::String = "ExternalEffects"
    _lid_::Int = 1
    k_ext::Real  = NaN
    g1_ext::Real = NaN
    g2_ext::Real = NaN
-end
-
-
-@kwdef struct init_NSISPLens <: AbstractLens
-   _lens_::String = "NSISPLens"
-   _lid_::Int = 5
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   x_s::Real = NaN
-   v_d::Real = NaN
-end
-
-
-@kwdef struct init_NSISMDLens <: AbstractLens
-   _lens_::String = "NSISMDLens"
-   _lid_::Int = 6
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   x_s::Real = NaN
-   v_d::Real = NaN
 end
 
 
@@ -329,7 +340,8 @@ end
 const lens_init_functions = Dict(
    :PointLens       => (init_PointLens,        [:D_d, :x_c, :y_c, :mass]),
    :PlummerLens     => (init_PlummerLens,      [:D_d, :x_c, :y_c, :mass, :x_s]),
-   :SISLens         => (init_SISLens,          [:x_c, :y_c, :v_d])
+   :SISLens         => (init_SISLens,          [:x_c, :y_c, :v_d]),
+   :NSISPLens       => (init_NSISPLens,        [:D_d, :x_c, :y_c, :v_d, :θ_s]),
    )
 # Constructor for composite lens
 function init_CompositeLens(lens::Vector{<:NamedTuple})

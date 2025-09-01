@@ -11,16 +11,19 @@ makedocs(
                 Sources,
                 Base.get_extension(LensFactory, :PlotExt)],
     format = Documenter.HTML(;collapselevel = 1, 
-                              prettyurls = get(ENV, "CI", nothing) == "true"),
+                            assets = ["assets/custom.css"],
+                            prettyurls = get(ENV, "CI", nothing) == "true"),
     pages = [
             "Home" => "index.md",
             "Constants" => "Constants.md",
             "Cosmology" => "Cosmology.md",
             "Lenses" => [
-                        "Basics" => "Lenses.md",
-                        "Point Lens" => "PointLens.md",
+                        "Basics"       => "Lenses.md",
+                        "Point Lens"   => "PointLens.md",
                         "Plummer Lens" => "PlummerLens.md",
-                        "SIS Lens" => "SISLens.md"
+                        "SIS Lens"     => "SISLens.md",
+                        "NSISP Lens"   => "NSISPLens.md",
+                        "NSISMD Lens"  => "NSISMDLens.md"
                         ],
             "Sources" => "Sources.md",
             "Plot Extension" => "PlotExt.md",

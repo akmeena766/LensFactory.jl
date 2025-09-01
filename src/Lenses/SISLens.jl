@@ -18,6 +18,7 @@ export einstein_angle
 """
 function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
    θE::Float64 = 4.0 * pi * (vd / CONST_C)^2
+   
    dx::Float64 = 0.0
    dy::Float64 = 0.0
 
@@ -35,7 +36,8 @@ end
 """
     deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
 ```math
-\\pmb{\\hat{α}} (\\pmb{θ}) = 4 π \\left(\\frac{v_d}{c} \\right)^2 \\frac{\\pmb{θ} - \\pmb{θ}_c}{|\\pmb{θ} - \\pmb{θ}_c|}
+\\pmb{\\hat{α}} (\\pmb{θ}) = 4 π \\left(\\frac{v_d}{c} \\right)^2 
+                              \\frac{\\pmb{θ} - \\pmb{θ}_c}{|\\pmb{θ} - \\pmb{θ}_c|}
 ```
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
@@ -61,9 +63,14 @@ end
 """
     jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
 ```math
-ψ_{xx} (\\pmb{θ}) = 4 π \\left(\\frac{v_d}{c} \\right)^2 \\frac{(\\pmb{θ}_y - \\pmb{θ}_{yc})^2}{|\\pmb{θ} - \\pmb{θ}_c|^3} \\\\
-ψ_{yy} (\\pmb{θ}) = 4 π \\left(\\frac{v_d}{c} \\right)^2 \\frac{(\\pmb{θ}_x - \\pmb{θ}_{xc})^2}{|\\pmb{θ} - \\pmb{θ}_c|^3} \\\\
-ψ_{xy} (\\pmb{θ}) = 4 π \\left(\\frac{v_d}{c} \\right)^2 \\frac{- \\: (\\pmb{θ}_x - \\pmb{θ}_{xc}) \\: (\\pmb{θ}_y - \\pmb{θ}_{yc})}{|\\pmb{θ} - \\pmb{θ}_c|^3}
+\\begin{align*}
+ψ_{xx} (\\pmb{θ}) &= 4 π \\left(\\frac{v_d}{c} \\right)^2 
+                     \\frac{(\\pmb{θ}_y - \\pmb{θ}_{yc})^2}{|\\pmb{θ} - \\pmb{θ}_c|^3} \\\\[5pt]
+ψ_{yy} (\\pmb{θ}) &= 4 π \\left(\\frac{v_d}{c} \\right)^2 
+                     \\frac{(\\pmb{θ}_x - \\pmb{θ}_{xc})^2}{|\\pmb{θ} - \\pmb{θ}_c|^3} \\\\[5pt]
+ψ_{xy} (\\pmb{θ}) &= 4 π \\left(\\frac{v_d}{c} \\right)^2 
+                     \\frac{- \\: (\\pmb{θ}_x - \\pmb{θ}_{xc}) \\: (\\pmb{θ}_y - \\pmb{θ}_{yc})}{|\\pmb{θ} - \\pmb{θ}_c|^3}
+\\end{align*}
 ```
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
@@ -89,13 +96,12 @@ end
 
 """
     einstein_angle(Dds::RV, Ds::RV, vd::RV)::RV
-
 ```math
 θ_E = 4 π \\frac{D_{ds}}{D_s} \\left(\\frac{v_d}{c} \\right)^2
 ```
 """
 function einstein_angle(Dds::RV, Ds::RV, vd::RV)::RV
-   return 4.0 * pi * ( vd / CONST_C )^2 * (Dds / Ds)
+   return 4π * (vd / CONST_C)^2 * (Dds / Ds)
 end
 
 end

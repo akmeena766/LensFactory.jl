@@ -27,6 +27,8 @@ include("./lens_types.jl")
 include("./PointLens.jl")
 include("./SISLens.jl")
 include("./PlummerLens.jl")
+include("./NSISPLens.jl")
+include("./NSISMDLens.jl")
 
 
 # Various lensing function to export
@@ -108,9 +110,11 @@ end
 
 # Define lens_map globally (module-level or script-level)
 const lens_map = Dict(
-   :PointLens => (PointLens,     [:D_d, :x_c, :y_c, :mass]),
-   :PlummerLens => (PlummerLens, [:D_d, :x_c, :y_c, :mass, :x_s]),
-   :SISLens   => (SISLens,       [:x_c, :y_c, :v_d])
+   :PointLens   => (PointLens,     [:D_d, :x_c, :y_c, :mass]),
+   :PlummerLens => (PlummerLens,   [:D_d, :x_c, :y_c, :mass, :x_s]),
+   :SISLens     => (SISLens,       [:x_c, :y_c, :v_d]),
+   :NSISPLens   => (NSISPLens,     [:x_c, :y_c, :v_d, :θ_s]),
+   :NSISMDLens   => (NSISMDLens,     [:x_c, :y_c, :v_d, :θ_s])
 )
 function potential_helper!(ψ::ROA, lens::AbstractLens, θx::ROA, θy::ROA)
    # Check if the lens type is in the lens_map otherwise throw an error
