@@ -12,11 +12,11 @@ Initialize a point lens with the given parameters.
 """
 @kwdef struct init_PointLens <: AbstractLens
    _lens_::Symbol = :PointLens
-   _lid_::Int = 1
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   mass::Real= NaN
+   _lid_::Int64 = 1
+   D_d::RV  = NaN
+   x_c::RV  = 0.0
+   y_c::RV  = 0.0
+   mass::RV = NaN
 end
 
 
@@ -27,12 +27,12 @@ Initialize a Plummer lens with the given parameters.
 """
 @kwdef struct init_PlummerLens <: AbstractLens
    _lens_::Symbol = :PlummerLens
-   _lid_::Int = 2
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   mass::Real= NaN
-   x_s::Real = NaN
+   _lid_::Int64 = 2
+   D_d::RV  = NaN
+   x_c::RV  = 0.0
+   y_c::RV  = 0.0
+   mass::RV = NaN
+   x_s::RV  = NaN
 end
 
 
@@ -43,10 +43,10 @@ Initialize a Singular Isothermal Sphere (SIS) lens with the given parameters.
 """
 @kwdef struct init_SISLens <: AbstractLens
    _lens_::Symbol = :SISLens
-   _lid_::Int = 3
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   v_d::Real = NaN
+   _lid_::Int64 = 3
+   x_c::RV = 0.0
+   y_c::RV = 0.0
+   v_d::RV = NaN
 end
 
 
@@ -57,12 +57,12 @@ Initialize a Non-Singular Isothermal Sphere potential (NSISP) lens with the give
 """
 @kwdef struct init_NSISPLens <: AbstractLens
    _lens_::Symbol = :NSISPLens
-   _lid_::Int = 4
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   v_d::Real = NaN
-   x_s::Real = NaN
+   _lid_::Int64 = 4
+   D_d::RV = NaN
+   x_c::RV = 0.0
+   y_c::RV = 0.0
+   v_d::RV = NaN
+   x_s::RV = NaN
 end
 
 
@@ -73,83 +73,83 @@ Initialize a Non-Singular Isothermal Sphere mass distribution (NSISMD) lens with
 """
 @kwdef struct init_NSISMDLens <: AbstractLens
    _lens_::Symbol = :NSISMDLens
-   _lid_::Int = 5
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   v_d::Real = NaN
-   x_s::Real = NaN
+   _lid_::Int64 = 5
+   D_d::RV = NaN
+   x_c::RV = 0.0
+   y_c::RV = 0.0
+   v_d::RV = NaN
+   x_s::RV = NaN
 end
 
 
 @kwdef struct init_EinastoLens <: AbstractLens
-   _lens_::String = "EinastoLens"
-   _lid_::Int = 18
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   n_a::Real =-2.0
-   x_s::Real = NaN
-   c::Real   = NaN
-   rho_s::Real=NaN
-   mass::Real= NaN
+   _lens_::Symbol = :EinastoLens
+   _lid_::Int64 = 18
+   D_d::RV = NaN
+   x_c::RV = 0.0
+   y_c::RV = 0.0
+   n_a::RV =-2.0
+   x_s::RV = NaN
+   c::RV   = NaN
+   rho_s::RV = NaN
+   mass::RV  = NaN
 end
 
 
 @kwdef struct init_NFWLens <: AbstractLens
-   _lens_::String = "NFWLens"
-   _lid_::Int = 11
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   x_s::Real = NaN
-   c::Real   = NaN
-   rho_s::Real=NaN
-   mass::Real= NaN
+   _lens_::Symbol = :NFWLens
+   _lid_::Int64 = 11
+   D_d::RV = NaN
+   x_c::RV = 0.0
+   y_c::RV = 0.0
+   x_s::RV = NaN
+   c::RV   = NaN
+   rho_s::RV = NaN
+   mass::RV  = NaN
 end
 
 
 @kwdef struct init_gNFWLens <: AbstractLens
-   _lens_::String = "gNFWLens"
-   _lid_::Int = 14
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   x_s::Real = NaN
-   c::Real   = NaN
-   rho_s::Real=NaN
-   mass::Real= NaN
-   n_a::Real = NaN
+   _lens_::Symbol = :gNFWLens
+   _lid_::Int64 = 14
+   D_d::RV = NaN
+   x_c::RV = 0.0
+   y_c::RV = 0.0
+   n_a::RV = NaN
+   x_s::RV = NaN
+   c::RV   = NaN
+   rho_s::RV = NaN
+   mass::RV  = NaN
 end
 
 
 @kwdef struct init_CompositeLens <: AbstractLens
    _lens_::Symbol = :CompositeLens
-   _lid_::Int = 111
+   _lid_::Int64 = 111
    _components_ = Vector{AbstractLens}()
 end
 
 
 @kwdef struct init_MultiPlaneLens <: AbstractLens
-   _lens_::String = "MultiPlaneLens"
-   _lid_::Int = 222
-   _np_::Int = NaN
+   _lens_::Symbol = :MultiPlaneLens
+   _lid_::Int64 = 222
+   _np_::Int64  = NaN
    _zl_ = Vector{Real}()
    _components_ = Vector{AbstractLens}()
 end
 
 
 # Constructor for NFW lens
-function init_NFWLens(cosmology::Cosmology.AbstractCosmology, z_d::Real;
-                     x_c::Real=0.0, y_c::Real=0.0, x_s::Real=NaN, c::Real=NaN, mass::Real=NaN)                     
+function init_NFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV;
+                     x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, mass::RV=NaN)                     
    # ADD to the lens
-   D_d::Real = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
+   D_d = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
    
    # Critical density at the lens redshift
-   ρ_cz::Real = Cosmology.rho_cz(cosmology, z_d)
+   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
 
    # Virial radius of the lens (in meters)
-   r_vir::Real= (3.0 * mass / 72.0 / pi^3 / ρ_cz)^(1.0/3.0)
+   r_vir = (3.0 * mass / 72.0 / pi^3 / ρ_cz)^(1.0/3.0)
 
    # Check if concentration is given
    if isfinite(c)
@@ -166,22 +166,21 @@ end
 
 
 # Constructor for NFW lens
-function init_gNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::Real;
-                     x_c::Real=0.0, y_c::Real=0.0, 
-                     x_s::Real=NaN, c::Real=NaN, mass::Real=NaN, n_a::Real=-2.0)                     
+function init_gNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV;
+                     x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, mass::RV=NaN, n_a::RV=-2.0)                     
    # Calculate the mass
-   function intgrand(x::Real)::Real
+   function intgrand(x::RV)
       return x^(2.0 - n_a) / (1.0 + x)^(3.0 - n_a)
    end
 
    # ADD to the lens
-   D_d::Real = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
+   D_d = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
    
    # Critical density at the lens redshift
-   ρ_cz::Real = Cosmology.rho_cz(cosmology, z_d)
+   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
 
    # Virial radius of the lens (in meters)
-   r_vir::Real= (3.0 * mass / 72.0 / pi^3 / ρ_cz)^(1.0/3.0)
+   r_vir= (3.0 * mass / 72.0 / pi^3 / ρ_cz)^(1.0/3.0)
 
    # Check if concentration is given
    if isfinite(c)
@@ -202,20 +201,19 @@ end
 
 
 # Constructor for Einasto lens
-function init_EinastoLens(cosmology::Cosmology.AbstractCosmology, z_d::Real;
-                           x_c::Real=0.0, y_c::Real=0.0,
-                           x_s::Real=NaN, c::Real=NaN, mass::Real=NaN, n_a::Real = -2.0)
+function init_EinastoLens(cosmology::Cosmology.AbstractCosmology, z_d::RV;
+                     x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, mass::RV=NaN, n_a::RV = -2.0)
    # ADD to the lens
-   D_d::Real  = Cosmology.angular_diameter_distance(cosmology, 0., z_d)
+   D_d  = Cosmology.angular_diameter_distance(cosmology, 0., z_d)
 
    # Critical density at the lens redshift
-   ρ_cz::Real = Cosmology.rho_cz(cosmology, z_d)
+   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
 
    # Virial radius of the lens (in meters)
-   r_vir::Real= (3.0 * mass / 72.0 / pi^3 / ρ_cz)^(1.0/3.0)
+   r_vir= (3.0 * mass / 72.0 / pi^3 / ρ_cz)^(1.0/3.0)
 
    # Check if concentration is given
-   m_v::Real = 0.0
+   m_v::Float64 = 0.0
    if isfinite(c)
       Pax, _ = gamma_inc( 3.0/n_a, (2.0/n_a)*c^n_a )
       m_v = (1.0/n_a) * (n_a/2.0)^(3.0/n_a) * gamma(3.0/n_a) * Pax
@@ -268,27 +266,19 @@ end
 
 
 # Constructor for multi-plane lens
-function init_MultiPlaneLens(lens::Vector{<:Any})   
-   # Get all lens redshifts
-   zl_all = Vector{Real}()
+function init_MultiPlaneLens(lens::Vector{<:NamedTuple})   
+   # Get sorted unique lens redshifts
+   zl_unique = unique(component.zl for component in lens)
+   sort!(zl_unique)
+
+   # Group lens components by redshift
+   lens_by_z = Dict{eltype(getfield.(lens, :zl)), Vector{NamedTuple}}()
    for component in lens
-      # Get the redshifts of each plane
-      push!(zl_all, component.zl)
+      push!(get!(lens_by_z, component.zl, []), component)
    end
 
-   # Get (sorted) unique lens redshifts
-   zl_unique::Vector{Real} = unique( sort(zl_all) )
+   # Construct composite lenses for each unique redshift
+   lens_components = AbstractLens[init_CompositeLens(lens_by_z[z]) for z in zl_unique]
 
-   lens_components = Vector{AbstractLens}()
-   indi_components = Vector{AbstractLens}()
-   for z in zl_unique
-      indi_components = []
-      for component in lens
-         if component.zl == z            
-            push!(indi_components, component)
-         end
-      end
-      push!(lens_components, init_CompositeLens(indi_components[1].D_d, indi_components))
-   end
    return init_MultiPlaneLens(_np_=length(zl_unique), _zl_=zl_unique, _components_=lens_components)
 end

@@ -12,6 +12,9 @@ export Cosmology
 include("./Lenses/Lenses.jl")
 export Lenses
 
+include("./MultiPlane/MultiPlane.jl")
+export MultiPlane
+
 # Module for source profiles
 include("./Lenses/Sources.jl")
 export Sources

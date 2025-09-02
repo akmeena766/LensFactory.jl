@@ -3,7 +3,6 @@
 """
 module Lenses
 
-
 # Julia inbuilt functions to import
 
 # LensFactory modules to use
@@ -21,7 +20,6 @@ using .IntersectionFinder
 include("../LensFactoryUtils/PolygonOps.jl")
 using .PolygonOps
 
-
 # Include the lens types files
 include("./lens_types.jl")
 include("./PointLens.jl")
@@ -29,7 +27,6 @@ include("./SISLens.jl")
 include("./PlummerLens.jl")
 include("./NSISPLens.jl")
 include("./NSISMDLens.jl")
-
 
 # Various lensing function to export
 export get_meshgrid
@@ -47,13 +44,13 @@ export get_critical_area
 export get_einstein_angle
 
 """
-    get_meshgrid(θx::RV, θy::RV, dθ::RV) --> Tuple{Matrix{<:Float64}, Matrix{<:Float64}}
+    get_meshgrid(θx::RV, θy::RV, dθ::RV)
 
 Generate a meshgrid of coordinates on which various quantities can be evaluated. At present,
 this function only generates square pixels. In future if the need arises, it can be extended 
 to generate rectangular pixels as well.
 """
-function get_meshgrid(θx::RV, θy::RV, dθ::RV)::Tuple{Matrix{<:Float64}, Matrix{<:Float64}}
+function get_meshgrid(θx::RV, θy::RV, dθ::RV)
    # Making sure that grid and pixel size are positive
    if θx <= 0 || θy <= 0 || dθ <= 0
       throw(ArgumentError("All arguments must be positive."))
@@ -80,7 +77,7 @@ end
 
 
 """
-    get_critical_density(Dd::RV, Dds::RV, Ds::RV; unit::Symbol=:kg_m2)::RV
+    get_critical_density(Dd::RV, Dds::RV, Ds::RV; unit::Symbol=:kg_m2)
 
 Calculate the critical surface density,
 ```math
@@ -91,7 +88,7 @@ given the angular diameter distances. The result can be returned in different un
 - `:msun_pc2` ``\\Rightarrow{\\rm M_⊙/pc^2}``, 
 - `:msun_arcsec2` ``\\Rightarrow{\\rm M_⊙/arcsec^2}``.
 """   
-function get_critical_density(; D_d::RV=NaN, adis::RV=NaN, unit::Symbol=:kg_m2)::RV
+function get_critical_density(; D_d::RV=NaN, adis::RV=NaN, unit::Symbol=:kg_m2)
    # Calculate Σ_cr in kg/m^2
    Σ_cr::Float64 = ( CONST_C^2 / 4.0 / π / CONST_G ) * ( 1.0 / D_d / adis )
    
@@ -116,7 +113,7 @@ const lens_map = Dict(
    :NSISPLens   => (NSISPLens,     [:x_c, :y_c, :v_d, :θ_s]),
    :NSISMDLens   => (NSISMDLens,     [:x_c, :y_c, :v_d, :θ_s])
 )
-function potential_helper!(ψ::ROA, lens::AbstractLens, θx::ROA, θy::ROA)
+function potential_helper!(ψ::T, lens::AbstractLens, θx::T, θy::T) where T <: ROA
    # Check if the lens type is in the lens_map otherwise throw an error
    entry = get(lens_map, lens._lens_, nothing)
    if entry === nothing
@@ -136,9 +133,13 @@ end
 """
     get_potential(lens::AbstractLens, θx::ROA, θy::ROA) --> ROA
 """
-function get_potential(lens::AbstractLens, θx::ROA, θy::ROA)::ROA
+function get_potential(lens::AbstractLens, θx::T, θy::T) where T <: Union{RV, ROA}
+   # If RV is passed, covert to vector
+   θx = isa(θx, RV) ? [θx] : θx
+   θy = isa(θy, RV) ? [θy] : θy
+
    # Check if the input coordinates are of the same type and size
-   if typeof(θx) != typeof(θy) || size(θx) != size(θy)
+   if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same type and size."))
    end
 
@@ -156,8 +157,7 @@ function get_potential(lens::AbstractLens, θx::ROA, θy::ROA)::ROA
    end
 end
 
-
-function deflection_helper!(ψx::ROA, ψy::ROA, lens::AbstractLens, θx::ROA, θy::ROA)
+function deflection_helper!(ψx::T, ψy::T, lens::AbstractLens, θx::T, θy::T) where T <: ROA
    # Check if the lens type is in the lens_map otherwise throw an error
    entry = get(lens_map, lens._lens_, nothing)
    if entry === nothing
@@ -180,9 +180,13 @@ end
 Calculates the deflection angles (i.e., the gradient of the potential) for a given lens model. 
 Returns a tuple of deflection components, i.e., ``(ψ_x, ψ_y)``.
 """
-function get_deflection(lens::AbstractLens, θx::ROA, θy::ROA)::Tuple{ROA, ROA}
+function get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: Union{RV, ROA}
+   # If RV is passed, covert to vector
+   θx = isa(θx, RV) ? [θx] : θx
+   θy = isa(θy, RV) ? [θy] : θy
+
    # Check if the input coordinates are of the same type and size
-   if typeof(θx) != typeof(θy) || size(θx) != size(θy)
+   if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same type and size."))
    end
 
@@ -202,7 +206,7 @@ function get_deflection(lens::AbstractLens, θx::ROA, θy::ROA)::Tuple{ROA, ROA}
 end
 
 
-function jacobian_helper!(ψxx::ROA, ψyy::ROA, ψxy::ROA, lens::AbstractLens, θx::ROA, θy::ROA)
+function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::AbstractLens, θx::T, θy::T) where T <: ROA
    # Check if the lens type is in the lens_map otherwise throw an error
    entry = get(lens_map, lens._lens_, nothing)
    if entry === nothing
@@ -235,12 +239,16 @@ which is given as,
 Since the jacobian is symmetric (for single lens plane), only three components are returned,
 i.e., ``(ψ_{xx}, ψ_{yy}, ψ_{xy})``.
 """
-function get_jacobian(lens::AbstractLens, θx::ROA, θy::ROA)::Tuple{ROA, ROA, ROA}
+function get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: Union{RV, ROA}
+   # If RV is passed, covert to vector
+   θx = isa(θx, RV) ? [θx] : θx
+   θy = isa(θy, RV) ? [θy] : θy
+
    # Check if the input coordinates are of the same type and size
-   if typeof(θx) != typeof(θy) || size(θx) != size(θy)
+   if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same type and size."))
    end
-
+   
    # Initialize zero-valued potential array
    ψxx::ROA = zero(θx)
    ψyy::ROA = zero(θx)
@@ -267,7 +275,7 @@ t_d(\\pmb{θ}; \\pmb{β}) = \\frac{1+z_l}{\\rm c} \\frac{D_d D_s}{D_{ds}}
    \\left[ \\frac{(\\pmb{θ} - \\pmb{β})^2}{2} - \\frac{D_{ds}}{D_s} \\psi(\\pmb{θ}) \\right]
 ```
 """
-function get_time_delay(lens::AbstractLens, θx::ROA, θy::ROA, zl::RV, adis::Float64, β::NTuple{2, RV})::ROA
+function get_time_delay(lens::AbstractLens, θx::T, θy::T, zl::RV, adis::Float64, β::NTuple{2, RV}) where T <: ROA
    # Constant multiplicative factor
    constant_factor::Float64 =  ( (1.0 + zl) / CONST_C ) * lens.D_d / adis
 
@@ -295,7 +303,7 @@ Calculates the magnification for a given lens model. The corresponding expressio
 \\mu = \\frac{1}{\\det \\mathcal{A}} = \\frac{1}{(1 - κ)^2 - γ^2}
 ```
 """
-function get_magnification_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64)::ROA
+function get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: ROA
    # Get the jacobian components
    ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
 
@@ -309,7 +317,7 @@ function get_magnification_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::F
 end
 
 
-function get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Float64; rays_per_pixel::Int64=1)::T where T <: Matrix{<:RV}
+function get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Float64; rays_per_pixel::Int64=1) where T <: Matrix{<:RV}
    # Deflection field
    αx, αy = get_deflection(lens, θx, θy)
 
@@ -321,7 +329,7 @@ function get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Floa
    area_per_ray::Float64 = 1.0 / rays_per_pixel
 
    # Initialize an empty source plane magnification map
-   μ_source::AbstractMatrix{<:RV} = zero(θx)
+   μ_source::Matrix{<:RV} = zero(θx)
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for _ in ax2
@@ -359,7 +367,7 @@ Calculates the image position for a given lens model by solving the lens equatio
 \\pmb{β} = \\pmb{θ} - \\frac{D_{ds}}{D_s} ∇\\psi(\\pmb{θ})
 ```
 """
-function get_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64, β::NTuple{2, RV})::Vector{NTuple{2, RV}}
+function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::NTuple{2, RV}) where T <: Matrix{<:RV}
    # Get the potential gradient
    ψx, ψy = get_deflection(lens, θx, θy)
 
@@ -383,7 +391,7 @@ function get_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64, β::NT
    return image_position
 end
 
-function get_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64, β::Matrix{<:RV})::Matrix{<:RV}
+function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::T) where T <: Matrix{<:RV}
    # Get the potential gradient
    ψx, ψy = get_deflection(lens, θx, θy)
 
@@ -422,7 +430,7 @@ function get_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64, β::Ma
 end
 
 
-function get_critical_curve(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64)::Tuple{Vector{Vector{Vector{<:RV}}}, Vector{Vector{Vector{<:RV}}}}
+function get_critical_curve(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
    # Get the jacobian components
    ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
 
@@ -444,7 +452,7 @@ function get_critical_curve(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float6
 end
 
 
-function get_caustic(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64)::Tuple{Vector{Vector{Vector{<:RV}}}, Vector{Vector{Vector{<:RV}}}}
+function get_caustic(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
    # Generate critical curves
    critical_tan, critical_rad = get_critical_curve(lens, θx, θy, adis)
 
@@ -469,7 +477,7 @@ function get_caustic(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64)::Tup
 end
 
 
-function get_critical_area(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64)::Float64
+function get_critical_area(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
    area::Float64 = 0.0
 
    # Get tangential critical curves
@@ -483,7 +491,7 @@ function get_critical_area(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64
 end
 
 
-function get_einstein_angle(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64)::Float64
+function get_einstein_angle(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
    return √(get_critical_area(lens, θx, θy, adis) / π)
 end
 
