@@ -10,6 +10,5 @@
 
       # Bad lens throws error
       @test_throws ArgumentError Lenses.init_CompositeLens([(lens=:BadLens, D_d=1.0, x_c=0.0, y_c=0.0, mass=1.0)])
-
    end
 end
