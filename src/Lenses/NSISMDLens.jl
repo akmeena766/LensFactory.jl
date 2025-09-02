@@ -106,7 +106,7 @@ end
 \\sqrt{4 π \\frac{D_{ds}}{D_s} \\left(\\frac{v_d}{c} \\right)^2 - 2\\,θ_s}
 ```
 """
-function einstein_angle(Dds::RV, Ds::RV, vd::RV, θs::RV)
+function einstein_angle(Dds::Float64, Ds::Float64, vd::RV, θs::Float64)::Float64
    θE::Float64 = 4π * (Dds / Ds) * (vd / CONST_C)^2
    return √(θE^2 - 2.0 * θs * θE)
 end

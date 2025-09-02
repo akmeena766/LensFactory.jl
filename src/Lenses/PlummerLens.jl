@@ -101,7 +101,7 @@ end
 θ_E = \\sqrt{\\frac{4{\\rm G} M}{c^2} \\frac{D_{ds}}{D_{d}D_{s}} - θ_s^2}
 ```
 """
-function einstein_angle(Dol::RV, Dls::RV, Dos::RV, mass::RV, θs::RV)::RV
+function einstein_angle(Dol::Float64, Dls::Float64, Dos::Float64, mass::Float64, θs::Float64)::Float64
    return √( (4.0 * CONST_G * mass / CONST_C^2) * (Dls / Dol / Dos) - θs^2 )
 end
 

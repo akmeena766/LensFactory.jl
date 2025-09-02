@@ -100,7 +100,7 @@ end
 θ_E = 4 π \\frac{D_{ds}}{D_s} \\left(\\frac{v_d}{c} \\right)^2
 ```
 """
-function einstein_angle(Dds::RV, Ds::RV, vd::RV)::RV
+function einstein_angle(Dds::Float64, Ds::Float64, vd::RV)::Float64
    return 4π * (vd / CONST_C)^2 * (Dds / Ds)
 end
 

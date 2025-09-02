@@ -277,10 +277,10 @@ function get_time_delay(lens::AbstractLens, θx::ROA, θy::ROA, zl::RV, adis::Fl
    # Get time delay components
    ϕ_potential::ROA = get_potential(lens, θ_x, θ_y)
 
-   ax2, ax1 = axes(θ_x, 1), axes(θ_x, 2)
-   @inbounds for i in ax1
-      @inbounds for j in ax2
-         ϕ[j, i] = constant_factor * ( 0.5 * ((θx[j, i] - β[1])^2 + (θy[j, i] - β[2])^2) - adis * ϕ_potential[j, i] )
+   ax1, ax2 = axes(θ_x, 1), axes(θ_x, 2)
+   @inbounds for j in ax2
+      @inbounds for i in ax1
+         ϕ[i, j] = constant_factor * (0.5 * ((θx[i, j] - β[1])^2 + (θy[i, j] - β[2])^2) - adis * ϕ_potential[i, j]) 
       end
    end
    return ϕ

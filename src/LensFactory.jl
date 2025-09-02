@@ -8,15 +8,15 @@ export Constants
 include("./Cosmology/Cosmology.jl")
 export Cosmology
 
-# Module for source profiles
-include("./Lenses/Sources.jl")
-export Sources
-
 # Module for lens models
 include("./Lenses/Lenses.jl")
 export Lenses
 
-# Plotting functions (see extension for more information)
+# Module for source profiles
+include("./Lenses/Sources.jl")
+export Sources
+
+# Plotting functions (see ../ext folder for more information)
 export plot_image_plane
 export plot_surface_density
 export plot_magnification_map

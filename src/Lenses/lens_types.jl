@@ -82,58 +82,6 @@ Initialize a Non-Singular Isothermal Sphere mass distribution (NSISMD) lens with
 end
 
 
-
-@kwdef struct init_ExternalEffects <: AbstractLens
-   _lens_::String = "ExternalEffects"
-   _lid_::Int = 1
-   k_ext::Real  = NaN
-   g1_ext::Real = NaN
-   g2_ext::Real = NaN
-end
-
-
-@kwdef struct init_GaussianLens <: AbstractLens
-   _lens_::String = "GaussianLens"
-   _lid_::Int = 20
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   mass::Real= NaN
-   x_s::Real = NaN
-end
-
-
-@kwdef struct init_PowerLawlens <: AbstractLens
-   _lens_::String = "PowerLawLens"
-   _lid_::Int = 21
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   x_s::Real = NaN
-   n_a::Real = NaN
-end
-
-
-@kwdef struct init_SersicLens <: AbstractLens
-   _lens_::String = "SersicLens"
-   _lid_::Int = 22
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   x_e::Real = NaN
-   mass::Real= NaN
-end
-
-
-@kwdef struct init_HernquistLens <: AbstractLens
-   _lens_::String = "HernquistLens"
-   _lid_::Int = 10
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   x_s::Real = NaN
-   mass::Real= NaN
-end
-
-
 @kwdef struct init_EinastoLens <: AbstractLens
    _lens_::String = "EinastoLens"
    _lid_::Int = 18
@@ -172,56 +120,6 @@ end
    rho_s::Real=NaN
    mass::Real= NaN
    n_a::Real = NaN
-end
-
-
-@kwdef struct init_tNFWLens <: AbstractLens
-   _lens_::String = "tNFWLens"
-   _lid_::Int = 16
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-end
-
-
-@kwdef struct init_PIEPLens <: AbstractLens
-   _lens_::String = "PIEPLens"
-   _lid_::Int = 7
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   x_s::Real = 0.0
-   v_d::Real = NaN
-   eps::Real = NaN
-   p_a::Real = 0.0
-   n_a::Real = 0.5 
-end
-
-
-@kwdef struct init_SIEMDLens <: AbstractLens
-   _lens_::String = "SIEMDLens"
-   _lid_::Int = 8
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   x_s::Real = 0.0
-   v_d::Real = NaN
-   eps::Real = NaN
-   p_a::Real = 0.0
-end
-
-
-@kwdef struct init_PJEMDLens <: AbstractLens
-   _lens_::String = "PJEMDLens"
-   _lid_::Int = 9
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   x_s::Real = NaN
-   x_t::Real = NaN
-   v_d::Real = NaN
-   eps::Real = NaN
-   p_a::Real = NaN
 end
 
 
