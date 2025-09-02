@@ -133,9 +133,9 @@ end
 @kwdef struct init_MultiPlaneLens <: AbstractLens
    _lens_::Symbol = :MultiPlaneLens
    _lid_::Int64 = 222
-   _np_::Int64  = NaN
-   _zl_ = Vector{Real}()
-   _components_ = Vector{AbstractLens}()
+   n_p::Int64   = NaN
+   z_d = Vector{Real}()
+   _plane_ = Vector{AbstractLens}()
 end
 
 
@@ -268,17 +268,17 @@ end
 # Constructor for multi-plane lens
 function init_MultiPlaneLens(lens::Vector{<:NamedTuple})   
    # Get sorted unique lens redshifts
-   zl_unique = unique(component.zl for component in lens)
-   sort!(zl_unique)
+   zd_unique = unique(component.z_d for component in lens)
+   sort!(zd_unique)
 
    # Group lens components by redshift
-   lens_by_z = Dict{eltype(getfield.(lens, :zl)), Vector{NamedTuple}}()
+   lens_by_z = Dict{eltype(getfield.(lens, :z_d)), Vector{NamedTuple}}()
    for component in lens
-      push!(get!(lens_by_z, component.zl, []), component)
+      push!(get!(lens_by_z, component.z_d, []), component)
    end
 
    # Construct composite lenses for each unique redshift
-   lens_components = AbstractLens[init_CompositeLens(lens_by_z[z]) for z in zl_unique]
+   lens_components = AbstractLens[init_CompositeLens(lens_by_z[z]) for z in zd_unique]
 
-   return init_MultiPlaneLens(_np_=length(zl_unique), _zl_=zl_unique, _components_=lens_components)
+   return init_MultiPlaneLens(n_p=length(zd_unique), z_d=zd_unique, _plane_=lens_components)
 end
