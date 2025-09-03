@@ -43,6 +43,17 @@ export get_caustic
 export get_critical_area
 export get_einstein_angle
 
+# Plotting functions (see ../../ext folder for functions)
+export plot_image_plane
+export plot_surface_density
+export plot_magnification_map
+export plot_magnification_profile
+
+function plot_image_plane end
+function plot_surface_density end
+function plot_magnification_map end
+function plot_magnification_profile end
+
 """
     get_meshgrid(θx::RV, θy::RV, dθ::RV)
 
@@ -57,8 +68,8 @@ function get_meshgrid(θx::RV, θy::RV, dθ::RV)
    end
 
    # Number of pixels along x- and y-directions
-   nx::Int64 = round(Int64, 2.0*θx/dθ + 1.0)
-   ny::Int64 = round(Int64, 2.0*θy/dθ + 1.0)
+   nx = round(Int64, 2.0*θx/dθ + 1.0)
+   ny = round(Int64, 2.0*θy/dθ + 1.0)
 
    # Initialize an empty nx x ny grid
    grid_x = Matrix{Float64}(undef, nx, ny)
@@ -90,7 +101,7 @@ given the angular diameter distances. The result can be returned in different un
 """   
 function get_critical_density(; D_d::RV=NaN, adis::RV=NaN, unit::Symbol=:kg_m2)
    # Calculate Σ_cr in kg/m^2
-   Σ_cr::Float64 = ( CONST_C^2 / 4.0 / π / CONST_G ) * ( 1.0 / D_d / adis )
+   Σ_cr = ( CONST_C^2 / 4.0 / π / CONST_G ) * ( 1.0 / D_d / adis )
    
    # Convert to the requested unit
    if unit == :kg_m2
@@ -144,7 +155,7 @@ function get_potential(lens::AbstractLens, θx::T, θy::T) where T <: Union{RV, 
    end
 
    # Initialize zero-valued potential array
-   ψ::ROA = zero(θx)
+   ψ = zero(θx)
 
    if lens._lens_ == :CompositeLens
       for component in lens._components_
@@ -191,8 +202,8 @@ function get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: Union{RV,
    end
 
    # Initialize zero-valued potential array
-   ψx::ROA = zero(θx)
-   ψy::ROA = zero(θx)
+   ψx = zero(θx)
+   ψy = zero(θx)
 
    if lens._lens_ == :CompositeLens
       for component in lens._components_
@@ -250,9 +261,9 @@ function get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: Union{RV, R
    end
    
    # Initialize zero-valued potential array
-   ψxx::ROA = zero(θx)
-   ψyy::ROA = zero(θx)
-   ψxy::ROA = zero(θx)
+   ψxx = zero(θx)
+   ψyy = zero(θx)
+   ψxy = zero(θx)
 
    if lens._lens_ == :CompositeLens
       for component in lens._components_
@@ -280,10 +291,10 @@ function get_time_delay(lens::AbstractLens, θx::T, θy::T, zl::RV, adis::Float6
    constant_factor::Float64 =  ( (1.0 + zl) / CONST_C ) * lens.D_d / adis
 
    # Initialize zero-valued arrays to store time delay
-   ϕ::ROA = zero(θ_x)
+   ϕ = zero(θ_x)
 
    # Get time delay components
-   ϕ_potential::ROA = get_potential(lens, θ_x, θ_y)
+   ϕ_potential = get_potential(lens, θ_x, θ_y)
 
    ax1, ax2 = axes(θ_x, 1), axes(θ_x, 2)
    @inbounds for j in ax2
@@ -323,13 +334,13 @@ function get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Floa
 
    # Pixel size
    nx, ny = size(θx)
-   pixel_h::Float64 = abs(θx[2, 1] - θx[1, 1])
+   pixel_h = abs(θx[2, 1] - θx[1, 1])
 
    # Area per pixel in the image plane
-   area_per_ray::Float64 = 1.0 / rays_per_pixel
+   area_per_ray = 1.0 / rays_per_pixel
 
    # Initialize an empty source plane magnification map
-   μ_source::Matrix{<:RV} = zero(θx)
+   μ_source = zero(θx)
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for _ in ax2
@@ -400,7 +411,7 @@ function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::T) whe
 
    # Grid size
    nx, ny = size(θx)
-   pixel_h::Float64 = abs(θx[2, 1] - θx[1, 1])
+   pixel_h = abs(θx[2, 1] - θx[1, 1])
 
    beta_x::Float64 = 0
    beta_y::Float64 = 0
@@ -440,9 +451,9 @@ function get_critical_curve(lens::AbstractLens, θx::T, θy::T, adis::Float64) w
    ψxy .*= adis
 
    # Convergence and shear components
-   κ::ROA = 0.5 * (ψxx + ψyy)
-   γ1::ROA = 0.5 * (ψxx - ψyy)
-   γ2::ROA = ψxy
+   κ  = 0.5 * (ψxx + ψyy)
+   γ1 = 0.5 * (ψxx - ψyy)
+   γ2 = ψxy
 
    # Get the zero eigenvalue contours
    critical_tan = ContourFinder.get_contour(θx, θy, 1.0 .- κ .- sqrt.(γ1.^2 .+ γ2.^2), 0)
@@ -457,7 +468,7 @@ function get_caustic(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T 
    critical_tan, critical_rad = get_critical_curve(lens, θx, θy, adis)
 
    # Get tangential caustics
-   caustics_tan::Vector{Vector{Vector{Float64}}} = []
+   caustics_tan = Vector{Vector{Vector{Float64}}}()
    for curve in critical_tan
       ψ_x, ψ_y = get_deflection(lens, first.(curve), last.(curve))
       src_x = first.(curve) .- adis .* ψ_x
@@ -466,7 +477,7 @@ function get_caustic(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T 
    end
  
    # Get radial caustics
-   caustics_rad::Vector{Vector{Vector{Float64}}} = []
+   caustics_rad = Vector{Vector{Vector{Float64}}}()
    for curve in critical_rad
       ψ_x, ψ_y = get_deflection(lens, first.(curve), last.(curve))
       src_x = first.(curve) .- adis .* ψ_x
@@ -478,7 +489,7 @@ end
 
 
 function get_critical_area(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
-   area::Float64 = 0.0
+   area = 0.0
 
    # Get tangential critical curves
    critical_tan, _ = get_critical_curve(lens, θx, θy, adis)

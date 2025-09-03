@@ -21,7 +21,7 @@ using Makie
    - `plot_name::String = "image_plane.png"`
    - `resolution::Int = 2`
 """
-function LensFactory.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64; 
+function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64; 
                            two_panel::Bool = false,
                            plot_caustic::Bool = true,
                            caustic_kws::NamedTuple = (color_tan = :green, color_rad = :green, linewidth = 2),
@@ -244,7 +244,7 @@ end
    - `plot_name::String = "surface_density.png"`
    - `resolution::Int = 2`
 """
-function LensFactory.plot_surface_density(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64, D_d::Float64;
+function LensFactory.Lenses.plot_surface_density(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64, D_d::Float64;
                               unit::Symbol = :kg_m2,
                               figure_size::NTuple{2, RV} = (500, 400),
                               heatmap_kws::NamedTuple = (colormap=:cubehelix, colorrange=(0, 6)),
@@ -330,7 +330,7 @@ end
    - `plot_name::String = "magnification_map.png"`
    - `resolution::Int = 2`
 """
-function LensFactory.plot_magnification_map(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64;
+function LensFactory.Lenses.plot_magnification_map(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64;
                               plane::Symbol = :image,
                               rays_per_pixel::Int64 = 1,
                               figure_size::NTuple{2, RV} = (500, 400),
@@ -390,7 +390,7 @@ end
    - `plot_name::String = "magnification_profile.png"`
    - `resolution::Int = 2`
 """
-function LensFactory.plot_magnification_profile(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64;
+function LensFactory.Lenses.plot_magnification_profile(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64;
                               plane::Symbol = :image,
                               rays_per_pixel::Int64 = 1,
                               mu_range::StepRange{<:RV, <:RV} = 1:5:500,

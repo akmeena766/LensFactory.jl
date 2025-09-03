@@ -271,6 +271,10 @@ function init_MultiPlaneLens(lens::Vector{<:NamedTuple})
    zd_unique = unique(component.z_d for component in lens)
    sort!(zd_unique)
 
+   if length(zd_unique) < 2
+      throw(ArgumentError("Only $(length(zd_unique)) lens planes found. Need >= 2."))
+   end
+
    # Group lens components by redshift
    lens_by_z = Dict{eltype(getfield.(lens, :z_d)), Vector{NamedTuple}}()
    for component in lens
