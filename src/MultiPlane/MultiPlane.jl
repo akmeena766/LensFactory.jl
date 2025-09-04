@@ -11,15 +11,10 @@ using ..Cosmology
 using ..Lenses
 
 # Various lensing function to export
-export get_potential
 export get_deflection
 export get_jacobian
 export get_time_delay
 
-
-function get_potential(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: Union{RV, ROA}
-   
-end
 
 function get_deflection(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: Union{RV, ROA}
    # If RV is passed, covert to vector
@@ -57,7 +52,7 @@ function get_deflection(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abs
 
             # Deflection vector at (θx_i, θy_i) in i-th plane
             (ψ_vec[1, ni],), (ψ_vec[2, ni],) = Lenses.get_deflection(lens._plane_[ni], θx_i, θy_i)
-            println(ψ_vec[1, ni]," ", ψ_vec[2, ni])
+
             # Final deflection vector
             ψx[i, j] = ψx[i, j] + (D_ij[ni+1, n_p + 2] / D_ij[1, n_p + 2]) * ψ_vec[1, ni]
             ψy[i, j] = ψy[i, j] + (D_ij[ni+1, n_p + 2] / D_ij[1, n_p + 2]) * ψ_vec[2, ni]
@@ -87,8 +82,8 @@ function get_jacobian(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abstr
    
    # Temporary deflection vector for each lens plane
    ψ_vec = zeros(2, n_p)
-   U_vec = zeros(2, 2, 5)
-   A_vec = zeros(2, 2, 5)
+   U_vec = zeros(2, 2, n_p)
+   A_vec = zeros(2, 2, n_p)
    θx_i, θy_i = 0.0, 0.0
    ψrr = zeros(2, 2)
 
@@ -126,6 +121,68 @@ function get_jacobian(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abstr
    return ψxx, ψyy, ψxy, ψyx
 end
 
+
+function get_time_delay(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV, β::NTuple{2, RV}) where T <: Union{RV, ROA}
+   # If RV is passed, covert to vector
+   θx = isa(θx, RV) ? [θx] : θx
+   θy = isa(θy, RV) ? [θy] : θy
+
+   # Initialize zero-valued time delay function
+   ϕ = zero(θx)
+
+   # Get the number of lens planes
+   n_p = lens.n_p
+
+   # Get distance matrix
+   D_ij = _distances(cosmology, lens, zs)
+
+   # Temporary deflection vector for each lens plane
+   ψ_vec = zeros(2, n_p)
+   θx_i, θy_i = 0.0, 0.0
+   ψ = 0.0
+
+   # Get constant factor array
+   constant_factor = zeros(n_p)
+   for ni in 1:n_p
+      constant_factor[ni] = ( (1.0 + lens.z_d[ni]) / CONST_C ) * (D_ij[1, ni+1] * D_ij[1, ni+2] / D_ij[ni+1, ni+2])
+   end
+   println(constant_factor)
+   # Loop over all coordinates
+   ax1, ax2 = axes(θx, 1), axes(θx, 2)
+   @inbounds for j in ax2
+      @inbounds for i in ax1
+         for ni in 1:n_p
+            # Position vector in 1-st plane
+            θx_i = θx[i, j]
+            θy_i = θy[i, j]
+
+            # Get the position vector in i-th plane
+            for nj in 1:ni-1
+               θx_i = θx_i - (D_ij[nj+1, ni+1] / D_ij[1, ni+1]) * ψ_vec[1, nj]
+               θy_i = θy_i - (D_ij[nj+1, ni+1] / D_ij[1, ni+1]) * ψ_vec[2, nj]            
+            end   
+
+            # Potential value at (θ_xi, θ_yi) in i-th plane
+            ψ = Lenses.get_potential(lens._plane_[ni], θx_i, θy_i)
+
+            # Deflection vector at (θx_i, θy_i) in i-th plane
+            (ψ_vec[1, ni],), (ψ_vec[2, ni],) = Lenses.get_deflection(lens._plane_[ni], θx_i, θy_i)
+
+            # Get the position vector in i+1-th plane
+            if ni < n_p
+               θx_j = θx_i -  (D_ij[ni+1, ni+2] / D_ij[1, ni+2]) * ψ_vec[1, ni]
+               θy_j = θy_i -  (D_ij[ni+1, ni+2] / D_ij[1, ni+2]) * ψ_vec[2, ni]
+            else
+               θx_j = β[1]
+               θy_j = β[2]
+            end
+            # Time delay factor (without a reference point)
+            ϕ[i, j] += constant_factor[ni] * (0.5 * ((θx_i-θx_j)^2 + (θy_i-θy_j)^2) - (D_ij[ni+1, ni+2] / D_ij[1, ni+2]) * ψ[1])
+         end
+      end
+   end
+   return ϕ
+end
 
 
 function _distances(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, zs::RV)::Matrix{Float64}
