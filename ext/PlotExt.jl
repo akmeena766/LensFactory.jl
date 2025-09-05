@@ -244,7 +244,8 @@ end
    - `plot_name::String = "surface_density.png"`
    - `resolution::Int = 2`
 """
-function LensFactory.Lenses.plot_surface_density(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64, D_d::Float64;
+function LensFactory.Lenses.plot_surface_density(lens::Lenses.AbstractLens, θx::ROA, θy::ROA; 
+                              D_d::Float64 = NaN, D_ds::Float64=NaN, D_s::Float64 = NaN,
                               unit::Symbol = :kg_m2,
                               figure_size::NTuple{2, RV} = (500, 400),
                               heatmap_kws::NamedTuple = (colormap=:cubehelix, colorrange=(0, 6)),
@@ -274,7 +275,7 @@ function LensFactory.Lenses.plot_surface_density(lens::Lenses.AbstractLens, θx:
    if unit == :convergence
       Σ_cr = 1.0
    else
-      Σ_cr = Lenses.get_critical_density(D_d=D_d, adis=adis, unit=unit)
+      Σ_cr = Lenses.get_critical_density(D_d=D_d, D_ds=D_ds, D_s=D_s, unit=unit)
    end
 
    # Get surface density
