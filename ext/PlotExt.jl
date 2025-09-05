@@ -21,7 +21,8 @@ using Makie
    - `plot_name::String = "image_plane.png"`
    - `resolution::Int = 2`
 """
-function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64; 
+function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA, θy::ROA;
+                           adis::Float64=NaN, 
                            two_panel::Bool = false,
                            plot_caustic::Bool = true,
                            caustic_kws::NamedTuple = (color_tan = :green, color_rad = :green, linewidth = 2),
