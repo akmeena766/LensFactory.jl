@@ -256,8 +256,8 @@ function LensFactory.Lenses.plot_surface_density(lens::Lenses.AbstractLens, θx:
                               resolution::Int = 2)
    # Get jacobian and rescale according to adis
    ψxx, ψyy, _ = Lenses.get_jacobian(lens, θx, θy)
-   ψxx .*= adis
-   ψyy .*= adis
+   ψxx .*= (D_ds/D_s)
+   ψyy .*= (D_ds/D_s)
 
    if unit == :convergence
       cb_label = L"\kappa"
