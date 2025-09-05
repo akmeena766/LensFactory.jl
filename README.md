@@ -8,7 +8,7 @@
 ---
 ## Introduction
 `LensFactory` is a gravitational lensing package developed in julia. At present it has support for 
-basic lensing as we go along it is expected to have more features.
+basic lensing and as we go along it is expected to have more features.
 
 ---
 ## Installation
