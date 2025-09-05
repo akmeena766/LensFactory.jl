@@ -100,9 +100,9 @@ given the angular diameter distances. The result can be returned in different un
 - `:msun_pc2` ``\\Rightarrow{\\rm M_⊙/pc^2}``, 
 - `:msun_arcsec2` ``\\Rightarrow{\\rm M_⊙/arcsec^2}``.
 """   
-function get_critical_density(; D_d::RV=NaN, adis::RV=NaN, unit::Symbol=:kg_m2)
+function get_critical_density(; D_d::RV=NaN, D_ds::RV=NaN, D_s::RV=NaN, unit::Symbol=:kg_m2)
    # Calculate Σ_cr in kg/m^2
-   Σ_cr = ( CONST_C^2 / 4.0 / π / CONST_G ) * ( 1.0 / D_d / adis )
+   Σ_cr = (CONST_C^2 / (4.0 * π * CONST_G)) * (D_s / (D_d * D_ds))
    
    # Convert to the requested unit
    if unit == :kg_m2
@@ -289,7 +289,7 @@ t_d(\\pmb{θ}; \\pmb{β}) = \\frac{1+z_l}{\\rm c} \\frac{D_d D_s}{D_{ds}}
 """
 function get_time_delay(lens::AbstractLens, θx::T, θy::T, zl::RV, adis::Float64, β::NTuple{2, RV}) where T <: ROA
    # Constant multiplicative factor
-   constant_factor::Float64 =  ( (1.0 + zl) / CONST_C ) * lens.D_d / adis
+   constant_factor =  ( (1.0 + zl) / CONST_C ) * lens.D_d / adis
 
    # Initialize zero-valued arrays to store time delay
    ϕ = zero(θ_x)
@@ -324,7 +324,7 @@ function get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float
    ψyy .*= adis
    ψxy .*= adis
 
-   # Magnification is the inverse of the determinant of jacobian
+   # μ = 1 / det(A)
    return 1.0 ./ (1.0 .+ ψxx .* ψyy .- ψxx .- ψyy .- ψxy.^2)
 end
 
@@ -490,12 +490,11 @@ end
 
 
 function get_critical_area(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
-   area = 0.0
-
    # Get tangential critical curves
    critical_tan, _ = get_critical_curve(lens, θx, θy, adis)
 
    # Run a loop over all tangential critical curves
+   area = 0.0
    for curve in critical_tan
       area += shoelace(curve)
    end
@@ -504,24 +503,25 @@ end
 
 
 function get_einstein_angle(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
-   return √(get_critical_area(lens, θx, θy, adis) / π)
+   return sqrt(get_critical_area(lens, θx, θy, adis) / π)
 end
 
 
 function interpolation(x::Float64, y::Float64, df::Matrix{<:RV})::Float64
-   px::Int64 = floor(Int64, x)
-   py::Int64 = floor(Int64, y)
+   nx, ny = size(df)
+   px = clamp(floor(Int64, x), 1, nx-1)
+   py = clamp(floor(Int64, y), 1, ny-1)
 
-   df_00::Float64 = df[px + 0, py + 0]
-   df_01::Float64 = df[px + 0, py + 1]
-   df_10::Float64 = df[px + 1, py + 0]
-   df_11::Float64 = df[px + 1, py + 1]
+   # Fractional offsets
+   dx = x - px
+   dy = y - py
 
-   df_interpolated::Float64 = df_00 * (px + 1 - x) * (py + 1 - y) + 
-                              df_01 * (px + 1 - x) * (y - py - 0) +
-                              df_10 * (x - px - 0) * (py + 1 - y) + 
-                              df_11 * (x - px - 0) * (y - py - 0)
-   return df_interpolated
+   f00 = df[px + 0, py + 0]
+   f01 = df[px + 0, py + 1]
+   f10 = df[px + 1, py + 0]
+   f11 = df[px + 1, py + 1]
+
+   return f00 * (1 - dx) * (1 - dy) + f01 * (1 - dx) * dy + f10 * dx * (1 - dy) + f11 * dx * dy
 end
 
 end

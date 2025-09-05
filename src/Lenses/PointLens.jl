@@ -16,17 +16,26 @@ export einstein_angle
 ψ(\\pmb{θ}) = \\frac{4{\\rm G}M}{{\\rm c}^2} \\frac{1}{D_d} \\ln |\\pmb{θ} - \\pmb{θ}_c|
 ```
 """
-function potential!(ψ::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
-   θE2::Float64 = 2.0 * CONST_G * mass / CONST_C^2 / Dol
+function potential!(ψ::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where T <: RV
+   θE2 = 2.0 * CONST_G * mass / CONST_C^2 / Dol
    
-   dx::Float64 = 0.0
-   dy::Float64 = 0.0
+   dx = θx - θxc
+   dy = θy - θyc
+
+   ψ = ψ + θE2 * log(dx^2 + dy^2)
+end
+
+function potential!(ψ::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
+   θE2 = 2.0 * CONST_G * mass / CONST_C^2 / Dol
+   
+   dx = 0.0
+   dy = 0.0
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
-         dx = θx[i, j] - θxc + eps()
-         dy = θy[i, j] - θyc + eps()
+         dx = θx[i, j] - θxc
+         dy = θy[i, j] - θyc
          ψ[i, j] = ψ[i, j] + θE2 * log(dx^2 + dy^2)
       end
    end
@@ -39,18 +48,29 @@ end
 \\pmb{\\hat{α}} (\\pmb{θ}) = \\frac{4{\\rm G}M}{{\\rm c}^2} \\frac{1}{D_d} \\frac{\\pmb{θ} - \\pmb{θ}_c}{|\\pmb{θ} - \\pmb{θ}_c|^2}
 ```
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
-   θE2::Float64 = 4.0 * CONST_G * mass / CONST_C^2 / Dol
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where T <: RV
+   θE2 = 4.0 * CONST_G * mass / CONST_C^2 / Dol
+   dx = θx - θxc
+
+   dy = θy - θyc
+   θr = dx^2 + dy^2
    
-   dx::Float64 = 0.0
-   dy::Float64 = 0.0
-   θr::Float64 = 0.0
+   ψx = ψx + θE2 * dx / θr
+   ψy = ψy + θE2 * dy / θr
+end
+
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
+   θE2 = 4.0 * CONST_G * mass / CONST_C^2 / Dol
+   
+   dx = 0.0
+   dy = 0.0
+   θr = 0.0
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
-         dx = θx[i, j] - θxc + eps()
-         dy = θy[i, j] - θyc + eps()
+         dx = θx[i, j] - θxc
+         dy = θy[i, j] - θyc
          θr = dx^2 + dy^2
          ψx[i, j] = ψx[i, j] + θE2 * dx / θr
          ψy[i, j] = ψy[i, j] + θE2 * dy / θr
@@ -72,18 +92,30 @@ end
 \\end{align*}
 ```
 """
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where T <: RV
+   θE2 = 4.0 * CONST_G * mass / CONST_C^2 / Dol
+
+   dx = θx - θxc
+   dy = θy - θyc
+   θr = (dx^2 + dy^2)^2
+
+   ψxx = ψxx - θE2 * (dx^2 - dy^2) / θr
+   ψyy = ψyy + θE2 * (dx^2 - dy^2) / θr
+   ψxy = ψxy - θE2 * 2.0 * dx * dy / θr
+end
+
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
-   θE2::RV = 4.0 * CONST_G * mass / CONST_C^2 / Dol
-   
-   dx::Float64 = 0
-   dy::Float64 = 0
-   θr::Float64 = 0
+   θE2 = 4.0 * CONST_G * mass / CONST_C^2 / Dol
+
+   dx = 0.0
+   dy = 0.0
+   θr = 0.0
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
-         dx = θx[i, j] - θxc + eps()
-         dy = θy[i, j] - θyc + eps()
+         dx = θx[i, j] - θxc
+         dy = θy[i, j] - θyc
          θr = (dx^2 + dy^2)^2
          ψxx[i, j] = ψxx[i, j] - θE2 * (dx^2 - dy^2) / θr
          ψyy[i, j] = ψyy[i, j] + θE2 * (dx^2 - dy^2) / θr
@@ -100,7 +132,7 @@ end
 ```
 """
 function einstein_angle(Dd::Float64, Dds::Float64, Ds::Float64, mass::Float64)::Float64
-  return  √( (4.0 * CONST_G * mass / CONST_C^2) * (Dds / Dd / Ds) )
+  return  sqrt((4.0 * CONST_G * mass / CONST_C^2) * (Dds / Dd / Ds))
 end
 
 end

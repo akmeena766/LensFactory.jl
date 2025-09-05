@@ -17,12 +17,22 @@ export einstein_angle
 \\left[ \\sqrt{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2} - θ_s \\ln \\left( \\sqrt{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2} + θ_s \\right) \\right]
 ```
 """
+function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: RV
+   θE = 4.0 * pi * (vd / CONST_C)^2
+
+   dx = θx - θxc
+   dy = θy - θyc
+   θr = sqrt(θs^2 + dx^2 + dy^2)
+
+   ψ = ψ + θE * (θr - θs * log(θr + θs))
+end
+
 function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
-   θE::Float64 = 4.0 * pi * (vd / CONST_C)^2
+   θE = 4.0 * pi * (vd / CONST_C)^2
    
-   dx::Float64 = 0.0
-   dy::Float64 = 0.0
-   θr::Float64 = 0.0
+   dx = 0.0
+   dy = 0.0
+   θr = 0.0
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -43,12 +53,23 @@ end
                               \\frac{\\pmb{θ} - \\pmb{θ}_c}{θ_s + \\sqrt{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2}}
 ```
 """
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: RV
+   θE = 4.0 * pi * (vd / CONST_C)^2
+
+   dx = θx - θxc
+   dy = θy - θyc
+   θr = sqrt(θs^2 + dx^2 + dy^2)
+
+   ψx = ψx + θE * dx / (θs + θr)
+   ψy = ψy + θE * dy / (θs + θr)
+end
+
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
-   θE::Float64 = 4.0 * pi * (vd / CONST_C)^2
+   θE = 4.0 * pi * (vd / CONST_C)^2
    
-   dx::Float64 = 0.0
-   dy::Float64 = 0.0
-   θr::Float64 = 0.0
+   dx = 0.0
+   dy = 0.0
+   θr = 0.0
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -78,12 +99,24 @@ end
 \\end{align*}
 ```
 """
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: RV
+   θE = 4.0 * pi * (vd / CONST_C)^2
+
+   dx = θx - θxc
+   dy = θy - θyc
+   θr = sqrt(θs^2 + dx^2 + dy^2)
+
+   ψxx = ψxx + θE * ((1.0 / (θs + θr)) - (dx^2 / θr / (θs + θr)^2))
+   ψyy = ψyy + θE * ((1.0 / (θs + θr)) - (dy^2 / θr / (θs + θr)^2))
+   ψxy = ψxy - θE * dx * dy / θr / (θs + θr)^2
+end
+
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
-   θE::Float64 = 4.0 * pi * (vd / CONST_C)^2
+   θE = 4.0 * pi * (vd / CONST_C)^2
    
-   dx::Float64 = 0.0
-   dy::Float64 = 0.0
-   θr::Float64 = 0.0
+   dx = 0.0
+   dy = 0.0
+   θr = 0.0
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2

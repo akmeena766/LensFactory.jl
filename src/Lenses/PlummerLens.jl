@@ -12,15 +12,24 @@ export einstein_angle
 
 """
     potential!(ψ::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
-
 ```math
 ψ(\\pmb{θ}) = \\frac{4{\\rm G}M}{{\\rm c}^2} \\frac{1}{D_d} \\ln \\left( \\sqrt{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2} \\right)
 ```
 """
+function potential!(ψ::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: RV
+   θE2 = 2.0 * CONST_G * mass / CONST_C^2 / Dol
+   
+   dx = θx - θxc
+   dy = θy - θyc
+   
+   ψ = ψ + θE2 * log(θs^2 + dx^2 + dy^2)
+end
+
 function potential!(ψ::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
-   θE2::Float64 = 2.0 * CONST_G * mass / CONST_C^2 / Dol
-   dx::Float64 = 0.0
-   dy::Float64 = 0.0
+   θE2 = 2.0 * CONST_G * mass / CONST_C^2 / Dol
+   
+   dx = 0.0
+   dy = 0.0
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -32,19 +41,30 @@ function potential!(ψ::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV
    end
 end
 
+
 """
     deflection!(ψx::T, ψy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
 ```math
 \\pmb{\\hat{α}} (\\pmb{θ}) = \\frac{4{\\rm G}M}{{\\rm c}^2} \\frac{1}{D_d} \\frac{\\pmb{θ} - \\pmb{θ}_c}{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2}
 ```
-
 """
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: RV
+   θE2 = 4.0 * CONST_G * mass / CONST_C^2 / Dol
+
+   dx = θx - θxc
+   dy = θy - θyc
+   θr = θs^2 + dx^2 + dy^2
+
+   ψx = ψx + θE2 * dx / θr
+   ψy = ψy + θE2 * dy / θr
+end
+
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
-   θE2::RV = 4.0 * CONST_G * mass / CONST_C^2 / Dol
+   θE2= 4.0 * CONST_G * mass / CONST_C^2 / Dol
    
-   dx::Float64 = 0.0
-   dy::Float64 = 0.0
-   θr::Float64 = 0.0
+   dx = 0.0
+   dy = 0.0
+   θr = 0.0
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -61,7 +81,6 @@ end
 
 """
     jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
-
 ```math
 \\begin{align*}
 ψ_{xx} (\\pmb{θ}) &= \\frac{4{\\rm G}M}{{\\rm c}^2} \\frac{1}{D_d} 
@@ -73,6 +92,18 @@ end
 \\end{align*}
 ```
 """
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: RV
+   θE2 = 4.0 * CONST_G * mass / CONST_C^2 / Dol
+
+   dx = θx - θxc
+   dy = θy - θyc
+   θr = (θs^2 + dx^2 + dy^2)^2
+
+   ψxx = ψxx + θE2 * (θs^2 - dx^2 + dy^2) / θr
+   ψyy = ψyy + θE2 * (θs^2 + dx^2 - dy^2) / θr
+   ψxy = ψxy - θE2 * 2.0 * dx * dy / θr
+end
+
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
    θE2::RV = 4.0 * CONST_G * mass / CONST_C^2 / Dol
    
@@ -96,13 +127,12 @@ end
 
 """
     einstein_angle(Dol::RV, Dls::RV, Dos::RV, mass::RV, θs::RV)::RV
-
 ```math
 θ_E = \\sqrt{\\frac{4{\\rm G} M}{c^2} \\frac{D_{ds}}{D_{d}D_{s}} - θ_s^2}
 ```
 """
 function einstein_angle(Dol::Float64, Dls::Float64, Dos::Float64, mass::Float64, θs::Float64)::Float64
-   return √( (4.0 * CONST_G * mass / CONST_C^2) * (Dls / Dol / Dos) - θs^2 )
+   return sqrt((4.0 * CONST_G * mass / CONST_C^2) * (Dls / Dol / Dos) - θs^2)
 end
 
 end
