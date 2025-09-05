@@ -145,7 +145,22 @@ end
 """
     get_potential(lens::AbstractLens, θx::ROA, θy::ROA)
 """
-function get_potential(lens::AbstractLens, θx::T, θy::T) where T <: Union{RV, ROA}
+function get_potential(lens::AbstractLens, θx::T, θy::T) where T <: RV
+   # Initialize zero-valued potential array
+   ψ = 0.0
+
+   if lens._lens_ == :CompositeLens
+      for component in lens._components_
+         ψ = potential_helper!(ψ, component, θx, θy)
+      end
+      return ψ
+   else
+      ψ = potential_helper!(ψ, lens, θx, θy)
+      return ψ
+   end
+end
+
+function get_potential(lens::AbstractLens, θx::T, θy::T) where T <: ROA
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
@@ -178,7 +193,7 @@ function deflection_helper!(ψx::T, ψy::T, lens::AbstractLens, θx::T, θy::T) 
    # Extract fields from lens
    args = [getfield(lens, p) for p in properties]
 
-   # Call the potential function for specific model
+   # Call the potential function for specific model)
    return getfield(module_name, :deflection!)(ψx, ψy, θx, θy, args...)
 end
 
@@ -188,7 +203,23 @@ end
 Calculates the deflection angles (i.e., the gradient of the potential) for a given lens model. 
 Returns a tuple of deflection components, i.e., ``(ψ_x, ψ_y)``.
 """
-function get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: Union{RV, ROA}
+function get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: RV
+   # Initialize zero-valued potential array
+   ψx = 0.0
+   ψy = 0.0
+
+   if lens._lens_ == :CompositeLens
+      for component in lens._components_
+         ψx, ψy = deflection_helper!(ψx, ψy, component, θx, θy)
+      end
+      return ψx, ψy
+   else
+      ψx, ψy = deflection_helper!(ψx, ψy, lens, θx, θy)
+      return ψx, ψy
+   end
+end
+
+function get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: ROA
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
@@ -243,7 +274,24 @@ which is given as,
 Since the jacobian is symmetric (for single lens plane), only three components are returned,
 i.e., ``(ψ_{xx}, ψ_{yy}, ψ_{xy})``.
 """
-function get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: Union{RV, ROA}
+function get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: RV
+   # Initialize zero-valued potential array
+   ψxx = 0.0
+   ψyy = 0.0
+   ψxy = 0.0
+
+   if lens._lens_ == :CompositeLens
+      for component in lens._components_
+         ψxx, ψyy, ψxy = jacobian_helper!(ψxx, ψyy, ψxy, component, θx, θy)
+      end
+      return ψxx, ψyy, ψxy
+   else
+      ψxx, ψyy, ψxy = jacobian_helper!(ψxx, ψyy, ψxy, lens, θx, θy)
+      return ψxx, ψyy, ψxy
+   end
+end
+
+function get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: ROA
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
@@ -275,22 +323,18 @@ t_d(\\pmb{θ}; \\pmb{β}) = \\frac{1+z_l}{\\rm c} \\frac{D_d D_s}{D_{ds}}
    \\left[ \\frac{(\\pmb{θ} - \\pmb{β})^2}{2} - \\frac{D_{ds}}{D_s} \\psi(\\pmb{θ}) \\right]
 ```
 """
-function get_time_delay(lens::AbstractLens, θx::T, θy::T, zl::RV, adis::Float64, β::NTuple{2, RV}) where T <: ROA
+function get_time_delay(lens::AbstractLens, θx::T, θy::T, zl::RV, adis::Float64, β::NTuple{2, RV}) where T <: Union{RV, ROA}
    # Constant multiplicative factor
-   constant_factor =  ( (1.0 + zl) / CONST_C ) * lens.D_d / adis
+   constant_factor =  (1.0 + zl) / CONST_C * (lens.D_d / adis)
 
    # Initialize zero-valued arrays to store time delay
    ϕ = zero(θx)
 
-   # Get time delay components
+   # Get potential at each point
    ϕ_potential = get_potential(lens, θx, θy)
 
-   ax1, ax2 = axes(θx, 1), axes(θx, 2)
-   @inbounds for j in ax2
-      @inbounds for i in ax1
-         ϕ[i, j] = constant_factor * (0.5 * ((θx[i, j] - β[1])^2 + (θy[i, j] - β[2])^2) - adis * ϕ_potential[i, j]) 
-      end
-   end
+   # Get time delay
+   @. ϕ = constant_factor * (0.5 * ((θx - β[1])^2 + (θy - β[2])^2) - adis * ϕ_potential) 
    return ϕ
 end
 
@@ -308,12 +352,12 @@ function get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float
    ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
 
    # Scale the deformation tensor
-   ψxx .*= adis
-   ψyy .*= adis
-   ψxy .*= adis
+   @. ψxx = adis * ψxx
+   @. ψyy = adis * ψyy
+   @. ψxy = adis * ψxy
 
    # μ = 1 / det(A)
-   return 1.0 ./ (1.0 .+ ψxx .* ψyy .- ψxx .- ψyy .- ψxy.^2)
+   return @. 1.0 / (1.0 + ψxx * ψyy - ψxx - ψyy - ψxy^2)
 end
 
 
@@ -396,14 +440,14 @@ function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::T) whe
    ψx, ψy = get_deflection(lens, θx, θy)
 
    # Create an empty image map
-   image_map::Matrix{<:RV} = zero(θx)
+   image_map = zero(θx)
 
    # Grid size
    nx, ny = size(θx)
    pixel_h = abs(θx[2, 1] - θx[1, 1])
 
-   beta_x::Float64 = 0
-   beta_y::Float64 = 0
+   βx = 0.0
+   βy = 0.0
    pixel_x::Int64 = 0
    pixel_y::Int64 = 0
 
@@ -435,13 +479,13 @@ function get_critical_curve(lens::AbstractLens, θx::T, θy::T, adis::Float64) w
    ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
 
    # Scale the deformation tensor
-   ψxx .*= adis
-   ψyy .*= adis
-   ψxy .*= adis
+   @. ψxx = adis * ψxx
+   @. ψyy = adis * ψyy
+   @. ψxy = adis * ψxy
 
    # Convergence and shear components
-   κ  = 0.5 * (ψxx + ψyy)
-   γ1 = 0.5 * (ψxx - ψyy)
+   κ  = 0.5 .* (ψxx .+ ψyy)
+   γ1 = 0.5 .* (ψxx .- ψyy)
    γ2 = ψxy
 
    # Get the zero eigenvalue contours

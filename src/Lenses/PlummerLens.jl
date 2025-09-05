@@ -22,7 +22,8 @@ function potential!(ψ::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV
    dx = θx - θxc
    dy = θy - θyc
    
-   ψ = ψ + θE2 * log(θs^2 + dx^2 + dy^2)
+   ψ_up = ψ + θE2 * log(θs^2 + dx^2 + dy^2)
+   return ψ_up
 end
 
 function potential!(ψ::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
@@ -55,8 +56,9 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV
    dy = θy - θyc
    θr = θs^2 + dx^2 + dy^2
 
-   ψx = ψx + θE2 * dx / θr
-   ψy = ψy + θE2 * dy / θr
+   ψx_up = ψx + θE2 * dx / θr
+   ψy_up = ψy + θE2 * dy / θr
+   return ψx_up, ψy_up
 end
 
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
@@ -99,9 +101,10 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, Dol::RV, θxc::RV,
    dy = θy - θyc
    θr = (θs^2 + dx^2 + dy^2)^2
 
-   ψxx = ψxx + θE2 * (θs^2 - dx^2 + dy^2) / θr
-   ψyy = ψyy + θE2 * (θs^2 + dx^2 - dy^2) / θr
-   ψxy = ψxy - θE2 * 2.0 * dx * dy / θr
+   ψxx_up = ψxx + θE2 * (θs^2 - dx^2 + dy^2) / θr
+   ψyy_up = ψyy + θE2 * (θs^2 + dx^2 - dy^2) / θr
+   ψxy_up = ψxy - θE2 * 2.0 * dx * dy / θr
+   return ψxx_up, ψyy_up, ψxy_up
 end
 
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
