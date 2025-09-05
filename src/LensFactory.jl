@@ -12,6 +12,7 @@ export Cosmology
 include("./Lenses/Lenses.jl")
 export Lenses
 
+# Module for multi-plane lensing
 include("./MultiPlane/MultiPlane.jl")
 export MultiPlane
 
