@@ -17,6 +17,7 @@ using .ContourFinder
 include("../LensFactoryUtils/IntersectionFinder.jl")
 using .IntersectionFinder
 
+# Module for various polygon operations
 include("../LensFactoryUtils/PolygonOps.jl")
 using .PolygonOps
 
