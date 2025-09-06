@@ -380,6 +380,69 @@ function get_magnification_source(cosmology::Cosmology.AbstractCosmology, lens::
 end
 
 
+function get_image(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV, β::NTuple{2, RV}) where T <: Matrix{<:RV}
+   # Get the potential gradient
+   ψx, ψy = get_deflection(cosmology, lens, θx, θy, zs)
+
+   # Get grid for contour
+   RXC = ContourFinder.get_contour(θx, θy, β[1] .- θx .+ ψx, 0.0)
+   RYC = ContourFinder.get_contour(θx, θy, β[2] .- θy .+ ψy, 0.0)
+
+   # Initialize empty Vector of tuples to store image positions
+   image_position::Vector{NTuple{2, RV}} = []
+   for contour_1 in RXC
+      for contour_2 in RYC
+         # Find the intersection points
+         intersect_points = IntersectionFinder.get_intersection( first.(contour_1), last.(contour_1), first.(contour_2), last.(contour_2) )
+         
+         # Store the intersection points in the image_position vector
+         for point in intersect_points
+            push!(image_position, point)
+         end
+      end
+   end
+   return image_position
+end
+
+function get_image(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV, β::T) where T <: Matrix{<:RV}
+   # Get the potential gradient
+   ψx, ψy = get_deflection(cosmology, lens, θx, θy, zs)
+
+   # Create an empty image map
+   image_map = zero(θx)
+
+   # Grid size
+   nx, ny = size(θx)
+   pixel_h = abs(θx[2, 1] - θx[1, 1])
+
+   βx = 0.0
+   βy = 0.0
+   pixel_x::Int64 = 0
+   pixel_y::Int64 = 0
+
+   # Loop over the image plane and assign values from source
+   ax1, ax2 = axes(θx, 1), axes(θx, 2)
+
+   @inbounds for j in ax2
+      @inbounds for i in ax1
+         # Get source plane position in radians
+         βx = θx[i, j] - ψx[i, j]
+         βy = θy[i, j] - ψy[i, j]
+
+         # Get pixel position from radians
+         pixel_x = round(Int64, βx / pixel_h + 0.5 * nx + 1.0)
+         pixel_y = round(Int64, βy / pixel_h + 0.5 * ny + 1.0)
+
+         # make sure pixel position is within bounds
+         if (1 <= pixel_x <= nx) && (1 <= pixel_y <= ny)
+            image_map[i, j] = β[pixel_x, pixel_y]
+         end
+      end
+   end
+   return image_map
+end
+
+
 function get_critical_curve(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: Matrix{<:RV}
    # Get the jacobian components
    ψxx, ψyy, ψxy, ψyx = get_jacobian(cosmology, lens, θx, θy, zs)
@@ -411,7 +474,7 @@ function get_caustic(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abstra
 end
 
 
-function _distances(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, zs::RV)::Matrix{Float64}
+function _distances(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, zs::RV)
    # Vector of all redshift (including observer and source)
    z_all = [0; lens.z_d; zs]
 
