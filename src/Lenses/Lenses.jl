@@ -69,8 +69,8 @@ function get_meshgrid(θx::RV, θy::RV, dθ::RV)
    end
 
    # Number of pixels along x- and y-directions
-   nx = round(Int64, 2.0*θx/dθ + 1.0)
-   ny = round(Int64, 2.0*θy/dθ + 1.0)
+   nx = floor(Int64, 2.0*θx/dθ + 1)
+   ny = floor(Int64, 2.0*θy/dθ + 1)
 
    # Initialize an empty nx x ny grid
    grid_x = Matrix{Float64}(undef, nx, ny)
@@ -112,7 +112,7 @@ function get_critical_density(; D_d::RV=NaN, D_ds::RV=NaN, D_s::RV=NaN, unit::Sy
    elseif unit == :msun_arcsec2
       return Σ_cr * ( D_d^2 * ANGLE_ARCSEC^2 / MASS_SUN )
    else
-      error( "Invalid unit: $unit. Must be 'kg_m2' or 'msun_pc2' or 'msun_arcsec2'." )
+      throw(ArgumentError("Invalid unit: $unit. Must be 'kg_m2' or 'msun_pc2' or 'msun_arcsec2'."))
    end
 end
 
