@@ -363,7 +363,7 @@ end
 
 function get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Float64; rays_per_pixel::Int64=1) where T <: Matrix{<:RV}
    # Deflection field
-   αx, αy = get_deflection(lens, θx, θy)
+   ψx, ψy = get_deflection(lens, θx, θy)
 
    # Pixel size
    nx, ny = size(θx)
@@ -384,8 +384,8 @@ function get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Floa
 
          for k in 1:rays_per_pixel
             # Get the source plane position
-            βx = interpolation(rand_x[k], rand_y[k], θx) - adis * interpolation(rand_x[k], rand_y[k], αx)
-            βy = interpolation(rand_x[k], rand_y[k], θy) - adis * interpolation(rand_x[k], rand_y[k], αy)
+            βx = PolygonOps.interpolation(rand_x[k], rand_y[k], θx) - adis * PolygonOps.interpolation(rand_x[k], rand_y[k], ψx)
+            βy = PolygonOps.interpolation(rand_x[k], rand_y[k], θy) - adis * PolygonOps.interpolation(rand_x[k], rand_y[k], ψy)
 
             # Get the corresponding pixel values
             βx_p = round(Int64, βx/pixel_h + nx/2.0)
@@ -536,24 +536,6 @@ end
 
 function get_einstein_angle(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
    return sqrt(get_critical_area(lens, θx, θy, adis) / π)
-end
-
-
-function interpolation(x::Float64, y::Float64, df::Matrix{<:RV})::Float64
-   nx, ny = size(df)
-   px = clamp(floor(Int64, x), 1, nx-1)
-   py = clamp(floor(Int64, y), 1, ny-1)
-
-   # Fractional offsets
-   dx = x - px
-   dy = y - py
-
-   f00 = df[px + 0, py + 0]
-   f01 = df[px + 0, py + 1]
-   f10 = df[px + 1, py + 0]
-   f11 = df[px + 1, py + 1]
-
-   return f00 * (1 - dx) * (1 - dy) + f01 * (1 - dx) * dy + f10 * dx * (1 - dy) + f11 * dx * dy
 end
 
 end

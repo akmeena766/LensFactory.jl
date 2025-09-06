@@ -134,8 +134,8 @@ end
 θ_E = \\sqrt{\\frac{4{\\rm G} M}{c^2} \\frac{D_{ds}}{D_{d}D_{s}}}
 ```
 """
-function einstein_angle(Dd::Float64, Dds::Float64, Ds::Float64, mass::Float64)::Float64
-  return  sqrt((4.0 * CONST_G * mass / CONST_C^2) * (Dds / Dd / Ds))
+function einstein_angle(;D_d::Float64=NaN, D_ds::Float64=NaN, D_s::Float64=NaN, mass::Float64=NaN)::Float64
+  return  sqrt((4.0 * CONST_G * mass / CONST_C^2) * (D_ds / D_d / D_s))
 end
 
 end

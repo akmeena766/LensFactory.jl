@@ -21,8 +21,7 @@ using Makie
    - `plot_name::String = "image_plane.png"`
    - `resolution::Int = 2`
 """
-function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA, θy::ROA;
-                           adis::Float64=NaN, 
+function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64;
                            two_panel::Bool = false,
                            plot_caustic::Bool = true,
                            caustic_kws::NamedTuple = (color_tan = :green, color_rad = :green, linewidth = 2),
@@ -50,8 +49,7 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA
                                        markersize=source_kws.markersize, 
                                        marker=source_kws.marker)
          elseif isa(source, Matrix{<:RV})
-            heatmap!(ax1, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, source, 
-                                       colormap=source_kws.heatmap)
+            heatmap!(ax1, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, source, colormap=source_kws.heatmap)
          else
             error("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}.")
          end
@@ -448,6 +446,144 @@ function LensFactory.Lenses.plot_magnification_profile(lens::Lenses.AbstractLens
       save(plot_name, fig, px_per_unit=resolution)
    end
    return fig, ax
+end
+
+
+function LensFactory.MultiPlane.plot_image_plane(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::ROA, θy::ROA, zs::RV;
+                           two_panel::Bool = false,
+                           plot_caustic::Bool = true,
+                           caustic_kws::NamedTuple = (color = :green, linewidth = 2),
+                           plot_critical::Bool =true,
+                           critical_kws::NamedTuple = (color = :red, linewidth = 2),
+                           source::Union{Nothing, NTuple{2, RV}, Matrix{<:RV}} = nothing,
+                           source_kws::NamedTuple = (color=:red, markersize=10, marker=:star5, heatmap=cgrad([:white, :blue])),
+                           image_kws::NamedTuple = (color=:blue, markersize=10, marker=:star5, heatmap=cgrad([:white, :red])),
+                           save_plot::Bool = false,
+                           plot_name::String = "image_plane.png",
+                           resolution::Int = 2)
+   
+   if two_panel
+      # Initialize empty figure
+      fig = Figure(size=(800, 400), figure_padding=15, fontsize=20, fonts=(; regular="Times New Roman"))
+
+      # Axis for source plane
+      ax1 = Axis(fig[1, 1])
+
+      # Plot source and its images
+      if source !== nothing
+         if isa(source, NTuple{2, RV})
+            scatter!(ax1, source[1] / ANGLE_ARCSEC, source[2] / ANGLE_ARCSEC, 
+                                       color=source_kws.color, 
+                                       markersize=source_kws.markersize, 
+                                       marker=source_kws.marker)
+         elseif isa(source, Matrix{<:RV})
+            heatmap!(ax1, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, source, colormap=source_kws.heatmap)
+         else
+            error("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}.")
+         end
+      end
+
+      # Get caustics and plot
+      if plot_caustic
+         # Get caustics
+         caustic_curve = MultiPlane.get_caustic(cosmology, lens, θx, θy, zs)
+
+         # Plot tangential caustic
+         for curve in caustic_curve
+            lines!(ax1, first.(curve) ./ ANGLE_ARCSEC, last.(curve) ./ ANGLE_ARCSEC, 
+                                       color=caustic_kws.color, 
+                                       linewidth=caustic_kws.linewidth,
+                                       linestyle=:solid)
+         end
+      end
+
+      # Set plot keywords
+      set_plotKws!(ax1)
+
+      # Set axis labels and limits
+      ax1.xlabel = L"\theta_1~\text{(in arcseconds)}"
+      ax1.ylabel = L"\theta_2~\text{(in arcseconds)}"
+      xlims!(minimum(θx) / ANGLE_ARCSEC, maximum(θx) / ANGLE_ARCSEC)
+      ylims!(minimum(θy) / ANGLE_ARCSEC, maximum(θy) / ANGLE_ARCSEC)
+
+      # Axis for image plane
+      ax2 = Axis(fig[1, 2])
+
+      # Get critical curves
+      if plot_critical
+         # Get critical curves
+         criical_curve = MultiPlane.get_critical_curve(cosmology, lens, θx, θy, zs)
+
+         # Plot tangential critical curve
+         for curve in criical_curve
+            lines!(ax2, first.(curve) ./ ANGLE_ARCSEC, last.(curve) ./ ANGLE_ARCSEC, 
+                                       color=critical_kws.color, 
+                                       linewidth=critical_kws.linewidth,
+                                       linestyle=:solid)
+         end
+      end
+
+      # Set plot keywords
+      set_plotKws!(ax2)
+
+      # Set axis labels and limits
+      ax2.xlabel = L"\theta_1~\text{(in arcseconds)}"
+      ax2.ylabel = L"\theta_2~\text{(in arcseconds)}"
+      xlims!(minimum(θx) / ANGLE_ARCSEC, maximum(θx) / ANGLE_ARCSEC)
+      ylims!(minimum(θy) / ANGLE_ARCSEC, maximum(θy) / ANGLE_ARCSEC)
+
+      # Save plot
+      if save_plot
+         save(plot_name, fig, px_per_unit=resolution)
+      end
+      return fig, [ax1, ax2]
+   else
+      # Initialize empty figure
+      fig = Figure(size=(400, 400), figure_padding=15, fontsize=20, fonts=(; regular="Times New Roman"))
+      
+      # Plot source + image plane
+      ax = Axis(fig[1, 1])
+
+      # Get caustics and plot
+      if plot_caustic
+         # Get caustics
+         caustic_curve = MultiPlane.get_caustic(cosmology, lens, θx, θy, zs)
+
+         # Plot tangential caustic
+         for curve in caustic_curve
+            lines!(ax, first.(curve) ./ ANGLE_ARCSEC, last.(curve) ./ ANGLE_ARCSEC, 
+                                       color=caustic_kws.color, 
+                                       linewidth=caustic_kws.linewidth,
+                                       linestyle=:solid)
+         end
+      end
+
+      if plot_critical
+         # Get critical curves
+         critical_curve = MultiPlane.get_critical_curve(cosmology, lens, θx, θy, zs)
+
+         # Plot tangential critical curve
+         for curve in critical_curve
+            lines!(ax, first.(curve) ./ ANGLE_ARCSEC, last.(curve) ./ ANGLE_ARCSEC, 
+                                       color=critical_kws.color, 
+                                       linewidth=critical_kws.linewidth,
+                                       linestyle=:solid)
+         end
+      end
+      # Set plot keywords
+      set_plotKws!(ax)
+
+      # Set axis labels and limits
+      ax.xlabel = L"\theta_1~\text{(in arcseconds)}"
+      ax.ylabel = L"\theta_2~\text{(in arcseconds)}"
+      xlims!(minimum(θx) / ANGLE_ARCSEC, maximum(θx) / ANGLE_ARCSEC)
+      ylims!(minimum(θy) / ANGLE_ARCSEC, maximum(θy) / ANGLE_ARCSEC)
+
+      if save_plot
+         save(plot_name, fig, px_per_unit=resolution)
+      end
+      return fig, ax
+   end
 end
 
 

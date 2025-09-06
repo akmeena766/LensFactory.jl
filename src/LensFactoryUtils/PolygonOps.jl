@@ -2,6 +2,7 @@ module PolygonOps
 
 export shoelace
 export hao_sun
+export interpolation
 
 function shoelace(curve::Vector{Vector{Float64}})::Float64
    # Close the polygon if needed
@@ -82,6 +83,23 @@ function hao_sun(point, polygon)
    end
 
    return 1
+end
+
+function interpolation(x::Float64, y::Float64, df::Matrix{<:Float64})::Float64
+   nx, ny = size(df)
+   px = clamp(floor(Int64, x), 1, nx-1)
+   py = clamp(floor(Int64, y), 1, ny-1)
+
+   # Fractional offsets
+   dx = x - px
+   dy = y - py
+
+   f00 = df[px + 0, py + 0]
+   f01 = df[px + 0, py + 1]
+   f10 = df[px + 1, py + 0]
+   f11 = df[px + 1, py + 1]
+
+   return f00 * (1 - dx) * (1 - dy) + f01 * (1 - dx) * dy + f10 * dx * (1 - dy) + f11 * dx * dy
 end
 
 end

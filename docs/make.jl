@@ -25,6 +25,7 @@ makedocs(
                         "NSISP Lens"   => "NSISPLens.md",
                         "NSISMD Lens"  => "NSISMDLens.md"
                         ],
+            "Multi-plane lensing" => "MultiPlane.md",
             "Sources" => "Sources.md",
             "Plot Extension" => "PlotExt.md",
             "History" => "History.md",

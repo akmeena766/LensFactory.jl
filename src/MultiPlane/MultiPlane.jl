@@ -10,18 +10,29 @@ using ..Constants
 using ..Cosmology
 using ..Lenses
 
+include("../LensFactoryUtils/ContourFinder.jl")
+using .ContourFinder
+
+# Module to get intersection points of two contours
+include("../LensFactoryUtils/IntersectionFinder.jl")
+using .IntersectionFinder
+
+# Module for various polygon operations
+include("../LensFactoryUtils/PolygonOps.jl")
+using .PolygonOps
+
 # Various lensing function to export
 export get_deflection
 export get_jacobian
 export get_time_delay
 
 # Plotting functions (see ../../ext folder for functions)
-# export plot_image_plane
+export plot_image_plane
 # export plot_surface_density
 # export plot_magnification_map
 # export plot_magnification_profile
 
-# function plot_image_plane end
+function plot_image_plane end
 # function plot_surface_density end
 # function plot_magnification_map end
 # function plot_magnification_profile end
@@ -29,7 +40,8 @@ export get_time_delay
 
 function get_deflection(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: RV
    # Initialize zero-valued deflection components
-   ψr = zeros(2)
+   ψx = 0.0
+   ψy = 0.0
 
    # Get the number of lens planes
    n_p = lens.n_p
@@ -57,15 +69,16 @@ function get_deflection(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abs
 
       # Final deflection vector
       distance_ratio = (D_ij[ni+1, n_p+2] / D_ij[1, n_p+2])
-      ψr[1] = ψr[1] + distance_ratio * ψ_vec[1, ni]
-      ψr[2] = ψr[2] + distance_ratio * ψ_vec[2, ni]
+      ψx = ψx + distance_ratio * ψ_vec[1, ni]
+      ψy = ψy + distance_ratio * ψ_vec[2, ni]
    end
-   return ψr[1], ψr[2]
+   return ψx, ψy
 end
 
 function get_deflection(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: ROA
    # Initialize zero-valued deflection components
-   ψr = zeros(size(θx,1), size(θx,2), 2)
+   ψx = zero(θx)
+   ψy = zero(θx)
 
    # Get the number of lens planes
    n_p = lens.n_p
@@ -97,12 +110,12 @@ function get_deflection(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abs
 
             # Final deflection vector
             distance_ratio = (D_ij[ni+1, n_p+2] / D_ij[1, n_p+2])
-            ψr[i, j, 1] = ψr[i, j, 1] + distance_ratio * ψ_vec[1, ni]
-            ψr[i, j, 2] = ψr[i, j, 2] + distance_ratio * ψ_vec[2, ni]
+            ψx[i, j] = ψx[i, j] + distance_ratio * ψ_vec[1, ni]
+            ψy[i, j] = ψy[i, j] + distance_ratio * ψ_vec[2, ni]
          end
       end
    end
-   return ψr[:, :, 1], ψr[:, :, 2]
+   return ψx, ψy
 end
 
 
@@ -326,6 +339,76 @@ function get_magnification_image(cosmology::Cosmology.AbstractCosmology, lens::L
 end
 
 
+function get_magnification_source(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV; rays_per_pixel::Int64=1) where T <: Matrix{<:RV}
+   # Deflection field
+   ψx, ψy = get_deflection(cosmology, lens, θx, θy, zs)
+
+   # Pixel size
+   nx, ny = size(θx)
+   pixel_h = abs(θx[2, 1] - θx[1, 1])
+
+   # Area per pixel in the image plane
+   area_per_ray = 1.0 / rays_per_pixel
+
+   # Initialize an empty source plane magnification map
+   μ_source = zero(θx)
+
+   ax1, ax2 = axes(θx, 1), axes(θx, 2)
+   @inbounds for _ in ax2
+      @inbounds  for _ in ax1
+         # Draw random pixel numbers equal to rays_per_pixel
+         rand_x = 1.0 .+ rand(Float64, rays_per_pixel) .* (nx - 1.0)
+         rand_y = 1.0 .+ rand(Float64, rays_per_pixel) .* (ny - 1.0)
+
+         for k in 1:rays_per_pixel
+            # Get the source plane position
+            βx = PolygonOps.interpolation(rand_x[k], rand_y[k], θx) - adis * PolygonOps.interpolation(rand_x[k], rand_y[k], ψx)
+            βy = PolygonOps.interpolation(rand_x[k], rand_y[k], θy) - adis * PolygonOps.interpolation(rand_x[k], rand_y[k], ψy)
+
+            # Get the corresponding pixel values
+            βx_p = round(Int64, βx/pixel_h + nx/2.0)
+            βy_p = round(Int64, βy/pixel_h + ny/2.0)
+
+            # make sure pixel position is within bounds
+            if (1 <= βx_p <= nx) && (1 <= βy_p <= ny)
+               μ_source[βx_p, βy_p] += area_per_ray
+            end
+         end
+      end
+   end
+   return μ_source
+end
+
+
+function get_critical_curve(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: Matrix{<:RV}
+   # Get the jacobian components
+   ψxx, ψyy, ψxy, ψyx = get_jacobian(cosmology, lens, θx, θy, zs)
+
+   # μ det(A)
+   detA = 1.0 .+ ψxx .* ψyy .- ψxx .- ψyy .- ψxy .* ψyx
+
+   # Get the zero eigenvalue contours
+   critical_curve = ContourFinder.get_contour(θx, θy, detA, 0)
+
+   return critical_curve
+end
+
+
+function get_caustic(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: Matrix{<:RV}
+   # Generate critical curves
+   critical_curve = get_critical_curve(cosmology, lens, θx, θy, zs)
+
+   # Get tangential caustics
+   caustics_curve = Vector{Vector{Vector{Float64}}}()
+   for curve in critical_curve
+      ψx, ψy = get_deflection(cosmology, lens, first.(curve), last.(curve), zs)
+      src_x = first.(curve) .- ψx
+      src_y =  last.(curve) .- ψy
+      push!(caustics_curve, [[x, y] for (x, y) in zip(src_x, src_y)])
+   end
+
+   return caustics_curve
+end
 
 
 function _distances(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, zs::RV)::Matrix{Float64}
