@@ -89,7 +89,7 @@ end
 
 
 """
-    get_critical_density(Dd::RV, Dds::RV, Ds::RV; unit::Symbol=:kg_m2)
+    get_critical_density(; Dd::Float64=NaN, Dds::Float64=NaN, Ds::Float64=NaN, adis::Float64=NaN; unit::Symbol=:kg_m2)
 
 Calculate the critical surface density,
 ```math
@@ -99,10 +99,18 @@ given the angular diameter distances. The result can be returned in different un
 - `:kg_m2` ``\\Rightarrow{\\rm kg/m^2}``, 
 - `:msun_pc2` ``\\Rightarrow{\\rm M_⊙/pc^2}``, 
 - `:msun_arcsec2` ``\\Rightarrow{\\rm M_⊙/arcsec^2}``.
+
+!!! note
+    As we can see from formula, to estimate ``Σ_{\\rm cr}``, we need either ``(D_d,\\:D_{ds},\\:D_s)``
+    or ``(D_d,\\:a_{\\rm dis})``. The latter takes precedent during ``Σ_{\\rm cr}`` estimation.
 """   
-function get_critical_density(; D_d::RV=NaN, D_ds::RV=NaN, D_s::RV=NaN, unit::Symbol=:kg_m2)
-   # Calculate Σ_cr in kg/m^2
-   Σ_cr = (CONST_C^2 / (4.0 * π * CONST_G)) * (D_s / (D_d * D_ds))
+function get_critical_density(; D_d::Float64=NaN, D_ds::Float64=NaN, D_s::Float64=NaN, adis::Float64=NaN, unit::Symbol=:kg_m2)
+   # Calculate Σ_cr in kg/m^2 based type of input parameters
+   if isnan(adis)
+      Σ_cr = (CONST_C^2 / (4.0 * π * CONST_G)) * (D_s / (D_d * D_ds))
+   else
+      Σ_cr = (CONST_C^2 / (4.0 * π * CONST_G)) * (1.0 / (D_d * adis))
+   end
    
    # Convert to the requested unit
    if unit == :kg_m2
@@ -409,7 +417,11 @@ end
 Calculates the image position for a given lens model by solving the lens equation,
 ```math
 \\pmb{β} = \\pmb{θ} - \\frac{D_{ds}}{D_s} ∇\\psi(\\pmb{θ})
-```
+```   
+In case of a point source, given by ``\\pmb{β} = (β_1,\\:β_2)``, the current implementation finds 
+the intersection points of contours corresponding to ``\\pmb{β} - \\pmb{θ} + a_{\\rm dis} ∇\\psi(\\pmb{θ}) = 0``.
+On the other hand, for an extended source, the function does **inverse ray shooting** to construct
+the image plane.
 """
 function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::NTuple{2, RV}) where T <: Matrix{<:RV}
    # Get the potential gradient
@@ -473,7 +485,9 @@ function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::T) whe
    return image_map
 end
 
-
+"""
+    get_critical_curve(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
+"""
 function get_critical_curve(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
    # Get the jacobian components
    ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
@@ -496,6 +510,9 @@ function get_critical_curve(lens::AbstractLens, θx::T, θy::T, adis::Float64) w
 end
 
 
+"""
+    get_caustic(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
+"""
 function get_caustic(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
    # Generate critical curves
    critical_tan, critical_rad = get_critical_curve(lens, θx, θy, adis)
@@ -521,6 +538,9 @@ function get_caustic(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T 
 end
 
 
+"""
+    get_critical_area(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
+"""
 function get_critical_area(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
    # Get tangential critical curves
    critical_tan, _ = get_critical_curve(lens, θx, θy, adis)
@@ -534,6 +554,9 @@ function get_critical_area(lens::AbstractLens, θx::T, θy::T, adis::Float64) wh
 end
 
 
+"""
+    get_einstein_angle(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
+"""
 function get_einstein_angle(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
    return sqrt(get_critical_area(lens, θx, θy, adis) / π)
 end

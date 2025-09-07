@@ -6,7 +6,7 @@ using Makie
 
 
 """
-    LensFactory.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::RV)
+    LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::RV)
 
 # Additional keyword arguments and their default values
 - `two_panel::Bool = false` -- Whether to create a two-panel plot with source plane on the left and image plane on the right
@@ -209,7 +209,7 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA
 end
 
 """
-    LensFactory.plot_surface_density(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64, D_d::Float64)
+    LensFactory.Lenses.plot_surface_density(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64; D_d::Float6=NaN)
 
 # Additional keyword arguments and their default values
 - `unit::Symbol = :kg_m2` -- Unit for surface density. Options are :convergence, :kg_m2, :msun_pc2, :msun_arcsec2
@@ -221,8 +221,8 @@ end
    - `plot_name::String = "surface_density.png"`
    - `resolution::Int = 2`
 """
-function LensFactory.Lenses.plot_surface_density(lens::Lenses.AbstractLens, θx::ROA, θy::ROA; 
-                              D_d::Float64 = NaN, D_ds::Float64=NaN, D_s::Float64 = NaN,
+function LensFactory.Lenses.plot_surface_density(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64; 
+                              D_d::Float64 = NaN,
                               unit::Symbol = :kg_m2,
                               figure_size::NTuple{2, RV} = (500, 400),
                               heatmap_kws::NamedTuple = (colormap=:cubehelix, colorrange=(0, 6)),
@@ -233,8 +233,8 @@ function LensFactory.Lenses.plot_surface_density(lens::Lenses.AbstractLens, θx:
                               resolution::Int = 2)
    # Get jacobian and rescale according to adis
    ψxx, ψyy, _ = Lenses.get_jacobian(lens, θx, θy)
-   ψxx .*= (D_ds/D_s)
-   ψyy .*= (D_ds/D_s)
+   ψxx .*= adis
+   ψyy .*= adis
 
    if unit == :convergence
       cb_label = L"\kappa"
@@ -252,7 +252,7 @@ function LensFactory.Lenses.plot_surface_density(lens::Lenses.AbstractLens, θx:
    if unit == :convergence
       Σ_cr = 1.0
    else
-      Σ_cr = Lenses.get_critical_density(D_d=D_d, D_ds=D_ds, D_s=D_s, unit=unit)
+      Σ_cr = Lenses.get_critical_density(D_d=D_d, adis=adis, unit=unit)
    end
 
    # Get surface density
@@ -297,7 +297,7 @@ end
 
 
 """
-    LensFactory.plot_magnification_map(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64)
+    LensFactory.Lenses.plot_magnification_map(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64)
 
 # Additional keyword arguments and their default values
 - `plane::Symbol = :image` -- Whether to plot |μ| map in `:image` or `:source` plane
@@ -355,7 +355,7 @@ end
 
 
 """
-    LensFactory.plot_magnification_profile(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64)
+    LensFactory.Lenses.plot_magnification_profile(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::Float64)
 
 # Additional keyword arguments and their default values
 - `plane::Symbol = :image` -- Whether to plot |μ| map in `:image` or `:source` plane
@@ -426,7 +426,22 @@ function LensFactory.Lenses.plot_magnification_profile(lens::Lenses.AbstractLens
    return fig, ax
 end
 
+"""
+    LensFactory.MultiPlane.plot_image_plane(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::ROA, θy::ROA, zs::RV)
 
+# Additional keyword arguments and their default values
+- `two_panel::Bool = false` -- Whether to create a two-panel plot with source plane on the left and image plane on the right
+- `plot_caustic::Bool = true`
+   - `caustic_kws::NamedTuple = (color = :green, linewidth = 2)`
+- `plot_critical::Bool =true`
+   - `critical_kws::NamedTuple = (color = :red, linewidth = 2)`
+- `source::Union{Nothing, NTuple{2, RV}, Matrix{<:RV}} = nothing`
+   - `source_kws::NamedTuple = (color=:red, markersize=10, marker=:star5, heatmap=cgrad([:white, :blue]))`
+   - `image_kws::NamedTuple = (color=:blue, markersize=10, marker=:star5, heatmap=cgrad([:white, :red]))`
+- `save_plot::Bool = false`
+   - `plot_name::String = "image_plane.png"`
+   - `resolution::Int = 2`
+"""
 function LensFactory.MultiPlane.plot_image_plane(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::ROA, θy::ROA, zs::RV;
                            two_panel::Bool = false,
                            plot_caustic::Bool = true,

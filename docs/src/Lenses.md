@@ -11,4 +11,8 @@ Lenses.get_jacobian
 Lenses.get_time_delay
 Lenses.get_magnification_image
 Lenses.get_image
+Lenses.get_critical_curve
+Lenses.get_caustic
+Lenses.get_critical_area
+Lenses.get_einstein_angle
 ```
