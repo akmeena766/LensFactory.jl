@@ -44,10 +44,9 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA
       # Plot source and its images
       if source !== nothing
          if isa(source, NTuple{2, RV})
-            scatter!(ax1, source[1] / ANGLE_ARCSEC, source[2] / ANGLE_ARCSEC, 
-                                       color=source_kws.color, markersize=source_kws.markersize, marker=source_kws.marker)
+            scatter!(ax1, source[1], source[2], color=source_kws.color, markersize=source_kws.markersize, marker=source_kws.marker)
          elseif isa(source, Matrix{<:RV})
-            heatmap!(ax1, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, source, colormap=source_kws.heatmap)
+            heatmap!(ax1, θx[:,1], θy[1,:], source, colormap=source_kws.heatmap)
          else
             error("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}.")
          end
@@ -60,14 +59,12 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA
 
          # Plot tangential caustic
          for curve in caustic_tan
-            lines!(ax1, first.(curve) ./ ANGLE_ARCSEC, last.(curve) ./ ANGLE_ARCSEC, 
-                                       color=caustic_kws.color_tan, linewidth=caustic_kws.linewidth,linestyle=:solid)
+            lines!(ax1, first.(curve), last.(curve), color=caustic_kws.color_tan, linewidth=caustic_kws.linewidth,linestyle=:solid)
          end
 
          # Plot radial caustic
          for curve in caustic_rad
-            lines!(ax1, first.(curve) ./ ANGLE_ARCSEC, last.(curve) ./ ANGLE_ARCSEC, 
-                                       color=caustic_kws.color_rad, linewidth=caustic_kws.linewidth, linestyle=:dash)
+            lines!(ax1, first.(curve), last.(curve), color=caustic_kws.color_rad, linewidth=caustic_kws.linewidth, linestyle=:dash)
          end
       end
    
@@ -77,8 +74,8 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA
       # Set axis labels and limits
       ax1.xlabel = L"\theta_1~\text{(in arcseconds)}"
       ax1.ylabel = L"\theta_2~\text{(in arcseconds)}"
-      xlims!(minimum(θx) / ANGLE_ARCSEC, maximum(θx) / ANGLE_ARCSEC)
-      ylims!(minimum(θy) / ANGLE_ARCSEC, maximum(θy) / ANGLE_ARCSEC)
+      xlims!(minimum(θx), maximum(θx))
+      ylims!(minimum(θy), maximum(θy))
 
       # Axis for image plane
       ax2 = Axis(fig[1, 2])
@@ -88,11 +85,9 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA
          # Get the image positions
          image = Lenses.get_image(lens, θx, θy, adis, source)
          if isa(source, NTuple{2, RV})
-            scatter!(ax2, first.(image) ./ ANGLE_ARCSEC, last.(image) ./ ANGLE_ARCSEC, 
-                                       color=image_kws.color, markersize=image_kws.markersize, marker=image_kws.marker)
+            scatter!(ax2, first.(image), last.(image), color=image_kws.color, markersize=image_kws.markersize, marker=image_kws.marker)
          elseif isa(source, Matrix{<:RV})
-            heatmap!(ax2, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, image, 
-                                       colormap=image_kws.heatmap)
+            heatmap!(ax2, θx[:,1], θy[1,:], image, colormap=image_kws.heatmap)
          else
             ArgumentError("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}.")
          end
@@ -105,14 +100,12 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA
 
          # Plot tangential critical curve
          for curve in crit_tan
-            lines!(ax2, first.(curve) ./ ANGLE_ARCSEC, last.(curve) ./ ANGLE_ARCSEC, 
-                                       color=critical_kws.color_tan, linewidth=critical_kws.linewidth, linestyle=:solid)
+            lines!(ax2, first.(curve), last.(curve), color=critical_kws.color_tan, linewidth=critical_kws.linewidth, linestyle=:solid)
          end
 
          # Plot radial critical curve
          for curve in crit_rad
-            lines!(ax2, first.(curve) ./ ANGLE_ARCSEC, last.(curve) ./ ANGLE_ARCSEC, 
-                                       color=critical_kws.color_rad, linewidth=critical_kws.linewidth, linestyle=:dash)
+            lines!(ax2, first.(curve), last.(curve), color=critical_kws.color_rad, linewidth=critical_kws.linewidth, linestyle=:dash)
          end
       end
 
@@ -122,8 +115,8 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA
       # Set axis labels and limits
       ax2.xlabel = L"\theta_1~\text{(in arcseconds)}"
       ax2.ylabel = L"\theta_2~\text{(in arcseconds)}"
-      xlims!(minimum(θx) / ANGLE_ARCSEC, maximum(θx) / ANGLE_ARCSEC)
-      ylims!(minimum(θy) / ANGLE_ARCSEC, maximum(θy) / ANGLE_ARCSEC)
+      xlims!(minimum(θx), maximum(θx))
+      ylims!(minimum(θy), maximum(θy))
 
       # Save plot
       if save_plot
@@ -142,17 +135,11 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA
          image = Lenses.get_image(lens, θx, θy, adis, source)
 
          if isa(source, NTuple{2, RV})
-            scatter!(ax, source[1] / ANGLE_ARCSEC, source[2] / ANGLE_ARCSEC, 
-                                       color=source_kws.color, markersize=source_kws.markersize, marker=source_kws.marker)
-
-            scatter!(ax, first.(image) ./ ANGLE_ARCSEC, last.(image) ./ ANGLE_ARCSEC, 
-                                       color=image_kws.color, markersize=image_kws.markersize, marker=image_kws.marker)
+            scatter!(ax, source[1], source[2], color=source_kws.color, markersize=source_kws.markersize, marker=source_kws.marker)
+            scatter!(ax, first.(image), last.(image), color=image_kws.color, markersize=image_kws.markersize, marker=image_kws.marker)
          elseif isa(source, Matrix{<:RV})
-            heatmap!(ax, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, source, 
-                                       colormap=source_kws.heatmap, alpha=1.0)
-                                       
-            heatmap!(ax, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, image, 
-                                       colormap=image_kws.heatmap, alpha=0.8)
+            heatmap!(ax, θx[:,1], θy[1,:], source, colormap=source_kws.heatmap, alpha=1.0)                                       
+            heatmap!(ax, θx[:,1], θy[1,:], image, colormap=image_kws.heatmap, alpha=0.8)
          else
             error("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}.")
          end
@@ -164,14 +151,12 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA
 
          # Plot tangential caustic
          for curve in caustic_tan
-            lines!(ax, first.(curve) ./ ANGLE_ARCSEC, last.(curve) ./ ANGLE_ARCSEC, 
-                                       color=caustic_kws.color_tan, linewidth=caustic_kws.linewidth)
+            lines!(ax, first.(curve), last.(curve), color=caustic_kws.color_tan, linewidth=caustic_kws.linewidth)
          end
 
          # Plot radial caustic
          for curve in caustic_rad
-            lines!(ax, first.(curve) ./ ANGLE_ARCSEC, last.(curve) ./ ANGLE_ARCSEC, 
-                                       color=caustic_kws.color_rad, linewidth=caustic_kws.linewidth)
+            lines!(ax, first.(curve), last.(curve), color=caustic_kws.color_rad, linewidth=caustic_kws.linewidth)
          end
       end
 
@@ -181,14 +166,12 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA
 
          # Plot tangential critical curve
          for curve in crit_tan
-            lines!(ax, first.(curve) ./ ANGLE_ARCSEC, last.(curve) ./ ANGLE_ARCSEC, 
-                                       color=critical_kws.color_tan, linewidth=critical_kws.linewidth)
+            lines!(ax, first.(curve), last.(curve), color=critical_kws.color_tan, linewidth=critical_kws.linewidth)
          end
 
          # Plot radial critical curve
          for curve in crit_rad
-            lines!(ax, first.(curve) ./ ANGLE_ARCSEC, last.(curve) ./ ANGLE_ARCSEC, 
-                                       color=critical_kws.color_rad, linewidth=critical_kws.linewidth)
+            lines!(ax, first.(curve), last.(curve), color=critical_kws.color_rad, linewidth=critical_kws.linewidth)
          end
       end
 
@@ -198,8 +181,8 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA
       # Set axis labels and limits
       ax.xlabel = L"\theta_1~\text{(in arcseconds)}"
       ax.ylabel = L"\theta_2~\text{(in arcseconds)}"
-      xlims!(minimum(θx) / ANGLE_ARCSEC, maximum(θx) / ANGLE_ARCSEC)
-      ylims!(minimum(θy) / ANGLE_ARCSEC, maximum(θy) / ANGLE_ARCSEC)
+      xlims!(minimum(θx), maximum(θx))
+      ylims!(minimum(θy), maximum(θy))
 
       if save_plot
          save(plot_name, fig, px_per_unit=resolution)
@@ -266,9 +249,9 @@ function LensFactory.Lenses.plot_surface_density(lens::Lenses.AbstractLens, θx:
 
    # Plot surface density
    if unit == :convergence
-      hm = heatmap!(ax, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, Σ; heatmap_kws...)
+      hm = heatmap!(ax, θx[:,1], θy[1,:], Σ; heatmap_kws...)
    else
-      hm = heatmap!(ax, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, log10.(Σ); heatmap_kws...)
+      hm = heatmap!(ax, θx[:,1], θy[1,:], log10.(Σ); heatmap_kws...)
    end
 
    # Colorbar specification
@@ -277,7 +260,7 @@ function LensFactory.Lenses.plot_surface_density(lens::Lenses.AbstractLens, θx:
    
    # Plot contours
    if plot_contour
-      contour!(ax, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, Σ; contour_kws...)
+      contour!(ax, θx[:,1], θy[1,:], Σ; contour_kws...)
    end
 
    # Set plot keywords
@@ -286,8 +269,8 @@ function LensFactory.Lenses.plot_surface_density(lens::Lenses.AbstractLens, θx:
    # Set axis labels and limits
    ax.xlabel = L"\theta_1 \text{(in arcseconds)}"
    ax.ylabel = L"\theta_2 \text{(in arcseconds)}"
-   xlims!(minimum(θx) / ANGLE_ARCSEC, maximum(θx) / ANGLE_ARCSEC)
-   ylims!(minimum(θy) / ANGLE_ARCSEC, maximum(θy) / ANGLE_ARCSEC)
+   xlims!(minimum(θx), maximum(θx))
+   ylims!(minimum(θy), maximum(θy))
 
    if save_plot
       save(plot_name, fig, px_per_unit=resolution)
@@ -332,7 +315,7 @@ function LensFactory.Lenses.plot_magnification_map(lens::Lenses.AbstractLens, θ
    ax = Axis(fig[1, 1])
 
    # Plot the magnification map
-   hm = heatmap!(ax, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, abs.(μ); heatmap_kws...)
+   hm = heatmap!(ax, θx[:,1], θy[1,:], abs.(μ); heatmap_kws...)
 
    # Colorbar specification
    cb = Colorbar(fig[1, 2], hm; label=L"|μ|", labelpadding=5, width=20, tickalign=1, ticksize=10, tickwidth=1.5, labelrotation=3*pi/2)
@@ -344,8 +327,8 @@ function LensFactory.Lenses.plot_magnification_map(lens::Lenses.AbstractLens, θ
    # Set axis labels and limits
    ax.xlabel = L"\theta_1 \text{(in arcseconds)}"
    ax.ylabel = L"\theta_2 \text{(in arcseconds)}"
-   xlims!(minimum(θx) / ANGLE_ARCSEC, maximum(θx) / ANGLE_ARCSEC)
-   ylims!(minimum(θy) / ANGLE_ARCSEC, maximum(θy) / ANGLE_ARCSEC)
+   xlims!(minimum(θx), maximum(θx))
+   ylims!(minimum(θy), maximum(θy))
 
    if save_plot
       save(plot_name, fig, px_per_unit=resolution)
@@ -398,7 +381,7 @@ function LensFactory.Lenses.plot_magnification_profile(lens::Lenses.AbstractLens
    μ_area = [sum(μ_flatten .>= t) * pixel_h^2 for t in μ_bins]
 
    # Convert to proper units
-   μ_area .*= 1.0 / unit
+   μ_area .*= (ANGLE_ARCSEC^2 / unit)
 
    # Initialize empty figure
    fig = Figure(size=figure_size, figure_padding=15, fontsize=20, fonts=(; regular="Times New Roman"))
@@ -465,10 +448,9 @@ function LensFactory.MultiPlane.plot_image_plane(cosmology::Cosmology.AbstractCo
       # Plot source and its images
       if source !== nothing
          if isa(source, NTuple{2, RV})
-            scatter!(ax1, source[1] / ANGLE_ARCSEC, source[2] / ANGLE_ARCSEC, 
-                                       color=source_kws.color, markersize=source_kws.markersize, marker=source_kws.marker)
+            scatter!(ax1, source[1], source[2], color=source_kws.color, markersize=source_kws.markersize, marker=source_kws.marker)
          elseif isa(source, Matrix{<:RV})
-            heatmap!(ax1, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, source, colormap=source_kws.heatmap)
+            heatmap!(ax1, θx[:,1], θy[1,:], source, colormap=source_kws.heatmap)
          else
             error("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}.")
          end
@@ -481,7 +463,7 @@ function LensFactory.MultiPlane.plot_image_plane(cosmology::Cosmology.AbstractCo
 
          # Plot tangential caustic
          for curve in caustic_curve
-            lines!(ax1, first.(curve) ./ ANGLE_ARCSEC, last.(curve) ./ ANGLE_ARCSEC; caustic_kws...)
+            lines!(ax1, first.(curve), last.(curve); caustic_kws...)
          end
       end
 
@@ -491,8 +473,8 @@ function LensFactory.MultiPlane.plot_image_plane(cosmology::Cosmology.AbstractCo
       # Set axis labels and limits
       ax1.xlabel = L"\theta_1~\text{(in arcseconds)}"
       ax1.ylabel = L"\theta_2~\text{(in arcseconds)}"
-      xlims!(minimum(θx) / ANGLE_ARCSEC, maximum(θx) / ANGLE_ARCSEC)
-      ylims!(minimum(θy) / ANGLE_ARCSEC, maximum(θy) / ANGLE_ARCSEC)
+      xlims!(minimum(θx), maximum(θx))
+      ylims!(minimum(θy), maximum(θy))
 
       # Axis for image plane
       ax2 = Axis(fig[1, 2])
@@ -502,11 +484,9 @@ function LensFactory.MultiPlane.plot_image_plane(cosmology::Cosmology.AbstractCo
          # Get the image positions
          image = MultiPlane.get_image(cosmology, lens, θx, θy, zs, source)
          if isa(source, NTuple{2, RV})
-            scatter!(ax2, first.(image) ./ ANGLE_ARCSEC, last.(image) ./ ANGLE_ARCSEC;
-                                       color=image_kws.color, markersize=image_kws.markersize, marker=image_kws.marker)
+            scatter!(ax2, first.(image), last.(image); color=image_kws.color, markersize=image_kws.markersize, marker=image_kws.marker)
          elseif isa(source, Matrix{<:RV})
-            heatmap!(ax2, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, image, 
-                                       colormap=image_kws.heatmap)
+            heatmap!(ax2, θx[:,1], θy[1,:], image, colormap=image_kws.heatmap)
          else
             ArgumentError("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}.")
          end
@@ -519,7 +499,7 @@ function LensFactory.MultiPlane.plot_image_plane(cosmology::Cosmology.AbstractCo
 
          # Plot tangential critical curve
          for curve in criical_curve
-            lines!(ax2, first.(curve) ./ ANGLE_ARCSEC, last.(curve) ./ ANGLE_ARCSEC; critical_kws...)
+            lines!(ax2, first.(curve), last.(curve); critical_kws...)
          end
       end
 
@@ -529,8 +509,8 @@ function LensFactory.MultiPlane.plot_image_plane(cosmology::Cosmology.AbstractCo
       # Set axis labels and limits
       ax2.xlabel = L"\theta_1~\text{(in arcseconds)}"
       ax2.ylabel = L"\theta_2~\text{(in arcseconds)}"
-      xlims!(minimum(θx) / ANGLE_ARCSEC, maximum(θx) / ANGLE_ARCSEC)
-      ylims!(minimum(θy) / ANGLE_ARCSEC, maximum(θy) / ANGLE_ARCSEC)
+      xlims!(minimum(θx), maximum(θx))
+      ylims!(minimum(θy), maximum(θy))
 
       # Save plot
       if save_plot
@@ -549,17 +529,11 @@ function LensFactory.MultiPlane.plot_image_plane(cosmology::Cosmology.AbstractCo
          image = MultiPlane.get_image(cosmology, lens, θx, θy, zs, source)
 
          if isa(source, NTuple{2, RV})
-            scatter!(ax, source[1] / ANGLE_ARCSEC, source[2] / ANGLE_ARCSEC, 
-                                       color=source_kws.color, markersize=source_kws.markersize, marker=source_kws.marker)
-
-            scatter!(ax, first.(image) ./ ANGLE_ARCSEC, last.(image) ./ ANGLE_ARCSEC, 
-                                       color=image_kws.color, markersize=image_kws.markersize, marker=image_kws.marker)
+            scatter!(ax, source[1], source[2], color=source_kws.color, markersize=source_kws.markersize, marker=source_kws.marker)
+            scatter!(ax, first.(image), last.(image), color=image_kws.color, markersize=image_kws.markersize, marker=image_kws.marker)
          elseif isa(source, Matrix{<:RV})
-            heatmap!(ax, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, source, 
-                                       colormap=source_kws.heatmap, alpha=1.0)
-                                       
-            heatmap!(ax, θx[:,1] ./ ANGLE_ARCSEC, θy[1,:] ./ ANGLE_ARCSEC, image, 
-                                       colormap=image_kws.heatmap, alpha=0.8)
+            heatmap!(ax, θx[:,1], θy[1,:], source, colormap=source_kws.heatmap, alpha=1.0)                                    
+            heatmap!(ax, θx[:,1], θy[1,:], image, colormap=image_kws.heatmap, alpha=0.8)
          else
             error("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}.")
          end
@@ -572,10 +546,7 @@ function LensFactory.MultiPlane.plot_image_plane(cosmology::Cosmology.AbstractCo
 
          # Plot tangential caustic
          for curve in caustic_curve
-            lines!(ax, first.(curve) ./ ANGLE_ARCSEC, last.(curve) ./ ANGLE_ARCSEC, 
-                                       color=caustic_kws.color, 
-                                       linewidth=caustic_kws.linewidth,
-                                       linestyle=:solid)
+            lines!(ax, first.(curve), last.(curve), color=caustic_kws.color, linewidth=caustic_kws.linewidth, linestyle=:solid)
          end
       end
 
@@ -585,10 +556,7 @@ function LensFactory.MultiPlane.plot_image_plane(cosmology::Cosmology.AbstractCo
 
          # Plot tangential critical curve
          for curve in critical_curve
-            lines!(ax, first.(curve) ./ ANGLE_ARCSEC, last.(curve) ./ ANGLE_ARCSEC, 
-                                       color=critical_kws.color, 
-                                       linewidth=critical_kws.linewidth,
-                                       linestyle=:solid)
+            lines!(ax, first.(curve), last.(curve), color=critical_kws.color, linewidth=critical_kws.linewidth, linestyle=:solid)
          end
       end
       # Set plot keywords
@@ -597,8 +565,8 @@ function LensFactory.MultiPlane.plot_image_plane(cosmology::Cosmology.AbstractCo
       # Set axis labels and limits
       ax.xlabel = L"\theta_1~\text{(in arcseconds)}"
       ax.ylabel = L"\theta_2~\text{(in arcseconds)}"
-      xlims!(minimum(θx) / ANGLE_ARCSEC, maximum(θx) / ANGLE_ARCSEC)
-      ylims!(minimum(θy) / ANGLE_ARCSEC, maximum(θy) / ANGLE_ARCSEC)
+      xlims!(minimum(θx), maximum(θx))
+      ylims!(minimum(θy), maximum(θy))
 
       if save_plot
          save(plot_name, fig, px_per_unit=resolution)

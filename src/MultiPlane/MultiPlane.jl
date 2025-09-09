@@ -235,7 +235,7 @@ function get_time_delay(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abs
    # Get constant factor array
    constant_factor = zeros(n_p)
    for ni in 1:n_p
-      constant_factor[ni] = ( (1.0 + lens.z_d[ni]) / CONST_C ) * (D_ij[1, ni+1] * D_ij[1, ni+2] / D_ij[ni+1, ni+2])
+      constant_factor[ni] = ( (1.0 + lens.z_d[ni]) / CONST_C ) * (D_ij[1, ni+1] * D_ij[1, ni+2] / D_ij[ni+1, ni+2]) * ANGLE_ARCSEC^2
    end
 
    # Loop over all coordinates
@@ -289,7 +289,7 @@ function get_time_delay(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abs
    # Get constant factor array
    constant_factor = zeros(n_p)
    for ni in 1:n_p
-      constant_factor[ni] = ( (1.0 + lens.z_d[ni]) / CONST_C ) * (D_ij[1, ni+1] * D_ij[1, ni+2] / D_ij[ni+1, ni+2])
+      constant_factor[ni] = ( (1.0 + lens.z_d[ni]) / CONST_C ) * (D_ij[1, ni+1] * D_ij[1, ni+2] / D_ij[ni+1, ni+2]) * ANGLE_ARCSEC^2
    end
 
    # Loop over all coordinates

@@ -11,13 +11,13 @@ export einstein_angle
 
 
 """
-    potential!(ψ::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
+    potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
 ```math
 ψ(\\pmb{θ}) = \\frac{4{\\rm G}M}{{\\rm c}^2} \\frac{1}{D_d} \\ln |\\pmb{θ} - \\pmb{θ}_c|
 ```
 """
-function potential!(ψ::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where T <: RV
-   θE2 = 2.0 * CONST_G * mass / CONST_C^2 / Dol
+function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV) where T <: RV
+   θE2 = (2.0 * CONST_G * mass / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
    
    dx = θx - θxc
    dy = θy - θyc
@@ -26,8 +26,8 @@ function potential!(ψ::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV
    return ψ_up
 end
 
-function potential!(ψ::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
-   θE2 = 2.0 * CONST_G * mass / CONST_C^2 / Dol
+function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
+   θE2 = (2.0 * CONST_G * mass / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
    
    dx = 0.0
    dy = 0.0
@@ -44,25 +44,25 @@ end
 
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
 ```math
 \\pmb{\\hat{α}} (\\pmb{θ}) = \\frac{4{\\rm G}M}{{\\rm c}^2} \\frac{1}{D_d} \\frac{\\pmb{θ} - \\pmb{θ}_c}{|\\pmb{θ} - \\pmb{θ}_c|^2}
 ```
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where T <: RV
-   θE2 = 4.0 * CONST_G * mass / CONST_C^2 / Dol
-   dx = θx - θxc
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV) where T <: RV
+   θE2 = (4.0 * CONST_G * mass / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
 
+   dx = θx - θxc
    dy = θy - θyc
    θr = dx^2 + dy^2
-   
+
    ψx_up = ψx + θE2 * dx / θr
    ψy_up = ψy + θE2 * dy / θr
    return ψx_up, ψy_up
 end
 
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
-   θE2 = 4.0 * CONST_G * mass / CONST_C^2 / Dol
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
+   θE2 = (4.0 * CONST_G * mass / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
    
    dx = 0.0
    dy = 0.0
@@ -82,7 +82,7 @@ end
 
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
 ```math
 \\begin{align*}
 ψ_{xx} (\\pmb{θ}) &= \\frac{4{\\rm G}M}{{\\rm c}^2} \\frac{1}{D_d} 
@@ -94,8 +94,8 @@ end
 \\end{align*}
 ```
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where T <: RV
-   θE2 = 4.0 * CONST_G * mass / CONST_C^2 / Dol
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV) where T <: RV
+   θE2 = (4.0 * CONST_G * mass / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
 
    dx = θx - θxc
    dy = θy - θyc
@@ -107,8 +107,8 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, Dol::RV, θxc::RV,
    return ψxx_up, ψyy_up, ψxy_up
 end
 
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, Dol::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
-   θE2 = 4.0 * CONST_G * mass / CONST_C^2 / Dol
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
+   θE2 = (4.0 * CONST_G * mass / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
 
    dx = 0.0
    dy = 0.0
@@ -128,14 +128,14 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, Dol::RV, θxc::RV,
 end
 
 """
-    einstein_angle(Dol::RV, Dls::RV, Dos::RV, mass::RV)::RV
+    einstein_angle(;D_d::Float64=NaN, D_ds::Float64=NaN, D_s::Float64=NaN, mass::Float64=NaN)
 
 ```math
 θ_E = \\sqrt{\\frac{4{\\rm G} M}{c^2} \\frac{D_{ds}}{D_{d}D_{s}}}
 ```
 """
-function einstein_angle(;D_d::Float64=NaN, D_ds::Float64=NaN, D_s::Float64=NaN, mass::Float64=NaN)::Float64
-  return  sqrt((4.0 * CONST_G * mass / CONST_C^2) * (D_ds / D_d / D_s))
+function einstein_angle(;D_d::Float64=NaN, D_ds::Float64=NaN, D_s::Float64=NaN, mass::Float64=NaN)
+  return  sqrt((4.0 * CONST_G * mass / CONST_C^2) * (D_ds / D_d / D_s)) / ANGLE_ARCSEC
 end
 
 end

@@ -333,7 +333,7 @@ t_d(\\pmb{θ}; \\pmb{β}) = \\frac{1+z_l}{\\rm c} \\frac{D_d D_s}{D_{ds}}
 """
 function get_time_delay(lens::AbstractLens, θx::T, θy::T, zl::RV, adis::Float64, β::NTuple{2, RV}) where T <: Union{RV, ROA}
    # Constant multiplicative factor
-   constant_factor =  (1.0 + zl) / CONST_C * (lens.D_d / adis)
+   constant_factor =  (1.0 + zl) / CONST_C * (lens.D_d / adis) * ANGLE_ARCSEC^2
 
    # Initialize zero-valued arrays to store time delay
    ϕ = zero(θx)

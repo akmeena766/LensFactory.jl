@@ -17,7 +17,7 @@ export einstein_angle
 ```
 """
 function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: RV
-   θE = 4.0 * pi * (vd / CONST_C)^2
+   θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
    
    dx = θx - θxc
    dy = θy - θyc
@@ -27,7 +27,7 @@ function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) 
 end
 
 function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
-   θE = 4.0 * pi * (vd / CONST_C)^2
+   θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
    
    dx = 0.0
    dy = 0.0
@@ -51,7 +51,7 @@ end
 ```
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: RV
-   θE = 4.0 * pi * (vd / CONST_C)^2
+   θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
 
    dx = θx - θxc
    dy = θy - θyc
@@ -63,7 +63,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV,
 end
 
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
-   θE = 4.0 * pi * (vd / CONST_C)^2
+   θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
    
    dx = 0.0
    dy = 0.0
@@ -96,7 +96,7 @@ end
 ```
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: RV
-   θE = 4.0 * pi * (vd / CONST_C)^2 
+   θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
    
    dx = θx - θxc
    dy = θy - θyc
@@ -109,7 +109,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
 end
 
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
-   θE = 4.0 * pi * (vd / CONST_C)^2 
+   θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
    
    dx = 0.0
    dy = 0.0
@@ -130,13 +130,13 @@ end
 
 
 """
-    einstein_angle(Dds::RV, Ds::RV, vd::RV)::RV
+    einstein_angle(;D_ds::Float64=NaN, D_s::Float64=NaN, v_d::RV=NaN, x_s::Float64=NaN)
 ```math
-θ_E = \\sqrt{ 4 π \\frac{D_{ds}}{D_s} \\left(\\frac{v_d}{c} \\right)^2 - θ_s^2 }
+θ_E = \\sqrt{ 4 π \\frac{D_{ds}}{D_s} \\left(\\frac{v_d}{c} \\right)^2 - x_s^2 }
 ```
 """
-function einstein_angle(Dds::Float64, Ds::Float64, vd::Float64, θs::Float64)::Float64
-   return sqrt((4π * (vd / CONST_C)^2 * (Dds/Ds))^2 - θs^2)
+function einstein_angle(;D_ds::Float64=NaN, D_s::Float64=NaN, v_d::RV=NaN, x_s::Float64=NaN)
+   return sqrt((4π * (v_d / CONST_C)^2 * (D_ds/D_s))^2 - x_s^2)
 end
 
 end
