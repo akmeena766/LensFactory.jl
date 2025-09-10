@@ -6,7 +6,7 @@ abstract type AbstractLens end
 
 
 """
-    init_PointLens(D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN)
+    init_PointLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN)
 
 Initialize a point lens with the given parameters.
 """
@@ -21,7 +21,7 @@ end
 
 
 """
-    init_PlummerLens(D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_s::Real=NaN)
+    init_PlummerLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN)
 
 Initialize a Plummer lens with the given parameters.
 """
@@ -37,7 +37,7 @@ end
 
 
 """
-    init_SISLens(x_c::Real=0.0, y_c::Real=0.0, v_d::Real=NaN)
+    init_SISLens(x_c::RV=0.0, y_c::RV=0.0, v_d::RV=NaN)
 
 Initialize a Singular Isothermal Sphere (SIS) lens with the given parameters.
 """
@@ -51,7 +51,7 @@ end
 
 
 """
-    init_NSISPLens(x_c::Real=0.0, y_c::Real=0.0, v_d::Real=NaN, x_s::Real=NaN)
+    init_NSISPLens(x_c::RV=0.0, y_c::RV=0.0, v_d::RV=NaN, x_s::RV=NaN)
 
 Initialize a Non-Singular Isothermal Sphere potential (NSISP) lens with the given parameters.
 """
@@ -67,7 +67,7 @@ end
 
 
 """
-    init_NSISMDLens(x_c::Real=0.0, y_c::Real=0.0, v_d::Real=NaN, x_s::Real=NaN)
+    init_NSISMDLens(x_c::RV=0.0, y_c::RV=0.0, v_d::RV=NaN, x_s::RV=NaN)
 
 Initialize a Non-Singular Isothermal Sphere mass distribution (NSISMD) lens with the given parameters.
 """
@@ -78,6 +78,21 @@ Initialize a Non-Singular Isothermal Sphere mass distribution (NSISMD) lens with
    x_c::RV = 0.0
    y_c::RV = 0.0
    v_d::RV = NaN
+   x_s::RV = NaN
+end
+
+
+"""
+    init_GaussianLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN)
+Initialize a Gaussian lens with the given parameters.
+"""
+@kwdef struct init_GaussianLens <: AbstractLens
+   _lens_::Symbol = :GaussianLens
+   _lid_::Int = 6
+   D_d::RV = NaN
+   x_c::RV = 0.0
+   y_c::RV = 0.0
+   mass::RV= NaN
    x_s::RV = NaN
 end
 
@@ -134,7 +149,7 @@ end
    _lens_::Symbol = :MultiPlaneLens
    _lid_::Int64 = 222
    n_p::Int64   = NaN
-   z_d = Vector{Real}()
+   z_d = Vector{RV}()
    _plane_ = Vector{AbstractLens}()
 end
 
@@ -238,6 +253,7 @@ const lens_init_functions = Dict(
    :PlummerLens     => (init_PlummerLens,      [:D_d, :x_c, :y_c, :mass, :x_s]),
    :SISLens         => (init_SISLens,          [:x_c, :y_c, :v_d]),
    :NSISPLens       => (init_NSISPLens,        [:D_d, :x_c, :y_c, :v_d, :θ_s]),
+   :GaussianLens    => (init_GaussianLens,     [:D_d, :x_c, :y_c, :mass, :x_s])
    )
 # Constructor for composite lens
 function init_CompositeLens(lens::Vector{<:NamedTuple})

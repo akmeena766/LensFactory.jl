@@ -18,12 +18,13 @@ makedocs(
             "Constants" => "Constants.md",
             "Cosmology" => "Cosmology.md",
             "Lenses" => [
-                        "Basics"       => "Lenses.md",
-                        "Point Lens"   => "PointLens.md",
-                        "Plummer Lens" => "PlummerLens.md",
-                        "SIS Lens"     => "SISLens.md",
-                        "NSISP Lens"   => "NSISPLens.md",
-                        "NSISMD Lens"  => "NSISMDLens.md"
+                        "Basics"        => "Lenses.md",
+                        "Point Lens"    => "PointLens.md",
+                        "Plummer Lens"  => "PlummerLens.md",
+                        "SIS Lens"      => "SISLens.md",
+                        "NSISP Lens"    => "NSISPLens.md",
+                        "NSISMD Lens"   => "NSISMDLens.md",
+                        "Gaussian Lens" => "GaussianLens.md"
                         ],
             "Multi-plane lensing" => "MultiPlane.md",
             "Sources" => "Sources.md",

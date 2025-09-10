@@ -64,8 +64,8 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
-         dx = θx - θxc
-         dy = θy - θyc
+         dx = θx[i, j] - θxc
+         dy = θy[i, j] - θyc
          dr = (dx^2 + dy^2) / θs^2
 
          ψx[i, j] = ψx[i, j] + κ_s * θs * (1.0 - exp(-0.5 * dr)) * dx / dr
@@ -103,8 +103,8 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
-         dx = θx - θxc
-         dy = θy - θyc
+         dx = θx[i, j] - θxc
+         dy = θy[i, j] - θyc
          dr = (dx^2 + dy^2) / θs^2
 
          α_r = κ_s * (1.0 - exp(-0.5 * dr)) / sqrt(dr)

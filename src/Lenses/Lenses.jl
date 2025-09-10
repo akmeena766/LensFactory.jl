@@ -28,6 +28,7 @@ include("./SISLens.jl")
 include("./PlummerLens.jl")
 include("./NSISPLens.jl")
 include("./NSISMDLens.jl")
+include("./GaussianLens.jl")
 
 # Various lensing function to export
 export get_meshgrid
@@ -125,13 +126,14 @@ function get_critical_density(; D_d::Float64=NaN, D_ds::Float64=NaN, D_s::Float6
 end
 
 
-# Define lens_map globally (module-level or script-level)
+# Define lens_map globally (module-level)
 const lens_map = Dict(
-   :PointLens   => (PointLens,     [:D_d, :x_c, :y_c, :mass]),
-   :PlummerLens => (PlummerLens,   [:D_d, :x_c, :y_c, :mass, :x_s]),
-   :SISLens     => (SISLens,       [:x_c, :y_c, :v_d]),
-   :NSISPLens   => (NSISPLens,     [:x_c, :y_c, :v_d, :θ_s]),
-   :NSISMDLens   => (NSISMDLens,     [:x_c, :y_c, :v_d, :θ_s])
+   :PointLens    => (PointLens,     [:D_d, :x_c, :y_c, :mass]),
+   :PlummerLens  => (PlummerLens,   [:D_d, :x_c, :y_c, :mass, :x_s]),
+   :SISLens      => (SISLens,       [:x_c, :y_c, :v_d]),
+   :NSISPLens    => (NSISPLens,     [:x_c, :y_c, :v_d, :θ_s]),
+   :NSISMDLens   => (NSISMDLens,    [:x_c, :y_c, :v_d, :θ_s]),
+   :GaussianLens => (GaussianLens,  [:D_d, :x_c, :y_c, :mass, :x_s])
 )
 function potential_helper!(ψ::T, lens::AbstractLens, θx::T, θy::T) where T <: Union{RV, ROA}
    # Check if the lens type is in the lens_map otherwise throw an error

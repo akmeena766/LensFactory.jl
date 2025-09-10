@@ -94,7 +94,15 @@ and the effective radius is given by ``θ_e``. The center of the Sersic profile 
 The overall normalization is determined by ``A``. The corresponding formula is:
 ```math
 S(θ_x, θ_y) = \\frac{A \\,b_n^{2n}}{π θ_e^2 \\, Γ(2n+1)} 
-\\exp\\left[-b_n \\left(\\frac{\\sqrt{(θ_x - β_x)^2 + (θ_y - β_y)^2}}{θ_e}\\right)^{1/n}\\right]
+\\exp\\left[-b_n \\left(\\frac{\\sqrt{(θ_x - β_x)^2 + (θ_y - β_y)^2}}{θ_e}\\right)^{1/n}\\right],
+```
+where,
+```math
+b_n = 
+\\begin{cases}
+0.01945 - 0.8902\\:n + 10.95\\:n^2 - 19.67\\:n^3 + 13.43\\:n^4, & 0.06 < n < 0.36 \\\\
+2n - \\frac{1}{3} + \\frac{4}{405\\:n} + \\frac{46}{25515\\:n^2} + \\frac{131}{1148175\\:n^3} - \\frac{2194697}{30690717750\\:n^4}, & n > 0.36
+\\end{cases}
 ```
 """
 function sersic(θx::Matrix{<:RV}, θy::Matrix{<:RV}, n::RV, θe::RV, β::NTuple{2, RV}; A::RV=1.0)::Matrix{<:RV}

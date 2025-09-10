@@ -151,12 +151,12 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA
 
          # Plot tangential caustic
          for curve in caustic_tan
-            lines!(ax, first.(curve), last.(curve), color=caustic_kws.color_tan, linewidth=caustic_kws.linewidth)
+            lines!(ax, first.(curve), last.(curve), color=caustic_kws.color_tan, linewidth=caustic_kws.linewidth, linestyle=:solid)
          end
 
          # Plot radial caustic
          for curve in caustic_rad
-            lines!(ax, first.(curve), last.(curve), color=caustic_kws.color_rad, linewidth=caustic_kws.linewidth)
+            lines!(ax, first.(curve), last.(curve), color=caustic_kws.color_rad, linewidth=caustic_kws.linewidth, linestyle=:dash)
          end
       end
 
@@ -166,12 +166,12 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA
 
          # Plot tangential critical curve
          for curve in crit_tan
-            lines!(ax, first.(curve), last.(curve), color=critical_kws.color_tan, linewidth=critical_kws.linewidth)
+            lines!(ax, first.(curve), last.(curve), color=critical_kws.color_tan, linewidth=critical_kws.linewidth, linestyle=:solid)
          end
 
          # Plot radial critical curve
          for curve in crit_rad
-            lines!(ax, first.(curve), last.(curve), color=critical_kws.color_rad, linewidth=critical_kws.linewidth)
+            lines!(ax, first.(curve), last.(curve), color=critical_kws.color_rad, linewidth=critical_kws.linewidth, linestyle=:dash)
          end
       end
 
