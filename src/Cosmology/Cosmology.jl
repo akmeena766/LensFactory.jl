@@ -94,7 +94,7 @@ end
 
 Calculates the Hubble time ``(t_H)`` in ``{\\rm \\mathbf{Gyr}}``. The formula is,
 ```math
-t_H = \\frac{1}{\\rm H_0}
+t_H = \\frac{1}{H_0}
 ```
 """
 function hubble_time(H0::RV)
