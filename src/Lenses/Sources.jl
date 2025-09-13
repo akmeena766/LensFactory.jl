@@ -30,17 +30,17 @@ S(θ_x, θ_y) =
 """
 function disk(θx::Matrix{<:RV}, θy::Matrix{<:RV}, θr::RV, β::NTuple{2, RV}; A::RV=1.0)::Matrix{<:RV}
    # Initialize an empty source grid
-   src = zero(θ_x)
+   src = zero(θx)
 
    # Local variables for calculations
    dx::Float64 = 0.0
    dy::Float64 = 0.0
 
-   ax1, ax2 = axes(θ_x, 1), axes(θ_x, 2)
+   ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
-         dx = θ_x[i, j] - β[1]
-         dy = θ_y[i, j] - β[2]
+         dx = θx[i, j] - β[1]
+         dy = θy[i, j] - β[2]
          src[i, j] = (dx^2 + dy^2 <= θr^2) ? A * 1.0 : 0.0
       end
    end

@@ -11,11 +11,7 @@ export einstein_angle
 
 
 """
-    potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
-```math
-ψ(\\pmb{θ}) = 4 π \\left(\\frac{v_d}{c} \\right)^2 
-\\left[ \\sqrt{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2} - θ_s \\ln \\left( \\sqrt{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2} + θ_s \\right) \\right]
-```
+    potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: RV
 """
 function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: RV
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
@@ -28,6 +24,9 @@ function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) 
    return ψ_up
 end
 
+"""
+    potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
+"""
 function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
    
@@ -48,11 +47,7 @@ end
 
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
-```math
-\\pmb{\\hat{α}} (\\pmb{θ}) = 4 π \\left(\\frac{v_d}{c} \\right)^2 
-                              \\frac{\\pmb{θ} - \\pmb{θ}_c}{θ_s + \\sqrt{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2}}
-```
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: RV
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: RV
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
@@ -66,6 +61,9 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV,
    return ψx_up, ψy_up
 end
 
+"""
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
+"""
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
    
@@ -87,19 +85,7 @@ end
 
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
-```math
-\\begin{align*}
-ψ_{xx} (\\pmb{θ}) &= 4 π \\left(\\frac{v_d}{c} \\right)^2 
-\\left[ \\frac{1}{θ_s + \\sqrt{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2}} - 
-\\frac{(\\pmb{θ}_x - \\pmb{θ}_{xc})^2}{\\sqrt{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2} \\left( θ_s + \\sqrt{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2} \\right)^2 } \\right] \\\\[5pt]
-ψ_{yy} (\\pmb{θ}) &= 4 π \\left(\\frac{v_d}{c} \\right)^2 
-\\left[ \\frac{1}{θ_s + \\sqrt{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2}} - 
-\\frac{(\\pmb{θ}_y - \\pmb{θ}_{yc})^2}{\\sqrt{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2} \\left( θ_s + \\sqrt{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2} \\right)^2 } \\right] \\\\[5pt]
-ψ_{xy} (\\pmb{θ}) &= 4 π \\left(\\frac{v_d}{c} \\right)^2 
-\\left[ \\frac{-(\\pmb{θ}_x - \\pmb{θ}_{xc}) \\, (\\pmb{θ}_y - \\pmb{θ}_{yc})}{\\sqrt{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2} \\left( θ_s + \\sqrt{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2} \\right)^2 } \\right] \\\\[5pt]
-\\end{align*}
-```
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: RV
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: RV
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
@@ -114,6 +100,9 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
    return ψxx_up, ψyy_up, ψxy_up
 end
 
+"""
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
+"""
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
    
@@ -137,10 +126,6 @@ end
 
 """
     einstein_angle(;D_ds::Float64=NaN, D_s::Float64=NaN, v_d::RV=NaN, x_s::Float64=NaN)
-```math
-θ_E = \\sqrt{ 4 π \\frac{D_{ds}}{D_s} \\left(\\frac{v_d}{c} \\right)^2 }
-\\sqrt{4 π \\frac{D_{ds}}{D_s} \\left(\\frac{v_d}{c} \\right)^2 - 2\\,x_s}
-```
 """
 function einstein_angle(;D_ds::Float64=NaN, D_s::Float64=NaN, v_d::RV=NaN, x_s::Float64=NaN)
    θE = 4π * (D_ds / D_s) * (v_d / CONST_C)^2
