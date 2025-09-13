@@ -3,7 +3,7 @@
 """
 module Sources
 
-# Julia inbuilt functions to import
+# Julia packages to import
 using SpecialFunctions
 
 # LensFactory modules to use
@@ -79,8 +79,8 @@ function gaussian(θx::Matrix{<:RV}, θy::Matrix{<:RV}, σx::RV, σy::RV, β::NT
 end
 
 
-@inline function b_n(n::Real)::Real
-   if 0.06 < n && (n > 0.36)
+@inline function b_n(n::RV)
+   if 0.06 < n < 0.36
       return 0.01945 - n * (0.8902 - n * (10.95 - n * (19.67 - 13.47 * n)))
    else
       return 2.0*n - (1.0/3.0) + (4.0/405.0/n) + (46.0/25515/n^2) + (131.0/1148175.0/n^3) - (2194697.0/30690717750.0/n^4)

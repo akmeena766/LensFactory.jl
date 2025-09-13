@@ -2,7 +2,7 @@
 
 julia_version = "1.11.6"
 manifest_format = "2.0"
-project_hash = "123b766211f8dc9dff84fe3dc3376801654f2d2a"
+project_hash = "fc2deafd9d312de04609b2b776aa713908d13f0b"
 
 [[deps.Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
@@ -62,6 +62,12 @@ deps = ["CFITSIO", "Printf", "Reexport", "Tables"]
 git-tree-sha1 = "f57de3f533590c785210893030736dc11c4a4afb"
 uuid = "525bcba6-941b-5504-bd06-fd0dc1a4d2eb"
 version = "0.17.5"
+
+[[deps.HypergeometricFunctions]]
+deps = ["LinearAlgebra", "OpenLibm_jll", "SpecialFunctions"]
+git-tree-sha1 = "68c173f4f449de5b438ee67ed0c9c748dc31a2ec"
+uuid = "34004b35-14d8-5ef3-9330-4cdb6864b03a"
+version = "0.3.28"
 
 [[deps.IrrationalConstants]]
 git-tree-sha1 = "e2222959fbc6c19554dc15174c81bf7bf3aa691c"

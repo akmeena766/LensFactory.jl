@@ -1,8 +1,5 @@
 ```@docs
 Lenses.init_NSISPLens
-```
-
-```@docs
 Lenses.NSISPLens.potential!
 Lenses.NSISPLens.deflection!
 Lenses.NSISPLens.jacobian!
