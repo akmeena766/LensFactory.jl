@@ -25,6 +25,7 @@ makedocs(
                         "NSISP Lens"       => "NSISPLens.md",
                         "NSISMD Lens"      => "NSISMDLens.md",
                         "Gaussian Lens"    => "GaussianLens.md",
+                        "Sersic Lens"      => "SersicLens.md",
                         "External Effects" => "ExternalEffects.md"
                         ],
             "Multi-plane lensing" => "MultiPlane.md",

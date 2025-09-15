@@ -29,13 +29,13 @@ end
 function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV, n::RV) where T <: RV
    bn = b_n(n)
    θs = θe / bn^n
-   κs = (4.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * gamma(2.0*n+1.0) * ANGLE_ARCSEC^2)
+   κs = (4.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
 
    dx = (θx - θxc) / θs
    dy = (θy - θyc) / θs
    dr = sqrt(dx^2 + dy^2)
 
-   ψ_up = ψ + 0.5 * κs * θs^2 * dr^2 * pFq( (2.0*n, 2.0*n), (2.0*n+1.0, 2.0*n+1.0), -dr^(1.0/n))
+   ψ_up = ψ + 0.5 * κs * θs^2 * dr^2 * pFq( (2*n, 2*n), (2*n+1, 2*n+1), -dr^(1/n))
    return ψ_up
 end
 
@@ -45,11 +45,7 @@ end
 function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV, n::RV) where T <: ROA
    bn = b_n(n)
    θs = θe / bn^n
-   κs = (4.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * gamma(2.0*n+1.0) * ANGLE_ARCSEC^2)
-
-   dx = 0.0
-   dy = 0.0
-   dr = 0.0
+   κs = (4.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -57,7 +53,7 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV
          dx = (θx[i, j] - θxc) / θs
          dy = (θy[i, j] - θyc) / θs
          dr = sqrt(dx^2 + dy^2)
-         ψ[i, j] = ψ[i, j] + 0.5 * κs * θs^2 * dr^2 * pFq( (2.0*n, 2.0*n), (2.0*n+1.0, 2.0*n+1.0), -dr^(1.0/n))
+         ψ[i, j] = ψ[i, j] + 0.5 * κs * θs^2 * dr^2 * pFq( (2*n, 2*n), (2*n+1, 2*n+1), -dr^(1/n))
       end
    end
 end
@@ -68,15 +64,15 @@ end
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV, n::RV) where T <: RV
    bn = b_n(n)
    θs = θe / bn^n
-   κs = (4.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * gamma(2.0*n+1.0) * ANGLE_ARCSEC^2)
+   κs = (4.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
 
    dx = (θx - θxc) / θs
    dy = (θy - θyc) / θs
    dr = sqrt(dx^2 + dy^2)
    
-   P, _ = gamma_inc(2.0*n, dr^(1.0/n))
-   ψx_up = ψx + κs * θs * gamma(2.0*n+1.0) * P * dx / dr^2
-   ψy_up = ψy + κs * θs * gamma(2.0*n+1.0) * P * dy / dr^2
+   P, _ = gamma_inc(2*n, dr^(1/n))
+   ψx_up = ψx + κs * θs * gamma(2*n+1) * P * dx / dr^2
+   ψy_up = ψy + κs * θs * gamma(2*n+1) * P * dy / dr^2
    return ψx_up, ψy_up
 end
 
@@ -86,11 +82,7 @@ end
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV, n::RV) where T <: ROA
    bn = b_n(n)
    θs = θe / bn^n
-   κs = (4.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * gamma(2.0*n+1.0) * ANGLE_ARCSEC^2)
-
-   dx = 0.0
-   dy = 0.0
-   dr = 0.0
+   κs = (4.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -99,9 +91,9 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
          dy = (θy[i, j] - θyc) / θs
          dr = sqrt(dx^2 + dy^2)
 
-         P, _ = gamma_inc(2.0*n, dr^(1.0/n))
-         ψx[i, j] = ψx[i, j] + κs * θs * gamma(2.0*n+1.0) * P * dx / dr^2
-         ψy[i, j] = ψy[i, j] + κs * θs * gamma(2.0*n+1.0) * P * dy / dr^2
+         P, _ = gamma_inc(2*n, dr^(1/n))
+         ψx[i, j] = ψx[i, j] + κs * θs * gamma(2*n+1) * P * dx / dr^2
+         ψy[i, j] = ψy[i, j] + κs * θs * gamma(2*n+1) * P * dy / dr^2
       end
    end
 end
@@ -112,15 +104,15 @@ end
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV, n::RV) where T <: RV
    bn = b_n(n)
    θs = θe / bn^n
-   κs = (4.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * gamma(2.0*n+1.0) * ANGLE_ARCSEC^2)
+   κs = (4.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
 
    dx = (θx - θxc) / θs
    dy = (θy - θyc) / θs
    dr = sqrt(dx^2 + dy^2)
 
-   P, _ = gamma_inc(2.0*n, dr^(1.0/n))
-   α_r = κs * gamma(2.0*n+1.0) * P / dr
-   κ_r = κs * exp(-dr^(1.0/n))
+   P, _ = gamma_inc(2*n, dr^(1/n))
+   α_r = κs * gamma(2*n+1) * P / dr
+   κ_r = κs * exp(-dr^(1/n))
 
    ψxx_up = ψxx + 2.0 * κ_r * dx^2 / dr^2 - α_r * (dx^2 - dy^2) / dr^3
    ψyy_up = ψyy + 2.0 * κ_r * dy^2 / dr^2 + α_r * (dx^2 - dy^2) / dr^3
@@ -134,13 +126,7 @@ end
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV, n::RV) where T <: ROA
    bn = b_n(n)
    θs = θe / bn^n
-   κs = (4.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * gamma(2.0*n+1.0) * ANGLE_ARCSEC^2)
-
-   dx = 0.0
-   dy = 0.0
-   dr = 0.0
-   α_r = 0.0
-   κ_r = 0.0  
+   κs = (4.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -149,8 +135,8 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
          dy = (θy[i, j] - θyc) / θs
          dr = sqrt(dx^2 + dy^2)
 
-         P, _ = gamma_inc(2.0*n, dr^(1.0/n))
-         α_r = κs * gamma(2.0*n+1.0) * P / dr
+         P, _ = gamma_inc(2*n, dr^(1/n))
+         α_r = κs * gamma(2*n+1) * P / dr
          κ_r = κs * exp(-dr^(1.0/n))
 
          ψxx[i, j] = ψxx[i, j] + 2.0 * κ_r * dx^2 / dr^2 - α_r * (dx^2 - dy^2) / dr^3
@@ -159,7 +145,6 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
       end
    end
 end
-
 
 
 """

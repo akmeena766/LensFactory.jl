@@ -29,6 +29,7 @@ include("./PlummerLens.jl")
 include("./NSISPLens.jl")
 include("./NSISMDLens.jl")
 include("./GaussianLens.jl")
+include("./SersicLens.jl")
 include("./ExternalEffects.jl")
 
 # Various lensing function to export

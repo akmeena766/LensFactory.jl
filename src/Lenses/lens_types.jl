@@ -97,6 +97,35 @@ Initialize a Gaussian lens with the given parameters.
 end
 
 
+"""
+    init_SersicLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_e::RV=NaN, n::RV=4)
+Initialize a Sersic lens with the given parameters.
+"""
+@kwdef struct init_SersicLens <: AbstractLens
+   _lens_::Symbol = :SersicLens
+   _lid_::Int = 7
+   D_d::RV = NaN
+   x_c::RV = 0.0
+   y_c::RV = 0.0
+   mass::RV= NaN
+   x_e::RV = NaN
+   n::RV   = 4.0
+end
+
+
+"""
+    init_ExternalEffects(D_d::RV=NaN, kappa::RV=NaN, gamma1::RV=NaN, gamma2::RV=NaN)
+Initialize constant external effects with the given parameters.
+"""
+@kwdef struct init_ExternalEffects <: AbstractLens
+   _lens_::String = "ExternalEffects"
+   _lid_::Int = 1
+   kappa::RV  = NaN
+   gamma1::RV = NaN
+   gamma2::RV = NaN
+end
+
+
 @kwdef struct init_EinastoLens <: AbstractLens
    _lens_::Symbol = :EinastoLens
    _lid_::Int64 = 18

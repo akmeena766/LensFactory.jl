@@ -19,9 +19,9 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV
 
    dx = (θx - θxc) / θs
    dy = (θy - θyc) / θs
-   dr = dx^2 + dy^2
+   dr = sqrt(dx^2 + dy^2)
 
-   ψ_up = ψ + κs * θs^2 * (2.0 * log(sqrt(dr)) - expinti(-0.5 * dr))
+   ψ_up = ψ + κs * θs^2 * (2.0 * log(dr) - expinti(-0.5 * dr^2))
    return ψ_up
 end
 
@@ -40,8 +40,8 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV
       @inbounds for i in ax1
          dx = (θx[i, j] - θxc) / θs
          dy = (θy[i, j] - θyc) / θs
-         dr = dx^2 + dy^2
-         ψ[i, j] = ψ[i, j] + κs * θs^2 * (2.0 * log(sqrt(dr)) - expinti(-0.5 * dr))
+         dr = sqrt(dx^2 + dy^2)
+         ψ[i, j] = ψ[i, j] + κs * θs^2 * (2.0 * log(dr) - expinti(-0.5 * dr^2))
       end
    end
 end
@@ -55,10 +55,10 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
 
    dx = (θx - θxc) / θs
    dy = (θy - θyc) / θs
-   dr = dx^2 + dy^2
+   dr = sqrt(dx^2 + dy^2)
 
-   ψx_up = ψx + 2.0 * κs * θs * (1.0 - exp(-0.5 * dr)) * dx / dr
-   ψy_up = ψy + 2.0 * κs * θs * (1.0 - exp(-0.5 * dr)) * dy / dr
+   ψx_up = ψx + 2.0 * κs * θs * (1.0 - exp(-0.5 * dr^2)) * dx / dr^2
+   ψy_up = ψy + 2.0 * κs * θs * (1.0 - exp(-0.5 * dr^2)) * dy / dr^2
    return ψx_up, ψy_up
 end
 
@@ -77,10 +77,10 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
       @inbounds for i in ax1
          dx = (θx[i, j] - θxc) / θs
          dy = (θy[i, j] - θyc) / θs
-         dr = dx^2 + dy^2
+         dr = sqrt(dx^2 + dy^2)
 
-         ψx[i, j] = ψx[i, j] + 2.0 * κs * θs * (1.0 - exp(-0.5 * dr)) * dx / dr
-         ψy[i, j] = ψy[i, j] + 2.0 * κs * θs * (1.0 - exp(-0.5 * dr)) * dy / dr
+         ψx[i, j] = ψx[i, j] + 2.0 * κs * θs * (1.0 - exp(-0.5 * dr^2)) * dx / dr^2
+         ψy[i, j] = ψy[i, j] + 2.0 * κs * θs * (1.0 - exp(-0.5 * dr^2)) * dy / dr^2
       end
    end
 end
@@ -94,14 +94,14 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
    
    dx = (θx - θxc) / θs
    dy = (θy - θyc) / θs
-   dr = dx^2 + dy^2
+   dr = sqrt(dx^2 + dy^2)
 
-   α_r = 2.0 * κs * (1.0 - exp(-0.5 * dr)) / sqrt(dr)
-   κ_r = κs * exp(-0.5 * dr)
+   α_r = 2.0 * κs * (1.0 - exp(-0.5 * dr^2)) / dr
+   κ_r = κs * exp(-0.5 * dr^2)
 
-   ψxx_up = ψxx + 2.0 * κ_r * dx^2 / dr - α_r * (dx^2 - dy^2) / dr^(3/2)
-   ψyy_up = ψyy + 2.0 * κ_r * dy^2 / dr + α_r * (dx^2 - dy^2) / dr^(3/2)
-   ψxy_up = ψxy + 2.0 * (κ_r - α_r / sqrt(dr)) * dx * dy / dr
+   ψxx_up = ψxx + 2.0 * κ_r * dx^2 / dr^2 - α_r * (dx^2 - dy^2) / dr^3
+   ψyy_up = ψyy + 2.0 * κ_r * dy^2 / dr^2 + α_r * (dx^2 - dy^2) / dr^3
+   ψxy_up = ψxy + 2.0 * (κ_r - α_r / dr) * dx * dy / dr^2
    return ψxx_up, ψyy_up, ψxy_up
 end
 
@@ -122,14 +122,14 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
       @inbounds for i in ax1
          dx = (θx[i, j] - θxc) / θs
          dy = (θy[i, j] - θyc) / θs
-         dr = dx^2 + dy^2
+         dr = sqrt(dx^2 + dy^2)
 
-         α_r = 2.0 * κs * (1.0 - exp(-0.5 * dr)) / sqrt(dr)
-         κ_r = κs * exp(-0.5 * dr)
+         α_r = 2.0 * κs * (1.0 - exp(-0.5 * dr^2)) / dr
+         κ_r = κs * exp(-0.5 * dr^2)
 
-         ψxx[i, j] = ψxx[i, j] + 2.0 * κ_r * dx^2 / dr - α_r * (dx^2 - dy^2) / dr^(3/2)
-         ψyy[i, j] = ψyy[i, j] + 2.0 * κ_r * dy^2 / dr + α_r * (dx^2 - dy^2) / dr^(3/2)
-         ψxy[i, j] = ψxy[i, j] + 2.0 * (κ_r - α_r / sqrt(dr)) * dx * dy / dr
+         ψxx[i, j] = ψxx[i, j] + 2.0 * κ_r * dx^2 / dr^2 - α_r * (dx^2 - dy^2) / dr^3
+         ψyy[i, j] = ψyy[i, j] + 2.0 * κ_r * dy^2 / dr^2 + α_r * (dx^2 - dy^2) / dr^3
+         ψxy[i, j] = ψxy[i, j] + 2.0 * (κ_r - α_r / dr) * dx * dy / dr^2
       end
    end
 end
