@@ -31,6 +31,7 @@ include("./NSISMDLens.jl")
 include("./GaussianLens.jl")
 include("./SersicLens.jl")
 include("./ExternalEffects.jl")
+include("./PIEPLens.jl")
 
 # Various lensing function to export
 export get_meshgrid
@@ -130,12 +131,15 @@ end
 
 # Define lens_map globally (module-level)
 const lens_map = Dict(
-   :PointLens    => (PointLens,     [:D_d, :x_c, :y_c, :mass]),
-   :PlummerLens  => (PlummerLens,   [:D_d, :x_c, :y_c, :mass, :x_s]),
-   :SISLens      => (SISLens,       [:x_c, :y_c, :v_d]),
-   :NSISPLens    => (NSISPLens,     [:x_c, :y_c, :v_d, :θ_s]),
-   :NSISMDLens   => (NSISMDLens,    [:x_c, :y_c, :v_d, :θ_s]),
-   :GaussianLens => (GaussianLens,  [:D_d, :x_c, :y_c, :mass, :x_s])
+   :PointLens       => (PointLens,       [:D_d, :x_c, :y_c, :mass]),
+   :PlummerLens     => (PlummerLens,     [:D_d, :x_c, :y_c, :mass, :x_s]),
+   :SISLens         => (SISLens,         [:x_c, :y_c, :v_d]),
+   :NSISPLens       => (NSISPLens,       [:x_c, :y_c, :v_d, :x_s]),
+   :NSISMDLens      => (NSISMDLens,      [:x_c, :y_c, :v_d, :x_s]),
+   :GaussianLens    => (GaussianLens,    [:D_d, :x_c, :y_c, :mass, :x_s]),
+   :SersicLens      => (SersicLens,      [:D_d, :x_c, :y_c, :mass, :x_e, :n]),
+   :ExternalEffects => (ExternalEffects, [:kappa, :gamma1, :gamma2]),
+   :PIEPLens        => (PIEPLens,        [:x_c, :y_c, :v_d, :x_s, :eps, :pa])
 )
 function potential_helper!(ψ::T, lens::AbstractLens, θx::T, θy::T) where T <: Union{RV, ROA}
    # Check if the lens type is in the lens_map otherwise throw an error

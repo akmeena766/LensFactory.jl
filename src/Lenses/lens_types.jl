@@ -58,7 +58,6 @@ Initialize a Non-Singular Isothermal Sphere potential (NSISP) lens with the give
 @kwdef struct init_NSISPLens <: AbstractLens
    _lens_::Symbol = :NSISPLens
    _lid_::Int64 = 4
-   D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
    v_d::RV = NaN
@@ -74,7 +73,6 @@ Initialize a Non-Singular Isothermal Sphere mass distribution (NSISMD) lens with
 @kwdef struct init_NSISMDLens <: AbstractLens
    _lens_::Symbol = :NSISMDLens
    _lid_::Int64 = 5
-   D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
    v_d::RV = NaN
@@ -114,15 +112,31 @@ end
 
 
 """
-    init_ExternalEffects(D_d::RV=NaN, kappa::RV=NaN, gamma1::RV=NaN, gamma2::RV=NaN)
+    init_ExternalEffects(kappa::RV=NaN, gamma1::RV=NaN, gamma2::RV=NaN)
 Initialize constant external effects with the given parameters.
 """
 @kwdef struct init_ExternalEffects <: AbstractLens
-   _lens_::String = "ExternalEffects"
-   _lid_::Int = 1
+   _lens_::Symbol = :ExternalEffects
+   _lid_::Int = 8
    kappa::RV  = NaN
    gamma1::RV = NaN
    gamma2::RV = NaN
+end
+
+
+"""
+    init_PIEPLens(x_c::RV=0.0, y_c::RV=0.0, v_d::RV=NaN, x_s::RV=NaN, eps::RV=NaN, pa::RV=NaN)
+Initialize pseudo isothermal elliptical potential (PIEP) lens with the given parameters.
+"""
+@kwdef struct init_PIEPLens <: AbstractLens
+   _lens_::Symbol = :PIEPLens
+   _lid_::Int = 9
+   x_c::RV = 0.0
+   y_c::RV = 0.0
+   v_d::RV = NaN
+   x_s::RV = NaN
+   eps::RV = NaN
+   pa::RV  = NaN
 end
 
 
