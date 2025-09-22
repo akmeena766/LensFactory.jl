@@ -140,6 +140,22 @@ Initialize pseudo isothermal elliptical potential (PIEP) lens with the given par
 end
 
 
+"""
+    init_SIELens(x_c::RV=0.0, y_c::RV=0.0, v_d::RV=NaN, x_s::RV=NaN, eps::RV=NaN, pa::RV=NaN)
+Initialize singular isothermal ellipsoid (SIE) lens with the given parameters.
+"""
+@kwdef struct init_SIELens <: AbstractLens
+   _lens_::Symbol = :SIELens
+   _lid_::Int = 10
+   x_c::RV = 0.0
+   y_c::RV = 0.0
+   v_d::RV = NaN
+   x_s::RV = NaN
+   eps::RV = NaN
+   pa::RV  = NaN
+end
+
+
 @kwdef struct init_EinastoLens <: AbstractLens
    _lens_::Symbol = :EinastoLens
    _lid_::Int64 = 18
