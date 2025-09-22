@@ -17,7 +17,7 @@ function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, 
    q = 1.0 - ϵ
 
    # Get b_sie(q)
-   bq = (4.0 * pi * (vd / CONST_C)^2) / sqrt(q)
+   bq = (4.0 * pi * (vd / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
 
    # Get s(q)
    sq = θs / sqrt(q)
@@ -25,7 +25,7 @@ function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, 
    # Coordinate in the rotated frame
    dx_r = + (θx - θxc) * cos(deg2rad(pa)) + (θy - θyc) * sin(deg2rad(pa))
    dy_r = - (θx - θxc) * sin(deg2rad(pa)) + (θy - θyc) * cos(deg2rad(pa))
-   dr_r = sqrt(q^2 * (s_q^2 + dx_r^2) + dy_r^2)
+   dr_r = sqrt(q^2 * (sq^2 + dx_r^2) + dy_r^2)
 
    # Get deflection vector in rotated frame
    ψx_r = (bq * q / sqrt(1 - q^2)) *  atan(sqrt(1 - q^2) * dx_r / (dr_r + sq))
@@ -44,7 +44,7 @@ function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, 
    q = 1.0 - ϵ
 
    # Get b_sie(q)
-   bq = (4.0 * pi * (vd / CONST_C)^2) / sqrt(q)
+   bq = (4.0 * pi * (vd / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
 
    # Get s(q)
    sq = θs / sqrt(q)
@@ -52,9 +52,10 @@ function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
+         # Coordinate in the rotated frame
          dx_r = + (θx[i, j] - θxc) * cos(deg2rad(pa)) + (θy[i, j] - θyc) * sin(deg2rad(pa))
          dy_r = - (θx[i, j] - θxc) * sin(deg2rad(pa)) + (θy[i, j] - θyc) * cos(deg2rad(pa))
-         dr_r = sqrt(q^2 * (s_q^2 + dx_r^2) + dy_r^2)
+         dr_r = sqrt(q^2 * (sq^2 + dx_r^2) + dy_r^2)
 
          # Get deflection vector in rotated frame
          ψx_r = (bq * q / sqrt(1 - q^2)) *  atan(sqrt(1 - q^2) * dx_r / (dr_r + sq))
@@ -74,7 +75,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV,
    q = 1.0 - ϵ
 
    # Get b_sie(q)
-   bq = (4.0 * pi * (vd / CONST_C)^2) / sqrt(q)
+   bq = (4.0 * pi * (vd / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
 
    # Get s(q)
    sq = θs / sqrt(q)
@@ -82,7 +83,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV,
    # Coordinate in the rotated frame
    dx_r = + (θx - θxc) * cos(deg2rad(pa)) + (θy - θyc) * sin(deg2rad(pa))
    dy_r = - (θx - θxc) * sin(deg2rad(pa)) + (θy - θyc) * cos(deg2rad(pa))
-   dr_r = sqrt(q^2 * (s_q^2 + dx_r^2) + dy_r^2)
+   dr_r = sqrt(q^2 * (sq^2 + dx_r^2) + dy_r^2)
 
    # Get deflection vector in rotated frame
    ψx_r = (bq * q / sqrt(1 - q^2)) *  atan(sqrt(1 - q^2) * dx_r / (dr_r + sq))
@@ -103,7 +104,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV,
    q = 1.0 - ϵ
 
    # Get b_sie(q)
-   bq = (4.0 * pi * (vd / CONST_C)^2) / sqrt(q)
+   bq = (4.0 * pi * (vd / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
 
    # Get s(q)
    sq = θs / sqrt(q)
@@ -111,9 +112,10 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV,
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
+         # Coordinate in the rotated frame
          dx_r = + (θx[i, j] - θxc) * cos(deg2rad(pa)) + (θy[i, j] - θyc) * sin(deg2rad(pa))
          dy_r = - (θx[i, j] - θxc) * sin(deg2rad(pa)) + (θy[i, j] - θyc) * cos(deg2rad(pa))
-         dr_r = sqrt(q^2 * (s_q^2 + dx_r^2) + dy_r^2)
+         dr_r = sqrt(q^2 * (sq^2 + dx_r^2) + dy_r^2)
 
          # Get deflection vector in rotated frame
          ψx_r = (bq * q / sqrt(1 - q^2)) *  atan(sqrt(1 - q^2) * dx_r / (dr_r + sq))
@@ -135,7 +137,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
    q = 1.0 - ϵ
 
    # Get b_sie(q)
-   bq = (4.0 * pi * (vd / CONST_C)^2) / sqrt(q)
+   bq = (4.0 * pi * (vd / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
 
    # Get s(q)
    sq = θs / sqrt(q)
@@ -143,7 +145,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
    # Coordinate in the rotated frame
    dx_r = + (θx - θxc) * cos(deg2rad(pa)) + (θy - θyc) * sin(deg2rad(pa))
    dy_r = - (θx - θxc) * sin(deg2rad(pa)) + (θy - θyc) * cos(deg2rad(pa))
-   dr_r = sqrt(q^2 * (s_q^2 + dx_r^2) + dy_r^2)
+   dr_r = sqrt(q^2 * (sq^2 + dx_r^2) + dy_r^2)
 
    # Common factor
    common_factor = (1+q^2) *sq^2 + 2 * dr_r * sq + dx_r^2 + dy_r^2
@@ -169,7 +171,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
    q = 1.0 - ϵ
 
    # Get b_sie(q)
-   bq = (4.0 * pi * (vd / CONST_C)^2) / sqrt(q)
+   bq = (4.0 * pi * (vd / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
 
    # Get s(q)
    sq = θs / sqrt(q)
@@ -178,9 +180,9 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
    @inbounds for j in ax2
       @inbounds for i in ax1
          # Coordinate in the rotated frame
-         dx_r = + (θx - θxc) * cos(deg2rad(pa)) + (θy - θyc) * sin(deg2rad(pa))
-         dy_r = - (θx - θxc) * sin(deg2rad(pa)) + (θy - θyc) * cos(deg2rad(pa))
-         dr_r = sqrt(q^2 * (s_q^2 + dx_r^2) + dy_r^2)
+         dx_r = + (θx[i, j] - θxc) * cos(deg2rad(pa)) + (θy[i, j] - θyc) * sin(deg2rad(pa))
+         dy_r = - (θx[i, j] - θxc) * sin(deg2rad(pa)) + (θy[i, j] - θyc) * cos(deg2rad(pa))
+         dr_r = sqrt(q^2 * (sq^2 + dx_r^2) + dy_r^2)
 
          # Common factor
          common_factor = (1+q^2) *sq^2 + 2 * dr_r * sq + dx_r^2 + dy_r^2
