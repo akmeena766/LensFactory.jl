@@ -156,6 +156,23 @@ Initialize singular isothermal ellipsoid (SIE) lens with the given parameters.
 end
 
 
+"""
+    init_PJEMDLens(x_c::RV=0.0, y_c::RV=0.0, v_d::RV=NaN, x_s::RV=NaN, x_t::RV=NaN, eps::RV=NaN, pa::RV=NaN)
+Initialize Pseudo-Jaffe Ellipsoid (PJE) lens with the given parameters.
+"""
+@kwdef struct init_PJELens <: AbstractLens
+   _lens_::Symbol = :PJELens
+   _lid_::Int = 11
+   x_c::RV = 0.0
+   y_c::RV = 0.0
+   v_d::RV = NaN
+   x_s::RV = NaN
+   x_t::RV = NaN
+   eps::RV = NaN
+   pa::RV  = NaN
+end
+
+
 @kwdef struct init_EinastoLens <: AbstractLens
    _lens_::Symbol = :EinastoLens
    _lid_::Int64 = 18

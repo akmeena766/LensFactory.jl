@@ -148,7 +148,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
    dr_r = sqrt(q^2 * (sq^2 + dx_r^2) + dy_r^2)
 
    # Common factor
-   common_factor = (1+q^2) *sq^2 + 2 * dr_r * sq + dx_r^2 + dy_r^2
+   common_factor = (1+q^2) * sq^2 + 2 * dr_r * sq + dx_r^2 + dy_r^2
 
    # Get deformation tensor in rotated frame
    ψxx_r = + bq * q * (q^2 * sq^2 + dy_r^2 + sq * dr_r) / dr_r / common_factor
@@ -185,7 +185,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
          dr_r = sqrt(q^2 * (sq^2 + dx_r^2) + dy_r^2)
 
          # Common factor
-         common_factor = (1+q^2) *sq^2 + 2 * dr_r * sq + dx_r^2 + dy_r^2
+         common_factor = (1+q^2) * sq^2 + 2 * dr_r * sq + dx_r^2 + dy_r^2
 
          # Get deformation tensor in rotated frame
          ψxx_r = + bq * q * (q^2 * sq^2 + dy_r^2 + sq * dr_r) / dr_r / common_factor

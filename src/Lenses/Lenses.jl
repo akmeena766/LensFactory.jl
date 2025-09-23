@@ -33,6 +33,7 @@ include("./SersicLens.jl")
 include("./ExternalEffects.jl")
 include("./PIEPLens.jl")
 include("./SIELens.jl")
+include("./PJELens.jl")
 
 # Various lensing function to export
 export get_meshgrid
@@ -141,7 +142,8 @@ const lens_map = Dict(
    :SersicLens      => (SersicLens,      [:D_d, :x_c, :y_c, :mass, :x_e, :n]),
    :ExternalEffects => (ExternalEffects, [:kappa, :gamma1, :gamma2]),
    :PIEPLens        => (PIEPLens,        [:x_c, :y_c, :v_d, :x_s, :eps, :pa]),
-   :SIELens         => (SIELens,         [:x_c, :y_c, :v_d, :x_s, :eps, :pa])
+   :SIELens         => (SIELens,         [:x_c, :y_c, :v_d, :x_s, :eps, :pa]),
+   :PJELens         => (PJELens,         [:x_c, :y_c, :v_d, :x_s, :x_t, :eps, :pa])
 )
 function potential_helper!(ψ::T, lens::AbstractLens, θx::T, θy::T) where T <: Union{RV, ROA}
    # Check if the lens type is in the lens_map otherwise throw an error
