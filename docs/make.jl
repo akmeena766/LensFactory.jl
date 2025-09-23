@@ -28,7 +28,8 @@ makedocs(
                         "Sersic Lens"      => "SersicLens.md",
                         "External Effects" => "ExternalEffects.md",
                         "PIEP Lens"        => "PIEPLens.md",
-                        "SIE Lens"         => "SIELens.md"
+                        "SIE Lens"         => "SIELens.md",
+                        "PJE Lens"         => "PJELens.md"
                         ],
             "Multi-plane lensing" => "MultiPlane.md",
             "Sources" => "Sources.md",
