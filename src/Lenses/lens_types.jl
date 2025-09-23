@@ -329,7 +329,13 @@ const lens_init_functions = Dict(
    :PlummerLens     => (init_PlummerLens,      [:D_d, :x_c, :y_c, :mass, :x_s]),
    :SISLens         => (init_SISLens,          [:x_c, :y_c, :v_d]),
    :NSISPLens       => (init_NSISPLens,        [:D_d, :x_c, :y_c, :v_d, :θ_s]),
-   :GaussianLens    => (init_GaussianLens,     [:D_d, :x_c, :y_c, :mass, :x_s])
+   :NSISMDLens      => (init_NSISMDLens,       [:x_c, :y_c, :v_d, :x_s]),
+   :GaussianLens    => (init_GaussianLens,     [:D_d, :x_c, :y_c, :mass, :x_s]),
+   :SersicLens      => (init_SersicLens,       [:D_d, :x_c, :y_c, :mass, :x_e, :n]),
+   :ExternalEffects => (init_ExternalEffects,  [:kappa, :gamma1, :gamma2]),
+   :PIEPLens        => (init_PIEPLens,         [:x_c, :y_c, :v_d, :x_s, :eps, :pa]),
+   :SIELens         => (init_SIELens,          [:x_c, :y_c, :v_d, :x_s, :eps, :pa]),
+   :PJELens         => (init_PJELens,          [:x_c, :y_c, :v_d, :x_s, :x_t, :eps, :pa])
    )
 # Constructor for composite lens
 function init_CompositeLens(lens::Vector{<:NamedTuple})
