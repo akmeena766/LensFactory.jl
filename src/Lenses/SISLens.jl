@@ -29,9 +29,6 @@ end
 function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
    
-   dx = 0.0
-   dy = 0.0
-
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
@@ -63,10 +60,6 @@ end
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
-
-   dx = 0.0
-   dy = 0.0
-   θr = 0.0
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -102,10 +95,6 @@ end
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
-   
-   dx = 0.0
-   dy = 0.0
-   θr = 0.0
    
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
