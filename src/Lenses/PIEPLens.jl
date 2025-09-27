@@ -13,12 +13,13 @@ export jacobian!
 """
 function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+   q = 1.0 - ϵ
 
    # Coordinate in the rotated frame
    dx_r = + (θx - θxc) * cos(deg2rad(pa)) + (θy - θyc) * sin(deg2rad(pa))
    dy_r = - (θx - θxc) * sin(deg2rad(pa)) + (θy - θyc) * cos(deg2rad(pa))
 
-   ψ_up = ψ + θE * sqrt(θs^2 + (1.0 - ϵ) * dx_r^2 + (1.0 + ϵ) * dy_r^2)
+   ψ_up = ψ + θE * sqrt(θs^2 + dx_r^2 + dy_r^2 / q^2)
    return ψ_up
 end
 
@@ -27,6 +28,7 @@ end
 """
 function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+   q = 1.0 - ϵ
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -34,7 +36,7 @@ function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, 
          dx_r = + (θx[i, j] - θxc) * cos(deg2rad(pa)) + (θy[i, j] - θyc) * sin(deg2rad(pa))
          dy_r = - (θx[i, j] - θxc) * sin(deg2rad(pa)) + (θy[i, j] - θyc) * cos(deg2rad(pa))
 
-         ψ[i, j] = ψ[i, j] + θE * sqrt(θs^2 + (1.0 - ϵ) * dx_r^2 + (1.0 + ϵ) * dy_r^2)
+         ψ[i, j] = ψ[i, j] + θE * sqrt(θs^2 + dx_r^2 + dy_r^2 / q^2)
       end
    end
 end
@@ -45,15 +47,16 @@ end
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+   q = 1.0 - ϵ
 
    # Coordinate in the rotated frame
    dx_r = + (θx - θxc) * cos(deg2rad(pa)) + (θy - θyc) * sin(deg2rad(pa))
    dy_r = - (θx - θxc) * sin(deg2rad(pa)) + (θy - θyc) * cos(deg2rad(pa)) 
-   dr_r = sqrt(θs^2 + (1.0 - ϵ) * dx_r^2 + (1.0 + ϵ) * dy_r^2)
+   dr_r = sqrt(θs^2 + dx_r^2 + dy_r^2 / q^2)
 
    # Deflection in the rotated frame
-   ψx_r = θE * (1.0 - ϵ) * dx_r / dr_r
-   ψy_r = θE * (1.0 + ϵ) * dy_r / dr_r
+   ψx_r = θE * dx_r / dr_r
+   ψy_r = θE * dy_r / dr_r / q^2
 
    # Rotate back to original frame
    ψx_up = ψx + ψx_r * cos(deg2rad(pa)) - ψy_r * sin(deg2rad(pa))
@@ -67,6 +70,7 @@ end
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+   q = 1.0 - ϵ
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -74,11 +78,11 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV,
          # Coordinate in the rotated frame
          dx_r = + (θx[i, j] - θxc) * cos(deg2rad(pa)) + (θy[i, j] - θyc) * sin(deg2rad(pa))
          dy_r = - (θx[i, j] - θxc) * sin(deg2rad(pa)) + (θy[i, j] - θyc) * cos(deg2rad(pa))
-         dr_r = sqrt(θs^2 + (1.0 - ϵ) * dx_r^2 + (1.0 + ϵ) * dy_r^2)
+         dr_r = sqrt(θs^2 + dx_r^2 + dy_r^2 / q^2)
 
          # Deflection in the rotated frame
-         ψx_r = θE * (1.0 - ϵ) * dx_r / dr_r
-         ψy_r = θE * (1.0 + ϵ) * dy_r / dr_r
+         ψx_r = θE * dx_r / dr_r
+         ψy_r = θE * dy_r / dr_r / q^2
 
          # Rotate back to original frame
          ψx[i, j] = ψx[i, j] + ψx_r * cos(deg2rad(pa)) - ψy_r * sin(deg2rad(pa))
@@ -93,16 +97,17 @@ end
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+   q = 1.0 - ϵ
 
    # Coordinate in the rotated frame
    dx_r = + (θx - θxc) * cos(deg2rad(pa)) + (θy - θyc) * sin(deg2rad(pa))
    dy_r = - (θx - θxc) * sin(deg2rad(pa)) + (θy - θyc) * cos(deg2rad(pa))
-   dr_r = sqrt(θs^2 + (1.0 - ϵ) * dx_r^2 + (1.0 + ϵ) * dy_r^2)
+   dr_r = sqrt(θs^2 + dx_r^2 + dy_r^2 / q^2)
 
    # Deformation tensor components in rotated frame
-   ψxx_r = +θE * (1.0 - ϵ) * (θs^2 + (1.0 + ϵ) * dy_r^2) / dr_r^3
-   ψyy_r = +θE * (1.0 + ϵ) * (θs^2 + (1.0 - ϵ) * dx_r^2) / dr_r^3
-   ψxy_r = -θE * (1.0 - ϵ^2) * dx_r * dy_r / dr_r^3
+   ψxx_r = + θE * (θs^2 + dy_r^2 / q^2) / dr_r^3
+   ψyy_r = + θE * (θs^2 + dx_r^2) / dr_r^3 / q^2
+   ψxy_r = - θE * dx_r * dy_r / dr_r^3 / q^2
 
    # Rotate back to the original frame
    ψxx_up = ψxx + ψxx_r * cos(deg2rad(pa))^2 - ψxy_r * sin(deg2rad(2*pa)) + ψyy_r * sin(deg2rad(pa))^2
@@ -117,6 +122,7 @@ end
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+   q = 1.0 - ϵ
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -124,12 +130,12 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
          # Coordinate in the rotated frame
          dx_r = (θx[i, j] - θxc) * cos(deg2rad(pa)) + (θy[i, j] - θyc) * sin(deg2rad(pa))
          dy_r = (θy[i, j] - θyc) * cos(deg2rad(pa)) - (θx[i, j] - θxc) * sin(deg2rad(pa))
-         dr_r = sqrt(θs^2 + (1.0 - ϵ) * dx_r^2 + (1.0 + ϵ) * dy_r^2)
+         dr_r = sqrt(θs^2 + dx_r^2 + dy_r^2 / q^2)
 
          # Deformation tensor components in rotated frame
-         ψxx_r = +θE * (1.0 - ϵ) * (θs^2 + (1.0 + ϵ) * dy_r^2) / dr_r^3
-         ψyy_r = +θE * (1.0 + ϵ) * (θs^2 + (1.0 - ϵ) * dx_r^2) / dr_r^3
-         ψxy_r = -θE * (1.0 - ϵ^2) * dx_r * dy_r / dr_r^3
+         ψxx_r = + θE * (θs^2 + dy_r^2 / q^2) / dr_r^3
+         ψyy_r = + θE * (θs^2 + dx_r^2) / dr_r^3 / q^2
+         ψxy_r = - θE * dx_r * dy_r / dr_r^3 / q^2
 
          # Rotate back to the original frame
          ψxx[i, j] = ψxx[i, j] + ψxx_r * cos(deg2rad(pa))^2 - ψxy_r * sin(deg2rad(2*pa)) + ψyy_r * sin(deg2rad(pa))^2

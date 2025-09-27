@@ -32,10 +32,6 @@ function disk(θx::Matrix{<:RV}, θy::Matrix{<:RV}, θr::RV, β::NTuple{2, RV}; 
    # Initialize an empty source grid
    src = zero(θx)
 
-   # Local variables for calculations
-   dx::Float64 = 0.0
-   dy::Float64 = 0.0
-
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
@@ -62,9 +58,7 @@ function gaussian(θx::Matrix{<:RV}, θy::Matrix{<:RV}, σx::RV, σy::RV, β::NT
    # Initialize an empty source grid
    src = zero(θx)
 
-   # Local variables for calculations
-   dx::Float64 = 0.0
-   dy::Float64 = 0.0
+   # Normalization factor
    amplitude::Float64 = A / (2.0 * π * σx * σy)
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
@@ -110,10 +104,9 @@ function sersic(θx::Matrix{<:RV}, θy::Matrix{<:RV}, n::RV, θe::RV, β::NTuple
    src = zero(θx)
    bn::Float64 = b_n(n)
 
-   # Local variables for calculations
-   dx::Float64 = 0.0
-   dy::Float64 = 0.0
+   # Normalization factor
    amplitude::Float64 = A * bn^(2n) / (π * θe^2 * gamma(2.0 * n + 1.0))
+
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
