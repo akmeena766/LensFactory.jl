@@ -111,7 +111,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
    dr = sqrt(dx^2 + dy^2)
 
    P, _ = gamma_inc(2*n, dr^(1/n))
-   α_r = κs * gamma(2*n+1) * P / dr
+   α_r = κs * θs * gamma(2*n+1) * P / dr
    κ_r = κs * exp(-dr^(1/n))
 
    ψxx_up = ψxx + 2.0 * κ_r * dx^2 / dr^2 - α_r * (dx^2 - dy^2) / dr^3
@@ -136,7 +136,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
          dr = sqrt(dx^2 + dy^2)
 
          P, _ = gamma_inc(2*n, dr^(1/n))
-         α_r = κs * gamma(2*n+1) * P / dr
+         α_r = κs * θs * gamma(2*n+1) * P / dr
          κ_r = κs * exp(-dr^(1.0/n))
 
          ψxx[i, j] = ψxx[i, j] + 2.0 * κ_r * dx^2 / dr^2 - α_r * (dx^2 - dy^2) / dr^3

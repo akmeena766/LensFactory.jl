@@ -173,13 +173,30 @@ Initialize Pseudo-Jaffe Ellipsoid (PJE) lens with the given parameters.
 end
 
 
-@kwdef struct init_EinastoLens <: AbstractLens
-   _lens_::Symbol = :EinastoLens
-   _lid_::Int64 = 18
+"""
+    init_HernquistLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_e::RV=NaN)
+Initialize a Hernquist lens with the given parameters.
+"""
+@kwdef struct init_HernquistLens <: AbstractLens
+   _lens_::Symbol = :HernquistLens
+   _lid_::Int64 = 12
+   D_d::RV  = NaN
+   x_c::RV  = 0.0
+   y_c::RV  = 0.0
+   mass::RV = NaN
+   x_e::RV  = NaN
+end
+
+"""
+    init_NFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, rho_s::RV=NaN, mass::RV=NaN)
+Initialize a Navarro-Frenk-White (NFW) lens with the given parameters.
+"""
+@kwdef struct init_NFWLens <: AbstractLens
+   _lens_::Symbol = :NFWLens
+   _lid_::Int64 = 13
    D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
-   n_a::RV =-2.0
    x_s::RV = NaN
    c::RV   = NaN
    rho_s::RV = NaN
@@ -187,12 +204,13 @@ end
 end
 
 
-@kwdef struct init_NFWLens <: AbstractLens
-   _lens_::Symbol = :NFWLens
-   _lid_::Int64 = 11
+@kwdef struct init_EinastoLens <: AbstractLens
+   _lens_::Symbol = :EinastoLens
+   _lid_::Int64 = 18
    D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
+   n_a::RV =-2.0
    x_s::RV = NaN
    c::RV   = NaN
    rho_s::RV = NaN
@@ -335,7 +353,9 @@ const lens_init_functions = Dict(
    :ExternalEffects => (init_ExternalEffects,  [:kappa, :gamma1, :gamma2]),
    :PIEPLens        => (init_PIEPLens,         [:x_c, :y_c, :v_d, :x_s, :eps, :pa]),
    :SIELens         => (init_SIELens,          [:x_c, :y_c, :v_d, :x_s, :eps, :pa]),
-   :PJELens         => (init_PJELens,          [:x_c, :y_c, :v_d, :x_s, :x_t, :eps, :pa])
+   :PJELens         => (init_PJELens,          [:x_c, :y_c, :v_d, :x_s, :x_t, :eps, :pa]),
+   :HernquistLens   => (init_HernquistLens,    [:D_d, :x_c, :y_c, :mass, :x_e]),
+   :NFWLens         => (init_NFWLens,          [:D_d, :x_c, :y_c, :x_s, :c, :rho_s, :mass])
    )
 # Constructor for composite lens
 function init_CompositeLens(lens::Vector{<:NamedTuple})
