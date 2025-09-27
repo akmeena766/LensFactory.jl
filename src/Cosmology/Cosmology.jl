@@ -242,7 +242,7 @@ end
 
 
 """
-    comoving_distance_radial(cosmo::AbstractCosmology, zi::RV, zf::RV)
+    comoving_distance_radial(cosmo::AbstractCosmology, z1::RV, z2::RV)
 
 Calculates the comoving radial distance ``(D_C)`` between ``z_1`` and ``z_2`` in ``{\\rm \\mathbf{meters}}``.
 The formula is,
@@ -269,7 +269,7 @@ end
 
 
 """
-    comoving_distance_transverse(cosmo::AbstractCosmology, zi::RV, zf::RV)
+    comoving_distance_transverse(cosmo::AbstractCosmology, z1::RV, z2::RV)
 
 Calculates the comoving radial distance ``(D_M)`` between, ``z_1`` and ``z_2`` in ``{\\rm \\mathbf{meters}}``.
 The formula is,
@@ -281,12 +281,12 @@ D_H \\frac{1}{\\sqrt{|\\Omega_k|}}  \\sin \\left[ \\sqrt{|\\Omega_k|} \\: D_C / 
 \\end{cases}
 ```
 """
-function comoving_distance_transverse(cosmology::AbstractCosmology, zi::RV, zf::RV)
+function comoving_distance_transverse(cosmology::AbstractCosmology, z1::RV, z2::RV)
    # Get the Hubble distance
    dH = hubble_distance(cosmology.H0)
 
    # Get the comoving distance (radial)
-   dC = comoving_distance_radial(cosmology, zi, zf)
+   dC = comoving_distance_radial(cosmology, z1, z2)
 
    # Get the comoving distance (transverse)
    dM = 0.0
@@ -312,8 +312,8 @@ The formula is,
 D_L(z) = (1+z) D_M(z)
 ```
 """
-function luminosity_distance(cosmology::AbstractCosmology, zf::RV)
-   return (1.0 + zf) * comoving_distance_transverse(cosmology, 0.0, zf)
+function luminosity_distance(cosmology::AbstractCosmology, z::RV)
+   return (1.0 + z) * comoving_distance_transverse(cosmology, 0.0, z)
 end
 
 
@@ -325,13 +325,13 @@ The formula is,
 D_A(z_1, z_2) = \\frac{D_M(z_1, z_2)}{1+z_2}
 ```
 """
-function angular_diameter_distance(cosmology::AbstractCosmology, zi::RV, zf::RV)
-   return comoving_distance_transverse(cosmology, zi, zf) / (1.0 + zf)
+function angular_diameter_distance(cosmology::AbstractCosmology, z1::RV, z2::RV)
+   return comoving_distance_transverse(cosmology, z1, z2) / (1.0 + z2)
 end
 
 
 """
-    distance_modulus(cosmo::AbstractCosmology, zf::RV)
+    distance_modulus(cosmo::AbstractCosmology, z::RV)
 
 Calculates the distance modulus ``(\\mu)`` to a given redshift ``z``. 
 The formula is,
@@ -339,13 +339,13 @@ The formula is,
 \\mu = 5 \\log\\left( \\frac{D_L}{\\rm pc} \\right) - 5
 ```
 """
-function distance_modulus(cosmology::AbstractCosmology, zf::RV)
-   return 5.0 * log10(luminosity_distance(cosmology, zf) / DIST_PC) - 5.0
+function distance_modulus(cosmology::AbstractCosmology, z::RV)
+   return 5.0 * log10(luminosity_distance(cosmology, z) / DIST_PC) - 5.0
 end
 
 
 """
-    angular_scale(cosmo::AbstractCosmology, zf::RV)
+    angular_scale(cosmo::AbstractCosmology, z::RV)
 
 Calculates the angular size in ``{\\rm \\mathbf{Kpc}}`` for ``1''`` on sky at redhsift, ``z``. 
 The formula is
@@ -359,7 +359,7 @@ end
 
 
 """
-    comoving_volume_element(cosmology::AbstractCosmology, zf::RV)
+    comoving_volume_element(cosmology::AbstractCosmology, z::RV)
 
 Calculates the comving volume element ``(dV_C)`` at redshift ``z`` in ``{\\rm \\mathbf{Gpc^3}}``.
 The formula is
@@ -367,22 +367,22 @@ The formula is
 dV_C = D_H \\frac{D_M^2(z)}{E(z)}
 ```
 """
-function comoving_volume_element(cosmology::AbstractCosmology, zf::RV)
+function comoving_volume_element(cosmology::AbstractCosmology, z::RV)
    # Get the Hubble distance
    dH = hubble_distance(cosmology.H0)
 
    # E(z) factor
-   ez_value = Ez(cosmology, zf)
+   ez_value = Ez(cosmology, z)
 
    # Get the transverse comoving distance
-   dC_trans = comoving_distance_transverse(cosmology, 0.0, zf)
+   dC_trans = comoving_distance_transverse(cosmology, 0.0, z)
 
    return dH * dC_trans^2 / ez_value / DIST_GPC^3
 end
 
 
 """
-    comoving_volume(cosmology::AbstractCosmology, zf::RV)
+    comoving_volume(cosmology::AbstractCosmology, z::RV)
 
 Calculates the total comving volume up to redshift ``z`` in ``{\\rm \\mathbf{Gpc^3}}``.
 The formula is,
@@ -397,12 +397,12 @@ V_C = \\begin{cases}
 \\end{cases}
 ```
 """
-function comoving_volume(cosmology::AbstractCosmology, zf::RV)
+function comoving_volume(cosmology::AbstractCosmology, z::RV)
    # Get the Hubble distance
    dH = hubble_distance(cosmology.H0)
 
    # Get the comoving distance (radial)
-   dM = comoving_distance_transverse(cosmology, 0.0, zf)
+   dM = comoving_distance_transverse(cosmology, 0.0, z)
 
    # Get the comoving volume up to redshift z
    com_vol = 0.0
