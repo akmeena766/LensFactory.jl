@@ -29,7 +29,9 @@ makedocs(
                         "External Effects" => "ExternalEffects.md",
                         "PIEP Lens"        => "PIEPLens.md",
                         "SIE Lens"         => "SIELens.md",
-                        "PJE Lens"         => "PJELens.md"
+                        "PJE Lens"         => "PJELens.md",
+                        "Hernquist Lens" => "HernquistLens.md",
+                        "NFW Lens"         => "NFWLens.md",
                         ],
             "Multi-plane lensing" => "MultiPlane.md",
             "Sources" => "Sources.md",

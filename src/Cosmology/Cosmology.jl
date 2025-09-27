@@ -173,7 +173,7 @@ end
 """
     Omega_mz(cosmology::AbstractCosmology, z::RV)
 
-Calculates the matter density parameter ``(\\Omega_{m})`` at redshift `z`. The formula is,
+Calculates the matter density parameter ``(\\Omega_{m})`` at redshift ``z``. The formula is,
 
 ```math
 Ω_{m}(z) = Ω_{m}(0) \\: (1+z)^3 \\left( \\frac{H0}{H(z)} \\right)^2
@@ -187,7 +187,7 @@ end
 """
     Omega_rz(cosmology::AbstractCosmology, z::RV)
 
-Calculates the matter density parameter ``(\\Omega_{r})`` at redshift `z`. The formula is,
+Calculates the matter density parameter ``(\\Omega_{r})`` at redshift ``z``. The formula is,
 
 ```math
 Ω_{r}(z) = Ω_{r}(0) \\: (1+z)^4 \\left( \\frac{H_0}{H(z)} \\right)^2
@@ -201,7 +201,7 @@ end
 """
     Omega_wz(cosmology::AbstractCosmology, z::RV)
 
-Calculates the dark energy density parameter ``(\\Omega_{w})`` at redshift `z`. The formula is,
+Calculates the dark energy density parameter ``(\\Omega_{w})`` at redshift ``z``. The formula is,
 
 ```math
 Ω_{w}(z) = Ω_{w0} (1+z)^{3(1+w)} \\left( \\frac{H_0}{H(z)} \\right)^2
@@ -215,7 +215,7 @@ end
 """
     Omega_kz(cosmology::AbstractCosmology, z::RV)
 
-Calculates the curvature density parameter ``(\\Omega_{k})`` at redshift `z`. The formula is,
+Calculates the curvature density parameter ``(\\Omega_{k})`` at redshift ``z``. The formula is,
 
 ```math 
 Ω_{k}(z) = Ω_{k0} (1+z)^2 \\left( \\frac{H_0}{H(z)} \\right)^2
