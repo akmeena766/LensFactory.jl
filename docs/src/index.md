@@ -14,7 +14,7 @@ for basic lensing and as we go along it is expected to have more features.
 ## Installation
 To install, activate `pkg` mode by pressing `]` in julia REPL and then type: 
 ```julia-repl
-pkg> add "https://github.com/akmeena766/LensFactory.jl"
+pkg> add LensFactory
 ```
 To use the `LensFactory` package in your current julia session, type: 
 ```julia-repl

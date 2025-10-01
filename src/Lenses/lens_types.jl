@@ -189,7 +189,9 @@ end
 
 """
     init_NFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, rho_s::RV=NaN, mass::RV=NaN)
-Initialize a Navarro-Frenk-White (NFW) lens with the given parameters.
+Initialize a Navarro-Frenk-White (NFW) lens with the given parameters. The lens model can be 
+initialized with either the concentration `c` or the scale radius `x_s`. 
+If both are provided, `c` is used to calculate the scale radius.
 """
 @kwdef struct init_NFWLens <: AbstractLens
    _lens_::Symbol = :NFWLens
@@ -204,13 +206,40 @@ Initialize a Navarro-Frenk-White (NFW) lens with the given parameters.
 end
 
 
-@kwdef struct init_EinastoLens <: AbstractLens
-   _lens_::Symbol = :EinastoLens
-   _lid_::Int64 = 18
+"""
+    init_tNFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, x_t::RV=NaN, c::RV=NaN, mass::RV=NaN)
+Initialize a truncated Navarro-Frenk-White (tNFW) lens with the given parameters. The lens model can
+be initialized with either the concentration `c` or the scale radius `x_s`.
+If both are provided, `c` is used to calculate the scale radius.
+"""
+@kwdef struct init_tNFWLens <: AbstractLens
+   _lens_::Symbol = :tNFWLens
+   _lid_::Int64 = 14
    D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
-   n_a::RV =-2.0
+   x_s::RV = NaN
+   x_t::RV = NaN
+   c::RV   = NaN
+   rho_s::RV = NaN
+   mass::RV  = NaN
+end
+
+
+"""
+    init_gNFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, rho_s::RV=NaN, mass::RV=NaN, n::RV=-2.0)
+Initialize a generalized Navarro-Frenk-White (gNFW) lens with the given parameters. The lens model 
+can be initialized with either the concentration `c` or the scale radius `x_s`. If both are 
+provided, `c` is used to calculate the scale radius. The parameter `n` defines the slope of the 
+density profile.
+"""
+@kwdef struct init_gNFWLens <: AbstractLens
+   _lens_::Symbol = :gNFWLens
+   _lid_::Int64 = 15
+   D_d::RV = NaN
+   x_c::RV = 0.0
+   y_c::RV = 0.0
+   n::RV   = NaN
    x_s::RV = NaN
    c::RV   = NaN
    rho_s::RV = NaN
@@ -218,13 +247,19 @@ end
 end
 
 
-@kwdef struct init_gNFWLens <: AbstractLens
-   _lens_::Symbol = :gNFWLens
-   _lid_::Int64 = 14
+"""
+    init_EinastoLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, rho_s::RV=NaN, mass::RV=NaN, n::RV=-2.0)
+Initialize an Einasto lens with the given parameters. The lens model can be initialized with either
+the concentration `c` or the scale radius `x_s`. If both are provided, `c` is used to calculate the 
+scale radius. The parameter `n` defines the slope of the density profile.
+"""
+@kwdef struct init_EinastoLens <: AbstractLens
+   _lens_::Symbol = :EinastoLens
+   _lid_::Int64 = 16
    D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
-   n_a::RV = NaN
+   n::RV   =-2.0
    x_s::RV = NaN
    c::RV   = NaN
    rho_s::RV = NaN
@@ -274,9 +309,37 @@ function init_NFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV;
 end
 
 
-# Constructor for NFW lens
+# Constructor for truncated NFW lens
+function init_tNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV;
+                     x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, x_t::RV=NaN, c::RV=NaN, mass::RV=NaN)
+   # ADD to the lens
+   D_d = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
+   
+   # Critical density at the lens redshift
+   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
+
+   # Virial radius of the lens (in meters)
+   r_vir = (3.0 * mass / 72.0 / pi^3 / ρ_cz)^(1.0/3.0)   
+   
+   # Check if concentration is given
+   if isfinite(c)
+      ρ_s = (18.0 * pi^2 / 3.0) * ρ_cz * c^3 / ( log(1.0 + c) - ( c / (1.0 + c) ) )
+      x_s = r_vir / c / D_d
+   elseif isfinite(x_s)
+      c = r_vir / (x_s * D_d)
+      ρ_s = (18.0 * pi^2 / 3.0) * ρ_cz * c^3 / ( log(1.0 + c) - ( c / (1.0 + c) ) )
+   else
+      throw(ArgumentError("Provide at least c or x_s in ** init_NFWLens **"))
+   end
+
+   x_t = x_t / r_vir
+   return init_tNFWLens(D_d=D_d, x_c=x_c, y_c=y_c, x_s=x_s, x_t=x_t, c=c, rho_s=ρ_s, mass=mass)
+end
+
+
+# Constructor for generalized NFW lens
 function init_gNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV;
-                     x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, mass::RV=NaN, n_a::RV=-2.0)                     
+                     x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, mass::RV=NaN, n::RV=-2.0)                     
    # Calculate the mass
    function intgrand(x::RV)
       return x^(2.0 - n_a) / (1.0 + x)^(3.0 - n_a)
@@ -305,13 +368,13 @@ function init_gNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV;
    else
       throw(ArgumentError("Provide at least c or x_s in ** init_gNFWLens **"))
    end
-   return init_gNFWLens(D_d=D_d, x_c=x_c, y_c=y_c, x_s=x_s, c=c, rho_s=ρ_s, mass=mass, n_a=n_a)
+   return init_gNFWLens(D_d=D_d, x_c=x_c, y_c=y_c, x_s=x_s, c=c, rho_s=ρ_s, mass=mass, n=n)
 end
 
 
 # Constructor for Einasto lens
 function init_EinastoLens(cosmology::Cosmology.AbstractCosmology, z_d::RV;
-                     x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, mass::RV=NaN, n_a::RV = -2.0)
+                     x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, mass::RV=NaN, n::RV = -2.0)
    # ADD to the lens
    D_d  = Cosmology.angular_diameter_distance(cosmology, 0., z_d)
 
@@ -337,7 +400,7 @@ function init_EinastoLens(cosmology::Cosmology.AbstractCosmology, z_d::RV;
    else
       throw(ArgumentError("Provide at least c or x_s in ** init_EinastoLens **"))
    end
-   return init_EinastoLens(D_d=D_d, x_c=x_c, y_c=y_c, n_a=n_a, x_s=x_s, c=c, rho_s=ρ_s, mass=mass)
+   return init_EinastoLens(D_d=D_d, x_c=x_c, y_c=y_c, n=n, x_s=x_s, c=c, rho_s=ρ_s, mass=mass)
 end
 
 
