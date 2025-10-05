@@ -6,7 +6,7 @@ module Constants
 export RV, ROA
 export CONST_C, CONST_G
 export MASS_SUN, RADIUS_SUN, LUMINOSITY_SUN
-export DIST_AU, DIST_PC, DIST_KPC, DIST_MPC, DIST_GPC
+export DIST_AU, DIST_LYR, DIST_PC, DIST_KPC, DIST_MPC, DIST_GPC
 export ANGLE_DEGREE, ANGLE_ARCMIN, ANGLE_ARCSEC, ANGLE_MILLIARCSEC, ANGLE_MICROARCSEC
 export YEAR2SECOND, YEAR2HOUR, YEAR2DAY, DAY2HOUR, DAY2SECOND
 
@@ -28,6 +28,7 @@ const LUMINOSITY_SUN = 3.828E26                     # Solar luminosity (in Watts
 
 # Distance units
 const DIST_AU  = 1.495978707000000E+11              # One Astronomical Unit (in meters)
+const DIST_LYR = 9.460730472580800E+15              # One Light Year (in meters)
 const DIST_PC  = 3.085677581491367E+16              # One parsec (in meters)
 const DIST_KPC = 3.085677581491367E+19              # One Kilo-parsec (in meters)
 const DIST_MPC = 3.085677581491367E+22              # One Mega-parsec (in meters)

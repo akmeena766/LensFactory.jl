@@ -18,6 +18,7 @@ LUMINOSITY_SUN = 3.828E26                    # Solar luminos
 ## Distance units
 ```
 DIST_AU  = 1.495978707000000E+11             # One Astronomical Unit (in meters)
+DIST_LYR = 9.460730472580800E+15             # One Light Year (in meters)
 DIST_PC  = 3.085677581491367E+16             # One parsec (in meters)
 DIST_KPC = 3.085677581491367E+19             # One kiloparsec (in meters)
 DIST_MPC = 3.085677581491367E+22             # One Megaparsec (in meters)

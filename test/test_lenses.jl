@@ -61,5 +61,15 @@
       @test_throws ArgumentError Lenses.get_critical_density(D_d=D_d, D_ds=D_ds, D_s=D_s, unit=:invalid)
    end
 
+   @testset "Point lens" begin
+      # Einstein angle
+      D_d, D_ds, D_s, mass = 1.0, 1.0, 1.0, 1.0
+      θE = Lenses.PointLens.einstein_angle(D_d=D_d, D_ds=D_ds, D_s=D_s, mass=mass)
+      @test θE > 0.0
+      @test θE == sqrt(4.0 *CONST_G * mass / CONST_C^2 * (D_ds / D_d / D_s) ) / ANGLE_ARCSEC
+
+            
+
+   end
    
 end
