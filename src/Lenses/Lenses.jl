@@ -365,12 +365,23 @@ end
 
 
 """
-    get_magnification(lens::AbstractLens, θx::ROA, θy::ROA)
+    get_magnification_image(lens::AbstractLens, θx::T, θy::T) where T <: RV
+"""
+function get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: RV
+   # Get the jacobian components
+   ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
 
-Calculates the magnification for a given lens model. The corresponding expression is given as,
-```math
-\\mu = \\frac{1}{\\det \\mathcal{A}} = \\frac{1}{(1 - κ)^2 - γ^2}
-```
+   # Scale the deformation tensor
+   ψxx = adis * ψxx
+   ψyy = adis * ψyy
+   ψxy = adis * ψxy
+
+   # μ = 1 / det(A)
+   return 1.0 / (1.0 + ψxx * ψyy - ψxx - ψyy - ψxy^2)
+end
+
+"""
+    get_magnification_image(lens::AbstractLens, θx::T, θy::T) where T <: ROA 
 """
 function get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: ROA
    # Get the jacobian components

@@ -68,8 +68,52 @@
       @test θE > 0.0
       @test θE == sqrt(4.0 *CONST_G * mass / CONST_C^2 * (D_ds / D_d / D_s) ) / ANGLE_ARCSEC
 
-            
+      # Lensing quantities (AGAINST LENSTRONOMY)
+      cosmo = Cosmology.init_cosmology()
+      
+      # Lens and source redshifts
+      zl = 0.5
+      zs = 1.5
 
+      # ADDs and distance ratio
+      Dol = Cosmology.angular_diameter_distance(cosmo, 0., zl)
+      Dls = Cosmology.angular_diameter_distance(cosmo, zl, zs)
+      Dos = Cosmology.angular_diameter_distance(cosmo, 0., zs)
+      adis = Dls/Dos
+
+      # Create a point lens
+      lens = Lenses.init_PointLens(D_d=Dol, mass=1E11*MASS_SUN)
+
+      xt, yt = 1.0, 1.0
+      pot = adis * Lenses.get_potential(lens, xt, yt)
+      dex = adis .* Lenses.get_deflection(lens, xt, yt)
+      jac = adis .* Lenses.get_jacobian(lens, xt, yt)
+      mag = Lenses.get_magnification_image(lens, xt, yt, adis)
+
+      @test pot ≈ 0.12714991581219895 atol=1e-15 rtol=1e-15
+      @test dex[1] ≈ 0.18343855299170855 atol=1e-15 rtol=1e-15
+      @test dex[2] ≈ 0.18343855299170855 atol=1e-15 rtol=1e-15
+      @test jac[1] ≈ 0.0 atol=1e-15 rtol=1e-15
+      @test jac[2] ≈ 0.0 atol=1e-15 rtol=1e-15
+      @test jac[3] ≈ -0.18343855299170858 atol=1e-15 rtol=1e-15 
+      @test mag ≈ 1.0348214336131885 atol=1e-15 rtol=1e-15
+
+      xt, yt = 1.0, 0.0
+      pot = adis * Lenses.get_potential(lens, xt, yt)
+      dex = adis .* Lenses.get_deflection(lens, xt, yt)
+      jac = adis .* Lenses.get_jacobian(lens, xt, yt)
+      mag = Lenses.get_magnification_image(lens, xt, yt, adis)
+
+      @test pot ≈ 0.0 atol=1e-15 rtol=1e-15
+      @test dex[1] ≈ 0.36687710598341716 atol=1e-15 rtol=1e-15
+      @test dex[2] ≈ 0.0 atol=1e-15 rtol=1e-15
+      @test jac[1] ≈ -0.36687710598341716 atol=1e-15 rtol=1e-15
+      @test jac[2] ≈ +0.36687710598341716 atol=1e-15 rtol=1e-15
+      @test jac[3] ≈ 0.0 atol=1e-15 rtol=1e-15 
+      @test mag ≈ 1.155533424947028 atol=1e-15 rtol=1e-15
    end
-   
+
+   @testset "SIS lens" begin
+      
+   end
 end
