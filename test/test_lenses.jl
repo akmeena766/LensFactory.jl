@@ -61,6 +61,25 @@
       @test_throws ArgumentError Lenses.get_critical_density(D_d=D_d, D_ds=D_ds, D_s=D_s, unit=:invalid)
    end
 
+   #!!!!!!!!!!!!!! Testing individual lens models (AGAINST LENSTRONOMY/PyGRALE) !!!!!!!!!!!!!!
+   
+   # Cosmology   
+   cosmo = Cosmology.init_cosmology()
+   
+   # Lens and source redshifts
+   zl = 0.5
+   zs = 1.5
+
+   # ADDs and distance ratio
+   Dol = Cosmology.angular_diameter_distance(cosmo, 0., zl)
+   Dls = Cosmology.angular_diameter_distance(cosmo, zl, zs)
+   Dos = Cosmology.angular_diameter_distance(cosmo, 0., zs)
+   adis = Dls/Dos
+
+   # Points (in image plane) to evaluate lensing quantities
+   xt1, yt1 = 1.0, 1.0
+   xt2, yt2 = 1.0, 0.0
+   
    @testset "Point lens" begin
       # Einstein angle
       D_d, D_ds, D_s, mass = 1.0, 1.0, 1.0, 1.0
@@ -68,27 +87,13 @@
       @test θE > 0.0
       @test θE == sqrt(4.0 *CONST_G * mass / CONST_C^2 * (D_ds / D_d / D_s) ) / ANGLE_ARCSEC
 
-      # Lensing quantities (AGAINST LENSTRONOMY)
-      cosmo = Cosmology.init_cosmology()
-      
-      # Lens and source redshifts
-      zl = 0.5
-      zs = 1.5
-
-      # ADDs and distance ratio
-      Dol = Cosmology.angular_diameter_distance(cosmo, 0., zl)
-      Dls = Cosmology.angular_diameter_distance(cosmo, zl, zs)
-      Dos = Cosmology.angular_diameter_distance(cosmo, 0., zs)
-      adis = Dls/Dos
-
       # Create a point lens
       lens = Lenses.init_PointLens(D_d=Dol, mass=1E11*MASS_SUN)
 
-      xt, yt = 1.0, 1.0
-      pot = adis * Lenses.get_potential(lens, xt, yt)
-      dex = adis .* Lenses.get_deflection(lens, xt, yt)
-      jac = adis .* Lenses.get_jacobian(lens, xt, yt)
-      mag = Lenses.get_magnification_image(lens, xt, yt, adis)
+      pot = adis * Lenses.get_potential(lens, xt1, yt1)
+      dex = adis .* Lenses.get_deflection(lens, xt1, yt1)
+      jac = adis .* Lenses.get_jacobian(lens, xt1, yt1)
+      mag = Lenses.get_magnification_image(lens, xt1, yt1, adis)
 
       @test pot ≈ 0.12714991581219895 atol=1e-15 rtol=1e-15
       @test dex[1] ≈ 0.18343855299170855 atol=1e-15 rtol=1e-15
@@ -98,11 +103,10 @@
       @test jac[3] ≈ -0.18343855299170858 atol=1e-15 rtol=1e-15 
       @test mag ≈ 1.0348214336131885 atol=1e-15 rtol=1e-15
 
-      xt, yt = 1.0, 0.0
-      pot = adis * Lenses.get_potential(lens, xt, yt)
-      dex = adis .* Lenses.get_deflection(lens, xt, yt)
-      jac = adis .* Lenses.get_jacobian(lens, xt, yt)
-      mag = Lenses.get_magnification_image(lens, xt, yt, adis)
+      pot = adis * Lenses.get_potential(lens, xt2, yt2)
+      dex = adis .* Lenses.get_deflection(lens, xt1, yt2)
+      jac = adis .* Lenses.get_jacobian(lens, xt2, yt2)
+      mag = Lenses.get_magnification_image(lens, xt2, yt2, adis)
 
       @test pot ≈ 0.0 atol=1e-15 rtol=1e-15
       @test dex[1] ≈ 0.36687710598341716 atol=1e-15 rtol=1e-15
@@ -114,6 +118,33 @@
    end
 
    @testset "SIS lens" begin
-      
+      # Create a SIS lens
+      lens = Lenses.init_SISLens(v_d=200E3)
+
+      pot = adis * Lenses.get_potential(lens, xt1, yt1)
+      dex = adis .* Lenses.get_deflection(lens, xt1, yt1)
+      jac = adis .* Lenses.get_jacobian(lens, xt1, yt1)
+      mag = Lenses.get_magnification_image(lens, xt1, yt1, adis)
+
+      @test pot ≈ 0.9253665947775005 atol=1e-15 rtol=1e-15
+      @test dex[1] ≈ 0.4626832973887502 atol=1e-15 rtol=1e-15
+      @test dex[2] ≈ 0.4626832973887502 atol=1e-15 rtol=1e-15
+      @test jac[1] ≈ 0.2313416486943751 atol=1e-15 rtol=1e-15
+      @test jac[2] ≈ 0.2313416486943751 atol=1e-15 rtol=1e-15
+      @test jac[3] ≈ -0.2313416486943751 atol=1e-15 rtol=1e-15 
+      @test mag ≈ 1.8610997855458498 atol=1e-15 rtol=1e-15
+
+      pot = adis * Lenses.get_potential(lens, xt2, yt2)
+      dex = adis .* Lenses.get_deflection(lens, xt2, yt2)
+      jac = adis .* Lenses.get_jacobian(lens, xt2, yt2)
+      mag = Lenses.get_magnification_image(lens, xt2, yt2, adis)
+
+      @test pot ≈ 0.6543329942506746 atol=1e-15 rtol=1e-15
+      @test dex[1] ≈ 0.6543329942506746 atol=1e-15 rtol=1e-15
+      @test dex[2] ≈ 0.0 atol=1e-15 rtol=1e-15
+      @test jac[1] ≈ 0.0 atol=1e-15 rtol=1e-15
+      @test jac[2] ≈ 0.6543329942506746 atol=1e-15 rtol=1e-15
+      @test jac[3] ≈ 0.0 atol=1e-15 rtol=1e-15
+      @test mag ≈ 2.892957625019007 atol=1e-15 rtol=1e-15
    end
 end

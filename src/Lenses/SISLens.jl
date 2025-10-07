@@ -49,7 +49,6 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV)
    dx = θx - θxc
    dy = θy - θyc
    θr = sqrt(dx^2 + dy^2)
-
    ψx_up = ψx + θE * dx / θr
    ψy_up = ψy + θE * dy / θr
    return ψx_up, ψy_up
