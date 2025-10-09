@@ -1,6 +1,22 @@
 export init_PointLens
 export init_PlummerLens
 export init_SISLens
+export init_NSISPLens
+export init_NSISMDLens
+export init_GaussianLens
+export init_SersicLens
+export init_ExternalEffects
+export init_PIEPLens
+export init_SIELens
+export init_PJELens
+export init_HernquistLens
+export init_NFWLens
+export init_tNFWLens
+export init_gNFWLens
+export init_EinastoLens
+
+export init_CompositeLens
+export init_MultiPlaneLens
 
 abstract type AbstractLens end
 

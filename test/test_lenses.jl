@@ -85,7 +85,7 @@
       D_d, D_ds, D_s, mass = 1.0, 1.0, 1.0, 1.0
       θE = Lenses.PointLens.einstein_angle(D_d=D_d, D_ds=D_ds, D_s=D_s, mass=mass)
       @test θE > 0.0
-      @test θE == sqrt(4.0 *CONST_G * mass / CONST_C^2 * (D_ds / D_d / D_s) ) / ANGLE_ARCSEC
+      @test θE ≈ sqrt(4.0 *CONST_G * mass / CONST_C^2 * (D_ds / D_d / D_s) ) / ANGLE_ARCSEC atol=1e-15 rtol=1e-15
 
       # Create a point lens
       lens = Lenses.init_PointLens(D_d=Dol, mass=1E11*MASS_SUN)
@@ -117,7 +117,17 @@
       @test mag ≈ 1.155533424947028 atol=1e-15 rtol=1e-15
    end
 
+   @testset "Plummer lens" begin
+      
+   end
+
    @testset "SIS lens" begin
+      # Einstein angle
+      D_d, D_ds, D_s, v_d = 1.0, 1.0, 1.0, 200E3
+      θE = Lenses.SISLens.einstein_angle(D_ds=D_ds, D_s=D_s, v_d=v_d)
+      @test θE > 0.0
+      @test θE ≈ 4.0 * π * (v_d^2 / CONST_C^2) / ANGLE_ARCSEC atol=1e-15 rtol=1e-15
+
       # Create a SIS lens
       lens = Lenses.init_SISLens(v_d=200E3)
 
