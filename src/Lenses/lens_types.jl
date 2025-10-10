@@ -14,7 +14,6 @@ export init_NFWLens
 export init_tNFWLens
 export init_gNFWLens
 export init_EinastoLens
-
 export init_CompositeLens
 export init_MultiPlaneLens
 
