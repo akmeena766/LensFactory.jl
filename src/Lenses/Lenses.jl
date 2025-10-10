@@ -64,7 +64,7 @@ function plot_magnification_map end
 function plot_magnification_profile end
 
 """
-    get_meshgrid(θx::RV, θy::RV, dθ::RV)
+    get_meshgrid(θx::RV, θy::RV, dθ::RV) --> Tuple{Matrix{Float64}, Matrix{Float64}}
 
 Generate a meshgrid of coordinates on which various quantities can be evaluated. At present,
 this function only generates square pixels. In future if the need arises, it can be extended 
@@ -97,7 +97,7 @@ end
 
 
 """
-    get_critical_density(; Dd::Float64=NaN, Dds::Float64=NaN, Ds::Float64=NaN, adis::Float64=NaN; unit::Symbol=:kg_m2)
+    get_critical_density(; Dd::Float64=NaN, Dds::Float64=NaN, Ds::Float64=NaN, adis::Float64=NaN; unit::Symbol=:kg_m2) --> Float64
 
 Calculate the critical surface density,
 ```math
@@ -167,11 +167,14 @@ function potential_helper!(ψ::T, lens::AbstractLens, θx::T, θy::T) where T <:
 end
 
 """
-    get_potential(lens::AbstractLens, θx::ROA, θy::ROA)
+    get_potential(lens::AbstractLens, θx::T, θy::T) where T <: RV --> RV
 """
 function get_potential(lens::AbstractLens, θx::T, θy::T) where T <: RV
    # Initialize zero-valued potential array
    ψ = 0.0
+
+   # Promote the input coordinates from Int64 to Float64
+   ψ, θx, θy = promote(ψ, θx, θy)
 
    if lens._lens_ == :CompositeLens
       for component in lens._components_
@@ -184,6 +187,9 @@ function get_potential(lens::AbstractLens, θx::T, θy::T) where T <: RV
    end
 end
 
+"""
+    get_potential(lens::AbstractLens, θx::T, θy::T) where T <: ROA --> ROA
+"""
 function get_potential(lens::AbstractLens, θx::T, θy::T) where T <: ROA
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
@@ -222,15 +228,15 @@ function deflection_helper!(ψx::T, ψy::T, lens::AbstractLens, θx::T, θy::T) 
 end
 
 """
-    get_deflection(lens::AbstractLens, θx::ROA, θy::ROA)
-
-Calculates the deflection angles (i.e., the gradient of the potential) for a given lens model. 
-Returns a tuple of deflection components, i.e., ``(ψ_x, ψ_y)``.
+    get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: RV --> Tuple{RV, RV}
 """
 function get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: RV
    # Initialize zero-valued potential array
    ψx = 0.0
    ψy = 0.0
+
+   # Promote the input coordinates from Int64 to Float64
+   ψx, ψy, θx, θy = promote(ψx, ψy, θx, θy)
 
    if lens._lens_ == :CompositeLens
       for component in lens._components_
@@ -243,6 +249,11 @@ function get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: RV
    end
 end
 
+"""
+    get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: ROA --> Tuple{ROA, ROA}
+Calculates the deflection angles (i.e., the gradient of the potential) for a given lens model. 
+Returns a tuple of deflection components, i.e., ``(ψ_x, ψ_y)``.
+"""
 function get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: ROA
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
@@ -283,26 +294,16 @@ function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::AbstractLens, θx::T,
 end
 
 """
-    get_jacobian(lens::AbstractLens, θx::ROA, θy::ROA)
-
-Calculates the jacobian (i.e., deformation tensor) of the lens mapping for a given lens model.
-The jacobian is a ``2\\times2`` matrix composed of the second derivatives of the potential, 
-which is given as,
-```math
-\\mathcal{A} =
-\\begin{pmatrix}
-ψ_{xx} & ψ_{xy} \\\\
-ψ_{xy} & ψ_{yy}
-\\end{pmatrix}.
-```
-Since the jacobian is symmetric (for single lens plane), only three components are returned,
-i.e., ``(ψ_{xx}, ψ_{yy}, ψ_{xy})``.
+    get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: RV --> Tuple{RV, RV, RV}
 """
 function get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: RV
    # Initialize zero-valued potential array
    ψxx = 0.0
    ψyy = 0.0
    ψxy = 0.0
+
+   # Promote the input coordinates from Int64 to Float64
+   ψxx, ψyy, ψxy, θx, θy = promote(ψxx, ψyy, ψxy, θx, θy)
 
    if lens._lens_ == :CompositeLens
       for component in lens._components_
@@ -315,6 +316,12 @@ function get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: RV
    end
 end
 
+"""
+    get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: ROA --> Tuple{ROA, ROA, ROA}
+Calculates the jacobian (i.e., deformation tensor) of the lens mapping for a given lens model.
+Since the jacobian is symmetric (for single lens plane), only three components are returned,
+i.e., ``(ψ_{xx}, ψ_{yy}, ψ_{xy})``.
+"""
 function get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: ROA
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
@@ -339,7 +346,22 @@ end
 
 
 """
-    get_time_delay(lens::AbstractLens, θx::ROA, θy::ROA)
+    get_time_delay(lens::AbstractLens, θx::T, θy::T, zl::RV, adis::Float64, β::NTuple{2, RV}) where T <: RV --> RV
+"""
+function get_time_delay(lens::AbstractLens, θx::T, θy::T, zl::RV, adis::Float64, β::NTuple{2, RV}) where T <: RV
+   # Constant multiplicative factor
+   constant_factor =  (1.0 + zl) / CONST_C * (lens.D_d / adis) * ANGLE_ARCSEC^2
+
+   # Get potential at each point
+   ϕ_potential = get_potential(lens, θx, θy)
+
+   # Get time delay
+   ϕ = constant_factor * (0.5 * ((θx - β[1])^2 + (θy - β[2])^2) - adis * ϕ_potential) 
+   return ϕ
+end
+
+"""
+    get_time_delay(lens::AbstractLens, θx::T, θy::T, zl::RV, adis::Float64, β::NTuple{2, RV}) where T <: ROA --> ROA
 
 Calculates the time delay for a given lens model. The corresponding expression is given as,
 ```math
@@ -348,18 +370,15 @@ t_d(\\pmb{θ}; \\pmb{β}) = \\frac{1+z_l}{\\rm c} \\frac{D_d D_s}{D_{ds}} \\thet
 ```
 where ``\\theta_0`` is normalizing angular unit.
 """
-function get_time_delay(lens::AbstractLens, θx::T, θy::T, zl::RV, adis::Float64, β::NTuple{2, RV}) where T <: Union{RV, ROA}
+function get_time_delay(lens::AbstractLens, θx::T, θy::T, zl::RV, adis::Float64, β::NTuple{2, RV}) where T <: ROA
    # Constant multiplicative factor
    constant_factor =  (1.0 + zl) / CONST_C * (lens.D_d / adis) * ANGLE_ARCSEC^2
-
-   # Initialize zero-valued arrays to store time delay
-   ϕ = zero(θx)
 
    # Get potential at each point
    ϕ_potential = get_potential(lens, θx, θy)
 
    # Get time delay
-   @. ϕ = constant_factor * (0.5 * ((θx - β[1])^2 + (θy - β[2])^2) - adis * ϕ_potential) 
+   ϕ = @. constant_factor * (0.5 * ((θx - β[1])^2 + (θy - β[2])^2) - adis * ϕ_potential) 
    return ϕ
 end
 
