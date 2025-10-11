@@ -377,9 +377,7 @@ function get_time_delay(lens::AbstractLens, θx::T, θy::T, zl::RV, adis::Float6
    # Get potential at each point
    ϕ_potential = get_potential(lens, θx, θy)
 
-   # Get time delay
-   ϕ = @. constant_factor * (0.5 * ((θx - β[1])^2 + (θy - β[2])^2) - adis * ϕ_potential) 
-   return ϕ
+   return @. constant_factor * (0.5 * ((θx - β[1])^2 + (θy - β[2])^2) - adis * ϕ_potential)
 end
 
 
@@ -458,17 +456,7 @@ end
 
 
 """
-    get_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64, β::NTuple{2, RV})
-    get_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64, β::Matrix{<:RV})
-
-Calculates the image position for a given lens model by solving the lens equation,
-```math
-\\pmb{β} = \\pmb{θ} - \\frac{D_{ds}}{D_s} ∇\\psi(\\pmb{θ})
-```   
-In case of a point source, given by ``\\pmb{β} = (β_1,\\:β_2)``, the current implementation finds 
-the intersection points of contours corresponding to ``\\pmb{β} - \\pmb{θ} + a_{\\rm dis} ∇\\psi(\\pmb{θ}) = 0``.
-On the other hand, for an extended source, the function does **inverse ray shooting** to construct
-the image plane.
+    get_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64, β::NTuple{2, RV}) --> Vector{NTuple{2, RV}}
 """
 function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::NTuple{2, RV}) where T <: Matrix{<:RV}
    # Get the potential gradient
@@ -493,6 +481,19 @@ function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::NTuple
    end
    return image_position
 end
+
+"""
+    get_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64, β::Matrix{<:RV}) --> Matrix{<:RV}
+
+Calculates the image position for a given lens model by solving the lens equation,
+```math
+\\pmb{β} = \\pmb{θ} - \\frac{D_{ds}}{D_s} ∇\\psi(\\pmb{θ})
+```   
+In case of a point source, given by ``\\pmb{β} = (β_1,\\:β_2)``, the current implementation finds 
+the intersection points of contours corresponding to ``\\pmb{β} - \\pmb{θ} + a_{\\rm dis} ∇\\psi(\\pmb{θ}) = 0``.
+On the other hand, for an extended source, the function does **inverse ray shooting** to construct
+the image plane.
+"""
 
 function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::T) where T <: Matrix{<:RV}
    # Get the potential gradient
@@ -586,7 +587,7 @@ end
 
 
 """
-    get_critical_area(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
+    get_critical_area(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV} --> Float64
 """
 function get_critical_area(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
    # Get tangential critical curves
@@ -602,7 +603,7 @@ end
 
 
 """
-    get_einstein_angle(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
+    get_einstein_angle(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV} --> Float64
 """
 function get_einstein_angle(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
    return sqrt(get_critical_area(lens, θx, θy, adis) / π)

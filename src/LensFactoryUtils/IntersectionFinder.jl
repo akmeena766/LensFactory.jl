@@ -70,7 +70,23 @@ function get_intersection(x1::AbstractVector{<:Real}, y1::AbstractVector{<:Real}
             push!(xy0,(T[3, ll], T[4, ll]))
         end
     end
-    return xy0
+    
+    # Find unique solutions
+   xy0_unique::Vector{NTuple{2,Real}}=[]
+   l::Int = 0
+   for i in axes(xy0,1)
+      l = 0
+      for j in i+1:length(xy0)
+         norm = sqrt( (xy0[i][1]-xy0[j][1])^2 + (xy0[i][2]-xy0[j][2])^2)
+         if norm < 1E-12
+               l = l + 1
+         end
+      end
+      if l == 0
+         push!(xy0_unique, xy0[i])
+      end
+   end
+   return xy0_unique
 end
 
 @inline function mvmin(x)

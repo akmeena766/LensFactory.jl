@@ -41,17 +41,6 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA
       # Axis for source plane
       ax1 = Axis(fig[1, 1])
 
-      # Plot source and its images
-      if source !== nothing
-         if isa(source, NTuple{2, RV})
-            scatter!(ax1, source[1], source[2], color=source_kws.color, markersize=source_kws.markersize, marker=source_kws.marker)
-         elseif isa(source, Matrix{<:RV})
-            heatmap!(ax1, θx[:,1], θy[1,:], source, colormap=source_kws.heatmap)
-         else
-            error("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}.")
-         end
-      end
-
       # Get caustics and plot
       if plot_caustic
          # Get caustics
@@ -67,6 +56,18 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA
             lines!(ax1, first.(curve), last.(curve), color=caustic_kws.color_rad, linewidth=caustic_kws.linewidth, linestyle=:dash)
          end
       end
+
+      # Plot source and its images
+      if source !== nothing
+         if isa(source, NTuple{2, RV})
+            scatter!(ax1, source[1], source[2], color=source_kws.color, markersize=source_kws.markersize, marker=source_kws.marker)
+         elseif isa(source, Matrix{<:RV})
+            heatmap!(ax1, θx[:,1], θy[1,:], source, colormap=source_kws.heatmap)
+         else
+            error("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}.")
+         end
+      end
+
    
       # Set plot keywords
       set_plotKws!(ax1)
@@ -79,19 +80,6 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA
 
       # Axis for image plane
       ax2 = Axis(fig[1, 2])
-
-      # Plot source and its images
-      if source !== nothing
-         # Get the image positions
-         image = Lenses.get_image(lens, θx, θy, adis, source)
-         if isa(source, NTuple{2, RV})
-            scatter!(ax2, first.(image), last.(image), color=image_kws.color, markersize=image_kws.markersize, marker=image_kws.marker)
-         elseif isa(source, Matrix{<:RV})
-            heatmap!(ax2, θx[:,1], θy[1,:], image, colormap=image_kws.heatmap)
-         else
-            ArgumentError("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}.")
-         end
-      end
 
       # Get critical curves
       if plot_critical
@@ -106,6 +94,19 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA
          # Plot radial critical curve
          for curve in crit_rad
             lines!(ax2, first.(curve), last.(curve), color=critical_kws.color_rad, linewidth=critical_kws.linewidth, linestyle=:dash)
+         end
+      end
+
+      # Plot source and its images
+      if source !== nothing
+         # Get the image positions
+         image = Lenses.get_image(lens, θx, θy, adis, source)
+         if isa(source, NTuple{2, RV})
+            scatter!(ax2, first.(image), last.(image), color=image_kws.color, markersize=image_kws.markersize, marker=image_kws.marker)
+         elseif isa(source, Matrix{<:RV})
+            heatmap!(ax2, θx[:,1], θy[1,:], image, colormap=image_kws.heatmap)
+         else
+            ArgumentError("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}.")
          end
       end
 
@@ -129,21 +130,6 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA
       
       # Plot source + image plane
       ax = Axis(fig[1, 1])
-
-      if source !== nothing
-         # Get the image positions
-         image = Lenses.get_image(lens, θx, θy, adis, source)
-
-         if isa(source, NTuple{2, RV})
-            scatter!(ax, source[1], source[2], color=source_kws.color, markersize=source_kws.markersize, marker=source_kws.marker)
-            scatter!(ax, first.(image), last.(image), color=image_kws.color, markersize=image_kws.markersize, marker=image_kws.marker)
-         elseif isa(source, Matrix{<:RV})
-            heatmap!(ax, θx[:,1], θy[1,:], source, colormap=source_kws.heatmap, alpha=1.0)                                       
-            heatmap!(ax, θx[:,1], θy[1,:], image, colormap=image_kws.heatmap, alpha=0.8)
-         else
-            error("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}.")
-         end
-      end
 
       if plot_caustic
          # Get caustics
@@ -174,6 +160,22 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA
             lines!(ax, first.(curve), last.(curve), color=critical_kws.color_rad, linewidth=critical_kws.linewidth, linestyle=:dash)
          end
       end
+
+      if source !== nothing
+         # Get the image positions
+         image = Lenses.get_image(lens, θx, θy, adis, source)
+
+         if isa(source, NTuple{2, RV})
+            scatter!(ax, source[1], source[2], color=source_kws.color, markersize=source_kws.markersize, marker=source_kws.marker)
+            scatter!(ax, first.(image), last.(image), color=image_kws.color, markersize=image_kws.markersize, marker=image_kws.marker)
+         elseif isa(source, Matrix{<:RV})
+            heatmap!(ax, θx[:,1], θy[1,:], source, colormap=source_kws.heatmap, alpha=1.0)                                       
+            heatmap!(ax, θx[:,1], θy[1,:], image, colormap=image_kws.heatmap, alpha=0.8)
+         else
+            error("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}.")
+         end
+      end
+
 
       # Set plot keywords
       set_plotKws!(ax)

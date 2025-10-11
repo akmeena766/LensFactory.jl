@@ -93,7 +93,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::S, 
       dy = (θy - θyc[k]) / θs[k]
       dr = sqrt(dx^2 + dy^2)
 
-      α_r = κs * θs * 2.0 * (1.0 - exp(-0.5 * dr^2)) / dr
+      α_r = κs * 2.0 * (1.0 - exp(-0.5 * dr^2)) / dr
       κ_r = κs * exp(-0.5 * dr^2)
 
       ψxx_up = ψxx_up + 2.0 * κ_r * dx^2 / dr^2 - α_r * (dx^2 - dy^2) / dr^3
@@ -113,7 +113,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::S, 
             dy = (θy[i, j] - θyc[k]) / θs[k]
             dr = sqrt(dx^2 + dy^2)
 
-            α_r = κs * θs * 2.0 * (1.0 - exp(-0.5 * dr^2)) / dr
+            α_r = κs * 2.0 * (1.0 - exp(-0.5 * dr^2)) / dr
             κ_r = κs * exp(-0.5 * dr^2)
 
             ψxx[i, j] = ψxx[i, j] + 2.0 * κ_r * dx^2 / dr^2 - α_r * (dx^2 - dy^2) / dr^3
