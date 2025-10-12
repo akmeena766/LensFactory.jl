@@ -1,6 +1,6 @@
 @testset "Cosmology" begin
+   # Tests for default flat (Ωk = 0) LCDM cosmology module (AGAINST ASTROPY)
    @testset "flat LCDM" begin
-      # Tests for default flat (Ωk = 0) LCDM cosmology module (AGAINST ASTROPY)
       cosmo = Cosmology.init_cosmology()
       z = 1.0
 
@@ -28,8 +28,8 @@
       @test Cosmology.comoving_volume(cosmo, z) ≈ 151.05712532061932 atol=1e-8 rtol=1e-8
    end
 
+   # Tests for open (Ωk > 0) LCDM cosmology module (AGAINST ASTROPY)
    @testset "open LCDM" begin
-      # Tests for open (Ωk > 0) LCDM cosmology module (AGAINST ASTROPY)
       cosmo = Cosmology.init_cosmology(Omega_m0=0.26)
       z = 1.0
 
@@ -50,8 +50,8 @@
       @test Cosmology.comoving_volume(cosmo, z) ≈ 157.3382098743564 atol=1e-8 rtol=1e-8
    end
 
+   # Tests for closed (Ωk < 0) LCDM cosmology module (AGAINST ASTROPY)
    @testset "closed CDM" begin
-      # Tests for closed (Ωk < 0) LCDM cosmology module (AGAINST ASTROPY)
       cosmo = Cosmology.init_cosmology(Omega_m0=0.34)
       z = 1.0
 
