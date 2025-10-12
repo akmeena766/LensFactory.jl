@@ -84,8 +84,8 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
    dy = θy - θyc
    θr = (θs^2 + dx^2 + dy^2)^(3/2)
 
-   ψxx_up = ψxx + θE * dy^2 / θr
-   ψyy_up = ψyy + θE * dx^2 / θr
+   ψxx_up = ψxx + θE * (θs^2 + dy^2) / θr
+   ψyy_up = ψyy + θE * (θs^2 + dx^2) / θr
    ψxy_up = ψxy - θE * dx * dy / θr
    return ψxx_up, ψyy_up, ψxy_up
 end
@@ -102,8 +102,8 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
          dx = θx[i, j] - θxc
          dy = θy[i, j] - θyc
          θr = (θs^2 + dx^2 + dy^2)^(3/2)
-         ψxx[i, j] = ψxx[i, j] + θE * dy^2 / θr
-         ψyy[i, j] = ψyy[i, j] + θE * dx^2 / θr
+         ψxx[i, j] = ψxx[i, j] + θE * (θs^2 + dy^2) / θr
+         ψyy[i, j] = ψyy[i, j] + θE * (θs^2 + dx^2) / θr
          ψxy[i, j] = ψxy[i, j] - θE * dx * dy / θr
       end
    end
@@ -114,7 +114,7 @@ end
     einstein_angle(;D_ds::Float64=NaN, D_s::Float64=NaN, v_d::RV=NaN, x_s::Float64=NaN)
 """
 function einstein_angle(;D_ds::Float64=NaN, D_s::Float64=NaN, v_d::RV=NaN, x_s::Float64=NaN)
-   return sqrt((4π * (v_d / CONST_C)^2 * (D_ds/D_s))^2 - x_s^2)
+   return sqrt((4π * (v_d / CONST_C)^2 * (D_ds/D_s) / ANGLE_ARCSEC)^2 - x_s^2)
 end
 
 end
