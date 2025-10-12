@@ -52,8 +52,9 @@ adis = Dls/Dos
 xt1, yt1 = 1.0, 1.0
 xt2, yt2 = 1.0, 0.0
 
-include("./test_PointLens.jl")
-include("./test_PlummerLens.jl")
-include("./test_SISLens.jl")
+include("./test_Lenses_PointLens.jl")
+include("./test_Lenses_PlummerLens.jl")
+include("./test_Lenses_SISLens.jl")
+include("./test_Lenses_GaussianLens.jl")
 include("./test_Lenses_CompositeLens.jl")
 include("./test_Lenses_MultiPlaneLens.jl")

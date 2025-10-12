@@ -9,11 +9,11 @@
    # Create a Plummer lens
    lens = Lenses.init_PlummerLens(D_d=Dol, mass=1E11*MASS_SUN, x_s=0.1)
 
+   θE2 = (4.0 * CONST_G * mass / CONST_C^2) / Dol / ANGLE_ARCSEC^2
+
    pot = adis * Lenses.get_potential(lens, xt1, yt1)
    dex = adis .* Lenses.get_deflection(lens, xt1, yt1)
    jac = adis .* Lenses.get_jacobian(lens, xt1, yt1)
-
-   θE2 = (4.0 * CONST_G * mass / CONST_C^2) / Dol / ANGLE_ARCSEC^2
    @test pot ≈ adis * 0.5 * θE2 * log(0.1^2 + xt1^2 + yt1^2) atol=1e-15 rtol=1e-15
    @test dex[1] ≈ adis * θE2 * (xt1) / (0.1^2 + xt1^2 + yt1^2) atol=1e-15 rtol=1e-15
    @test dex[2] ≈ adis * θE2 * (yt1) / (0.1^2 + xt1^2 + yt1^2) atol=1e-15 rtol=1e-15

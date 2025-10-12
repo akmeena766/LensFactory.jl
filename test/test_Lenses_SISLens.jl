@@ -13,7 +13,6 @@
    dex = adis .* Lenses.get_deflection(lens, xt1, yt1)
    jac = adis .* Lenses.get_jacobian(lens, xt1, yt1)
    mag = Lenses.get_magnification_image(lens, xt1, yt1, adis)
-
    @test pot ≈ 0.9253665947775005 atol=1e-15 rtol=1e-15
    @test dex[1] ≈ 0.4626832973887502 atol=1e-15 rtol=1e-15
    @test dex[2] ≈ 0.4626832973887502 atol=1e-15 rtol=1e-15
@@ -26,7 +25,6 @@
    dex = adis .* Lenses.get_deflection(lens, xt2, yt2)
    jac = adis .* Lenses.get_jacobian(lens, xt2, yt2)
    mag = Lenses.get_magnification_image(lens, xt2, yt2, adis)
-
    @test pot ≈ 0.6543329942506746 atol=1e-15 rtol=1e-15
    @test dex[1] ≈ 0.6543329942506746 atol=1e-15 rtol=1e-15
    @test dex[2] ≈ 0.0 atol=1e-15 rtol=1e-15
