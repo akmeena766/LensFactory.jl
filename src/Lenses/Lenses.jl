@@ -36,6 +36,8 @@ include("./SIELens.jl")
 include("./PJELens.jl")
 include("./HernquistLens.jl")
 include("./NFWLens.jl")
+include("./MultiPlummerLens.jl")
+include("./MultiGaussianLens.jl")
 
 # Various lensing function to export
 export get_meshgrid

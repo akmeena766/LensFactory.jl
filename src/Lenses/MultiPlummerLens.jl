@@ -11,7 +11,6 @@ export jacobian!
 
 function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::S, θyc::S, mass::S, θs::S, nl::Int64) where {T <: RV, S <: Vector{RV}}
    ψ_up = ψ
-
    for k in 1:nl
       θE2 = (2.0 * CONST_G * mass[k] / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
 
@@ -42,7 +41,6 @@ end
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::S, θyc::S, mass::S, θs::S, nl::Int64) where {T <: RV, S <: Vector{RV}}
    ψx_up = ψx
    ψy_up = ψy
-
    for k in 1:nl
       θE2 = (4.0 * CONST_G * mass[k] / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
 
@@ -78,7 +76,6 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::S, 
    ψxx_up = ψxx
    ψyy_up = ψyy
    ψxy_up = ψxy
-
    for k in 1:nl
       θE2 = (4.0 * CONST_G * mass[k] / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
 

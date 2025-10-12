@@ -282,6 +282,30 @@ scale radius. The parameter `n` defines the slope of the density profile.
 end
 
 
+@kwdef struct init_MultiPlummerLens <: AbstractLens
+   _lens_::Symbol = :MultiPlummerLens
+   _lid_::Int64 = 101
+   D_d::RV  = NaN
+   n::Int64 = NaN
+   x_c  = Vector{<:RV}()
+   y_c  = Vector{<:RV}() 
+   mass = Vector{<:RV}()
+   x_s  = Vector{<:RV}()
+end
+
+
+@kwdef struct init_MultiGaussianLens <: AbstractLens
+   _lens_::Symbol = :MultiGaussianLens
+   _lid_::Int64 = 102
+   D_d::RV  = NaN
+   n::Int64 = 0
+   x_c  = Vector{Float64}()
+   y_c  = Vector{Float64}() 
+   mass = Vector{Float64}()
+   x_s  = Vector{Float64}()
+end
+
+
 @kwdef struct init_CompositeLens <: AbstractLens
    _lens_::Symbol = :CompositeLens
    _lid_::Int64 = 111
@@ -293,7 +317,7 @@ end
    _lens_::Symbol = :MultiPlaneLens
    _lid_::Int64 = 222
    n_p::Int64   = NaN
-   z_d = Vector{RV}()
+   z_d = Vector{<:RV}()
    _plane_ = Vector{AbstractLens}()
 end
 
@@ -344,7 +368,7 @@ function init_tNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV;
       c = r_vir / (x_s * D_d)
       ρ_s = (18.0 * pi^2 / 3.0) * ρ_cz * c^3 / ( log(1.0 + c) - ( c / (1.0 + c) ) )
    else
-      throw(ArgumentError("Provide at least c or x_s in ** init_NFWLens **"))
+      throw(ArgumentError("Provide at least c or x_s in ** init_tNFWLens **"))
    end
 
    x_t = x_t / r_vir
