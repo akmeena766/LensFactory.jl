@@ -1,3 +1,4 @@
+#!!!!!!!!!!!!!! Testing AGAINST LENSTRONOMY !!!!!!!!!!!!!!
 @testset "Point lens" begin
    # Einstein angle
    D_d, D_ds, D_s, mass = 1.0, 1.0, 1.0, 1.0

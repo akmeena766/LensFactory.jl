@@ -1,3 +1,4 @@
+#!!!!!!!!!!!!!! Testing AGAINST formulae !!!!!!!!!!!!!!
 @testset "Plummer lens" begin
    # Einstein angle
    mass = 1.0E11 * MASS_SUN

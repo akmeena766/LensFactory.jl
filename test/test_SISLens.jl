@@ -1,3 +1,4 @@
+#!!!!!!!!!!!!!! Testing AGAINST LENSTRONOMY !!!!!!!!!!!!!!
 @testset "SIS lens" begin
    # Einstein angle
    D_d, D_ds, D_s, v_d = 1.0, 1.0, 1.0, 200E3
