@@ -4,6 +4,7 @@
    x_s = 0.5
    lens = Lenses.init_GaussianLens(D_d=Dol, mass=mass, x_s=x_s)
 
+   pot1 = adis  * Lenses.get_potential(lens, xt1, yt1)
    dex1 = adis .* Lenses.get_deflection(lens, xt1, yt1)
    jac1 = adis .* Lenses.get_jacobian(lens, xt1, yt1)
    mag1 = Lenses.get_magnification_image(lens, xt1, yt1, adis)
@@ -14,7 +15,7 @@
    @test jac1[3] ≈ -0.16663958151736816 atol=1e-15 rtol=1e-15
    @test mag1 ≈ 1.0576039797648285 atol=1e-15 rtol=1e-15
 
-
+   pot2 = adis  * Lenses.get_potential(lens, xt1, yt1)
    dex2 = adis .* Lenses.get_deflection(lens, xt2, yt2)
    jac2 = adis .* Lenses.get_jacobian(lens, xt2, yt2)
    mag2 = Lenses.get_magnification_image(lens, xt2, yt2, adis)
@@ -34,8 +35,12 @@
    @test pot1 - pot3 ≈ -0.26472744601185416 atol=1e-15 rtol=1e-15
    @test pot2 - pot3 ≈ -0.38360040183651917 atol=1e-15 rtol=1e-15
 
+   potc = adis  * Lenses.get_potential(lens, [xt1, xt2], [yt1, yt2])
    dexc = adis .* Lenses.get_deflection(lens, [xt1, xt2], [yt1, yt2])
-   jacc = adis .* Lenses.get_jacobian(lens, [xt1, xt2], [yt1, yt2])   
+   jacc = adis .* Lenses.get_jacobian(lens, [xt1, xt2], [yt1, yt2])
+   @test potc[1] ≈ pot1 atol=1e-15 rtol=1e-15
+   @test potc[2] ≈ pot2 atol=1e-15 rtol=1e-15
+
    @test dexc[1][1] ≈ dex1[1] atol=1e-15 rtol=1e-15
    @test dexc[2][1] ≈ dex1[2] atol=1e-15 rtol=1e-15
    @test dexc[1][2] ≈ dex2[1] atol=1e-15 rtol=1e-15
