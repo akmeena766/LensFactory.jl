@@ -14,7 +14,7 @@ export jacobian!
     potential!(ψ::T, θx::T, θy::T, kv::RV, g1::RV, g2::RV) where T <: RV
 """
 function potential!(ψ::T, θx::T, θy::T, kv::RV, g1::RV, g2::RV) where T <: RV
-   ψ_up = ψ + 0.5 * (kv + γ1) * θx^2 + 0.5 * (kv - g1) * θy^2 + g2 * θx * θy
+   ψ_up = ψ + 0.5 * (kv + g1) * θx^2 + 0.5 * (kv - g1) * θy^2 + g2 * θx * θy
    return ψ_up
 end
 

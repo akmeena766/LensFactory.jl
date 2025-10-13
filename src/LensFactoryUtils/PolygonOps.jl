@@ -23,14 +23,14 @@ end
 
 function hao_sun(point, polygon)
    """
-   Algorithm to find determine if a point is in the given polygon.
+   Algorithm to determine if a point is in the given polygon.
    Taken from Hao and Sun (2018): https://doi.org/10.3390/sym10100477
    outputs:
       -1: on the edge
        0: outside
        1: inside
    """
-   
+
    k = 0
 
    xp = point[1]
@@ -86,14 +86,27 @@ function hao_sun(point, polygon)
 end
 
 function interpolation(x::Float64, y::Float64, df::Matrix{<:Float64})::Float64
+   """
+   Bilinear interpolation at (x, y) given in pixel coordinates.
+   """
+
+   # Data matrix dimesions
    nx, ny = size(df)
-   px = clamp(floor(Int64, x), 1, nx-1)
-   py = clamp(floor(Int64, y), 1, ny-1)
+   
+   # Check if the pixel is inside the grid range
+   if x < 1 || x > nx - 1 || y < 1 || y > ny - 1
+      throw(ArgumentError("Point ($x, $y) is outside the valid interpolation range [1, $(nx-1)], [1, $(ny-1)]"))
+   end
+   
+   # Lower-left pixel position
+   px = floor(Int, x)
+   py = floor(Int, y)
 
    # Fractional offsets
    dx = x - px
    dy = y - py
 
+   # Funtion values at the vertices
    f00 = df[px + 0, py + 0]
    f01 = df[px + 0, py + 1]
    f10 = df[px + 1, py + 0]
