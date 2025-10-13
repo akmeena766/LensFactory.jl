@@ -1,3 +1,4 @@
+#!!!!!!!!!!!!!! Testing AGAINST Lenstronomy + Glafic !!!!!!!!!!!!!!
 @testset "Gaussian lens" begin
    # lens properties
    mass = 1.0E11 * MASS_SUN

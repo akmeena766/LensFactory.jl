@@ -3,15 +3,18 @@
    # Einstein angle
    v_d = 200E3
    x_s = 0.1
-   θE = Lenses.NSISPLens.einstein_angle(D_ds=Dls, D_s=Dos, v_d=v_d, x_s=x_s)
-   @test θE > 0.0
-   @test θE ≈ sqrt((4π * (v_d/CONST_C)^2 *(Dls/Dos) / ANGLE_ARCSEC)^2 - x_s^2) atol=1e-15 rtol=1e-15
 
    # Create an NSISP lens
    lens = Lenses.init_NSISPLens(v_d=v_d, x_s=x_s)
 
    constant = 4π * (v_d/CONST_C)^2 * adis / ANGLE_ARCSEC
 
+   # Test Einstein angle
+   θE = Lenses.NSISPLens.einstein_angle(D_ds=Dls, D_s=Dos, v_d=v_d, x_s=x_s)
+   @test θE > 0.0
+   @test θE ≈ sqrt(constant^2 - x_s^2) atol=1e-15 rtol=1e-15
+
+   # Test lensing quantities
    pot1 = adis  * Lenses.get_potential(lens, xt1, yt1)
    dex1 = adis .* Lenses.get_deflection(lens, xt1, yt1)
    jac1 = adis .* Lenses.get_jacobian(lens, xt1, yt1)

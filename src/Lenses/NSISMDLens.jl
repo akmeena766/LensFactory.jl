@@ -115,8 +115,8 @@ end
 """
     einstein_angle(;D_ds::Float64=NaN, D_s::Float64=NaN, v_d::RV=NaN, x_s::Float64=NaN)
 """
-function einstein_angle(;D_ds::Float64=NaN, D_s::Float64=NaN, v_d::RV=NaN, x_s::Float64=NaN)
-   θE = 4π * (D_ds / D_s) * (v_d / CONST_C)^2
+function einstein_angle(; D_ds::Float64=NaN, D_s::Float64=NaN, v_d::RV=NaN, x_s::Float64=NaN)
+   θE = 4π * (D_ds / D_s) * (v_d / CONST_C)^2 / ANGLE_ARCSEC
    return sqrt(θE^2 - 2.0 * x_s * θE)
 end
 

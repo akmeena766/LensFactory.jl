@@ -1,16 +1,19 @@
-#!!!!!!!!!!!!!! Testing AGAINST formulae !!!!!!!!!!!!!!
+#!!!!!!!!!!!!!! Testing AGAINST formulae and cross-checked against PyGRALE !!!!!!!!!!!!!!
 @testset "Plummer lens" begin
-   # Einstein angle
    mass = 1.0E11 * MASS_SUN
-   θE = Lenses.PlummerLens.einstein_angle(D_d=Dol, D_ds=Dls, D_s=Dos, mass=mass, x_s=0.1)
-   @test θE > 0.0
-   @test θE ≈ sqrt((4.0 * CONST_G * mass / CONST_C^2) * (Dls / Dol / Dos) / ANGLE_ARCSEC^2 - 0.1^2) atol=1e-15 rtol=1e-15
+   x_s = 0.1
 
    # Create a Plummer lens
-   lens = Lenses.init_PlummerLens(D_d=Dol, mass=1E11*MASS_SUN, x_s=0.1)
+   lens = Lenses.init_PlummerLens(D_d=Dol, mass=1E11*MASS_SUN, x_s=x_s)
 
    θE2 = (4.0 * CONST_G * mass / CONST_C^2) / Dol / ANGLE_ARCSEC^2
 
+   # Test Einstein angle calculation
+   θE = Lenses.PlummerLens.einstein_angle(D_d=Dol, D_ds=Dls, D_s=Dos, mass=mass, x_s=x_s)
+   @test θE > 0.0
+   @test θE ≈ sqrt(θE2 * adis - x_s^2) atol=1e-15 rtol=1e-15
+
+   # Test lensing quantities
    pot1 = adis * Lenses.get_potential(lens, xt1, yt1)
    dex1 = adis .* Lenses.get_deflection(lens, xt1, yt1)
    jac1 = adis .* Lenses.get_jacobian(lens, xt1, yt1)
