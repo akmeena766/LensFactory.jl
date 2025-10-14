@@ -46,6 +46,18 @@
    @test jac2[3] ≈ +0.0 atol=1e-3 rtol=1e-3
    @test mag2 ≈ 1.144127692401055 atol=1e-3 rtol=1e-3
 
+   pot3 = adis  * Lenses.get_potential(lens, 0.1, 0.2)
+   dex3 = adis .* Lenses.get_deflection(lens, 0.1, 0.2)
+   jac3 = adis .* Lenses.get_jacobian(lens, 0.1, 0.2)
+   mag3 = Lenses.get_magnification_image(lens, 0.1, 0.2, adis)
+   @test pot3 ≈ 0.0807493284619905 atol=1e-3 rtol=1e-3
+   @test dex3[1] ≈ 0.18998367 atol=1e-3 rtol=1e-3
+   @test dex3[2] ≈ 0.37996733 atol=1e-3 rtol=1e-3
+   @test jac3[1] ≈ +1.48981845 atol=1e-3 rtol=1e-3
+   @test jac3[2] ≈ +0.25976378 atol=1e-3 rtol=1e-3
+   @test jac3[3] ≈ -0.82003645 atol=1e-3 rtol=1e-3
+   @test mag3 ≈ -0.9661451762327354 atol=1e-3 rtol=1e-3
+
    potc = adis .* Lenses.get_potential(lens, [xt1, xt2], [yt1, yt2])
    dexc = adis .* Lenses.get_deflection(lens, [xt1, xt2], [yt1, yt2])
    jacc = adis .* Lenses.get_jacobian(lens, [xt1, xt2], [yt1, yt2])
