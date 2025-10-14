@@ -328,21 +328,24 @@ function init_NFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV;
    # ADD to the lens
    D_d = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
    
-   # Critical density at the lens redshift
+   # Critical density at the lens redshift (in kg/m^3)
    ρ_cz = Cosmology.rho_cz(cosmology, z_d)
 
-   # Virial radius of the lens (in meters)
-   r_vir = (3.0 * mass / 72.0 / pi^3 / ρ_cz)^(1.0/3.0)
+   # Overdensity value
+   Δ_z = 200.0
+
+   # Virial radius of the lens (in ANGLE_ARCSEC)
+   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
 
    # Check if concentration is given
    if isfinite(c)
-      ρ_s = (18.0 * pi^2 / 3.0) * ρ_cz * c^3 / ( log(1.0 + c) - ( c / (1.0 + c) ) )
-      x_s = r_vir / c / D_d
+      ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / ( log(1.0 + c) - ( c / (1.0 + c) ) )
+      x_s = θ_vir / c
    elseif isfinite(x_s)
-      c = r_vir / (x_s * D_d)
-      ρ_s = (18.0 * pi^2 / 3.0) * ρ_cz * c^3 / ( log(1.0 + c) - ( c / (1.0 + c) ) )
+      c = θ_vir / x_s
+      ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / ( log(1.0 + c) - ( c / (1.0 + c) ) )
    else
-      throw(ArgumentError("Provide at least c or x_s in ** init_NFWLens **"))
+      throw(ArgumentError("Provide concentration (c) or scale radius (x_s) in ** init_NFWLens **"))
    end
    return init_NFWLens(D_d=D_d, x_c=x_c, y_c=y_c, x_s=x_s, c=c, rho_s=ρ_s, mass=mass)
 end

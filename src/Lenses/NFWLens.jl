@@ -24,8 +24,8 @@ end
     potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV) where T <: RV
 """
 function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV) where T <: RV
-   κs = 4.0 * ρs * D_d * θs / (CONST_C^2 / 4.0 / pi / CONST_G / D_d) / ANGLE_ARCSEC^2
-
+   κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+   println(κs)
    dx = (θx - θxc) / θs
    dy = (θy - θyc) / θs
    dr = sqrt(dx^2 + dy^2)
@@ -38,7 +38,7 @@ end
     potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV) where T <: ROA
 """
 function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV) where T <: ROA
-   κs = 4.0 * ρs * D_d * θs / (CONST_C^2 / 4.0 / pi / CONST_G / D_d) / ANGLE_ARCSEC^2
+   κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -56,7 +56,7 @@ end
     deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV) where T <: RV
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV) where T <: RV
-   κs = 4.0 * ρs * D_d * θs / (CONST_C^2 / 4.0 / pi / CONST_G / D_d) / ANGLE_ARCSEC^2
+   κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
 
    dx = (θx - θxc) / θs
    dy = (θy - θyc) / θs
@@ -73,7 +73,7 @@ end
     deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV) where T <: ROA
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV) where T <: ROA
-   κs = 4.0 * ρs * D_d * θs / (CONST_C^2 / 4.0 / pi / CONST_G / D_d) / ANGLE_ARCSEC^2
+   κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -95,13 +95,13 @@ end
     jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV) where T <: RV
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV) where T <: RV
-   κs = 4.0 * ρs * D_d * θs / (CONST_C^2 / 4.0 / pi / CONST_G / D_d) / ANGLE_ARCSEC^2
+   κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
 
    dx = (θx - θxc) / θs
    dy = (θy - θyc) / θs
    dr = sqrt(dx^2 + dy^2)
 
-   α_r = κs * θs * (F_x(dr) + log(0.5 * dr)) / dr
+   α_r = κs * (F_x(dr) + log(0.5 * dr)) / dr
    κ_r = κs * 0.5 * (1.0 - F_x(dr)) / (dr^2 - 1.0)
 
    ψxx_up = ψxx + 2.0 * κ_r * dx^2 / dr^2 - α_r * (dx^2 - dy^2) / dr^3
@@ -114,7 +114,7 @@ end
     jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV) where T <: ROA
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV) where T <: ROA
-   κs = 4.0 * ρs * D_d * θs / (CONST_C^2 / 4.0 / pi / CONST_G / D_d) / ANGLE_ARCSEC^2
+   κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -123,7 +123,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
          dy = (θy[i, j] - θyc) / θs
          dr = sqrt(dx^2 + dy^2)
 
-         α_r = κs * θs * (F_x(dr) + log(0.5 * dr)) / dr
+         α_r = κs * (F_x(dr) + log(0.5 * dr)) / dr
          κ_r = κs * 0.5 * (1.0 - F_x(dr)) / (dr^2 - 1.0)
 
          ψxx[i, j] = ψxx[i, j] + 2.0 * κ_r * dx^2 / dr^2 - α_r * (dx^2 - dy^2) / dr^3

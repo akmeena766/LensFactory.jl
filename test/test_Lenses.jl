@@ -34,7 +34,7 @@
    end
 end
 
-#!!!!!!!!!!!!!! Testing individual lens models (AGAINST LENSTRONOMY) !!!!!!!!!!!!!!
+#!!!!!!!!!!!!!! Testing individual lens models !!!!!!!!!!!!!!
 # Cosmology   
 cosmo = Cosmology.init_cosmology()
 
