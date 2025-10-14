@@ -11,7 +11,7 @@
 
 # lensModel = LensModel(lens_model_list=['HERNQUIST'])
 # hernquist = {'center_x': 0, 'center_y': 0, "Rs": rs_angle, "sigma0": sigma0}
-# tx, ty = [1.0, 1.0], [1.0, 0.0]
+# tx, ty = [1.0, 1.0, 0.1], [1.0, 0.0, 0.2]
 # pot = lensModel.potential(tx, ty, [hernquist])
 # dex = lensModel.alpha(tx, ty, [hernquist])
 # hes = lensModel.hessian(tx, ty, [hernquist])
