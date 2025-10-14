@@ -11,11 +11,11 @@ export jacobian!
 
 @inline function F_x(x::RV)
    if x < 1.0 
-      arg = sqrt( 1.0 - x^2 )
-      f_x = atanh( arg ) / arg
+      arg = sqrt(1.0 - x^2)
+      f_x = atanh(arg) / arg
    else 
-      arg = sqrt( x^2 - 1.0 )
-      f_x =  atan( arg ) / arg
+      arg = sqrt(x^2 - 1.0)
+      f_x =  atan(arg) / arg
    end
    return f_x
 end
@@ -25,12 +25,12 @@ end
 """
 function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV) where T <: RV
    κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
-   println(κs)
+
    dx = (θx - θxc) / θs
    dy = (θy - θyc) / θs
    dr = sqrt(dx^2 + dy^2)
 
-   ψ_up = ψ + κs * θs^2 * 0.5 * ((dr^2 - 1.0) * F_x(dr)^2 + log(0.5 * dr))
+   ψ_up = ψ + κs * θs^2 * 0.5 * ((dr^2 - 1.0) * F_x(dr)^2 + log(0.5 * dr)^2)
    return ψ_up
 end
 
@@ -46,7 +46,7 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV
          dx = (θx[i, j] - θxc) / θs
          dy = (θy[i, j] - θyc) / θs
          dr = sqrt(dx^2 + dy^2)
-         ψ[i, j] = ψ[i, j] + κs * θs^2 * 0.5 * ((dr^2 - 1.0) * F_x(dr)^2 + log(0.5 * dr))
+         ψ[i, j] = ψ[i, j] + κs * θs^2 * 0.5 * ((dr^2 - 1.0) * F_x(dr)^2 + log(0.5 * dr)^2)
       end
    end
 end
