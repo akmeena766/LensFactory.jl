@@ -1,4 +1,16 @@
 #!!!!!!!!!!!!!! Testing AGAINST formulae and cross-checked against PyGRALE !!!!!!!!!!!!!!
+# cosm = cosmology.Cosmology(0.7, 0.3, 0, 0.7)
+# z_d, z_s = 0.5, 1.5
+# D_d = cosm.getAngularDiameterDistance(z_d)
+# D_s = cosm.getAngularDiameterDistance(z_s)
+# D_ds = cosm.getAngularDiameterDistance(z_s, z_d)
+# adis = D_ds/D_s
+
+# lens = lenses.PlummerLens(D_d, { "mass": 1E11*1.988409870698051e30, "width": 1.0 * cv.ANGLE_ARCSEC })
+# dex = lens.getAlphaVector(np.array([1.0 * cv.ANGLE_ARCSEC, 1.0 * cv.ANGLE_ARCSEC])) / cv.ANGLE_ARCSEC
+# jac = lens.getAlphaVectorDerivatives(np.array([1.0 * cv.ANGLE_ARCSEC, 1.0 * cv.ANGLE_ARCSEC]))
+# mag = 1 / lens.getInverseMagnification(D_s, D_ds, np.array([1.0 * cv.ANGLE_ARCSEC, 1.0 * cv.ANGLE_ARCSEC]))
+
 @testset "Plummer lens" begin
    mass = 1.0E11 * MASS_SUN
    x_s = 0.1

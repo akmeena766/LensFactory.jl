@@ -1,4 +1,12 @@
 #!!!!!!!!!!!!!! Testing AGAINST Lenstronomy + Glafic !!!!!!!!!!!!!!
+# lensModel = LensModel(lens_model_list=['GAUSSIAN'])
+# gaussian = {'center_x': 0, 'center_y': 0, 'sigma':0.5, 'amp': 0.18343855299170853 * 2 * np.pi}
+# tx, ty = [1.0, 1.0], [1.0, 0.0]
+# pot = lensModel.potential(tx, ty, [gaussian])
+# dex = lensModel.alpha(tx, ty, [gaussian])
+# hes = lensModel.hessian(tx, ty, [gaussian])
+# mag = lensModel.magnification(tx, ty, [gaussian])
+
 @testset "Gaussian lens" begin
    # lens properties
    mass = 1.0E11 * MASS_SUN

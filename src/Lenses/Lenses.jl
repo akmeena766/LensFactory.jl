@@ -148,7 +148,7 @@ const lens_map = Dict(
    :PIEPLens        => (PIEPLens,        [:x_c, :y_c, :v_d, :x_s, :eps, :pa]),
    :SIELens         => (SIELens,         [:x_c, :y_c, :v_d, :x_s, :eps, :pa]),
    :PJELens         => (PJELens,         [:x_c, :y_c, :v_d, :x_s, :x_t, :eps, :pa]),
-   :HernquistLens   => (HernquistLens,   [:D_d, :x_c, :y_c, :mass, :x_e]),
+   :HernquistLens   => (HernquistLens,   [:D_d, :x_c, :y_c, :mass, :x_s]),
    :NFWLens         => (NFWLens,         [:D_d, :x_c, :y_c, :rho_s, :x_s])
 )
 function potential_helper!(ψ::T, lens::AbstractLens, θx::T, θy::T) where T <: Union{RV, ROA}

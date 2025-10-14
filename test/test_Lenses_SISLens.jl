@@ -1,4 +1,12 @@
 #!!!!!!!!!!!!!! Testing AGAINST LENSTRONOMY !!!!!!!!!!!!!!
+# lensModel = LensModel(lens_model_list=['SIS'])
+# sis = {'center_x': 0, 'center_y': 0, 'theta_E': 0.6543329942506746}
+# tx, ty = [1.0, 1.0], [1.0, 0.0]
+# pot = lensModel.potential(tx, ty, [sis])
+# dex = lensModel.alpha(tx, ty, [sis])
+# hes = lensModel.hessian(tx, ty, [sis])
+# mag = lensModel.magnification(tx, ty, [sis])
+
 @testset "SIS lens" begin
    # Einstein angle
    D_d, D_ds, D_s, v_d = 1.0, 1.0, 1.0, 200E3

@@ -199,7 +199,7 @@ Initialize a Hernquist lens with the given parameters.
    x_c::RV  = 0.0
    y_c::RV  = 0.0
    mass::RV = NaN
-   x_e::RV  = NaN
+   x_s::RV  = NaN
 end
 
 """

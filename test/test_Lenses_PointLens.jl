@@ -1,4 +1,12 @@
 #!!!!!!!!!!!!!! Testing AGAINST LENSTRONOMY !!!!!!!!!!!!!!
+# lensModel = LensModel(lens_model_list=['POINT_MASS'])
+# point = {'center_x': 0, 'center_y': 0, 'theta_E': 0.6057038104415533}
+# tx, ty = [1.0, 1.0], [1.0, 0.0]
+# pot = lensModel.potential(tx, ty, [point])
+# dex = lensModel.alpha(tx, ty, [point])
+# hes = lensModel.hessian(tx, ty, [point])
+# mag = lensModel.magnification(tx, ty, [point])
+
 @testset "Point lens" begin
    # Einstein angle
    D_d, D_ds, D_s, mass = 1.0, 1.0, 1.0, 1.0
