@@ -44,7 +44,7 @@ function hao_sun(point, polygon)
          continue
       end
 
-      u1 = polygon[i][1] - xp
+      u1 = polygon[i][1]   - xp
       u2 = polygon[i+1][1] - xp
 
       f = (u1 * v2) - (u2 * v1)
@@ -94,8 +94,8 @@ function interpolation(x::Float64, y::Float64, df::Matrix{<:Float64})::Float64
    nx, ny = size(df)
    
    # Check if the pixel is inside the grid range
-   if x < 1 || x > nx - 1 || y < 1 || y > ny - 1
-      throw(ArgumentError("Point ($x, $y) is outside the valid interpolation range [1, $(nx-1)], [1, $(ny-1)]"))
+   if x < 1 || x ≥ nx || y < 1 || y ≥ ny
+      throw(ArgumentError("Point ($x, $y) is outside the valid interpolation range [1, $(nx)), [1, $(ny))"))
    end
    
    # Lower-left pixel position
