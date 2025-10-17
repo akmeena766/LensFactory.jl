@@ -62,4 +62,6 @@
    @test pot1 - pot2 ≈ -0.026823145088490218 atol=1e-4 rtol=1e-4
    @test pot2 - pot3 ≈ -0.05538925777883399 atol=1e-4 rtol=1e-4
    @test pot3 - pot1 ≈ +0.0822124028673242 atol=1e-4 rtol=1e-4
+
+   @test_throws ArgumentError Lenses.init_NFWLens(cosmo, zl, mass=mass)
 end
