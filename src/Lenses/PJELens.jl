@@ -102,23 +102,20 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV,
    da_r = sqrt(q^2 * (aq^2 + dx_r^2) + dy_r^2)
 
    # Get deflection vector corresponding to θs in rotated frame
-   ψx_r = (bq * q / sqrt(1 - q^2)) *  atan(sqrt(1 - q^2) * dx_r / (ds_r + sq))
-   ψy_r = (bq * q / sqrt(1 - q^2)) * atanh(sqrt(1 - q^2) * dy_r / (ds_r + q^2 * sq))
+   ψx_r1 =  atan(sqrt(1 - q^2) * dx_r / (ds_r + sq))
+   ψy_r1 = atanh(sqrt(1 - q^2) * dy_r / (ds_r + q^2 * sq))
    
-   # Rotate back to original frame
-   ψx_1 = ψx_r * cos(deg2rad(pa)) - ψy_r * sin(deg2rad(pa))
-   ψy_1 = ψx_r * sin(deg2rad(pa)) + ψy_r * cos(deg2rad(pa))
-
    # Get the deflection vector corresponding to θt in rotated frame
-   ψx_r = (bq * q / sqrt(1 - q^2)) *  atan(sqrt(1 - q^2) * dx_r / (da_r + aq))
-   ψy_r = (bq * q / sqrt(1 - q^2)) * atanh(sqrt(1 - q^2) * dy_r / (da_r + q^2 * aq))
+   ψx_r2 =  atan(sqrt(1 - q^2) * dx_r / (da_r + aq))
+   ψy_r2 = atanh(sqrt(1 - q^2) * dy_r / (da_r + q^2 * aq))
 
-   # Rotate back to original frame
-   ψx_2 = ψx_r * cos(deg2rad(pa)) - ψy_r * sin(deg2rad(pa))
-   ψy_2 = ψx_r * sin(deg2rad(pa)) + ψy_r * cos(deg2rad(pa))
+   # Add the two components
+   ψx_r = (bq * q / sqrt(1 - q^2)) * (ψx_r1 - ψx_r2)
+   ψy_r = (bq * q / sqrt(1 - q^2)) * (ψy_r1 - ψy_r2)
 
-   ψx_up = ψx + (ψx_1 - ψx_2)
-   ψy_up = ψy + (ψy_1 - ψy_2)
+   # Rotate back to original frame and update the values
+   ψx_up = ψx + ψx_r * cos(deg2rad(pa)) - ψy_r * sin(deg2rad(pa))
+   ψy_up = ψy + ψx_r * sin(deg2rad(pa)) + ψy_r * cos(deg2rad(pa))
    return ψx_up, ψy_up
 end
 
@@ -146,23 +143,20 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV,
          da_r = sqrt(q^2 * (aq^2 + dx_r^2) + dy_r^2)
 
          # Get deflection vector corresponding to θs in rotated frame
-         ψx_r = (bq * q / sqrt(1 - q^2)) *  atan(sqrt(1 - q^2) * dx_r / (ds_r + sq))
-         ψy_r = (bq * q / sqrt(1 - q^2)) * atanh(sqrt(1 - q^2) * dy_r / (ds_r + q^2 * sq))
+         ψx_r1 =  atan(sqrt(1 - q^2) * dx_r / (ds_r + sq))
+         ψy_r1 = atanh(sqrt(1 - q^2) * dy_r / (ds_r + q^2 * sq))
    
-         # Rotate back to original frame
-         ψx_1 = ψx_r * cos(deg2rad(pa)) - ψy_r * sin(deg2rad(pa))
-         ψy_1 = ψx_r * sin(deg2rad(pa)) + ψy_r * cos(deg2rad(pa))
-
          # Get the deflection vector corresponding to θt in rotated frame
-         ψx_r = (bq * q / sqrt(1 - q^2)) *  atan(sqrt(1 - q^2) * dx_r / (da_r + aq))
-         ψy_r = (bq * q / sqrt(1 - q^2)) * atanh(sqrt(1 - q^2) * dy_r / (da_r + q^2 * aq))
+         ψx_r2 =  atan(sqrt(1 - q^2) * dx_r / (da_r + aq))
+         ψy_r2 = atanh(sqrt(1 - q^2) * dy_r / (da_r + q^2 * aq))
 
-         # Rotate back to original frame
-         ψx_2 = ψx_r * cos(deg2rad(pa)) - ψy_r * sin(deg2rad(pa))
-         ψy_2 = ψx_r * sin(deg2rad(pa)) + ψy_r * cos(deg2rad(pa))
+         # Add the two components
+         ψx_r = (bq * q / sqrt(1 - q^2)) * (ψx_r1 - ψx_r2)
+         ψy_r = (bq * q / sqrt(1 - q^2)) * (ψy_r1 - ψy_r2)
 
-         ψx[i, j] = ψx[i, j] + (ψx_1 - ψx_2)
-         ψy[i, j] = ψy[i, j] + (ψy_1 - ψy_2)
+         # Rotate back to original frame and update the values
+         ψx[i, j] = ψx[i, j] + ψx_r * cos(deg2rad(pa)) - ψy_r * sin(deg2rad(pa))
+         ψy[i, j] = ψy[i, j] + ψx_r * sin(deg2rad(pa)) + ψy_r * cos(deg2rad(pa))
       end
    end
 end
@@ -190,27 +184,25 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
 
    # Get deformation tensor in rotated frame
    common_factor = (1+q^2) * sq^2 + 2 * ds_r * sq + dx_r^2 + dy_r^2
-   ψxx_r = + bq * q * (q^2 * sq^2 + dy_r^2 + sq * ds_r) / ds_r / common_factor
-   ψyy_r = + bq * q * (sq^2 + dx_r^2 + sq * ds_r) / ds_r / common_factor
-   ψxy_r = - bq * q * dx_r * dy_r / ds_r / common_factor
-
-   ψxx_1 = ψxx_r * cos(deg2rad(pa))^2 - ψxy_r * sin(deg2rad(2*pa)) + ψyy_r * sin(deg2rad(pa))^2
-   ψyy_1 = ψxx_r * sin(deg2rad(pa))^2 + ψxy_r * sin(deg2rad(2*pa)) + ψyy_r * cos(deg2rad(pa))^2
-   ψxy_1 = 0.5 * sin(deg2rad(2*pa)) * (ψxx_r - ψyy_r) + cos(deg2rad(2*pa)) * ψxy_r
+   ψxx_r1 = + (q^2 * sq^2 + dy_r^2 + sq * ds_r) / ds_r / common_factor
+   ψyy_r1 = + (sq^2 + dx_r^2 + sq * ds_r) / ds_r / common_factor
+   ψxy_r1 = - dx_r * dy_r / ds_r / common_factor
 
    # Get deformation tensor in rotated frame
    common_factor = (1+q^2) * aq^2 + 2 * da_r * aq + dx_r^2 + dy_r^2
-   ψxx_r = + bq * q * (q^2 * aq^2 + dy_r^2 + aq * da_r) / da_r / common_factor
-   ψyy_r = + bq * q * (aq^2 + dx_r^2 + aq * da_r) / da_r / common_factor
-   ψxy_r = - bq * q * dx_r * dy_r / da_r / common_factor
+   ψxx_r2 = + (q^2 * aq^2 + dy_r^2 + aq * da_r) / da_r / common_factor
+   ψyy_r2 = + (aq^2 + dx_r^2 + aq * da_r) / da_r / common_factor
+   ψxy_r2 = - dx_r * dy_r / da_r / common_factor
 
-   ψxx_2 = ψxx_r * cos(deg2rad(pa))^2 - ψxy_r * sin(deg2rad(2*pa)) + ψyy_r * sin(deg2rad(pa))^2
-   ψyy_2 = ψxx_r * sin(deg2rad(pa))^2 + ψxy_r * sin(deg2rad(2*pa)) + ψyy_r * cos(deg2rad(pa))^2
-   ψxy_2 = 0.5 * sin(deg2rad(2*pa)) * (ψxx_r - ψyy_r) + cos(deg2rad(2*pa)) * ψxy_r
-   
-   ψxx_up = ψxx + (ψxx_1 - ψxx_2)
-   ψyy_up = ψyy + (ψyy_1 - ψyy_2)
-   ψxy_up = ψxy + (ψxy_1 - ψxy_2)
+   # Add the two components
+   ψxx_r = bq * q * (ψxx_r1 - ψxx_r2)
+   ψyy_r = bq * q * (ψyy_r1 - ψyy_r2)
+   ψxy_r = bq * q * (ψxy_r1 - ψxy_r2)
+
+   # Rotate back to original frame and update the values
+   ψxx_up = ψxx + ψxx_r * cos(deg2rad(pa))^2 - ψxy_r * sin(deg2rad(2*pa)) + ψyy_r * sin(deg2rad(pa))^2
+   ψyy_up = ψyy + ψxx_r * sin(deg2rad(pa))^2 + ψxy_r * sin(deg2rad(2*pa)) + ψyy_r * cos(deg2rad(pa))^2
+   ψxy_up = ψxy + 0.5 * sin(deg2rad(2*pa)) * (ψxx_r - ψyy_r) + cos(deg2rad(2*pa)) * ψxy_r
    return ψxx_up, ψyy_up, ψxy_up
 end
 
@@ -239,27 +231,25 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
 
          # Get deformation tensor in rotated frame
          common_factor = (1+q^2) * sq^2 + 2 * ds_r * sq + dx_r^2 + dy_r^2
-         ψxx_r = + bq * q * (q^2 * sq^2 + dy_r^2 + sq * ds_r) / ds_r / common_factor
-         ψyy_r = + bq * q * (sq^2 + dx_r^2 + sq * ds_r) / ds_r / common_factor
-         ψxy_r = - bq * q * dx_r * dy_r / ds_r / common_factor
-
-         ψxx_1 = ψxx_r * cos(deg2rad(pa))^2 - ψxy_r * sin(deg2rad(2*pa)) + ψyy_r * sin(deg2rad(pa))^2
-         ψyy_1 = ψxx_r * sin(deg2rad(pa))^2 + ψxy_r * sin(deg2rad(2*pa)) + ψyy_r * cos(deg2rad(pa))^2
-         ψxy_1 = 0.5 * sin(deg2rad(2*pa)) * (ψxx_r - ψyy_r) + cos(deg2rad(2*pa)) * ψxy_r
+         ψxx_r1 = + (q^2 * sq^2 + dy_r^2 + sq * ds_r) / ds_r / common_factor
+         ψyy_r1 = + (sq^2 + dx_r^2 + sq * ds_r) / ds_r / common_factor
+         ψxy_r1 = - dx_r * dy_r / ds_r / common_factor
 
          # Get deformation tensor in rotated frame
          common_factor = (1+q^2) * aq^2 + 2 * da_r * aq + dx_r^2 + dy_r^2
-         ψxx_r = + bq * q * (q^2 * aq^2 + dy_r^2 + aq * da_r) / da_r / common_factor
-         ψyy_r = + bq * q * (aq^2 + dx_r^2 + aq * da_r) / da_r / common_factor
-         ψxy_r = - bq * q * dx_r * dy_r / da_r / common_factor
+         ψxx_r2 = + (q^2 * aq^2 + dy_r^2 + aq * da_r) / da_r / common_factor
+         ψyy_r2 = + (aq^2 + dx_r^2 + aq * da_r) / da_r / common_factor
+         ψxy_r2 = - dx_r * dy_r / da_r / common_factor
 
-         ψxx_2 = ψxx_r * cos(deg2rad(pa))^2 - ψxy_r * sin(deg2rad(2*pa)) + ψyy_r * sin(deg2rad(pa))^2
-         ψyy_2 = ψxx_r * sin(deg2rad(pa))^2 + ψxy_r * sin(deg2rad(2*pa)) + ψyy_r * cos(deg2rad(pa))^2
-         ψxy_2 = 0.5 * sin(deg2rad(2*pa)) * (ψxx_r - ψyy_r) + cos(deg2rad(2*pa)) * ψxy_r
+         # Add the two components
+         ψxx_r = bq * q * (ψxx_r1 - ψxx_r2)
+         ψyy_r = bq * q * (ψyy_r1 - ψyy_r2)
+         ψxy_r = bq * q * (ψxy_r1 - ψxy_r2)
 
-         ψxx[i, j] = ψxx[i, j] + (ψxx_1 - ψxx_2)
-         ψyy[i, j] = ψyy[i, j] + (ψyy_1 - ψyy_2)
-         ψxy[i, j] = ψxy[i, j] + (ψxy_1 - ψxy_2)
+         # Rotate back to original frame and update the values
+         ψxx[i, j] = ψxx[i, j] + ψxx_r * cos(deg2rad(pa))^2 - ψxy_r * sin(deg2rad(2*pa)) + ψyy_r * sin(deg2rad(pa))^2
+         ψyy[i, j] = ψyy[i, j] + ψxx_r * sin(deg2rad(pa))^2 + ψxy_r * sin(deg2rad(2*pa)) + ψyy_r * cos(deg2rad(pa))^2
+         ψxy[i, j] = ψxy[i, j] + 0.5 * sin(deg2rad(2*pa)) * (ψxx_r - ψyy_r) + cos(deg2rad(2*pa)) * ψxy_r
       end
    end
 end
