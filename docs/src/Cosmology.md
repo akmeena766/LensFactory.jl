@@ -1,6 +1,5 @@
-```@docs
-Cosmology
-```
+# Cosmology
+[Example - 1](https://github.com/akmeena766/LensFactory_Examples/blob/main/Example-1%3A%20Constants%20and%20Cosmology.ipynb)
 
 ## Initialization
 ```@docs

@@ -1,6 +1,3 @@
-"""
-    Constants
-"""
 module Constants
 
 export RV, ROA
@@ -28,7 +25,7 @@ const LUMINOSITY_SUN = 3.828E26                     # Solar luminosity (in Watts
 
 # Distance units
 const DIST_AU  = 1.495978707000000E+11              # One Astronomical Unit (in meters)
-const DIST_LYR = 9.460730472580800E+15              # One Light Year (in meters)
+const DIST_LYR = 9.460730472580808E+15              # One Light Year (in meters)
 const DIST_PC  = 3.085677581491367E+16              # One parsec (in meters)
 const DIST_KPC = 3.085677581491367E+19              # One Kilo-parsec (in meters)
 const DIST_MPC = 3.085677581491367E+22              # One Mega-parsec (in meters)
