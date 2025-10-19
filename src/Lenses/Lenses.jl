@@ -1,6 +1,3 @@
-"""
-    Lenses
-"""
 module Lenses
 
 # Julia inbuilt functions to import
@@ -100,7 +97,26 @@ end
 
 
 """
-    get_critical_density(; Dd::Float64=NaN, Dds::Float64=NaN, Ds::Float64=NaN, adis::Float64=NaN; unit::Symbol=:kg_m2) --> Float64
+    get_critical_density(D_d::Float64, adis::Float64; unit::Symbol=:kg_m2) --> Float64
+"""
+function get_critical_density(D_d::Float64, adis::Float64; unit::Symbol=:kg_m2)
+   # Calculate Σ_cr in kg/m^2 based type of input parameters
+   Σ_cr = (CONST_C^2 / (4.0 * π * CONST_G)) * (1.0 / (D_d * adis))
+   
+   # Convert to the requested unit
+   if unit == :kg_m2
+      return Σ_cr
+   elseif unit == :msun_pc2
+      return Σ_cr * ( DIST_PC^2 / MASS_SUN )
+   elseif unit == :msun_arcsec2
+      return Σ_cr * ( D_d^2 * ANGLE_ARCSEC^2 / MASS_SUN )
+   else
+      throw(ArgumentError("Invalid unit: $unit. Must be 'kg_m2' or 'msun_pc2' or 'msun_arcsec2'."))
+   end
+end
+
+"""
+    get_critical_density(D_d::Float64, D_ds::Float64, D_s::Float64s; unit::Symbol=:kg_m2) --> Float64
 
 Calculate the critical surface density,
 ```math
@@ -111,17 +127,10 @@ given the angular diameter distances. The result can be returned in different un
 - `:msun_pc2` ``\\Rightarrow{\\rm M_⊙/pc^2}``, 
 - `:msun_arcsec2` ``\\Rightarrow{\\rm M_⊙/arcsec^2}``.
 
-!!! note
-    As we can see from formula, to estimate ``Σ_{\\rm cr}``, we need either ``(D_d,\\:D_{ds},\\:D_s)``
-    or ``(D_d,\\:a_{\\rm dis})``. The latter takes precedent during ``Σ_{\\rm cr}`` estimation.
-"""   
-function get_critical_density(; D_d::Float64=NaN, D_ds::Float64=NaN, D_s::Float64=NaN, adis::Float64=NaN, unit::Symbol=:kg_m2)
+"""
+function get_critical_density(D_d::Float64, D_ds::Float64, D_s::Float64; unit::Symbol=:kg_m2)
    # Calculate Σ_cr in kg/m^2 based type of input parameters
-   if isnan(adis)
-      Σ_cr = (CONST_C^2 / (4.0 * π * CONST_G)) * (D_s / (D_d * D_ds))
-   else
-      Σ_cr = (CONST_C^2 / (4.0 * π * CONST_G)) * (1.0 / (D_d * adis))
-   end
+   Σ_cr = (CONST_C^2 / (4.0 * π * CONST_G)) * (D_s / (D_d * D_ds))
    
    # Convert to the requested unit
    if unit == :kg_m2
@@ -352,11 +361,11 @@ end
 
 
 """
-    get_time_delay(lens::AbstractLens, θx::T, θy::T, zl::RV, adis::Float64, β::NTuple{2, RV}) where T <: RV --> RV
+    get_time_delay(lens::AbstractLens, θx::T, θy::T, z_d::RV, D_d::RV, adis::Float64, β::NTuple{2, RV}) where T <: RV --> RV
 """
-function get_time_delay(lens::AbstractLens, θx::T, θy::T, zl::RV, adis::Float64, β::NTuple{2, RV}) where T <: RV
+function get_time_delay(lens::AbstractLens, θx::T, θy::T, z_d::RV, D_d, adis::Float64, β::NTuple{2, RV}) where T <: RV
    # Constant multiplicative factor
-   constant_factor =  (1.0 + zl) / CONST_C * (lens.D_d / adis) * ANGLE_ARCSEC^2
+   constant_factor =  (1.0 + z_d) / CONST_C * (D_d / adis) * ANGLE_ARCSEC^2
 
    # Get potential at each point
    ϕ_potential = get_potential(lens, θx, θy)
@@ -367,8 +376,7 @@ function get_time_delay(lens::AbstractLens, θx::T, θy::T, zl::RV, adis::Float6
 end
 
 """
-    get_time_delay(lens::AbstractLens, θx::T, θy::T, zl::RV, adis::Float64, β::NTuple{2, RV}) where T <: ROA --> ROA
-
+    get_time_delay(lens::AbstractLens, θx::T, θy::T, z_d::RV, D_d::RV, adis::Float64, β::NTuple{2, RV}) where T <: ROA --> ROA
 Calculates the time delay for a given lens model. The corresponding expression is given as,
 ```math
 t_d(\\pmb{θ}; \\pmb{β}) = \\frac{1+z_l}{\\rm c} \\frac{D_d D_s}{D_{ds}} \\theta_0^2
@@ -376,9 +384,9 @@ t_d(\\pmb{θ}; \\pmb{β}) = \\frac{1+z_l}{\\rm c} \\frac{D_d D_s}{D_{ds}} \\thet
 ```
 where ``\\theta_0`` is normalizing angular unit.
 """
-function get_time_delay(lens::AbstractLens, θx::T, θy::T, zl::RV, adis::Float64, β::NTuple{2, RV}) where T <: ROA
+function get_time_delay(lens::AbstractLens, θx::T, θy::T, z_d::RV, D_d::RV, adis::Float64, β::NTuple{2, RV}) where T <: ROA
    # Constant multiplicative factor
-   constant_factor =  (1.0 + zl) / CONST_C * (lens.D_d / adis) * ANGLE_ARCSEC^2
+   constant_factor =  (1.0 + z_d) / CONST_C * (D_d / adis) * ANGLE_ARCSEC^2
 
    # Get potential at each point
    ϕ_potential = get_potential(lens, θx, θy)
