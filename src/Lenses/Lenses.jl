@@ -137,19 +137,20 @@ end
 
 # Define lens_map globally (module-level)
 const lens_map = Dict(
-   :PointLens       => (PointLens,       [:D_d, :x_c, :y_c, :mass]),
-   :PlummerLens     => (PlummerLens,     [:D_d, :x_c, :y_c, :mass, :x_s]),
-   :SISLens         => (SISLens,         [:x_c, :y_c, :v_d]),
-   :NSISPLens       => (NSISPLens,       [:x_c, :y_c, :v_d, :x_s]),
-   :NSISMDLens      => (NSISMDLens,      [:x_c, :y_c, :v_d, :x_s]),
-   :GaussianLens    => (GaussianLens,    [:D_d, :x_c, :y_c, :mass, :x_s]),
-   :SersicLens      => (SersicLens,      [:D_d, :x_c, :y_c, :mass, :x_e, :n]),
-   :ExternalEffects => (ExternalEffects, [:kappa, :gamma1, :gamma2]),
-   :PIEPLens        => (PIEPLens,        [:x_c, :y_c, :v_d, :x_s, :eps, :pa]),
-   :SIELens         => (SIELens,         [:x_c, :y_c, :v_d, :x_s, :eps, :pa]),
-   :PJELens         => (PJELens,         [:x_c, :y_c, :v_d, :x_s, :x_t, :eps, :pa]),
-   :HernquistLens   => (HernquistLens,   [:D_d, :x_c, :y_c, :mass, :x_s]),
-   :NFWLens         => (NFWLens,         [:D_d, :x_c, :y_c, :rho_s, :x_s]),
+   :PointLens         => (PointLens,         [:D_d, :x_c, :y_c, :mass]),
+   :PlummerLens       => (PlummerLens,       [:D_d, :x_c, :y_c, :mass, :x_s]),
+   :SISLens           => (SISLens,           [:x_c, :y_c, :v_d]),
+   :NSISPLens         => (NSISPLens,         [:x_c, :y_c, :v_d, :x_s]),
+   :NSISMDLens        => (NSISMDLens,        [:x_c, :y_c, :v_d, :x_s]),
+   :GaussianLens      => (GaussianLens,      [:D_d, :x_c, :y_c, :mass, :x_s]),
+   :SersicLens        => (SersicLens,        [:D_d, :x_c, :y_c, :mass, :x_e, :n]),
+   :ExternalEffects   => (ExternalEffects,   [:kappa, :gamma1, :gamma2]),
+   :PIEPLens          => (PIEPLens,          [:x_c, :y_c, :v_d, :x_s, :eps, :pa]),
+   :SIELens           => (SIELens,           [:x_c, :y_c, :v_d, :x_s, :eps, :pa]),
+   :PJELens           => (PJELens,           [:x_c, :y_c, :v_d, :x_s, :x_t, :eps, :pa]),
+   :HernquistLens     => (HernquistLens,     [:D_d, :x_c, :y_c, :mass, :x_s]),
+   :NFWLens           => (NFWLens,           [:D_d, :x_c, :y_c, :rho_s, :x_s]),
+   :MultiPlummerLens  => (MultiPlummerLens,  [:D_d, :x_c, :y_c, :mass, :x_s, :n]),
    :MultiGaussianLens => (MultiGaussianLens, [:D_d, :x_c, :y_c, :mass, :x_s, :n])
 )
 function potential_helper!(ψ::T, lens::AbstractLens, θx::T, θy::T) where T <: Union{RV, ROA}
