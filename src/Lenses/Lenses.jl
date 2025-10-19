@@ -149,7 +149,8 @@ const lens_map = Dict(
    :SIELens         => (SIELens,         [:x_c, :y_c, :v_d, :x_s, :eps, :pa]),
    :PJELens         => (PJELens,         [:x_c, :y_c, :v_d, :x_s, :x_t, :eps, :pa]),
    :HernquistLens   => (HernquistLens,   [:D_d, :x_c, :y_c, :mass, :x_s]),
-   :NFWLens         => (NFWLens,         [:D_d, :x_c, :y_c, :rho_s, :x_s])
+   :NFWLens         => (NFWLens,         [:D_d, :x_c, :y_c, :rho_s, :x_s]),
+   :MultiGaussianLens => (MultiGaussianLens, [:D_d, :x_c, :y_c, :mass, :x_s, :n])
 )
 function potential_helper!(ψ::T, lens::AbstractLens, θx::T, θy::T) where T <: Union{RV, ROA}
    # Check if the lens type is in the lens_map otherwise throw an error
@@ -177,7 +178,7 @@ function get_potential(lens::AbstractLens, θx::T, θy::T) where T <: RV
 
    # Promote the input coordinates from Int64 to Float64
    ψ, θx, θy = promote(ψ, θx, θy)
-
+   
    if lens._lens_ == :CompositeLens
       for component in lens._components_
          ψ = potential_helper!(ψ, component, θx, θy)

@@ -1,9 +1,8 @@
 # Constants
-The `Constants` module contains the list of global constants available in `LensFactory`. These
-constants can be used via `LensFactory.XYZ` or by direct import by doing `LensFactory.Constants`.
-
-Below is the full list of various constants available. For examples on how to import and use
-various constants, please see [Example - 1](https://github.com/akmeena766/LensFactory_Examples/blob/main/Example-1%3A%20Constants%20and%20Cosmology.ipynb).
+The `Constants` module contains the list of global constants defined in `LensFactory`. For examples 
+on how to import and use various constants, please see 
+[Example - 1](https://github.com/akmeena766/LensFactory_Examples/blob/main/Example-1%3A%20Constants%20and%20Cosmology.ipynb).
+Below is the full list of various constants available. 
 
 
 ### Natural constants

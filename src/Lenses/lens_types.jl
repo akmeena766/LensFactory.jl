@@ -298,7 +298,7 @@ end
    _lens_::Symbol = :MultiGaussianLens
    _lid_::Int64 = 102
    D_d::RV  = NaN
-   n::Int64 = 0
+   n::Int64 = NaN
    x_c  = Vector{Float64}()
    y_c  = Vector{Float64}() 
    mass = Vector{Float64}()
