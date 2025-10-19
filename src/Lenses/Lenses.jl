@@ -38,6 +38,7 @@ include("./HernquistLens.jl")
 include("./NFWLens.jl")
 include("./MultiPlummerLens.jl")
 include("./MultiGaussianLens.jl")
+include("./MultiPJELens.jl")
 
 # Various lensing function to export
 export get_meshgrid
@@ -151,7 +152,8 @@ const lens_map = Dict(
    :HernquistLens     => (HernquistLens,     [:D_d, :x_c, :y_c, :mass, :x_s]),
    :NFWLens           => (NFWLens,           [:D_d, :x_c, :y_c, :rho_s, :x_s]),
    :MultiPlummerLens  => (MultiPlummerLens,  [:D_d, :x_c, :y_c, :mass, :x_s, :n]),
-   :MultiGaussianLens => (MultiGaussianLens, [:D_d, :x_c, :y_c, :mass, :x_s, :n])
+   :MultiGaussianLens => (MultiGaussianLens, [:D_d, :x_c, :y_c, :mass, :x_s, :n]),
+   :MultiPJELens      => (MultiPJELens,      [:x_c, :y_c, :v_d, :x_s, :x_t, :eps, :pa, :n])
 )
 function potential_helper!(ψ::T, lens::AbstractLens, θx::T, θy::T) where T <: Union{RV, ROA}
    # Check if the lens type is in the lens_map otherwise throw an error

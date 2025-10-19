@@ -14,6 +14,9 @@ export init_NFWLens
 # export init_tNFWLens
 # export init_gNFWLens
 # export init_EinastoLens
+export init_MultiPlummerLens
+export init_MultiGaussianLens
+export init_MultiPJELens
 export init_CompositeLens
 export init_MultiPlaneLens
 
@@ -303,6 +306,20 @@ end
    y_c  = Vector{Float64}() 
    mass = Vector{Float64}()
    x_s  = Vector{Float64}()
+end
+
+
+@kwdef struct init_MultiPJELens <: AbstractLens
+   _lens_::Symbol = :MultiPJELens
+   _lid_::Int64 = 103
+   n::Int64 = NaN
+   x_c  = Vector{Float64}()
+   y_c  = Vector{Float64}() 
+   v_d  = Vector{Float64}()
+   x_s  = Vector{Float64}()
+   x_t  = Vector{Float64}()
+   eps  = Vector{Float64}()
+   pa   = Vector{Float64}()
 end
 
 
