@@ -8,16 +8,14 @@ export potential!
 export deflection!
 export jacobian!
 
-
 @inline function F_x(x::RV)
    if x < 1.0 
       arg = sqrt(1.0 - x^2)
-      f_x = atanh(arg) / arg
+      return atanh(arg) / arg
    else 
       arg = sqrt(x^2 - 1.0)
-      f_x =  atan(arg) / arg
+      return atan(arg) / arg
    end
-   return f_x
 end
 
 """
@@ -132,6 +130,5 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
       end
    end
 end
-
 
 end

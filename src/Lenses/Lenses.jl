@@ -33,6 +33,7 @@ include("./SIELens.jl")
 include("./PJELens.jl")
 include("./HernquistLens.jl")
 include("./NFWLens.jl")
+include("./tNFWLens.jl")
 include("./MultiPlummerLens.jl")
 include("./MultiGaussianLens.jl")
 include("./MultiPJELens.jl")
@@ -160,6 +161,7 @@ const lens_map = Dict(
    :PJELens           => (PJELens,           [:x_c, :y_c, :v_d, :x_s, :x_t, :eps, :pa]),
    :HernquistLens     => (HernquistLens,     [:D_d, :x_c, :y_c, :mass, :x_s]),
    :NFWLens           => (NFWLens,           [:D_d, :x_c, :y_c, :rho_s, :x_s]),
+   :tNFWLens          => (tNFWLens,          [:D_d, :x_c, :y_c, :rho_s, :x_s, :x_t]),
    :MultiPlummerLens  => (MultiPlummerLens,  [:D_d, :x_c, :y_c, :mass, :x_s, :n]),
    :MultiGaussianLens => (MultiGaussianLens, [:D_d, :x_c, :y_c, :mass, :x_s, :n]),
    :MultiPJELens      => (MultiPJELens,      [:x_c, :y_c, :v_d, :x_s, :x_t, :eps, :pa, :n])

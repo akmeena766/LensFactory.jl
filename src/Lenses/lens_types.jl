@@ -11,7 +11,7 @@ export init_SIELens
 export init_PJELens
 export init_HernquistLens
 export init_NFWLens
-# export init_tNFWLens
+export init_tNFWLens
 # export init_gNFWLens
 # export init_EinastoLens
 export init_MultiPlummerLens
@@ -206,10 +206,10 @@ Initialize a Hernquist lens with the given parameters.
 end
 
 """
-    init_NFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, rho_s::RV=NaN, mass::RV=NaN)
+    init_NFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, mass::RV=NaN)
 Initialize a Navarro-Frenk-White (NFW) lens with the given parameters. The lens model can be 
 initialized with either the concentration `c` or the scale radius `x_s`. 
-If both are provided, `c` is used to calculate the scale radius.
+**If both are provided, `c` will used to calculate the `x_s` and the input `x_s` will be overwritten.**
 """
 @kwdef struct init_NFWLens <: AbstractLens
    _lens_::Symbol = :NFWLens
@@ -225,10 +225,10 @@ end
 
 
 """
-    init_tNFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, x_t::RV=NaN, c::RV=NaN, mass::RV=NaN)
+    init_tNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, x_t::RV=NaN, c::RV=NaN, mass::RV=NaN)
 Initialize a truncated Navarro-Frenk-White (tNFW) lens with the given parameters. The lens model can
 be initialized with either the concentration `c` or the scale radius `x_s`.
-If both are provided, `c` is used to calculate the scale radius.
+**If both are provided, `c` will used to calculate the `x_s` and the input `x_s` will be overwritten.**
 """
 @kwdef struct init_tNFWLens <: AbstractLens
    _lens_::Symbol = :tNFWLens
@@ -247,9 +247,9 @@ end
 """
     init_gNFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, rho_s::RV=NaN, mass::RV=NaN, n::RV=-2.0)
 Initialize a generalized Navarro-Frenk-White (gNFW) lens with the given parameters. The lens model 
-can be initialized with either the concentration `c` or the scale radius `x_s`. If both are 
-provided, `c` is used to calculate the scale radius. The parameter `n` defines the slope of the 
-density profile.
+can be initialized with either the concentration `c` or the scale radius `x_s`. 
+**If both are provided, `c` will used to calculate the `x_s` and the input `x_s` will be overwritten.**
+The parameter `n` defines the slope of the density profile.
 """
 @kwdef struct init_gNFWLens <: AbstractLens
    _lens_::Symbol = :gNFWLens
@@ -268,8 +268,9 @@ end
 """
     init_EinastoLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, rho_s::RV=NaN, mass::RV=NaN, n::RV=-2.0)
 Initialize an Einasto lens with the given parameters. The lens model can be initialized with either
-the concentration `c` or the scale radius `x_s`. If both are provided, `c` is used to calculate the 
-scale radius. The parameter `n` defines the slope of the density profile.
+the concentration `c` or the scale radius `x_s`. 
+**If both are provided, `c` will used to calculate the `x_s` and the input `x_s` will be overwritten.**
+The parameter `n` defines the slope of the density profile.
 """
 @kwdef struct init_EinastoLens <: AbstractLens
    _lens_::Symbol = :EinastoLens
@@ -377,21 +378,23 @@ function init_tNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV;
    # Critical density at the lens redshift
    ρ_cz = Cosmology.rho_cz(cosmology, z_d)
 
-   # Virial radius of the lens (in meters)
-   r_vir = (3.0 * mass / 72.0 / pi^3 / ρ_cz)^(1.0/3.0)   
-   
+   # Overdensity value
+   Δ_z = 200.0
+
+   # Virial radius of the lens (in ANGLE_ARCSEC)
+   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
+
    # Check if concentration is given
    if isfinite(c)
-      ρ_s = (18.0 * pi^2 / 3.0) * ρ_cz * c^3 / ( log(1.0 + c) - ( c / (1.0 + c) ) )
-      x_s = r_vir / c / D_d
+      ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / ( log(1.0 + c) - ( c / (1.0 + c) ) )
+      x_s = θ_vir / c
    elseif isfinite(x_s)
-      c = r_vir / (x_s * D_d)
-      ρ_s = (18.0 * pi^2 / 3.0) * ρ_cz * c^3 / ( log(1.0 + c) - ( c / (1.0 + c) ) )
+      c = θ_vir / x_s
+      ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / ( log(1.0 + c) - ( c / (1.0 + c) ) )
    else
       throw(ArgumentError("Provide at least c or x_s in ** init_tNFWLens **"))
    end
-
-   x_t = x_t / r_vir
+   
    return init_tNFWLens(D_d=D_d, x_c=x_c, y_c=y_c, x_s=x_s, x_t=x_t, c=c, rho_s=ρ_s, mass=mass)
 end
 
