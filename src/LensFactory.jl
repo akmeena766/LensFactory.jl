@@ -17,7 +17,7 @@ include("./MultiPlane/MultiPlane.jl")
 export MultiPlane
 
 # Module for source profiles
-include("./Lenses/Sources.jl")
+include("./Sources/Sources.jl")
 export Sources
 
 end
