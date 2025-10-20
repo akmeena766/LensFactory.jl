@@ -15,22 +15,22 @@
 
    @testset "Σ_cr" begin
       D_d, D_ds, D_s = 1.0, 1.0, 2.0
-      Σcr = Lenses.get_critical_density(D_d=D_d, D_ds=D_ds, D_s=D_s)
+      Σcr = Lenses.get_critical_density(D_d, D_ds, D_s)
       
       # Σ_cr > 0 
       @test Σcr > 0.0
 
       # Σ_cr using distance ratio
-      @test Σcr ≈ Lenses.get_critical_density(D_d=D_d, adis=0.5)
+      @test Σcr ≈ Lenses.get_critical_density(D_d, 0.5)
 
       # Unit conversion: kg/m^2 --> msun/pc^2
-      @test Σcr * (DIST_PC^2 / MASS_SUN) ≈ Lenses.get_critical_density(D_d=D_d, D_ds=D_ds, D_s=D_s; unit=:msun_pc2)
+      @test Σcr * (DIST_PC^2 / MASS_SUN) ≈ Lenses.get_critical_density(D_d, D_ds, D_s; unit=:msun_pc2)
 
       # Unit conversion: kg/m^2 --> msun/arcsec^2
-      @test Σcr * (D_d^2 * ANGLE_ARCSEC^2 / MASS_SUN) ≈ Lenses.get_critical_density(D_d=D_d, D_ds=D_ds, D_s=D_s; unit=:msun_arcsec2)
+      @test Σcr * (D_d^2 * ANGLE_ARCSEC^2 / MASS_SUN) ≈ Lenses.get_critical_density(D_d, D_ds, D_s; unit=:msun_arcsec2)
 
       # Unknown unit error handeling
-      @test_throws ArgumentError Lenses.get_critical_density(D_d=D_d, D_ds=D_ds, D_s=D_s, unit=:invalid)
+      @test_throws ArgumentError Lenses.get_critical_density(D_d, D_ds, D_s; unit=:invalid)
    end
 end
 
