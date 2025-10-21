@@ -71,5 +71,14 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV
 end
 
 
+function deflection!(ψx::T, ψT::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, θt::RV) where T <: RV
+   κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+   τ = θt / θs
+end
+
+function deflection!(ψx::T, ψT::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, θt::RV) where T <: ROA
+   κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+   τ = θt / θs
+end
 
 end

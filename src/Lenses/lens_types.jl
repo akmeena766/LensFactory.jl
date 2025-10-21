@@ -357,11 +357,11 @@ function init_NFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV;
 
    # Check if concentration is given
    if isfinite(c)
-      ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / ( log(1.0 + c) - ( c / (1.0 + c) ) )
+      ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
       x_s = θ_vir / c
    elseif isfinite(x_s)
       c = θ_vir / x_s
-      ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / ( log(1.0 + c) - ( c / (1.0 + c) ) )
+      ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
    else
       throw(ArgumentError("Provide concentration (c) or scale radius (x_s) in ** init_NFWLens **"))
    end
@@ -386,11 +386,11 @@ function init_tNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV;
 
    # Check if concentration is given
    if isfinite(c)
-      ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / ( log(1.0 + c) - ( c / (1.0 + c) ) )
+      ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
       x_s = θ_vir / c
    elseif isfinite(x_s)
       c = θ_vir / x_s
-      ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / ( log(1.0 + c) - ( c / (1.0 + c) ) )
+      ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
    else
       throw(ArgumentError("Provide at least c or x_s in ** init_tNFWLens **"))
    end
