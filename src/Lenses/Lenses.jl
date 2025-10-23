@@ -1,6 +1,7 @@
 module Lenses
 
 # Julia inbuilt functions to import
+using SpecialFunctions
 
 # LensFactory modules to use
 using ..Constants
@@ -33,7 +34,7 @@ include("./SIELens.jl")
 include("./PJELens.jl")
 include("./HernquistLens.jl")
 include("./NFWLens.jl")
-include("./tNFWLens.jl")
+include("./EinastoLens.jl")
 include("./MultiPlummerLens.jl")
 include("./MultiGaussianLens.jl")
 include("./MultiPJELens.jl")
@@ -161,7 +162,7 @@ const lens_map = Dict(
    :PJELens           => (PJELens,           [:x_c, :y_c, :v_d, :x_s, :x_t, :eps, :pa]),
    :HernquistLens     => (HernquistLens,     [:D_d, :x_c, :y_c, :mass, :x_s]),
    :NFWLens           => (NFWLens,           [:D_d, :x_c, :y_c, :rho_s, :x_s]),
-   :tNFWLens          => (tNFWLens,          [:D_d, :x_c, :y_c, :rho_s, :x_s, :x_t]),
+   :EinastoLens       => (EinastoLens,       [:D_d, :x_c, :y_c, :rho_s, :x_s, :n]),
    :MultiPlummerLens  => (MultiPlummerLens,  [:D_d, :x_c, :y_c, :mass, :x_s, :n]),
    :MultiGaussianLens => (MultiGaussianLens, [:D_d, :x_c, :y_c, :mass, :x_s, :n]),
    :MultiPJELens      => (MultiPJELens,      [:x_c, :y_c, :v_d, :x_s, :x_t, :eps, :pa, :n])

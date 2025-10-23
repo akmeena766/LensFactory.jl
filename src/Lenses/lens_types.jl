@@ -11,9 +11,9 @@ export init_SIELens
 export init_PJELens
 export init_HernquistLens
 export init_NFWLens
-export init_tNFWLens
+# export init_tNFWLens
 # export init_gNFWLens
-# export init_EinastoLens
+export init_EinastoLens
 export init_MultiPlummerLens
 export init_MultiGaussianLens
 export init_MultiPJELens
@@ -357,14 +357,14 @@ function init_NFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV;
 
    # Check if concentration is given
    if isfinite(c)
-      ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
       x_s = θ_vir / c
    elseif isfinite(x_s)
       c = θ_vir / x_s
-      ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
    else
       throw(ArgumentError("Provide concentration (c) or scale radius (x_s) in ** init_NFWLens **"))
    end
+   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
+
    return init_NFWLens(D_d=D_d, x_c=x_c, y_c=y_c, x_s=x_s, c=c, rho_s=ρ_s, mass=mass)
 end
 
@@ -386,15 +386,14 @@ function init_tNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV;
 
    # Check if concentration is given
    if isfinite(c)
-      ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
       x_s = θ_vir / c
    elseif isfinite(x_s)
       c = θ_vir / x_s
-      ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
    else
       throw(ArgumentError("Provide at least c or x_s in ** init_tNFWLens **"))
    end
-   
+   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
+
    return init_tNFWLens(D_d=D_d, x_c=x_c, y_c=y_c, x_s=x_s, x_t=x_t, c=c, rho_s=ρ_s, mass=mass)
 end
 
@@ -436,32 +435,31 @@ end
 
 # Constructor for Einasto lens
 function init_EinastoLens(cosmology::Cosmology.AbstractCosmology, z_d::RV;
-                     x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, mass::RV=NaN, n::RV = -2.0)
+                     x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, mass::RV=NaN, n::RV=0.2)
    # ADD to the lens
-   D_d  = Cosmology.angular_diameter_distance(cosmology, 0., z_d)
+   D_d  = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
 
    # Critical density at the lens redshift
    ρ_cz = Cosmology.rho_cz(cosmology, z_d)
 
-   # Virial radius of the lens (in meters)
-   r_vir= (3.0 * mass / 72.0 / pi^3 / ρ_cz)^(1.0/3.0)
+   # Overdensity value
+   Δ_z = 200.0
+
+   # Virial radius of the lens (in ANGLE_ARCSEC)
+   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
 
    # Check if concentration is given
-   m_v::Float64 = 0.0
    if isfinite(c)
-      Pax, _ = gamma_inc( 3.0/n_a, (2.0/n_a)*c^n_a )
-      m_v = (1.0/n_a) * (n_a/2.0)^(3.0/n_a) * gamma(3.0/n_a) * Pax
-
-      ρ_s = (18.0 * pi^2 / 3.0) * ρ_cz * c^3 / m_v
+      x_s = θ_vir / c
    elseif isfinite(x_s)
-      c = r_vir / (x_s * D_d)
-      Pax, _ = gamma_inc( 3.0/n_a, (2.0/n_a)*c^n_a )
-      m_v = (1.0/n_a) * (n_a/2.0)^(3.0/n_a) * gamma(3.0/n_a) * Pax
-
-      ρ_s = (18.0 * pi^2 / 3.0) * ρ_cz * c^3 / m_v
+      c = θ_vir / x_s
    else
       throw(ArgumentError("Provide at least c or x_s in ** init_EinastoLens **"))
    end
+   Pax, _ = gamma_inc(3.0 / n, (2.0 / n) * c^n)
+   m_v = (1.0 / n) * (n / 2.0)^(3.0 / n) * gamma(3.0 / n) * Pax
+   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / m_v
+
    return init_EinastoLens(D_d=D_d, x_c=x_c, y_c=y_c, n=n, x_s=x_s, c=c, rho_s=ρ_s, mass=mass)
 end
 

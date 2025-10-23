@@ -71,9 +71,24 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV
 end
 
 
-function deflection!(ψx::T, ψT::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, θt::RV) where T <: RV
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, θt::RV) where T <: RV
    κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
    τ = θt / θs
+   τ2 = τ * τ
+   τ4 = τ2 * τ2
+
+   dx = (θx - θxc) / θs
+   dy = (θy - θyc) / θs
+   dr = sqrt(dx^2 + dy^2)
+
+   term1 = 2.0 * F_x(dr) * (τ^2 + 1.0 + 4.0 * (dr^2 - 1.0))
+   term2 = (pi * (3.0 * τ^2 - 1.0) + 2.0 * τ * (τ^2 - 3.0) * log(τ)) / τ
+   term3 = -τ^3 * pi * (4.0 * (τ^2 + dr^2) - τ^2 - 1.0) + (τ^2 * (1.0 - τ^4) + (τ^2 + dr^2) * (3.0 * τ^4 - 6.0 * τ^2 - 1.0)) * L_x(dr, τ)
+   α_r = 0.5 * τ^4 * (term1 + term2 + term3 / τ^3 / sqrt(τ^2 + dr^2)) / dr / (τ^2 + 1.0)^3
+
+   ψx_up = ψx + κs * θs * α_r * dx / dr
+   ψy_up = ψy + κs * θs * α_r * dy / dr
+   return ψx_up, ψy_up
 end
 
 function deflection!(ψx::T, ψT::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, θt::RV) where T <: ROA
