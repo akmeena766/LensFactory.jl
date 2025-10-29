@@ -15,7 +15,7 @@ export jacobian!
 
 function m_Ein(θ::RV, n::RV)
    Pax, _ = gamma_inc(3.0 / n, (2.0 / n) * θ^n)
-   return (1.0 / n) * (n / 2.0)^(3.0 / n) * gamma(3.0 / n) * Pax
+   return (1.0 / n) * (0.5 * n)^(3.0 / n) * gamma(3.0 / n) * Pax
 end
 
 @inline function I_κ(z::RV, θ::RV, n::RV)
@@ -28,12 +28,13 @@ function κ(θ::RV, n::RV)
 end
 
 @inline function I_α(z::RV, θ::RV, n::RV)
-   return (m_Ein(θ * sqrt(1.0 + z^2), n) + θ * m_Ein(θ * sqrt(1.0 + z^2) / z, n)) / (1.0 + z)^1.5
+   Pax, _ = gamma_inc(3.0 / n, (2.0 / n) * θ^n * (1.0 + z^2)^(0.5 * n))
+   return gamma(3.0 / n) * Pax / (1.0 + z^2)^1.5
 end
 
 function α(θ::RV, n::RV)
    i_value, _ = quadgk(x -> I_α(x, θ, n), 0, Inf)
-   return i_value / θ
+   return i_value * (0.5 * n)^(3.0 / n) / θ / n
 end
 
 function ϕ(θ::RV, n::RV)
