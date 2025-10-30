@@ -1,4 +1,4 @@
-#!!!!!!!!!!!!!! Testing/cross-checked AGAINST against PyGRALE/Glafic !!!!!!!!!!!!!!
+#!!!!!!!!!!!!!! Testing/cross-checked AGAINST PyGRALE/Glafic !!!!!!!!!!!!!!
 # cosm = cosmology.Cosmology(0.7, 0.3, 0, 0.7)
 # z_d, z_s = 0.5, 1.5
 # D_d = cosm.getAngularDiameterDistance(z_d)
@@ -18,7 +18,7 @@
 
 @testset "NFW lens" begin
    mass = 1E11 * MASS_SUN
-   lens = Lenses.init_NFWLens(cosmo, zl, mass=mass, c=6)
+   lens = Lenses.init_NFWLens(cosmo, zl; mass=mass, c=6)
 
    pot1 = adis  * Lenses.get_potential(lens, xt1, yt1)
    dex1 = adis .* Lenses.get_deflection(lens, xt1, yt1)
