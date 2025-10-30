@@ -22,7 +22,11 @@
    kappa = 0.5 * (jac2[1] + jac2[2])
    gamma1 = 0.5 * (jac2[1] - jac2[2])
    gamma2 = jac2[3]
-
+   @test dex2[1] ≈ 0.041787 atol=1e-4 rtol=1e-4
+   @test dex2[2] ≈ 0.000000 atol=1e-4 rtol=1e-4
+   @test kappa  ≈ +0.026430 atol=1e-4 rtol=1e-4
+   @test gamma1 ≈ -0.015356 atol=1e-4 rtol=1e-4
+   @test gamma2 ≈ -0.000000 atol=1e-4 rtol=1e-4
    
    potc = adis .* Lenses.get_potential(lens, [xt1, xt2], [yt1, yt2])
    dexc = adis .* Lenses.get_deflection(lens, [xt1, xt2], [yt1, yt2])
