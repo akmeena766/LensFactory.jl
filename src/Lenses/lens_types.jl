@@ -12,7 +12,7 @@ export init_PJELens
 export init_HernquistLens
 export init_NFWLens
 # export init_tNFWLens
-# export init_gNFWLens
+export init_gNFWLens
 export init_EinastoLens
 export init_MultiPlummerLens
 export init_MultiGaussianLens
@@ -401,9 +401,9 @@ end
 # Constructor for generalized NFW lens
 function init_gNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV;
                      x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, mass::RV=NaN, n::RV=-2.0)                     
-   # Calculate the mass
-   function intgrand(x::RV)
-      return x^(2.0 - n_a) / (1.0 + x)^(3.0 - n_a)
+   # Integrand function for mass calculation
+   function integrand(x::RV, α::RV)
+      return x^(2.0 - α) / (1.0 + x)^(3.0 - α)
    end
 
    # ADD to the lens
@@ -412,23 +412,23 @@ function init_gNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV;
    # Critical density at the lens redshift
    ρ_cz = Cosmology.rho_cz(cosmology, z_d)
 
-   # Virial radius of the lens (in meters)
-   r_vir= (3.0 * mass / 72.0 / pi^3 / ρ_cz)^(1.0/3.0)
+   # Overdensity value
+   Δ_z = 200.0
+
+   # Virial radius of the lens (in ANGLE_ARCSEC)
+   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
 
    # Check if concentration is given
    if isfinite(c)
-      x_s = r_vir / c / D_d
-      mass, _ = quadgk(x -> integrand(x), 0, c)
-
-      ρ_s = (18.0 * pi^2 / 3.0) * ρ_cz * c^3 / mass 
+      x_s = θ_vir / c
    elseif isfinite(x_s)
-      c = r_vir / (x_s * D_d)
-      mass, _ = quadgk(x -> integrand(x), 0, c)
-
-      ρ_s = (18.0 * pi^2 / 3.0) * ρ_cz * c^3 / mass
+      c = θ_vir / x_s
    else
       throw(ArgumentError("Provide at least c or x_s in ** init_gNFWLens **"))
    end
+   mass, _ = quadgk(x -> integrand(x, n), 0, c)
+   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / mass
+
    return init_gNFWLens(D_d=D_d, x_c=x_c, y_c=y_c, x_s=x_s, c=c, rho_s=ρ_s, mass=mass, n=n)
 end
 
