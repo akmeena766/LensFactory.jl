@@ -38,7 +38,7 @@ function α(θ::RV, n::RV)
 end
 
 function ϕ(θ::RV, n::RV)
-   i_value, _ = quadgk(x -> α(θ, n), 0, θ)
+   i_value, _ = quadgk(x -> α(x, n), 0, θ)
    return i_value
 end
 
