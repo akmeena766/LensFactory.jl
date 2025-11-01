@@ -209,7 +209,7 @@ end
     init_NFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, mass::RV=NaN)
 Initialize a Navarro-Frenk-White (NFW) lens with the given parameters. The lens model can be 
 initialized with either the concentration `c` or the scale radius `x_s`. 
-**If both are provided, `c` will used to calculate the `x_s` and the input `x_s` will be overwritten.**
+**If both are provided, `c` will be used to calculate `x_s` and the input `x_s` will be overwritten.**
 """
 @kwdef struct init_NFWLens <: AbstractLens
    _lens_::Symbol = :NFWLens
@@ -228,7 +228,7 @@ end
     init_tNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, x_t::RV=NaN, c::RV=NaN, mass::RV=NaN)
 Initialize a truncated Navarro-Frenk-White (tNFW) lens with the given parameters. The lens model can
 be initialized with either the concentration `c` or the scale radius `x_s`.
-**If both are provided, `c` will used to calculate the `x_s` and the input `x_s` will be overwritten.**
+**If both are provided, `c` will be used to calculate `x_s` and the input `x_s` will be overwritten.**
 """
 @kwdef struct init_tNFWLens <: AbstractLens
    _lens_::Symbol = :tNFWLens
@@ -248,7 +248,7 @@ end
     init_gNFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, rho_s::RV=NaN, mass::RV=NaN, n::RV=-2.0)
 Initialize a generalized Navarro-Frenk-White (gNFW) lens with the given parameters. The lens model 
 can be initialized with either the concentration `c` or the scale radius `x_s`. 
-**If both are provided, `c` will used to calculate the `x_s` and the input `x_s` will be overwritten.**
+**If both are provided, `c` will be used to calculate `x_s` and the input `x_s` will be overwritten.**
 The parameter `n` defines the slope of the density profile.
 """
 @kwdef struct init_gNFWLens <: AbstractLens
@@ -269,7 +269,7 @@ end
     init_EinastoLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, rho_s::RV=NaN, mass::RV=NaN, n::RV=-2.0)
 Initialize an Einasto lens with the given parameters. The lens model can be initialized with either
 the concentration `c` or the scale radius `x_s`. 
-**If both are provided, `c` will used to calculate the `x_s` and the input `x_s` will be overwritten.**
+**If both are provided, `c` will be used to calculate `x_s` and the input `x_s` will be overwritten.**
 The parameter `n` defines the slope of the density profile.
 """
 @kwdef struct init_EinastoLens <: AbstractLens

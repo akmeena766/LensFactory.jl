@@ -165,6 +165,7 @@ const lens_map = Dict(
    :PJELens           => (PJELens,           [:x_c, :y_c, :v_d, :x_s, :x_t, :eps, :pa]),
    :HernquistLens     => (HernquistLens,     [:D_d, :x_c, :y_c, :mass, :x_s]),
    :NFWLens           => (NFWLens,           [:D_d, :x_c, :y_c, :rho_s, :x_s]),
+   :tNFWLens          => (tNFWLens,          [:D_d, :x_c, :y_c, :rho_s, :x_s, :x_t]),
    :gNFWLens          => (gNFWLens,          [:D_d, :x_c, :y_c, :rho_s, :x_s, :n]),
    :EinastoLens       => (EinastoLens,       [:D_d, :x_c, :y_c, :rho_s, :x_s, :n]),
    :MultiPlummerLens  => (MultiPlummerLens,  [:D_d, :x_c, :y_c, :mass, :x_s, :n]),
