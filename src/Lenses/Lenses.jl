@@ -193,11 +193,14 @@ end
     get_potential(lens::AbstractLens, θx::T, θy::T) where T <: RV --> RV
 """
 function get_potential(lens::AbstractLens, θx::T, θy::T) where T <: RV
-   # Initialize zero-valued potential array
-   ψ = 0.0
-
    # Promote the input coordinates from Int64 to Float64
-   ψ, θx, θy = promote(ψ, θx, θy)
+   if typeof(θx) === Int64 || typeof(θy) === Int64
+      θx = Float64(θx)
+      θy = Float64(θy)
+   end
+
+   # Initialize zero-valued potential scalar
+   ψ = zero(θx)
    
    if lens._lens_ == :CompositeLens
       for component in lens._components_
@@ -213,10 +216,16 @@ end
 """
     get_potential(lens::AbstractLens, θx::T, θy::T) where T <: ROA --> ROA
 """
-function get_potential(lens::AbstractLens, θx::T, θy::T) where T <: ROA
+function get_potential(lens::AbstractLens, θx::T, θy::T) where T <: Union{ROA, Vector{Int64}}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
+   end
+
+   # Promote both only if either is Int64
+   if eltype(θx) === Int64 || eltype(θy) === Int64
+      θx = Float64.(θx)
+      θy = Float64.(θy)
    end
 
    # Initialize zero-valued potential array
@@ -254,13 +263,17 @@ end
     get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: RV --> Tuple{RV, RV}
 """
 function get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: RV
-   # Initialize zero-valued potential array
-   ψx = 0.0
-   ψy = 0.0
-
    # Promote the input coordinates from Int64 to Float64
-   ψx, ψy, θx, θy = promote(ψx, ψy, θx, θy)
+   if typeof(θx) === Int64 || typeof(θy) === Int64
+      θx = Float64(θx)
+      θy = Float64(θy)
+   end
 
+   # Initialize zero-valued deflection scalars
+   ψx = zero(θx)
+   ψy = zero(θy)
+
+   # Calculate deflection based on lens type
    if lens._lens_ == :CompositeLens
       for component in lens._components_
          ψx, ψy = deflection_helper!(ψx, ψy, component, θx, θy)
@@ -281,6 +294,12 @@ function get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: ROA
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
+   end
+   
+   # Promote both only if either is Int64
+   if eltype(θx) === Int64 || eltype(θy) === Int64
+      θx = Float64.(θx)
+      θy = Float64.(θy)
    end
 
    # Initialize zero-valued potential array
@@ -320,10 +339,16 @@ end
     get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: RV --> Tuple{RV, RV, RV}
 """
 function get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: RV
-   # Initialize zero-valued potential array
-   ψxx = 0.0
-   ψyy = 0.0
-   ψxy = 0.0
+   # Promote the input coordinates from Int64 to Float64
+   if typeof(θx) === Int64 || typeof(θy) === Int64
+      θx = Float64(θx)
+      θy = Float64(θy)
+   end
+
+   # Initialize zero-valued deflection scalars
+   ψxx = zero(θx)
+   ψyy = zero(θy)
+   ψxy = zero(θx)
 
    # Promote the input coordinates from Int64 to Float64
    ψxx, ψyy, ψxy, θx, θy = promote(ψxx, ψyy, ψxy, θx, θy)
@@ -351,9 +376,20 @@ function get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: ROA
       throw(ArgumentError("Input coordinates must be of the same size."))
    end
    
+   # Check if the input coordinates are of the same size
+   if size(θx) != size(θy)
+      throw(ArgumentError("Input coordinates must be of the same size."))
+   end
+   
+   # Promote both only if either is Int64
+   if eltype(θx) === Int64 || eltype(θy) === Int64
+      θx = Float64.(θx)
+      θy = Float64.(θy)
+   end
+
    # Initialize zero-valued potential array
    ψxx = zero(θx)
-   ψyy = zero(θx)
+   ψyy = zero(θy)
    ψxy = zero(θx)
 
    if lens._lens_ == :CompositeLens
