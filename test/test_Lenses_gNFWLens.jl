@@ -15,6 +15,7 @@
    @test gamma1 ≈ +0.000000 atol=1e-4 rtol=1e-4
    @test gamma2 ≈ -0.006850 atol=1e-4 rtol=1e-4
 
+
    dex2 = adis .* Lenses.get_deflection(lens, xt2, yt2)
    jac2 = adis .* Lenses.get_jacobian(lens, xt2, yt2)
    kappa = 0.5 * (jac2[1] + jac2[2])
@@ -25,6 +26,7 @@
    @test kappa  ≈ +0.021728 atol=1e-4 rtol=1e-4
    @test gamma1 ≈ -0.006655 atol=1e-4 rtol=1e-4
    @test gamma2 ≈ -0.000000 atol=1e-4 rtol=1e-4
+   
    
    dexc = adis .* Lenses.get_deflection(lens, [xt1, xt2], [yt1, yt2])
    jacc = adis .* Lenses.get_jacobian(lens, [xt1, xt2], [yt1, yt2])
