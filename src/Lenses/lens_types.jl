@@ -400,7 +400,12 @@ end
 
 # Constructor for generalized NFW lens
 function init_gNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV;
-                     x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, mass::RV=NaN, n::RV=-2.0)                     
+                     x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, mass::RV=NaN, n::RV=1.0)
+   # Check for valid slope parameter
+   if !(0.0 < n < 2.0)
+      throw(ArgumentError("Slope parameter outside allowed range n ∈ (0, 2) in ** init_gNFWLens **"))
+   end
+
    # Integrand function for mass calculation
    function integrand(x::RV, α::RV)
       return x^(2.0 - α) / (1.0 + x)^(3.0 - α)
