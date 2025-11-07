@@ -470,42 +470,36 @@ end
 
 
 # Dictionary to map lens types to their initialization functions and arguments
-const lens_init_functions = Dict(
-   :PointLens       => (init_PointLens,        [:D_d, :x_c, :y_c, :mass]),
-   :PlummerLens     => (init_PlummerLens,      [:D_d, :x_c, :y_c, :mass, :x_s]),
-   :SISLens         => (init_SISLens,          [:x_c, :y_c, :v_d]),
-   :NSISPLens       => (init_NSISPLens,        [:x_c, :y_c, :v_d, :x_s]),
-   :NSISMDLens      => (init_NSISMDLens,       [:x_c, :y_c, :v_d, :x_s]),
-   :GaussianLens    => (init_GaussianLens,     [:D_d, :x_c, :y_c, :mass, :x_s]),
-   :SersicLens      => (init_SersicLens,       [:D_d, :x_c, :y_c, :mass, :x_e, :n]),
-   :ExternalEffects => (init_ExternalEffects,  [:kappa, :gamma1, :gamma2]),
-   :PIEPLens        => (init_PIEPLens,         [:x_c, :y_c, :v_d, :x_s, :eps, :pa]),
-   :SIELens         => (init_SIELens,          [:x_c, :y_c, :v_d, :x_s, :eps, :pa]),
-   :PJELens         => (init_PJELens,          [:x_c, :y_c, :v_d, :x_s, :x_t, :eps, :pa]),
-   :HernquistLens   => (init_HernquistLens,    [:D_d, :x_c, :y_c, :mass, :x_e]),
-   :NFWLens         => (init_NFWLens,          [:D_d, :x_c, :y_c, :x_s, :c, :rho_s, :mass])
+const lens_init_functions = Dict{Symbol, Function}(
+   :PointLens       => (c -> init_PointLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass)),
+   :PlummerLens     => (c -> init_PlummerLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_s=c.x_s)),
+   :SISLens         => (c -> init_SISLens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d)),
+   :NSISPLens       => (c -> init_NSISPLens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s)),
+   :NSISMDLens      => (c -> init_NSISMDLens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s)),
+   :GaussianLens    => (c -> init_GaussianLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_s=c.x_s)),
+   :SersicLens      => (c -> init_SersicLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_e=c.x_e, n=c.n)),
+   :ExternalEffects => (c -> init_ExternalEffects(kappa=c.kappa, gamma1=c.gamma1, gamma2=c.gamma2)),
+   :PIEPLens        => (c -> init_PIEPLens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s, eps=c.eps, pa=c.pa)),
+   :SIELens         => (c -> init_SIELens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s, eps=c.eps, pa=c.pa)),
+   :PJELens         => (c -> init_PJELens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s, x_t=c.x_t, eps=c.eps, pa=c.pa)),
+   :HernquistLens   => (c -> init_HernquistLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_e=c.x_e)),
+   :NFWLens         => (c -> init_NFWLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, x_s=c.x_s, c=c.c, rho_s=c.rho_s, mass=c.mass))
    )
 # Constructor for composite lens
 function init_CompositeLens(lens::Vector{<:NamedTuple})
-   # Define an component vector
-   lens_components = AbstractLens[]
+# Define a compoent vector of known size
+lens_components = Vector{AbstractLens}(undef, length(lens))
 
    # Run over the lens components in the composite lens
-   for component in lens
+   for (i, component) in enumerate(lens)
       # Check and get the lens component if available otherwise throw an error
-      val = get(lens_init_functions, component.lens, nothing)
-      if val === nothing
+      builder = get(lens_init_functions, component.lens, nothing)
+      if builder === nothing
          throw(ArgumentError("Unknown lens type: $(component.lens). Available lens models are $(keys(lens_init_functions))"))
       end
 
-      # Get the compoent init_* function and arguments
-      init_func, init_args = val
-
-      # Create a dict of args to pass to the init_* function
-      kwargs = Dict(arg => getproperty(component, arg) for arg in init_args)
-
-      # Push the component into the vector
-      push!(lens_components, init_func(; kwargs...))
+      # Wrapper function call
+      lens_components[i] = builder(component)
    end
    return init_CompositeLens(_components_=lens_components)
 end
@@ -518,7 +512,7 @@ function init_MultiPlaneLens(lens::Vector{<:NamedTuple})
    sort!(zd_unique)
 
    if length(zd_unique) < 2
-      throw(ArgumentError("Only $(length(zd_unique)) lens planes found. Need >= 2."))
+      throw(ArgumentError("Only $(length(zd_unique)) lens plane found. Need >= 2."))
    end
 
    # Group lens components by redshift
