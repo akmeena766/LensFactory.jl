@@ -2,7 +2,12 @@
 #! Currently I am removing potential tests for gNFW lens model as it makes the compilation very slow.
 @testset "Einasto lens" begin
    mass = 1E11 * MASS_SUN
-   lens = Lenses.init_EinastoLens(cosmo, zl; mass=mass, c=6, n=0.2)
+
+   # Get NFW lens parameters
+   param = Lenses.parameter_EinastoLens(cosmology=cosmo, z_d=zl, mass=mass, c=6)
+   @test_throws ArgumentError Lenses.parameter_EinastoLens(cosmology=cosmo, z_d=zl, mass=mass)
+
+   lens = Lenses.init_EinastoLens(D_d=Dol, rho_s=param.rho_s, x_s=param.x_s, n=param.n)
 
    # pot1 = adis  * Lenses.get_potential(lens, xt1, yt1)
    dex1 = adis .* Lenses.get_deflection(lens, xt1, yt1)
@@ -47,6 +52,4 @@
    @test jacc[2][2] ≈ jac2[2] atol=1e-15 rtol=1e-15
    @test jacc[3][1] ≈ jac1[3] atol=1e-15 rtol=1e-15
    @test jacc[3][2] ≈ jac2[3] atol=1e-15 rtol=1e-15
-
-   @test_throws ArgumentError Lenses.init_EinastoLens(cosmo, zl, mass=mass)
 end

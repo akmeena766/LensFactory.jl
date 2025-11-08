@@ -18,7 +18,12 @@
 
 @testset "NFW lens" begin
    mass = 1E11 * MASS_SUN
-   lens = Lenses.init_NFWLens(cosmo, zl; mass=mass, c=6)
+   
+   # Get NFW lens parameters
+   param = Lenses.parameter_NFWLens(cosmology=cosmo, z_d=zl, mass=mass, c=6)
+   @test_throws ArgumentError Lenses.parameter_NFWLens(cosmology=cosmo, z_d=zl, mass=mass)
+
+   lens = Lenses.init_NFWLens(D_d=Dol, rho_s=param.rho_s, x_s=param.x_s)
 
    pot1 = adis  * Lenses.get_potential(lens, xt1, yt1)
    dex1 = adis .* Lenses.get_deflection(lens, xt1, yt1)
@@ -62,6 +67,4 @@
    @test pot1 - pot2 ≈ -0.026823145088490218 atol=1e-4 rtol=1e-4
    @test pot2 - pot3 ≈ -0.05538925777883399 atol=1e-4 rtol=1e-4
    @test pot3 - pot1 ≈ +0.0822124028673242 atol=1e-4 rtol=1e-4
-
-   @test_throws ArgumentError Lenses.init_NFWLens(cosmo, zl, mass=mass)
 end

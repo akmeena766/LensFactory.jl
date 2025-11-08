@@ -2,7 +2,13 @@
 #! Currently I am removing potential tests for gNFW lens model as it makes the compilation very slow.
 @testset "gNFW lens" begin
    mass = 1E11 * MASS_SUN
-   lens = Lenses.init_gNFWLens(cosmo, zl; mass=mass, c=6, n=0.5)
+
+   # Get NFW lens parameters
+   param = Lenses.parameter_gNFWLens(cosmology=cosmo, z_d=zl, mass=mass, c=6, n=0.5)
+   @test_throws ArgumentError Lenses.parameter_gNFWLens(cosmology=cosmo, z_d=zl, mass=mass)
+   @test_throws ArgumentError Lenses.parameter_gNFWLens(cosmology=cosmo, z_d=zl, mass=mass, n=2)
+
+   lens = Lenses.init_gNFWLens(D_d=Dol, rho_s=param.rho_s, x_s=param.x_s, n=param.n)
 
    dex1 = adis .* Lenses.get_deflection(lens, xt1, yt1)
    jac1 = adis .* Lenses.get_jacobian(lens, xt1, yt1)
@@ -41,7 +47,4 @@
    @test jacc[2][2] ≈ jac2[2] atol=1e-15 rtol=1e-15
    @test jacc[3][1] ≈ jac1[3] atol=1e-15 rtol=1e-15
    @test jacc[3][2] ≈ jac2[3] atol=1e-15 rtol=1e-15
-
-   @test_throws ArgumentError Lenses.init_gNFWLens(cosmo, zl, mass=mass)
-   @test_throws ArgumentError Lenses.init_gNFWLens(cosmo, zl, mass=mass, n=2)
 end

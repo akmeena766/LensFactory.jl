@@ -217,10 +217,8 @@ initialized with either the concentration `c` or the scale radius `x_s`.
    D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
-   x_s::RV = NaN
-   c::RV   = NaN
    rho_s::RV = NaN
-   mass::RV  = NaN
+   x_s::RV = NaN
 end
 
 
@@ -338,137 +336,7 @@ end
    z_d = Vector{<:RV}()
    _plane_ = Vector{AbstractLens}()
 end
-
-
-# Constructor for NFW lens
-function init_NFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV;
-                     x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, mass::RV=NaN)                     
-   # ADD to the lens
-   D_d = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
-   
-   # Critical density at the lens redshift (in kg/m^3)
-   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
-
-   # Overdensity value
-   Δ_z = 200.0
-
-   # Virial radius of the lens (in ANGLE_ARCSEC)
-   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
-
-   # Check if concentration is given
-   if isfinite(c)
-      x_s = θ_vir / c
-   elseif isfinite(x_s)
-      c = θ_vir / x_s
-   else
-      throw(ArgumentError("Provide concentration (c) or scale radius (x_s) in ** init_NFWLens **"))
-   end
-   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
-
-   return init_NFWLens(D_d=D_d, x_c=x_c, y_c=y_c, x_s=x_s, c=c, rho_s=ρ_s, mass=mass)
-end
-
-
-# Constructor for truncated NFW lens
-function init_tNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV;
-                     x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, x_t::RV=NaN, c::RV=NaN, mass::RV=NaN)
-   # ADD to the lens
-   D_d = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
-   
-   # Critical density at the lens redshift
-   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
-
-   # Overdensity value
-   Δ_z = 200.0
-
-   # Virial radius of the lens (in ANGLE_ARCSEC)
-   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
-
-   # Check if concentration is given
-   if isfinite(c)
-      x_s = θ_vir / c
-   elseif isfinite(x_s)
-      c = θ_vir / x_s
-   else
-      throw(ArgumentError("Provide at least c or x_s in ** init_tNFWLens **"))
-   end
-   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
-
-   return init_tNFWLens(D_d=D_d, x_c=x_c, y_c=y_c, x_s=x_s, x_t=x_t, c=c, rho_s=ρ_s, mass=mass)
-end
-
-
-# Constructor for generalized NFW lens
-function init_gNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV;
-                     x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, mass::RV=NaN, n::RV=1.0)
-   # Check for valid slope parameter
-   if !(0.0 < n < 2.0)
-      throw(ArgumentError("Slope parameter outside allowed range n ∈ (0, 2) in ** init_gNFWLens **"))
-   end
-
-   # Integrand function for mass calculation
-   function integrand(x::RV, α::RV)
-      return x^(2.0 - α) / (1.0 + x)^(3.0 - α)
-   end
-
-   # ADD to the lens
-   D_d = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
-   
-   # Critical density at the lens redshift
-   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
-
-   # Overdensity value
-   Δ_z = 200.0
-
-   # Virial radius of the lens (in ANGLE_ARCSEC)
-   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
-
-   # Check if concentration is given
-   if isfinite(c)
-      x_s = θ_vir / c
-   elseif isfinite(x_s)
-      c = θ_vir / x_s
-   else
-      throw(ArgumentError("Provide at least c or x_s in ** init_gNFWLens **"))
-   end
-   mass, _ = quadgk(x -> integrand(x, n), 0, c)
-   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / mass
-
-   return init_gNFWLens(D_d=D_d, x_c=x_c, y_c=y_c, x_s=x_s, c=c, rho_s=ρ_s, mass=mass, n=n)
-end
-
-
-# Constructor for Einasto lens
-function init_EinastoLens(cosmology::Cosmology.AbstractCosmology, z_d::RV;
-                     x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, mass::RV=NaN, n::RV=0.2)
-   # ADD to the lens
-   D_d  = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
-
-   # Critical density at the lens redshift
-   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
-
-   # Overdensity value
-   Δ_z = 200.0
-
-   # Virial radius of the lens (in ANGLE_ARCSEC)
-   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
-
-   # Check if concentration is given
-   if isfinite(c)
-      x_s = θ_vir / c
-   elseif isfinite(x_s)
-      c = θ_vir / x_s
-   else
-      throw(ArgumentError("Provide at least c or x_s in ** init_EinastoLens **"))
-   end
-   Pax, _ = gamma_inc(3.0 / n, (2.0 / n) * c^n)
-   m_v = (1.0 / n) * (n / 2.0)^(3.0 / n) * gamma(3.0 / n) * Pax
-   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / m_v
-
-   return init_EinastoLens(D_d=D_d, x_c=x_c, y_c=y_c, n=n, x_s=x_s, c=c, rho_s=ρ_s, mass=mass)
-end
-
-
+#---------------------- Composite and Multi-plane lens constructors --------------------------------
 # Dictionary to map lens types to their initialization functions and arguments
 const lens_init_functions = Dict{Symbol, Function}(
    :PointLens       =>   (c -> init_PointLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass)),
@@ -483,18 +351,18 @@ const lens_init_functions = Dict{Symbol, Function}(
    :SIELens         =>   (c -> init_SIELens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s, eps=c.eps, pa=c.pa)),
    :PJELens         =>   (c -> init_PJELens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s, x_t=c.x_t, eps=c.eps, pa=c.pa)),
    :HernquistLens   =>   (c -> init_HernquistLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_e=c.x_e)),
-   :NFWLens         =>   (c -> init_NFWLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, x_s=c.x_s, c=c.c, rho_s=c.rho_s, mass=c.mass))
-   :tNFWLens        =>   (c -> init_tNFWLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, x_s=c.x_s, x_t=c.x_t, c=c.c, rho_s=c.rho_s, mass=c.mass)),
-   :gNFWLens        =>   (c -> init_gNFWLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, x_s=c.x_s, c=c.c, rho_s=c.rho_s, mass=c.mass, n=c.n)),
-   :EinastoLens     =>   (c -> init_EinastoLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, x_s=c.x_s, c=c.c, rho_s=c.rho_s, mass=c.mass, n=c.n)),
+   :NFWLens         =>   (c -> init_NFWLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, x_s=c.x_s, rho_s=c.rho_s)),
+   :tNFWLens        =>   (c -> init_tNFWLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, x_s=c.x_s, x_t=c.x_t, rho_s=c.rho_s)),
+   :gNFWLens        =>   (c -> init_gNFWLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, x_s=c.x_s, rho_s=c.rho_s, n=c.n)),
+   :EinastoLens     =>   (c -> init_EinastoLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, x_s=c.x_s, rho_s=c.rho_s, n=c.n)),
    :MultiPlummerLens =>  (c -> init_MultiPlummerLens(D_d=c.D_d, n=c.n, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_s=c.x_s)),
    :MultiGaussianLens => (c -> init_MultiGaussianLens(D_d=c.D_d, n=c.n, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_s=c.x_s)),
    :MultiPJELens     =>  (c -> init_MultiPJELens(n=c.n, x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s, x_t=c.x_t, eps=c.eps, pa=c.pa))
    )
 # Constructor for composite lens
 function init_CompositeLens(lens::Vector{<:NamedTuple})
-# Define a compoent vector of known size
-lens_components = Vector{AbstractLens}(undef, length(lens))
+   # Define a compoent vector of known size
+   lens_components = Vector{AbstractLens}(undef, length(lens))
 
    # Run over the lens components in the composite lens
    for (i, component) in enumerate(lens)
@@ -531,4 +399,127 @@ function init_MultiPlaneLens(lens::Vector{<:NamedTuple})
    lens_components = AbstractLens[init_CompositeLens(lens_by_z[z]) for z in zd_unique]
 
    return init_MultiPlaneLens(n_p=length(zd_unique), z_d=zd_unique, _plane_=lens_components)
+end
+
+
+#---------------------- Parameter functions for various lenses -------------------------------------
+# Parameters for NFW lens
+function parameter_NFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d::RV=NaN, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN)
+   # Overdensity value
+   Δ_z = 200.0
+
+   # ADD to the lens
+   D_d = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
+   
+   # Critical density at the lens redshift (in kg/m^3)
+   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
+
+   # Virial radius of the lens (in ANGLE_ARCSEC)
+   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
+
+   # Check if concentration is given
+   if isfinite(c)
+      x_s = θ_vir / c
+   elseif isfinite(x_s)
+      c = θ_vir / x_s
+   else
+      throw(ArgumentError("Provide concentration (c) or scale radius (x_s) in ** parameter_NFWLens **"))
+   end
+   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
+
+   return (mass=mass, rho_s=ρ_s, c=c, x_s=x_s)
+end
+
+# Parameters for tNFW lens
+function parameter_tNFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d::RV=NaN, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, x_t::RV=NaN)
+   # Overdensity value
+   Δ_z = 200.0
+
+   # ADD to the lens
+   D_d = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
+   
+   # Critical density at the lens redshift
+   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
+
+   # Virial radius of the lens (in ANGLE_ARCSEC)
+   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
+
+   # Check if concentration is given
+   if isfinite(c)
+      x_s = θ_vir / c
+   elseif isfinite(x_s)
+      c = θ_vir / x_s
+   else
+      throw(ArgumentError("Provide at least c or x_s in ** parameter_tNFWLens **"))
+   end
+   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
+
+   return (mass=mass, rho_s=ρ_s, c=c, x_s=x_s, x_t=x_t)
+end
+
+# Parameters for generalized NFW lens
+function parameter_gNFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d::RV, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, n::RV=1.0)
+   # Check for valid slope parameter
+   if !(0.0 < n < 2.0)
+      throw(ArgumentError("Slope parameter outside allowed range n ∈ (0, 2) in ** parameter_gNFWLens **"))
+   end
+
+   # Integrand function for mass calculation
+   function integrand(x::RV, α::RV)
+      return x^(2.0 - α) / (1.0 + x)^(3.0 - α)
+   end
+
+   # Overdensity value
+   Δ_z = 200.0
+
+   # ADD to the lens
+   D_d = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
+   
+   # Critical density at the lens redshift
+   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
+
+   # Virial radius of the lens (in ANGLE_ARCSEC)
+   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
+
+   # Check if concentration is given
+   if isfinite(c)
+      x_s = θ_vir / c
+   elseif isfinite(x_s)
+      c = θ_vir / x_s
+   else
+      throw(ArgumentError("Provide at least c or x_s in ** parameter_gNFWLens **"))
+   end
+   mass, _ = quadgk(x -> integrand(x, n), 0, c)
+   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / mass
+
+   return (mass=mass, rho_s=ρ_s, c=c, x_s=x_s, n=n)
+end
+
+# Parameters for Einasto lens
+function parameter_EinastoLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d::RV, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, n::RV=0.2)
+   # Overdensity value
+   Δ_z = 200.0
+
+   # ADD to the lens
+   D_d  = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
+
+   # Critical density at the lens redshift
+   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
+
+   # Virial radius of the lens (in ANGLE_ARCSEC)
+   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
+
+   # Check if concentration is given
+   if isfinite(c)
+      x_s = θ_vir / c
+   elseif isfinite(x_s)
+      c = θ_vir / x_s
+   else
+      throw(ArgumentError("Provide at least c or x_s in ** parameter_EinastoLens **"))
+   end
+   Pax, _ = gamma_inc(3.0 / n, (2.0 / n) * c^n)
+   m_v = (1.0 / n) * (n / 2.0)^(3.0 / n) * gamma(3.0 / n) * Pax
+   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / m_v
+
+   return (mass=mass, rho_s=ρ_s, c=c, x_s=x_s, n=n)
 end
