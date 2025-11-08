@@ -484,6 +484,9 @@ const lens_init_functions = Dict{Symbol, Function}(
    :PJELens         => (c -> init_PJELens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s, x_t=c.x_t, eps=c.eps, pa=c.pa)),
    :HernquistLens   => (c -> init_HernquistLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_e=c.x_e)),
    :NFWLens         => (c -> init_NFWLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, x_s=c.x_s, c=c.c, rho_s=c.rho_s, mass=c.mass))
+   :tNFWLens        => (c -> init_tNFWLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, x_s=c.x_s, x_t=c.x_t, c=c.c, rho_s=c.rho_s, mass=c.mass)),
+   :gNFWLens        => (c -> init_gNFWLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, x_s=c.x_s, c=c.c, rho_s=c.rho_s, mass=c.mass, n=c.n)),
+   :EinastoLens     => (c -> init_EinastoLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, x_s=c.x_s, c=c.c, rho_s=c.rho_s, mass=c.mass, n=c.n))
    )
 # Constructor for composite lens
 function init_CompositeLens(lens::Vector{<:NamedTuple})

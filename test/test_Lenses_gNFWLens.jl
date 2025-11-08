@@ -42,5 +42,6 @@
    @test jacc[3][1] ≈ jac1[3] atol=1e-15 rtol=1e-15
    @test jacc[3][2] ≈ jac2[3] atol=1e-15 rtol=1e-15
 
-   @test_throws ArgumentError Lenses.init_EinastoLens(cosmo, zl, mass=mass)
+   @test_throws ArgumentError Lenses.init_gNFWLens(cosmo, zl, mass=mass)
+   @test_throws ArgumentError Lenses.init_gNFWLens(cosmo, zl, mass=mass, n=2)
 end
