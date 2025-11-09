@@ -37,6 +37,7 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV
          ψ[i, j] = ψ[i, j] + θE2 * log(dx^2 + dy^2)
       end
    end
+   return nothing
 end
 
 
@@ -72,6 +73,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
          ψy[i, j] = ψy[i, j] + θE2 * dy / dr2
       end
    end
+   return nothing
 end
 
 
@@ -115,6 +117,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
          ψxy[i, j] = ψxy[i, j] - θE2 * 2.0 * dx * dy / dr4
       end
    end
+   return nothing
 end
 
 """
