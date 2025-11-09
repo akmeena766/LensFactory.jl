@@ -15,11 +15,12 @@ export einstein_angle
 """
 function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: RV
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
-   
+   θs2 = θs^2
+
    dx = θx - θxc
    dy = θy - θyc
 
-   ψ_up = ψ + θE * sqrt(θs^2 + dx^2 + dy^2)
+   ψ_up = ψ + θE * sqrt(θs2 + dx^2 + dy^2)
    return ψ_up
 end
 
@@ -28,15 +29,17 @@ end
 """
 function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
-   
+   θs2 = θs^2
+
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
-      @inbounds for i in ax1
+      @inbounds @simd for i in ax1
          dx = θx[i, j] - θxc
          dy = θy[i, j] - θyc
-         ψ[i, j] = ψ[i, j] + θE * sqrt(θs^2 + dx^2 + dy^2)
+         ψ[i, j] = ψ[i, j] + θE * sqrt(θs2 + dx^2 + dy^2)
       end
    end
+   return nothing
 end
 
 
@@ -45,13 +48,14 @@ end
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: RV
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+   θs2 = θs^2
 
    dx = θx - θxc
    dy = θy - θyc
-   θr = sqrt(θs^2 + dx^2 + dy^2)
+   dr = sqrt(θs2 + dx^2 + dy^2)
 
-   ψx_up = ψx + θE * dx / θr
-   ψy_up = ψy + θE * dy / θr
+   ψx_up = ψx + θE * dx / dr
+   ψy_up = ψy + θE * dy / dr
    return ψx_up, ψy_up
 end
 
@@ -60,17 +64,20 @@ end
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
-   
+   θs2 = θs^2
+
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
-      @inbounds for i in ax1
+      @inbounds @simd for i in ax1
          dx = θx[i, j] - θxc
          dy = θy[i, j] - θyc
-         θr = sqrt(θs^2 + dx^2 + dy^2)
-         ψx[i, j] = ψx[i, j] + θE * dx / θr
-         ψy[i, j] = ψy[i, j] + θE * dy / θr
+         dr = sqrt(θs2 + dx^2 + dy^2)
+
+         ψx[i, j] = ψx[i, j] + θE * dx / dr
+         ψy[i, j] = ψy[i, j] + θE * dy / dr
       end
    end
+   return nothing
 end
 
 
@@ -79,14 +86,16 @@ end
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: RV
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+   θs2 = θs^2
    
    dx = θx - θxc
    dy = θy - θyc
-   θr = (θs^2 + dx^2 + dy^2)^(3/2)
+   dr2 = θs2 + dx^2 + dy^2
+   dr3 = dr2 * sqrt(dr2)
 
-   ψxx_up = ψxx + θE * (θs^2 + dy^2) / θr
-   ψyy_up = ψyy + θE * (θs^2 + dx^2) / θr
-   ψxy_up = ψxy - θE * dx * dy / θr
+   ψxx_up = ψxx + θE * (θs2 + dy^2) / dr3
+   ψyy_up = ψyy + θE * (θs2 + dx^2) / dr3
+   ψxy_up = ψxy - θE * dx * dy / dr3
    return ψxx_up, ψyy_up, ψxy_up
 end
 
@@ -95,18 +104,22 @@ end
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+   θs2 = θs^2
    
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
          dx = θx[i, j] - θxc
          dy = θy[i, j] - θyc
-         θr = (θs^2 + dx^2 + dy^2)^(3/2)
-         ψxx[i, j] = ψxx[i, j] + θE * (θs^2 + dy^2) / θr
-         ψyy[i, j] = ψyy[i, j] + θE * (θs^2 + dx^2) / θr
-         ψxy[i, j] = ψxy[i, j] - θE * dx * dy / θr
+         dr2 = θs2 + dx^2 + dy^2
+         dr3 = dr2 * sqrt(dr2)
+
+         ψxx[i, j] = ψxx[i, j] + θE * (θs2 + dy^2) / dr3
+         ψyy[i, j] = ψyy[i, j] + θE * (θs2 + dx^2) / dr3
+         ψxy[i, j] = ψxy[i, j] - θE * dx * dy / dr3
       end
    end
+   return nothing
 end
 
 
