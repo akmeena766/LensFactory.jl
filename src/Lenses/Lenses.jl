@@ -150,29 +150,6 @@ function get_critical_density(D_d::Float64, D_ds::Float64, D_s::Float64; unit::S
 end
 
 
-# Define lens_map globally (module-level)
-const lens_map = Dict(
-   :PointLens         => (PointLens,         [:D_d, :x_c, :y_c, :mass]),
-   :PlummerLens       => (PlummerLens,       [:D_d, :x_c, :y_c, :mass, :x_s]),
-   :SISLens           => (SISLens,           [:x_c, :y_c, :v_d]),
-   :NSISPLens         => (NSISPLens,         [:x_c, :y_c, :v_d, :x_s]),
-   :NSISMDLens        => (NSISMDLens,        [:x_c, :y_c, :v_d, :x_s]),
-   :GaussianLens      => (GaussianLens,      [:D_d, :x_c, :y_c, :mass, :x_s]),
-   :SersicLens        => (SersicLens,        [:D_d, :x_c, :y_c, :mass, :x_e, :n]),
-   :ExternalEffects   => (ExternalEffects,   [:kappa, :gamma1, :gamma2]),
-   :PIEPLens          => (PIEPLens,          [:x_c, :y_c, :v_d, :x_s, :eps, :pa]),
-   :SIELens           => (SIELens,           [:x_c, :y_c, :v_d, :x_s, :eps, :pa]),
-   :PJELens           => (PJELens,           [:x_c, :y_c, :v_d, :x_s, :x_t, :eps, :pa]),
-   :HernquistLens     => (HernquistLens,     [:D_d, :x_c, :y_c, :mass, :x_s]),
-   :NFWLens           => (NFWLens,           [:D_d, :x_c, :y_c, :rho_s, :x_s]),
-   :tNFWLens          => (tNFWLens,          [:D_d, :x_c, :y_c, :rho_s, :x_s, :x_t]),
-   :gNFWLens          => (gNFWLens,          [:D_d, :x_c, :y_c, :rho_s, :x_s, :n]),
-   :EinastoLens       => (EinastoLens,       [:D_d, :x_c, :y_c, :rho_s, :x_s, :n]),
-   :MultiPlummerLens  => (MultiPlummerLens,  [:D_d, :x_c, :y_c, :mass, :x_s, :n]),
-   :MultiGaussianLens => (MultiGaussianLens, [:D_d, :x_c, :y_c, :mass, :x_s, :n]),
-   :MultiPJELens      => (MultiPJELens,      [:x_c, :y_c, :v_d, :x_s, :x_t, :eps, :pa, :n])
-)
-
 """
     get_potential(lens::AbstractLens, θx::T, θy::T) where T <: RV --> RV
 """
@@ -437,12 +414,18 @@ function get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Floa
    # Initialize an empty source plane magnification map
    μ_source = zero(θx)
 
+   # Allocate arrays ONCE outside all loops
+   rand_x = Vector{Float64}(undef, rays_per_pixel)
+   rand_y = Vector{Float64}(undef, rays_per_pixel)
+
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for _ in ax2
       @inbounds  for _ in ax1
-         # Draw random pixel numbers equal to rays_per_pixel
-         rand_x = 1.0 .+ rand(Float64, rays_per_pixel) .* (nx - 1.0)
-         rand_y = 1.0 .+ rand(Float64, rays_per_pixel) .* (ny - 1.0)
+         # Generate random values and scale with explicit SIMD vectorization
+         @simd for k in 1:rays_per_pixel
+            rand_x[k] = 1.0 + rand(Float64) * (nx - 1.0)
+            rand_y[k] = 1.0 + rand(Float64) * (ny - 1.0)
+         end
 
          for k in 1:rays_per_pixel
             # Get the source plane position
@@ -480,7 +463,7 @@ function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::NTuple
    for contour_1 in RXC
       for contour_2 in RYC
          # Find the intersection points
-         intersect_points = IntersectionFinder.get_intersection( first.(contour_1), last.(contour_1), first.(contour_2), last.(contour_2) )
+         intersect_points = IntersectionFinder.get_intersection(first.(contour_1), last.(contour_1), first.(contour_2), last.(contour_2))
          
          # Store the intersection points in the image_position vector
          for point in intersect_points
@@ -575,21 +558,21 @@ function get_caustic(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T 
    critical_tan, critical_rad = get_critical_curve(lens, θx, θy, adis)
 
    # Get tangential caustics
-   caustics_tan = Vector{Vector{Vector{Float64}}}()
-   for curve in critical_tan
+   caustics_tan = Vector{Vector{Vector{Float64}}}(undef, length(critical_tan))
+   for (idx, curve) in enumerate(critical_tan)
       ψ_x, ψ_y = get_deflection(lens, first.(curve), last.(curve))
       src_x = first.(curve) .- adis .* ψ_x
       src_y =  last.(curve) .- adis .* ψ_y
-      push!(caustics_tan, [[x, y] for (x, y) in zip(src_x, src_y)])
+      caustics_tan[idx] = [[x, y] for (x, y) in zip(src_x, src_y)]
    end
  
    # Get radial caustics
-   caustics_rad = Vector{Vector{Vector{Float64}}}()
-   for curve in critical_rad
+   caustics_rad = Vector{Vector{Vector{Float64}}}(undef, length(critical_rad))
+   for (idx, curve) in enumerate(critical_rad)
       ψ_x, ψ_y = get_deflection(lens, first.(curve), last.(curve))
       src_x = first.(curve) .- adis .* ψ_x
       src_y =  last.(curve) .- adis .* ψ_y
-      push!(caustics_rad, [[x, y] for (x, y) in zip(src_x, src_y)])
+      caustics_rad[idx] = [[x, y] for (x, y) in zip(src_x, src_y)]
    end
    return caustics_tan, caustics_rad
 end
@@ -620,235 +603,235 @@ end
 
 
 #--------------------- Potential functions for specific lens models -------------------------------#
-function potential_helper!(ψ::T, lens::init_PointLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_PointLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return PointLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass)
 end
 
-function potential_helper!(ψ::T, lens::init_PlummerLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_PlummerLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return PlummerLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s)
 end
 
-function potential_helper!(ψ::T, lens::init_SISLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_SISLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return SISLens.potential!(ψ, θx, θy, lens.x_c, lens.y_c, lens.v_d)
 end
 
-function potential_helper!(ψ::T, lens::init_NSISPLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_NSISPLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return NSISPLens.potential!(ψ, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s)
 end
 
-function potential_helper!(ψ::T, lens::init_NSISMDLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_NSISMDLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return NSISMDLens.potential!(ψ, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s)
 end
 
-function potential_helper!(ψ::T, lens::init_GaussianLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_GaussianLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return GaussianLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s)
 end
 
-function potential_helper!(ψ::T, lens::init_SersicLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_SersicLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return SersicLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_e, lens.n)
 end
 
-function potential_helper!(ψ::T, lens::init_ExternalEffects, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_ExternalEffects, θx::T, θy::T) where T <: Union{RV, ROA}
    return ExternalEffects.potential!(ψ, θx, θy, lens.kappa, lens.gamma1, lens.gamma2)
 end
 
-function potential_helper!(ψ::T, lens::init_PIEPLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_PIEPLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return PIEPLens.potential!(ψ, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.eps, lens.pa)
 end
 
-function potential_helper!(ψ::T, lens::init_SIELens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_SIELens, θx::T, θy::T) where T <: Union{RV, ROA}
    return SIELens.potential!(ψ, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.eps, lens.pa)
 end
 
-function potential_helper!(ψ::T, lens::init_PJELens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_PJELens, θx::T, θy::T) where T <: Union{RV, ROA}
    return PJELens.potential!(ψ, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.x_t, lens.eps, lens.pa)
 end
 
-function potential_helper!(ψ::T, lens::init_HernquistLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_HernquistLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return HernquistLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s)
 end
 
-function potential_helper!(ψ::T, lens::init_NFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_NFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return NFWLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.rho_s, lens.x_s)
 end
 
-function potential_helper!(ψ::T, lens::init_tNFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_tNFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return tNFWLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.rho_s, lens.x_s, lens.x_t)
 end
 
-function potential_helper!(ψ::T, lens::init_gNFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_gNFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return gNFWLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.rho_s, lens.x_s, lens.n)
 end
 
-function potential_helper!(ψ::T, lens::init_EinastoLens, θx::T, θy::T) where T <: Union{RV, ROA}
-   EinastoLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.rho_s, lens.x_s, lens.n)
+@inline function potential_helper!(ψ::T, lens::init_EinastoLens, θx::T, θy::T) where T <: Union{RV, ROA}
+   return EinastoLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.rho_s, lens.x_s, lens.n)
 end
 
-function potential_helper!(ψ::T, lens::init_MultiPlummerLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_MultiPlummerLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return MultiPlummerLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.n)
 end
 
-function potential_helper!(ψ::T, lens::init_MultiGaussianLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_MultiGaussianLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return MultiGaussianLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.n)
 end
 
-function potential_helper!(ψ::T, lens::init_MultiPJELens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_MultiPJELens, θx::T, θy::T) where T <: Union{RV, ROA}
    return MultiPJELens.potential!(ψ, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.x_t, lens.eps, lens.pa, lens.n)
 end
 
 
 #--------------------- Deflection functions for specific lens models -------------------------------#
-function deflection_helper!(ψx::T, ψy::T, lens::init_PointLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_PointLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return PointLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass)
 end
 
-function deflection_helper!(ψx::T, ψy::T, lens::init_PlummerLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_PlummerLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return PlummerLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s)
 end
 
-function deflection_helper!(ψx::T, ψy::T, lens::init_SISLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_SISLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return SISLens.deflection!(ψx, ψy, θx, θy, lens.x_c, lens.y_c, lens.v_d)
 end
 
-function deflection_helper!(ψx::T, ψy::T, lens::init_NSISPLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_NSISPLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return NSISPLens.deflection!(ψx, ψy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s)
 end
 
-function deflection_helper!(ψx::T, ψy::T, lens::init_NSISMDLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_NSISMDLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return NSISMDLens.deflection!(ψx, ψy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s)
 end
 
-function deflection_helper!(ψx::T, ψy::T, lens::init_GaussianLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_GaussianLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return GaussianLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s)
 end
 
-function deflection_helper!(ψx::T, ψy::T, lens::init_SersicLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_SersicLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return SersicLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_e, lens.n)
 end
 
-function deflection_helper!(ψx::T, ψy::T, lens::init_ExternalEffects, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_ExternalEffects, θx::T, θy::T) where T <: Union{RV, ROA}
    return ExternalEffects.deflection!(ψx, ψy, θx, θy, lens.kappa, lens.gamma1, lens.gamma2)
 end
 
-function deflection_helper!(ψx::T, ψy::T, lens::init_PIEPLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_PIEPLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return PIEPLens.deflection!(ψx, ψy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.eps, lens.pa)
 end
 
-function deflection_helper!(ψx::T, ψy::T, lens::init_SIELens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_SIELens, θx::T, θy::T) where T <: Union{RV, ROA}
    return SIELens.deflection!(ψx, ψy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.eps, lens.pa)
 end
 
-function deflection_helper!(ψx::T, ψy::T, lens::init_PJELens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_PJELens, θx::T, θy::T) where T <: Union{RV, ROA}
    return PJELens.deflection!(ψx, ψy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.x_t, lens.eps, lens.pa)
 end
 
-function deflection_helper!(ψx::T, ψy::T, lens::init_HernquistLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_HernquistLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return HernquistLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s)
 end
 
-function deflection_helper!(ψx::T, ψy::T, lens::init_NFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_NFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return NFWLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.rho_s, lens.x_s)
 end
 
-function deflection_helper!(ψx::T, ψy::T, lens::init_tNFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_tNFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return tNFWLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.rho_s, lens.x_s, lens.x_t)
 end
 
-function deflection_helper!(ψx::T, ψy::T, lens::init_gNFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_gNFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return gNFWLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.rho_s, lens.x_s, lens.n)
 end
 
-function deflection_helper!(ψx::T, ψy::T, lens::init_EinastoLens, θx::T, θy::T) where T <: Union{RV, ROA}
-   EinastoLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.rho_s, lens.x_s, lens.n)
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_EinastoLens, θx::T, θy::T) where T <: Union{RV, ROA}
+   return EinastoLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.rho_s, lens.x_s, lens.n)
 end
 
-function deflection_helper!(ψx::T, ψy::T, lens::init_MultiPlummerLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_MultiPlummerLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return MultiPlummerLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.n)
 end
 
-function deflection_helper!(ψx::T, ψy::T, lens::init_MultiGaussianLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_MultiGaussianLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return MultiGaussianLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.n)
 end
 
-function deflection_helper!(ψx::T, ψy::T, lens::init_MultiPJELens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_MultiPJELens, θx::T, θy::T) where T <: Union{RV, ROA}
    return MultiPJELens.deflection!(ψx, ψy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.x_t, lens.eps, lens.pa, lens.n)
 end
 
 
 #--------------------- Deformation tensor for various lens models ---------------------------------#
-function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PointLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PointLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return PointLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass)
 end
 
-function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PlummerLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PlummerLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return PlummerLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s)
 end
 
-function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_SISLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_SISLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return SISLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, lens.v_d)
 end
 
-function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_NSISPLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_NSISPLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return NSISPLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s)
 end
 
-function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_NSISMDLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_NSISMDLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return NSISMDLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s)
 end
 
-function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_GaussianLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_GaussianLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return GaussianLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s)
 end
 
-function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_SersicLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_SersicLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return SersicLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_e, lens.n)
 end
 
-function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_ExternalEffects, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_ExternalEffects, θx::T, θy::T) where T <: Union{RV, ROA}
    return ExternalEffects.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.kappa, lens.gamma1, lens.gamma2)
 end
 
-function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PIEPLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PIEPLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return PIEPLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.eps, lens.pa)
 end
 
-function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_SIELens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_SIELens, θx::T, θy::T) where T <: Union{RV, ROA}
    return SIELens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.eps, lens.pa)
 end
 
-function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PJELens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PJELens, θx::T, θy::T) where T <: Union{RV, ROA}
    return PJELens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.x_t, lens.eps, lens.pa)
 end
 
-function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_HernquistLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_HernquistLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return HernquistLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s)
 end
 
-function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_NFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_NFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return NFWLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.rho_s, lens.x_s)
 end
 
-function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_tNFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_tNFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return tNFWLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.rho_s, lens.x_s, lens.x_t)
 end
 
-function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_gNFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_gNFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return gNFWLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.rho_s, lens.x_s, lens.n)
 end
 
-function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_EinastoLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_EinastoLens, θx::T, θy::T) where T <: Union{RV, ROA}
    EinastoLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.rho_s, lens.x_s, lens.n)
 end
 
-function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_MultiPlummerLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_MultiPlummerLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return MultiPlummerLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.n)
 end
 
-function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_MultiGaussianLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_MultiGaussianLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return MultiGaussianLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.n)
 end
 
-function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_MultiPJELens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_MultiPJELens, θx::T, θy::T) where T <: Union{RV, ROA}
    return MultiPJELens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.x_t, lens.eps, lens.pa, lens.n)
 end
 
