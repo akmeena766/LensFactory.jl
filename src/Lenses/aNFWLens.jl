@@ -19,7 +19,7 @@ export jacobian!
    # Capital Psi
    Ψ = (ψ + x_s)^2 + (1.0 - q2) * x^2
 
-   return 0.5 * (q / x_s) * log(Ψ) + (q / x_s) * log((1.0 + q) * x_s)
+   return 0.5 * (q / x_s) * log(Ψ) - (q / x_s) * log((1.0 + q) * x_s)
 end
 
 @inline function ϕx_CSE(x::RV, y::RV, x_s::RV, q::RV)

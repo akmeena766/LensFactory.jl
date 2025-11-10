@@ -273,7 +273,7 @@ end
 
 """
     init_aHernquistLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN, eps::RV=NaN, pa::RV=NaN)
-Initialize an approximate Navarro-Frenk-White (aNFW) lens with the given parameters based on 
+Initialize an approximate Hernquist lens (aHernquistLens) with the given parameters based on 
 [Oguri (2021)](https://ui.adsabs.harvard.edu/abs/2021PASP..133g4504O/abstract).
 """
 @kwdef struct init_aHernquistLens <: AbstractLens
@@ -290,7 +290,7 @@ end
 
 """
     init_aNFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, rho_s::RV=NaN, x_s::RV=NaN, eps::RV=NaN, pa::RV=NaN)
-Initialize an approximate Navarro-Frenk-White (aNFW) lens with the given parameters based on 
+Initialize an approximate Navarro-Frenk-White lens (aNFWLens) with the given parameters based on 
 [Oguri (2021)](https://ui.adsabs.harvard.edu/abs/2021PASP..133g4504O/abstract).
 """
 @kwdef struct init_aNFWLens <: AbstractLens

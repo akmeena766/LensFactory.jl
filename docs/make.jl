@@ -35,6 +35,7 @@ makedocs(
                         "truncated NFW Lens"   => "tNFWLens.md",
                         "generalized NFW Lens" => "gNFWLens.md",
                         "Einasto Lens"     => "EinastoLens.md",
+                        "approximate Hernquist Lens" => "aHernquistLens.md",
                         "approximate NFW Lens" => "aNFWLens.md",
                         ],
             "Multi-plane lensing" => "MultiPlane.md",
