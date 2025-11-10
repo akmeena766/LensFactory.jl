@@ -207,9 +207,7 @@ end
 
 """
     init_NFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, mass::RV=NaN)
-Initialize a Navarro-Frenk-White (NFW) lens with the given parameters. The lens model can be 
-initialized with either the concentration `c` or the scale radius `x_s`. 
-**If both are provided, `c` will be used to calculate `x_s` and the input `x_s` will be overwritten.**
+Initialize a Navarro-Frenk-White (NFW) lens with the given parameters
 """
 @kwdef struct init_NFWLens <: AbstractLens
    _lens_::Symbol = :NFWLens
@@ -224,9 +222,7 @@ end
 
 """
     init_tNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, x_t::RV=NaN, c::RV=NaN, mass::RV=NaN)
-Initialize a truncated Navarro-Frenk-White (tNFW) lens with the given parameters. The lens model can
-be initialized with either the concentration `c` or the scale radius `x_s`.
-**If both are provided, `c` will be used to calculate `x_s` and the input `x_s` will be overwritten.**
+Initialize a truncated Navarro-Frenk-White (tNFW) lens with the given parameters.
 """
 @kwdef struct init_tNFWLens <: AbstractLens
    _lens_::Symbol = :tNFWLens
@@ -234,20 +230,15 @@ be initialized with either the concentration `c` or the scale radius `x_s`.
    D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
+   rho_s::RV = NaN
    x_s::RV = NaN
    x_t::RV = NaN
-   c::RV   = NaN
-   rho_s::RV = NaN
-   mass::RV  = NaN
 end
 
 
 """
     init_gNFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, rho_s::RV=NaN, mass::RV=NaN, n::RV=-2.0)
-Initialize a generalized Navarro-Frenk-White (gNFW) lens with the given parameters. The lens model 
-can be initialized with either the concentration `c` or the scale radius `x_s`. 
-**If both are provided, `c` will be used to calculate `x_s` and the input `x_s` will be overwritten.**
-The parameter `n` defines the slope of the density profile.
+Initialize a generalized Navarro-Frenk-White (gNFW) lens with the given parameters.
 """
 @kwdef struct init_gNFWLens <: AbstractLens
    _lens_::Symbol = :gNFWLens
@@ -255,11 +246,9 @@ The parameter `n` defines the slope of the density profile.
    D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
-   n::RV   = NaN
-   x_s::RV = NaN
-   c::RV   = NaN
    rho_s::RV = NaN
-   mass::RV  = NaN
+   x_s::RV = NaN
+   n::RV   = NaN
 end
 
 
@@ -276,11 +265,27 @@ The parameter `n` defines the slope of the density profile.
    D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
-   n::RV   =-2.0
-   x_s::RV = NaN
-   c::RV   = NaN
    rho_s::RV = NaN
-   mass::RV  = NaN
+   x_s::RV = NaN
+   n::RV   =-2.0
+end
+
+
+"""
+    init_aNFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, rho_s::RV=NaN, x_s::RV=NaN, eps::RV=NaN, pa::RV=NaN)
+Initialize an approximate Navarro-Frenk-White (aNFW) lens with the given parameters based on 
+[Oguri (2021)](https://ui.adsabs.harvard.edu/abs/2021PASP..133g4504O/abstract).
+"""
+@kwdef struct init_aNFWLens <: AbstractLens
+   _lens_::Symbol = :aNFWLens
+   _lid_::Int64 = 17
+   D_d::RV = NaN
+   x_c::RV = 0.0
+   y_c::RV = 0.0
+   rho_s::RV = NaN
+   x_s::RV = NaN
+   eps::RV  = NaN
+   pa::RV   = NaN
 end
 
 
@@ -336,7 +341,7 @@ end
    z_d = Vector{<:RV}()
    _plane_ = Vector{AbstractLens}()
 end
-#---------------------- Composite and Multi-plane lens constructors --------------------------------
+#---------------------- Composite and Multi-plane lens constructors -------------------------------#
 # Dictionary to map lens types to their initialization functions and arguments
 const lens_init_functions = Dict{Symbol, Function}(
    :PointLens       =>   (c -> init_PointLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass)),
@@ -402,7 +407,7 @@ function init_MultiPlaneLens(lens::Vector{<:NamedTuple})
 end
 
 
-#---------------------- Parameter functions for various lenses -------------------------------------
+#---------------------- Parameter functions for various lenses ------------------------------------#
 # Parameters for NFW lens
 function parameter_NFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d::RV=NaN, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN)
    # Overdensity value

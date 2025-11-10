@@ -231,7 +231,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::S, θyc::S, 
       # Rotate back to original frame and update the values
       ψxx_up = ψxx_up + ψxx_r * cos_pa^2 - ψxy_r * sin_2pa + ψyy_r * sin_pa^2
       ψyy_up = ψyy_up + ψxx_r * sin_pa^2 + ψxy_r * sin_2pa + ψyy_r * cos_pa^2
-      ψxy_up = ψxy_up  + 0.5 * sin_2pa * (ψxx_r - ψyy_r) + cos_2pa * ψxy_r
+      ψxy_up = ψxy_up + 0.5 * sin_2pa * (ψxx_r - ψyy_r) + cos_2pa * ψxy_r
    end
    return ψxx_up, ψyy_up, ψxy_up
 end
