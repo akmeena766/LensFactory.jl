@@ -1,4 +1,4 @@
-module aNFWLens
+module aHernquistLens
 
 # LensFactory modules to import
 using ..Constants
@@ -19,7 +19,7 @@ export jacobian!
    # Capital Psi
    Ψ = (ψ + x_s)^2 + (1.0 - q2) * x^2
 
-   return 0.5 * (q / x_s) * log(Ψ) + (q / x_s) * log((1.0 + q) * x_s)
+   return (0.5 * q / x_s) * log(Ψ) + (q / x_s) * log((1.0 + q) * x_s)
 end
 
 @inline function ϕx_CSE(x::RV, y::RV, x_s::RV, q::RV)
@@ -30,7 +30,7 @@ end
    ψ = sqrt(q2 * (x_s^2 + x^2) + y^2)
 
    # Capital Psi
-   Ψ = (ψ + x_s)^2 + (1.0 - q2) * x^2   
+   Ψ = (ψ + x_s)^2 + (1.0 - q2) * x^2
 
    return (q / x_s) * (x / ψ) * (ψ + q^2 * x_s) / Ψ
 end
@@ -43,7 +43,7 @@ end
    ψ = sqrt(q2 * (x_s^2 + x^2) + y^2)
 
    # Capital Psi
-   Ψ = (ψ + x_s)^2 + (1.0 - q2) * x^2   
+   Ψ = (ψ + x_s)^2 + (1.0 - q2) * x^2
 
    return (q / x_s) * (y / ψ) * (ψ + x_s) / Ψ
 end
@@ -98,15 +98,15 @@ end
 
 
 """
-    potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+    potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
 """
-function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
    # Get axis-ratio
    q = 1.0 - ϵ
    θs_p = θs / sqrt(q)
 
    # Get normalization constant κs
-   κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+   κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
    κs = κs * θs_p^2
 
    # Precompute trigonometric functions
@@ -123,24 +123,24 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV
    y = dy_r / θs_p
 
    ψ_r = 0.0
-   for k in 1:44
+   for k in 1:41
       ψ_r = ψ_r + Ai[k] * ϕ_CSE(x, y, Si[k], q)
    end
    ψ_up = ψ + κs * ψ_r
-   
+
    return ψ_up
 end
 
 """
-    potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+    potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
 """
-function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
    # Get axis-ratio
    q = 1.0 - ϵ
    θs_p = θs / sqrt(q)
 
    # Get normalization constant κs
-   κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+   κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
    κs = κs * θs_p^2
 
    # Precompute trigonometric functions
@@ -160,7 +160,7 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV
          y = dy_r / θs_p
 
          ψ_r = 0.0
-         for k in 1:44
+         for k in 1:41
             ψ_r = ψ_r + Ai[k] * ϕ_CSE(x, y, Si[k], q)
          end
          ψ[i, j] = ψ[i, j] + κs * ψ_r
@@ -170,15 +170,15 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
    # Get axis-ratio
    q = 1.0 - ϵ
    θs_p = θs / sqrt(q)
 
    # Get normalization constant κs
-   κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+   κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
    κs = κs * θs_p
 
    # Precompute trigonometric functions
@@ -196,7 +196,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
    
    ψx_r = 0.0
    ψy_r = 0.0
-   for k in 1:44
+   for k in 1:41
       ψx_r = ψx_r + Ai[k] * ϕx_CSE(x, y, Si[k], q)
       ψy_r = ψy_r + Ai[k] * ϕy_CSE(x, y, Si[k], q)
    end
@@ -211,15 +211,15 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
    # Get axis-ratio
    q = 1.0 - ϵ
    θs_p = θs / sqrt(q)
 
    # Get normalization constant κs
-   κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+   κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
    κs = κs * θs_p
 
    # Precompute trigonometric functions
@@ -240,7 +240,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
 
          ψx_r = 0.0
          ψy_r = 0.0
-         for k in 1:44
+         for k in 1:41
             ψx_r = ψx_r + Ai[k] * ϕx_CSE(x, y, Si[k], q)
             ψy_r = ψy_r + Ai[k] * ϕy_CSE(x, y, Si[k], q)
          end
@@ -257,15 +257,15 @@ end
 
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
    # Get axis-ratio
    q = 1.0 - ϵ
    θs_p = θs / sqrt(q)
 
    # Get normalization constant κs
-   κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+   κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
 
    # Precompute trigonometric functions
    pa_rad = deg2rad(pa)
@@ -285,7 +285,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
    ψxx_r = 0.0
    ψyy_r = 0.0
    ψxy_r = 0.0
-   for k in 1:44
+   for k in 1:41
       ψxx_r = ψxx_r + Ai[k] * ϕxx_CSE(x, y, Si[k], q)
       ψyy_r = ψyy_r + Ai[k] * ϕyy_CSE(x, y, Si[k], q)
       ψxy_r = ψxy_r + Ai[k] * ϕxy_CSE(x, y, Si[k], q)
@@ -303,15 +303,15 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
 end
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
    # Get axis-ratio
    q = 1.0 - ϵ
    θs_p = θs / sqrt(q)
 
    # Get normalization constant κs
-   κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+   κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
 
    # Precompute trigonometric functions
    pa_rad = deg2rad(pa)
@@ -334,7 +334,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
          ψxx_r = 0.0
          ψyy_r = 0.0
          ψxy_r = 0.0
-         for k in 1:44
+         for k in 1:41
             ψxx_r = ψxx_r + Ai[k] * ϕxx_CSE(x, y, Si[k], q)
             ψyy_r = ψyy_r + Ai[k] * ϕyy_CSE(x, y, Si[k], q)
             ψxy_r = ψxy_r + Ai[k] * ϕxy_CSE(x, y, Si[k], q)
@@ -353,94 +353,88 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
 end
 
 
-const Ai = [1.648988e-18,
-            6.274458e-16,
-            3.646620e-17,
-            3.459206e-15,
-            2.457389e-14,
-            1.059319e-13,
-            4.211597e-13,
-            1.142832e-12,
-            4.391215e-12,
-            1.556500e-11,
-            6.951271e-11,
-            3.147466e-10,
-            1.379109e-09,
-            3.829778e-09,
-            1.384858e-08,
-            5.370951e-08,
-            1.804384e-07,
-            5.788608e-07,
-            3.205256e-06,
-            1.102422e-05,
-            4.093971e-05,
-            1.282206e-04,
-            4.575541e-04,
-            7.995270e-04,
-            5.013701e-03,
-            1.403508e-02,
-            5.230727e-02,
-            1.898907e-01,
-            3.643448e-01,
-            7.203734e-01,
-            1.717667e00,
-            2.217566e00,
-            3.187447e00,
-            8.194898e00,
-            1.765210e01,
-            1.974319e01,
-            2.783688e01,
-            4.482311e01,
-            5.598897e01,
-            1.426485e02,
-            2.279833e02,
-            5.401335e02,
-            9.743682e02,
-            1.775124e03]
+const Ai = [9.200445e-18,
+            2.184724e-16,
+            3.548079e-15,
+            2.823716e-14,
+            1.091876e-13,
+            6.998697e-13,
+            3.142264e-12,
+            1.457280e-11,
+            4.472783e-11,
+            2.042079e-10,
+            8.708137e-10,
+            2.423649e-09,
+            7.353440e-09,
+            5.470738e-08,
+            2.445878e-07,
+            4.541672e-07,
+            3.227611e-06,
+            1.110690e-05,
+            3.725101e-05,
+            1.056271e-04,
+            6.531501e-04,
+            2.121330e-03,
+            8.285518e-03,
+            4.084190e-02,
+            5.760942e-02,
+            1.788945e-01,
+            2.092774e-01,
+            3.697750e-01,
+            3.440555e-01,
+            5.792737e-01,
+            2.325935e-01,
+            5.227961e-01,
+            3.079968e-01,
+            1.633456e-01,
+            7.410900e-02,
+            3.123329e-02,
+            1.292488e-02,
+            2.156527e00,
+            1.652553e-02,
+            2.314934e-02,
+            3.992313e-01]
 
 
-const Si = [1.082411e-06,
-            8.786566e-06,
-            3.292868e-06,
-            1.860019e-05,
-            3.274231e-05,
-            6.232485e-05,
-            9.256333e-05,
-            1.546762e-04,
-            2.097321e-04,
-            3.391140e-04,
-            5.178790e-04,
-            8.636736e-04,
-            1.405152e-03,
-            2.193855e-03,
-            3.179572e-03,
-            4.970987e-03,
-            7.631970e-03,
-            1.119413e-02,
-            1.827267e-02,
-            2.945251e-02,
-            4.562723e-02,
-            6.782509e-02,
-            1.596987e-01,
-            1.127751e-01,
-            2.169469e-01,
-            3.423835e-01,
-            5.194527e-01,
-            8.623185e-01,
-            1.382737e00,
-            2.034929e00,
-            3.402979e00,
-            5.594276e00,
-            8.052345e00,
-            1.349045e01,
-            2.603825e01,
-            4.736823e01,
-            6.559320e01,
-            1.087932e02,
-            1.477673e02,
-            2.495341e02,
-            4.305999e02,
-            7.760206e02,
-            2.143057e03,
-            1.935749e03]
+const Si = [1.199110e-06,
+            3.751762e-06,
+            9.927207e-06,
+            2.206076e-05,
+            3.781528e-05,
+            6.659808e-05,
+            1.154366e-04,
+            1.924150e-04,
+            3.040440e-04,
+            4.683051e-04,
+            7.745084e-04,
+            1.175953e-03,
+            1.675459e-03,
+            2.801948e-03,
+            9.712807e-03,
+            5.469589e-03,
+            1.104654e-02,
+            1.893893e-02,
+            2.792864e-02,
+            4.152834e-02,
+            6.640398e-02,
+            1.107083e-01,
+            1.648028e-01,
+            2.839601e-01,
+            4.129439e-01,
+            8.239115e-01,
+            6.031726e-01,
+            1.145604e00,
+            1.401895e00,
+            2.512223e00,
+            2.038025e00,
+            4.644014e00,
+            9.301590e00,
+            2.039273e01,
+            4.896534e01,
+            1.252311e02,
+            3.576766e02,
+            2.579464e04,
+            2.944679e04,
+            2.834717e03,
+            5.931328e04]
 end
