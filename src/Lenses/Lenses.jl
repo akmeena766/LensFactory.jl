@@ -668,6 +668,10 @@ end
    return EinastoLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.rho_s, lens.x_s, lens.n)
 end
 
+@inline function potential_helper!(ψ::T, lens::init_aNFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
+   return aNFWLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.rho_s, lens.x_s, lens.eps, lens.pa)
+end
+
 @inline function potential_helper!(ψ::T, lens::init_MultiPlummerLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return MultiPlummerLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.n)
 end
@@ -746,6 +750,10 @@ end
    return EinastoLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.rho_s, lens.x_s, lens.n)
 end
 
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_aNFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
+   return aNFWLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.rho_s, lens.x_s, lens.eps, lens.pa)
+end
+
 @inline function deflection_helper!(ψx::T, ψy::T, lens::init_MultiPlummerLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return MultiPlummerLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.n)
 end
@@ -822,6 +830,10 @@ end
 
 @inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_EinastoLens, θx::T, θy::T) where T <: Union{RV, ROA}
    EinastoLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.rho_s, lens.x_s, lens.n)
+end
+
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_aNFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
+   return aNFWLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.rho_s, lens.x_s, lens.eps, lens.pa)
 end
 
 @inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_MultiPlummerLens, θx::T, θy::T) where T <: Union{RV, ROA}

@@ -61,7 +61,7 @@ end
    inv_Ψ = 1.0 / Ψ
    inv_ψ = 1.0 / ψ
 
-   return (q / x_s) * inv_Ψ * (1.0 + q2 * x_s * (q2 * x_s^2 + y^2) * inv_ψ^3 - 2.0 * x^2 * (ψ + q2 * s)^2 * inv_ψ^2 * inv_Ψ)
+   return (q / x_s) * inv_Ψ * (1.0 + q2 * x_s * (q2 * x_s^2 + y^2) * inv_ψ^3 - 2.0 * x^2 * (ψ + q2 * x_s)^2 * inv_ψ^2 * inv_Ψ)
 end
 
 @inline function ϕyy_CSE(x::RV, y::RV, x_s::RV, q::RV)
@@ -77,7 +77,7 @@ end
    inv_Ψ = 1.0 / Ψ
    inv_ψ = 1.0 / ψ
 
-   return (q / x_s) * inv_Ψ * (1.0 + q2 * x_s * (x_s^2 + x^2) * inv_ψ^3 - 2.0 * y^2 * (ψ + s)^2 * inv_ψ^2 * inv_Ψ)
+   return (q / x_s) * inv_Ψ * (1.0 + q2 * x_s * (x_s^2 + x^2) * inv_ψ^3 - 2.0 * y^2 * (ψ + x_s)^2 * inv_ψ^2 * inv_Ψ)
 end
 
 @inline function ϕxy_CSE(x::RV, y::RV, x_s::RV, q::RV)
@@ -286,9 +286,9 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
    ψyy_r = 0.0
    ψxy_r = 0.0
    for k in 1:44
-      ψxx_r = ψxx_r + Ai[k] * ϕx_CSE(x, y, Si[k], q)
-      ψyy_r = ψyy_r + Ai[k] * ϕy_CSE(x, y, Si[k], q)
-      ψxy_r = ψxy_r + Ai[k] * ϕy_CSE(x, y, Si[k], q)
+      ψxx_r = ψxx_r + Ai[k] * ϕxx_CSE(x, y, Si[k], q)
+      ψyy_r = ψyy_r + Ai[k] * ϕyy_CSE(x, y, Si[k], q)
+      ψxy_r = ψxy_r + Ai[k] * ϕxy_CSE(x, y, Si[k], q)
    end
    ψxx_r = κs * ψxx_r
    ψyy_r = κs * ψyy_r

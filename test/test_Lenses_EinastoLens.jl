@@ -1,5 +1,5 @@
 #!!!!!!!!!!!!!! Testing/cross-checked AGAINST Glafic !!!!!!!!!!!!!!
-#! Currently I am removing potential tests for gNFW lens model as it makes the compilation very slow.
+#! Currently I am removing potential tests for Einasto lens model as it makes the run time slow.
 @testset "Einasto lens" begin
    mass = 1E11 * MASS_SUN
 
