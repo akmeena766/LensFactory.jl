@@ -130,15 +130,15 @@ end
 
 
 """
-    init_ExternalEffects(kappa::RV=NaN, gamma1::RV=NaN, gamma2::RV=NaN)
+    init_ExternalEffects(kappa::RV=NaN, gamma::RV=NaN, angle::RV=NaN)
 Initialize constant external effects with the given parameters.
 """
 @kwdef struct init_ExternalEffects <: AbstractLens
    _lens_::Symbol = :ExternalEffects
    _lid_::Int = 8
-   kappa::RV  = NaN
-   gamma1::RV = NaN
-   gamma2::RV = NaN
+   kappa::RV = NaN
+   gamma::RV = NaN
+   angle::RV = NaN
 end
 
 
@@ -358,6 +358,8 @@ end
    z_d = Vector{<:RV}()
    _plane_ = Vector{AbstractLens}()
 end
+
+
 #---------------------- Composite and Multi-plane lens constructors -------------------------------#
 # Dictionary to map lens types to their initialization functions and arguments
 const lens_init_functions = Dict{Symbol, Function}(
