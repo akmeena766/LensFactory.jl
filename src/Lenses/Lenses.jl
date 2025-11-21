@@ -7,18 +7,7 @@ using SpecialFunctions
 # LensFactory modules to use
 using ..Constants
 using ..Cosmology
-
-# Modules for contour finding on a 2D grid
-include("../LensFactoryUtils/ContourFinder.jl")
-using .ContourFinder
-
-# Module to get intersection points of two contours
-include("../LensFactoryUtils/IntersectionFinder.jl")
-using .IntersectionFinder
-
-# Module for various polygon operations
-include("../LensFactoryUtils/PolygonOps.jl")
-using .PolygonOps
+using ..LFUtils
 
 # Include the lens types files
 include("./lens_types.jl")
