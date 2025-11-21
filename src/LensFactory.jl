@@ -1,7 +1,7 @@
 module LensFactory
 
 # Global constants
-include("./LensFactoryUtils/Constants.jl")
+include("./Constants.jl")
 export Constants
 
 # Module for cosmology
@@ -19,5 +19,9 @@ export MultiPlane
 # Module for source profiles
 include("./Sources/Sources.jl")
 export Sources
+
+# Module for other utilities
+include("./LensFactoryUtils/LFUtils.jl")
+export LFUtils
 
 end
