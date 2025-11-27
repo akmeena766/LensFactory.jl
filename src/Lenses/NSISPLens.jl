@@ -33,7 +33,7 @@ function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) 
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
-      @inbounds @simd for i in ax1
+      @inbounds for i in ax1
          dx = θx[i, j] - θxc
          dy = θy[i, j] - θyc
          ψ[i, j] = ψ[i, j] + θE * sqrt(θs2 + dx^2 + dy^2)
@@ -68,7 +68,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV,
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
-      @inbounds @simd for i in ax1
+      @inbounds for i in ax1
          dx = θx[i, j] - θxc
          dy = θy[i, j] - θyc
          dr = sqrt(θs2 + dx^2 + dy^2)

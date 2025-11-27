@@ -31,7 +31,7 @@ function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <
    
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
-      @inbounds @simd for i in ax1
+      @inbounds for i in ax1
          dx = θx[i, j] - θxc
          dy = θy[i, j] - θyc
 
@@ -65,7 +65,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV)
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
-      @inbounds @simd for i in ax1
+      @inbounds for i in ax1
          dx = θx[i, j] - θxc
          dy = θy[i, j] - θyc
          dr = sqrt(dx^2 + dy^2)
@@ -103,7 +103,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
    
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
-      @inbounds @simd for i in ax1
+      @inbounds for i in ax1
          dx = θx[i, j] - θxc
          dy = θy[i, j] - θyc
          dr2 = dx^2 + dy^2
