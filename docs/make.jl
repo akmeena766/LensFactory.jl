@@ -37,6 +37,7 @@ makedocs(
                         "Einasto Lens"     => "EinastoLens.md",
                         "approximate Hernquist Lens" => "aHernquistLens.md",
                         "approximate NFW Lens" => "aNFWLens.md",
+                        "elliptical Hernquist MD Lens" => "eHernquistMDLens.md",
                         ],
             "Multi-plane lensing" => "MultiPlane.md",
             "Sources" => "Sources.md",

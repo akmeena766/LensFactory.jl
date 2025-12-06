@@ -22,9 +22,49 @@ export jacobian!
    return f_x
 end
 
+@inline function α_r(x::RV)
+   return 2.0 * x * (1.0 - F_x(x)) / (x^2 - 1.0)
+end
 
+@inline function κ_r(x::RV)
+   return (-3.0 + (2.0 + x^2) * F_x(x)) / (x^2 - 1.0)^2
+end
+
+@inline function κ_dr(x::RV)
+   return (1.0 / x / (x^2 - 1.0)^3) * (2.0 + 13.0 * x^2 - 3.0 * x^2 * (x^2 + 4.0) * F_x(x))
+end
+
+
+function I_integrand(u::RV, x::RV, y::RV, q::RV)
+   ξ_u = sqrt(u * (x^2 + y^2 / (1.0 - (1.0 - q^2) * u)))
+   return ξ_u * α_r(ξ_u) / (u * sqrt(1.0 - (1.0 - q^2) * u))
+end
+
+function I_integral(x::RV, y::RV, q::RV)
+   I, _ = quadgk(u -> I_integrand(u, x, y, q), 0, 1)
+   return I
+end
+
+function J_integrand(u::RV, x::RV, y::RV, q::RV, n::Int64)
+   ξ_u = sqrt(u * (x^2 + y^2 / (1.0 - (1.0 - q^2) * u)))
+   return κ_r(ξ_u) / (1.0 - (1.0 - q^2) * u)^(n + 0.5)
+end
+
+function J_integral(x::RV, y::RV, q::RV, n::Int64)
+   J, _ = quadgk(u -> J_integrand(u, x, y, q, n), 0, 1)
+   return J
+end
+
+function K_integral(u::RV, q::RV, n::Int64)
+   
+end
+
+
+"""
+    potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+"""
 function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
-      # Get axis-ratio
+   # Get axis-ratio
    q = 1.0 - ϵ
    θs_p = θs / sqrt(q)
 
@@ -45,27 +85,137 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: R
    x = dx_r / θs_p
    y = dy_r / θs_p
 
-   
+   ψ_up = ψ 
+   return ψ_up
 end
 
+"""
+    potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+"""
 function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
-   
+   # Get axis-ratio
+   q = 1.0 - ϵ
+   θs_p = θs / sqrt(q)
+
+   # Get normalization constant κs
+   κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
+   κs = κs * θs_p^2
+
+   # Precompute trigonometric functions
+   pa_rad = deg2rad(pa)
+   cos_pa = cos(pa_rad)
+   sin_pa = sin(pa_rad)
+
+   return nothing
 end
 
+"""
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+"""
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+   # Get axis-ratio
+   q = 1.0 - ϵ
+   θs_p = θs / sqrt(q)
 
+   # Get normalization constant κs
+   κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
+   κs = κs * θs_p
+
+   # Precompute trigonometric functions
+   pa_rad = deg2rad(pa)
+   cos_pa = cos(pa_rad)
+   sin_pa = sin(pa_rad)
+
+   # Coordinate in the rotated frame
+   dx_r = + (θx - θxc) * cos_pa + (θy - θyc) * sin_pa
+   dy_r = - (θx - θxc) * sin_pa + (θy - θyc) * cos_pa
+
+   # Scaled coordinates
+   x = dx_r / θs_p
+   y = dy_r / θs_p
+
+   # Calculate integrals
+   J_0 = J_integral(x, y, q, 0)
+   J_1 = J_integral(x, y, q, 1)
+
+   # Calculate deflection vector in rotated frame
+   ψx_r = κs * q * x * J_0
+   ψy_r = κs * q * y * J_1
+
+   # Get deflection vector in original frame
+   ψx_up = ψx + ψx_r * cos_pa - ψy_r * sin_pa
+   ψy_up = ψy + ψx_r * sin_pa + ψy_r * cos_pa
+
+   return ψx_up, ψy_up
 end
 
+"""
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+"""
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+   # Get axis-ratio
+   q = 1.0 - ϵ
+   θs_p = θs / sqrt(q)
 
+   # Get normalization constant κs
+   κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
+   κs = κs * θs_p
+
+   # Precompute trigonometric functions
+   pa_rad = deg2rad(pa)
+   cos_pa = cos(pa_rad)
+   sin_pa = sin(pa_rad)
+   
+   return nothing
 end
 
+"""
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+"""
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+   # Get axis-ratio
+   q = 1.0 - ϵ
+   θs_p = θs / sqrt(q)
+
+   # Get normalization constant κs
+   κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
+
+   # Precompute trigonometric functions
+   pa_rad = deg2rad(pa)
+   cos_pa = cos(pa_rad)
+   sin_pa = sin(pa_rad)
+   sin_2pa = sin(2.0 * pa_rad)
+   cos_2pa = cos(2.0 * pa_rad)
+
+   # Coordinate in the rotated frame
+   dx_r = + (θx - θxc) * cos_pa + (θy - θyc) * sin_pa
+   dy_r = - (θx - θxc) * sin_pa + (θy - θyc) * cos_pa
+
+   # Scaled coordinates
+   x = dx_r / θs_p
+   y = dy_r / θs_p
    
 end
 
+"""
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+"""
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+   # Get axis-ratio
+   q = 1.0 - ϵ
+   θs_p = θs / sqrt(q)
+
+   # Get normalization constant κs
+   κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
+
+   # Precompute trigonometric functions
+   pa_rad = deg2rad(pa)
+   cos_pa = cos(pa_rad)
+   sin_pa = sin(pa_rad)
+   sin_2pa = sin(2.0 * pa_rad)
+   cos_2pa = cos(2.0 * pa_rad)
    
+   return nothing
 end
 
 end
