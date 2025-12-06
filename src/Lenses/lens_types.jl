@@ -321,6 +321,22 @@ Initialize an elliptical Hernquist mass distribution lens (eHernquistMDLens) wit
    pa::RV   = NaN
 end
 
+"""
+    init_eNFWMDLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, rho_s::RV=NaN, x_s::RV=NaN, eps::RV=NaN, pa::RV=NaN)
+Initialize an elliptical Navarro-Frenk-White mass distribution lens (eNFWMDLens) with the given parameters.
+"""
+@kwdef struct init_eNFWMDLens <: AbstractLens
+   _lens_::Symbol = :eNFWMDLens
+   _lid_::Int64 = 19
+   D_d::RV = NaN
+   x_c::RV = 0.0
+   y_c::RV = 0.0
+   rho_s::RV = NaN
+   x_s::RV  = NaN
+   eps::RV  = NaN
+   pa::RV   = NaN
+end
+
 @kwdef struct init_MultiPlummerLens <: AbstractLens
    _lens_::Symbol = :MultiPlummerLens
    _lid_::Int64 = 101

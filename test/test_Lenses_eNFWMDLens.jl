@@ -1,12 +1,12 @@
 #!!!!!!!!!!!!!! Testing/cross-checked AGAINST Glafic !!!!!!!!!!!!!!
-@testset "eHernquistMD lens" begin
+@testset "eNFWMD lens" begin
    mass = 1E11 * MASS_SUN
-   x_s = 0.3
-   eps = 0.0
-   pa = 0.0
-   lens = Lenses.init_eHernquistMDLens(D_d=Dol, mass=mass, x_s=x_s, eps=eps, pa=pa)
+   
+   # Get NFW lens parameters
+   param = Lenses.parameter_NFWLens(cosmology=cosmo, z_d=zl, mass=mass, c=6)
+   lens = Lenses.init_eNFWMDLens(D_d=Dol, rho_s=param.rho_s, x_s=param.x_s, eps=0.0, pa=0.0)
 
-   lens1 = Lenses.init_HernquistLens(D_d=Dol, mass=mass, x_s=x_s)
+   lens1 = Lenses.init_NFWLens(D_d=Dol, rho_s=param.rho_s, x_s=param.x_s)
    pot1_1 = adis  * Lenses.get_potential(lens1, xt1, yt1)
    dex1_1 = adis .* Lenses.get_deflection(lens1, xt1, yt1)
    jac1_1 = adis .* Lenses.get_jacobian(lens1, xt1, yt1)
@@ -52,36 +52,35 @@
    @test jacc[3][1] ≈ jac1[3] atol=1e-15 rtol=1e-15
    @test jacc[3][2] ≈ jac2[3] atol=1e-15 rtol=1e-15
 
+   # Get eNFWMD lens with ellipticity
+   lens = Lenses.init_eNFWMDLens(D_d=Dol, rho_s=param.rho_s, x_s=param.x_s, eps=0.3, pa=45.0)
 
-   # Get eHernquistMD lens with ellipticity
-   eps = 0.3
-   pa = 45.0
-   lens = Lenses.init_eHernquistMDLens(D_d=Dol, mass=mass, x_s=x_s, eps=eps, pa=pa)
-   pot1 = adis  * Lenses.get_potential(lens, xt1, yt1)
+   # pot1 = adis  * Lenses.get_potential(lens, xt1, yt1)
    dex1 = adis .* Lenses.get_deflection(lens, xt1, yt1)
    jac1 = adis .* Lenses.get_jacobian(lens, xt1, yt1)
    kappa  = 0.5 * (jac1[1] + jac1[2])
    gamma1 = 0.5 * (jac1[1] - jac1[2])
    gamma2 = jac1[3]
-   @test dex1[1] ≈ 0.135902 atol=1e-4 rtol=1e-4
-   @test dex1[2] ≈ 0.135902 atol=1e-4 rtol=1e-4
-   @test kappa  ≈ +0.029257 atol=1e-4 rtol=1e-4
-   @test gamma1 ≈ +0.000000 atol=1e-4 rtol=1e-4
-   @test gamma2 ≈ -0.126177 atol=1e-4 rtol=1e-4
 
-   pot2 = adis  * Lenses.get_potential(lens, xt2, yt2)
+   @test dex1[1] ≈ 0.028554 atol=1e-4 rtol=1e-4
+   @test dex1[2] ≈ 0.028554 atol=1e-4 rtol=1e-4
+   @test kappa  ≈ +0.022748 atol=1e-4 rtol=1e-4
+   @test gamma1 ≈ +0.000000 atol=1e-4 rtol=1e-4
+   @test gamma2 ≈ -0.015482 atol=1e-4 rtol=1e-4
+
+   # pot2 = adis  * Lenses.get_potential(lens, xt2, yt2)
    dex2 = adis .* Lenses.get_deflection(lens, xt2, yt2)
    jac2 = adis .* Lenses.get_jacobian(lens, xt2, yt2)
    kappa  = 0.5 * (jac2[1] + jac2[2])
    gamma1 = 0.5 * (jac2[1] - jac2[2])
    gamma2 = jac2[3]
-   @test dex2[1] ≈ +0.241001 atol=1e-4 rtol=1e-4
-   @test dex2[2] ≈ -0.016681 atol=1e-4 rtol=1e-4
-   @test kappa  ≈ +0.041101 atol=1e-4 rtol=1e-4
-   @test gamma1 ≈ -0.193372 atol=1e-4 rtol=1e-4
-   @test gamma2 ≈ +0.019137 atol=1e-4 rtol=1e-4
+   @test dex2[1] ≈ +0.040098 atol=1e-4 rtol=1e-4
+   @test dex2[2] ≈ -0.005782 atol=1e-4 rtol=1e-4
+   @test kappa  ≈ +0.025821 atol=1e-4 rtol=1e-4
+   @test gamma1 ≈ -0.013248 atol=1e-4 rtol=1e-4
+   @test gamma2 ≈ -0.001227 atol=1e-4 rtol=1e-4
 
-   potc = adis .* Lenses.get_potential(lens, [xt1, xt2], [yt1, yt2])
+   # potc = adis .* Lenses.get_potential(lens, [xt1, xt2], [yt1, yt2])
    dexc = adis .* Lenses.get_deflection(lens, [xt1, xt2], [yt1, yt2])
    jacc = adis .* Lenses.get_jacobian(lens, [xt1, xt2], [yt1, yt2])
    @test potc[1] ≈ pot1 atol=1e-15 rtol=1e-15
