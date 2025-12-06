@@ -847,8 +847,8 @@ end
    return aNFWLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.rho_s, lens.x_s, lens.eps, lens.pa)
 end
 
-@inline function deflection_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_eHernquistMDLens, θx::T, θy::T) where T <: Union{RV, ROA}
-   return eHernquistMDLens.deflection!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.eps, lens.pa)
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_eHernquistMDLens, θx::T, θy::T) where T <: Union{RV, ROA}
+   return eHernquistMDLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.eps, lens.pa)
 end
 
 @inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_MultiPlummerLens, θx::T, θy::T) where T <: Union{RV, ROA}

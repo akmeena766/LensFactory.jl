@@ -55,8 +55,14 @@ function J_integral(x::RV, y::RV, q::RV, n::Int64)
    return J
 end
 
-function K_integral(u::RV, q::RV, n::Int64)
-   
+function K_integrand(u::RV, x::RV, y::RV, q::RV, n::Int64)
+   ξ_u = sqrt(u * (x^2 + y^2 / (1.0 - (1.0 - q^2) * u)))
+   return 0.5 * u * κ_dr(ξ_u) / ξ_u / (1.0 - (1.0 - q^2) * u)^(n + 0.5)
+end
+
+function K_integral(x::RV, y::RV, q::RV, n::Int64)
+   K, _ = quadgk(u -> K_integrand(u, x, y, q, n), 0, 1)
+   return K
 end
 
 
@@ -84,8 +90,13 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: R
    # Scaled coordinates
    x = dx_r / θs_p
    y = dy_r / θs_p
+   
+   # Calculate integral
+   I = I_integral(x, y, q)
 
-   ψ_up = ψ 
+   # Calculate potential
+   ψ_up = ψ + κs * 0.5 * q * I
+
    return ψ_up
 end
 
@@ -106,6 +117,24 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: R
    cos_pa = cos(pa_rad)
    sin_pa = sin(pa_rad)
 
+   ax1, ax2 = axes(θx, 1), axes(θx, 2)
+   @inbounds for j in ax2
+      @inbounds for i in ax1
+         # Coordinate in the rotated frame
+         dx_r = + (θx[i, j] - θxc) * cos_pa + (θy[i, j] - θyc) * sin_pa
+         dy_r = - (θx[i, j] - θxc) * sin_pa + (θy[i, j] - θyc) * cos_pa
+
+         # Scaled coordinates
+         x = dx_r / θs_p
+         y = dy_r / θs_p
+
+         # Calculate integral
+         I = I_integral(x, y, q)
+
+         # Calculate potential
+         ψ[i, j] = ψ[i, j] + κs * 0.5 * q * I
+      end
+   end
    return nothing
 end
 
@@ -165,7 +194,31 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
    pa_rad = deg2rad(pa)
    cos_pa = cos(pa_rad)
    sin_pa = sin(pa_rad)
-   
+
+   ax1, ax2 = axes(θx, 1), axes(θx, 2)
+   @inbounds for j in ax2
+      @inbounds for i in ax1
+         # Coordinate in the rotated frame
+         dx_r = + (θx[i, j] - θxc) * cos_pa + (θy[i, j] - θyc) * sin_pa
+         dy_r = - (θx[i, j] - θxc) * sin_pa + (θy[i, j] - θyc) * cos_pa
+
+         # Scaled coordinates
+         x = dx_r / θs_p
+         y = dy_r / θs_p
+
+         # Calculate integrals
+         J_0 = J_integral(x, y, q, 0)
+         J_1 = J_integral(x, y, q, 1)
+
+         # Calculate deflection vector in rotated frame
+         ψx_r = κs * q * x * J_0
+         ψy_r = κs * q * y * J_1
+
+         # Get deflection vector in original frame
+         ψx[i, j] = ψx[i, j] + ψx_r * cos_pa - ψy_r * sin_pa
+         ψy[i, j] = ψy[i, j] + ψx_r * sin_pa + ψy_r * cos_pa
+      end
+   end
    return nothing
 end
 
@@ -195,6 +248,24 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
    x = dx_r / θs_p
    y = dy_r / θs_p
    
+   # Calculate integrals
+   J_0 = J_integral(x, y, q, 0)
+   J_1 = J_integral(x, y, q, 1)
+   K_0 = K_integral(x, y, q, 0)
+   K_1 = K_integral(x, y, q, 1)
+   K_2 = K_integral(x, y, q, 2)
+
+   # Calculate Jacobian in rotated frame
+   ψxx_r = κs * q * (J_0 + 2.0 * x^2 * K_0)
+   ψyy_r = κs * q * (J_1 + 2.0 * y^2 * K_2)
+   ψxy_r = κs * q * (2.0 * x * y * K_1)
+
+   # Get jacobian in original frame
+   ψxx_up = ψxx + ψxx_r * cos_pa^2 - ψxy_r * sin_2pa + ψyy_r * sin_pa^2
+   ψyy_up = ψyy + ψxx_r * sin_pa^2 + ψxy_r * sin_2pa + ψyy_r * cos_pa^2
+   ψxy_up = ψxy + 0.5 * sin_2pa * (ψxx_r - ψyy_r) + cos_2pa * ψxy_r
+
+   return ψxx_up, ψyy_up, ψxy_up
 end
 
 """
