@@ -286,6 +286,35 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
    sin_2pa = sin(2.0 * pa_rad)
    cos_2pa = cos(2.0 * pa_rad)
    
+   ax1, ax2 = axes(θx, 1), axes(θx, 2)
+   @inbounds for j in ax2
+      @inbounds for i in ax1
+         # Coordinate in the rotated frame
+         dx_r = + (θx[i, j] - θxc) * cos_pa + (θy[i, j] - θyc) * sin_pa
+         dy_r = - (θx[i, j] - θxc) * sin_pa + (θy[i, j] - θyc) * cos_pa
+
+         # Scaled coordinates
+         x = dx_r / θs_p
+         y = dy_r / θs_p
+
+         # Calculate integrals
+         J_0 = J_integral(x, y, q, 0)
+         J_1 = J_integral(x, y, q, 1)
+         K_0 = K_integral(x, y, q, 0)
+         K_1 = K_integral(x, y, q, 1)
+         K_2 = K_integral(x, y, q, 2)
+
+         # Calculate Jacobian in rotated frame
+         ψxx_r = κs * q * (J_0 + 2.0 * x^2 * K_0)
+         ψyy_r = κs * q * (J_1 + 2.0 * y^2 * K_2)
+         ψxy_r = κs * q * (2.0 * x * y * K_1)
+
+         # Get jacobian in original frame
+         ψxx[i, j] = ψxx[i, j] + ψxx_r * cos_pa^2 - ψxy_r * sin_2pa + ψyy_r * sin_pa^2
+         ψyy[i, j] = ψyy[i, j] + ψxx_r * sin_pa^2 + ψxy_r * sin_2pa + ψyy_r * cos_pa^2
+         ψxy[i, j] = ψxy[i, j] + 0.5 * sin_2pa * (ψxx_r - ψyy_r) + cos_2pa * ψxy_r
+      end
+   end
    return nothing
 end
 
