@@ -305,6 +305,21 @@ Initialize an approximate Navarro-Frenk-White lens (aNFWLens) with the given par
    pa::RV   = NaN
 end
 
+"""
+    init_eHernquistMDLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN, eps::RV=NaN, pa::RV=NaN)
+Initialize an elliptical Hernquist mass distribution lens (eHernquistMDLens) with the given parameters.
+"""
+@kwdef struct init_eHernquistMDLens <: AbstractLens
+   _lens_::Symbol = :eHernquistMDLens
+   _lid_::Int64 = 18
+   D_d::RV = NaN
+   x_c::RV = 0.0
+   y_c::RV = 0.0
+   mass::RV = NaN
+   x_s::RV  = NaN
+   eps::RV  = NaN
+   pa::RV   = NaN
+end
 
 @kwdef struct init_MultiPlummerLens <: AbstractLens
    _lens_::Symbol = :MultiPlummerLens

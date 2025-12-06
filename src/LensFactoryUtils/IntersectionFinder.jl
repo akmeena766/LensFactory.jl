@@ -13,7 +13,7 @@ function get_intersection(x1::AbstractVector{<:Real}, y1::AbstractVector{<:Real}
         throw(ArgumentError("Incompatible input axes for input vectors."))
     end
     
-    # Check if curve-1 is consistent
+    # Check if curve-2 is consistent
     if !(length(x2) > 1) || !(length(y2) > 1) || length(x2) == length(y2) || 
         throw(ArgumentError("Incompatible input axes for input vectors."))
     end    
