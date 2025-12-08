@@ -30,12 +30,13 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV
    bn = b_n(n)
    θs = θe / bn^n
    κs = (4.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
+   κs = 0.5 * θs^2 * κs
 
    dx = (θx - θxc) / θs
    dy = (θy - θyc) / θs
    dr = sqrt(dx^2 + dy^2)
 
-   ψ_up = ψ + 0.5 * κs * θs^2 * dr^2 * pFq( (2*n, 2*n), (2*n+1, 2*n+1), -dr^(1/n))
+   ψ_up = ψ + κs * dr^2 * pFq( (2*n, 2*n), (2*n+1, 2*n+1), -dr^(1/n))
    return ψ_up
 end
 
@@ -46,6 +47,7 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV
    bn = b_n(n)
    θs = θe / bn^n
    κs = (4.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
+   κs = κs * 0.5 * θs^2
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -53,7 +55,7 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV
          dx = (θx[i, j] - θxc) / θs
          dy = (θy[i, j] - θyc) / θs
          dr = sqrt(dx^2 + dy^2)
-         ψ[i, j] = ψ[i, j] + 0.5 * κs * θs^2 * dr^2 * pFq( (2*n, 2*n), (2*n+1, 2*n+1), -dr^(1/n))
+         ψ[i, j] = ψ[i, j] + κs * dr^2 * pFq( (2*n, 2*n), (2*n+1, 2*n+1), -dr^(1/n))
       end
    end
 end
@@ -65,14 +67,15 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
    bn = b_n(n)
    θs = θe / bn^n
    κs = (4.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
+   κs = κs * θs * gamma(2*n+1)
 
    dx = (θx - θxc) / θs
    dy = (θy - θyc) / θs
    dr = sqrt(dx^2 + dy^2)
    
    P, _ = gamma_inc(2*n, dr^(1/n))
-   ψx_up = ψx + κs * θs * gamma(2*n+1) * P * dx / dr^2
-   ψy_up = ψy + κs * θs * gamma(2*n+1) * P * dy / dr^2
+   ψx_up = ψx + κs * P * dx / dr^2
+   ψy_up = ψy + κs * P * dy / dr^2
    return ψx_up, ψy_up
 end
 
@@ -83,6 +86,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
    bn = b_n(n)
    θs = θe / bn^n
    κs = (4.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
+   κs = κs * θs * gamma(2*n+1)
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -92,8 +96,8 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
          dr = sqrt(dx^2 + dy^2)
 
          P, _ = gamma_inc(2*n, dr^(1/n))
-         ψx[i, j] = ψx[i, j] + κs * θs * gamma(2*n+1) * P * dx / dr^2
-         ψy[i, j] = ψy[i, j] + κs * θs * gamma(2*n+1) * P * dy / dr^2
+         ψx[i, j] = ψx[i, j] + κs * P * dx / dr^2
+         ψy[i, j] = ψy[i, j] + κs * P * dy / dr^2
       end
    end
 end

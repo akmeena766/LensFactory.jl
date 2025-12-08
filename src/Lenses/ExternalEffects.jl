@@ -17,7 +17,10 @@ function potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) wher
    gamma1 = gamma * cos(2.0 * deg2rad(angle))
    gamma2 = gamma * sin(2.0 * deg2rad(angle))
 
-   ψ_up = ψ + 0.5 * (kappa + gamma1) * θx^2 + 0.5 * (kappa - gamma1) * θy^2 + gamma2 * θx * θy
+   f1 = 0.5 * (kappa + gamma1)
+   f2 = 0.5 * (kappa - gamma1)
+
+   ψ_up = ψ + f1 * θx^2 + f2 * θy^2 + gamma2 * θx * θy
    return ψ_up
 end
 
@@ -28,10 +31,13 @@ function potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) wher
    gamma1 = gamma * cos(2.0 * deg2rad(angle))
    gamma2 = gamma * sin(2.0 * deg2rad(angle))
 
+   f1 = 0.5 * (kappa + gamma1)
+   f2 = 0.5 * (kappa - gamma1)
+
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
-         ψ[i, j] = ψ[i, j] + 0.5 * (kappa + gamma1) * θx[i, j]^2 + 0.5 * (kappa - gamma1) * θy[i, j]^2 + gamma2 * θx[i, j] * θy[i, j]
+         ψ[i, j] = ψ[i, j] + f1 * θx[i, j]^2 + f2 * θy[i, j]^2 + gamma2 * θx[i, j] * θy[i, j]
       end
    end
 end
@@ -44,8 +50,11 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle
    gamma1 = gamma * cos(2.0 * deg2rad(angle))
    gamma2 = gamma * sin(2.0 * deg2rad(angle))
 
-   ψx_up = ψx + (kappa + gamma1) * θx + gamma2 * θy
-   ψy_up = ψy + (kappa - gamma1) * θy + gamma2 * θx
+   f1 = (kappa + gamma1)
+   f2 = (kappa - gamma1)
+
+   ψx_up = ψx + f1 * θx + gamma2 * θy
+   ψy_up = ψy + f2 * θy + gamma2 * θx
    return ψx_up, ψy_up
 end
 
@@ -56,11 +65,14 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle
    gamma1 = gamma * cos(2.0 * deg2rad(angle))
    gamma2 = gamma * sin(2.0 * deg2rad(angle))
 
+   f1 = (kappa + gamma1)
+   f2 = (kappa - gamma1)
+
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
-      ψx[i, j] = ψx[i, j] + (kappa + gamma1) * θx[i, j] + gamma2 * θy[i, j]
-      ψy[i, j] = ψy[i, j] + (kappa - gamma1) * θy[i, j] + gamma2 * θx[i, j]
+      ψx[i, j] = ψx[i, j] + f1 * θx[i, j] + gamma2 * θy[i, j]
+      ψy[i, j] = ψy[i, j] + f2 * θy[i, j] + gamma2 * θx[i, j]
       end
    end
 end
@@ -86,11 +98,14 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma::
    gamma1 = gamma * cos(2.0 * deg2rad(angle))
    gamma2 = gamma * sin(2.0 * deg2rad(angle))
 
+   f1 = (kappa + gamma1)
+   f2 = (kappa - gamma1)
+
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
-         ψxx[i, j] = ψxx[i, j] + (kappa + gamma1)
-         ψyy[i, j] = ψyy[i, j] + (kappa - gamma1)
+         ψxx[i, j] = ψxx[i, j] + f1
+         ψyy[i, j] = ψyy[i, j] + f2
          ψxy[i, j] = ψxy[i, j] + gamma2
       end
    end

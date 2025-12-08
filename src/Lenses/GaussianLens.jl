@@ -35,7 +35,7 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
-      @inbounds @simd for i in ax1
+      @inbounds for i in ax1
          dx = (θx[i, j] - θxc) / θs
          dy = (θy[i, j] - θyc) / θs
          dr2 = dx^2 + dy^2
@@ -71,7 +71,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
-      @inbounds @simd for i in ax1
+      @inbounds for i in ax1
          dx = (θx[i, j] - θxc) / θs
          dy = (θy[i, j] - θyc) / θs
          dr2 = dx^2 + dy^2
@@ -97,8 +97,9 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
    dr2 = dr^2
    dr3 = dr * dr2
 
-   α_r = κs * 2.0 *  (1.0 - exp(-0.5 * dr2)) / dr
-   κ_r = κs * exp(-0.5 * dr2)
+   exp_term = exp(-0.5 * dr2)
+   α_r = κs * 2.0 *  (1.0 - exp_term) / dr
+   κ_r = κs * exp_term
 
    ψxx_up = ψxx + 2.0 * κ_r * dx2 / dr2 - α_r * (dx2 - dy2) / dr3
    ψyy_up = ψyy + 2.0 * κ_r * dy2 / dr2 + α_r * (dx2 - dy2) / dr3
@@ -114,7 +115,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
    
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
-      @inbounds @simd for i in ax1
+      @inbounds for i in ax1
          dx = (θx[i, j] - θxc) / θs
          dy = (θy[i, j] - θyc) / θs
          dx2 = dx^2
@@ -123,8 +124,9 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
          dr2 = dr^2
          dr3 = dr * dr2
 
-         α_r = κs * 2.0 * (1.0 - exp(-0.5 * dr2)) / dr
-         κ_r = κs * exp(-0.5 * dr2)
+         exp_term = exp(-0.5 * dr2)
+         α_r = κs * 2.0 * (1.0 - exp_term) / dr
+         κ_r = κs * exp_term
 
          ψxx[i, j] = ψxx[i, j] + 2.0 * κ_r * dx2 / dr2 - α_r * (dx2 - dy2) / dr3
          ψyy[i, j] = ψyy[i, j] + 2.0 * κ_r * dy2 / dr2 + α_r * (dx2 - dy2) / dr3
