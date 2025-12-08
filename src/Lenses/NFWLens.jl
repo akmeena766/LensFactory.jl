@@ -23,12 +23,13 @@ end
 """
 function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV) where T <: RV
    κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+   κs = κs * θs^2 * 0.5
 
    dx = (θx - θxc) / θs
    dy = (θy - θyc) / θs
    dr = sqrt(dx^2 + dy^2)
 
-   ψ_up = ψ + κs * θs^2 * 0.5 * ((dr^2 - 1.0) * F_x(dr)^2 + log(0.5 * dr)^2)
+   ψ_up = ψ + κs * ((dr^2 - 1.0) * F_x(dr)^2 + log(0.5 * dr)^2)
    return ψ_up
 end
 
@@ -37,6 +38,7 @@ end
 """
 function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV) where T <: ROA
    κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+   κs = κs * θs^2 * 0.5
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -44,7 +46,7 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV
          dx = (θx[i, j] - θxc) / θs
          dy = (θy[i, j] - θyc) / θs
          dr = sqrt(dx^2 + dy^2)
-         ψ[i, j] = ψ[i, j] + κs * θs^2 * 0.5 * ((dr^2 - 1.0) * F_x(dr)^2 + log(0.5 * dr)^2)
+         ψ[i, j] = ψ[i, j] + κs * ((dr^2 - 1.0) * F_x(dr)^2 + log(0.5 * dr)^2)
       end
    end
 end
@@ -55,6 +57,7 @@ end
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV) where T <: RV
    κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+   κs = κs * θs
 
    dx = (θx - θxc) / θs
    dy = (θy - θyc) / θs
@@ -62,8 +65,8 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
 
    α_r = (F_x(dr) + log(0.5 * dr)) / dr
 
-   ψx_up = ψx + κs * θs * α_r * dx / dr
-   ψy_up = ψy + κs * θs * α_r * dy / dr
+   ψx_up = ψx + κs * α_r * dx / dr
+   ψy_up = ψy + κs * α_r * dy / dr
    return ψx_up, ψy_up
 end
 
@@ -72,6 +75,7 @@ end
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV) where T <: ROA
    κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+   κs = κs * θs
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -82,8 +86,8 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
          
          α_r = (F_x(dr) + log(0.5 * dr)) / dr
 
-         ψx[i, j] = ψx[i, j] + κs * θs * α_r * dx / dr
-         ψy[i, j] = ψy[i, j] + κs * θs * α_r * dy / dr
+         ψx[i, j] = ψx[i, j] + κs * α_r * dx / dr
+         ψy[i, j] = ψy[i, j] + κs * α_r * dy / dr
       end
    end
 end
@@ -94,7 +98,7 @@ end
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV) where T <: RV
    κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
-
+   
    dx = (θx - θxc) / θs
    dy = (θy - θyc) / θs
    dr = sqrt(dx^2 + dy^2)
