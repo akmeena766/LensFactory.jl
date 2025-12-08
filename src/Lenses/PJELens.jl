@@ -22,9 +22,14 @@ function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, 
    sq = θs / sqrt(q)
    aq = θt / sqrt(q)
 
+   # Pre-compute angles
+   pa_rad = deg2rad(pa)
+   cos_pa = cos(pa_rad)
+   sin_pa = sin(pa_rad)
+
    # Coordinate in the rotated frame
-   dx_r = + (θx - θxc) * cos(deg2rad(pa)) + (θy - θyc) * sin(deg2rad(pa))
-   dy_r = - (θx - θxc) * sin(deg2rad(pa)) + (θy - θyc) * cos(deg2rad(pa))
+   dx_r = + (θx - θxc) * cos_pa + (θy - θyc) * sin_pa
+   dy_r = - (θx - θxc) * sin_pa + (θy - θyc) * cos_pa
    ds_r = sqrt(q^2 * (sq^2 + dx_r^2) + dy_r^2)
    da_r = sqrt(q^2 * (aq^2 + dx_r^2) + dy_r^2)
 
@@ -56,12 +61,17 @@ function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, 
    sq = θs / sqrt(q)
    aq = θt / sqrt(q)
 
+   # Pre-compute angles
+   pa_rad = deg2rad(pa)
+   cos_pa = cos(pa_rad)
+   sin_pa = sin(pa_rad)
+
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
          # Coordinate in the rotated frame
-         dx_r = + (θx[i, j] - θxc) * cos(deg2rad(pa)) + (θy[i, j] - θyc) * sin(deg2rad(pa))
-         dy_r = - (θx[i, j] - θxc) * sin(deg2rad(pa)) + (θy[i, j] - θyc) * cos(deg2rad(pa))
+         dx_r = + (θx[i, j] - θxc) * cos_pa + (θy[i, j] - θyc) * sin_pa
+         dy_r = - (θx[i, j] - θxc) * sin_pa + (θy[i, j] - θyc) * cos_pa
          ds_r = sqrt(q^2 * (sq^2 + dx_r^2) + dy_r^2)
          da_r = sqrt(q^2 * (aq^2 + dx_r^2) + dy_r^2)
 
@@ -95,9 +105,14 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV,
    sq = θs / sqrt(q)
    aq = θt / sqrt(q)
 
+   # Pre-compute angles
+   pa_rad = deg2rad(pa)
+   cos_pa = cos(pa_rad)
+   sin_pa = sin(pa_rad)
+
    # Coordinate in the rotated frame
-   dx_r = + (θx - θxc) * cos(deg2rad(pa)) + (θy - θyc) * sin(deg2rad(pa))
-   dy_r = - (θx - θxc) * sin(deg2rad(pa)) + (θy - θyc) * cos(deg2rad(pa))
+   dx_r = + (θx - θxc) * cos_pa + (θy - θyc) * sin_pa
+   dy_r = - (θx - θxc) * sin_pa + (θy - θyc) * cos_pa
    ds_r = sqrt(q^2 * (sq^2 + dx_r^2) + dy_r^2)
    da_r = sqrt(q^2 * (aq^2 + dx_r^2) + dy_r^2)
 
@@ -114,8 +129,8 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV,
    ψy_r = (bq * q / sqrt(1 - q^2)) * (ψy_r1 - ψy_r2)
 
    # Rotate back to original frame and update the values
-   ψx_up = ψx + ψx_r * cos(deg2rad(pa)) - ψy_r * sin(deg2rad(pa))
-   ψy_up = ψy + ψx_r * sin(deg2rad(pa)) + ψy_r * cos(deg2rad(pa))
+   ψx_up = ψx + ψx_r * cos_pa - ψy_r * sin_pa
+   ψy_up = ψy + ψx_r * sin_pa + ψy_r * cos_pa
    return ψx_up, ψy_up
 end
 
@@ -133,12 +148,18 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV,
    sq = θs / sqrt(q)
    aq = θt / sqrt(q)
 
+   # Pre-compute angles
+   pa_rad = deg2rad(pa)
+   cos_pa = cos(pa_rad)
+   sin_pa = sin(pa_rad)
+
+
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
          # Coordinate in the rotated frame
-         dx_r = + (θx[i, j] - θxc) * cos(deg2rad(pa)) + (θy[i, j] - θyc) * sin(deg2rad(pa))
-         dy_r = - (θx[i, j] - θxc) * sin(deg2rad(pa)) + (θy[i, j] - θyc) * cos(deg2rad(pa))
+         dx_r = + (θx[i, j] - θxc) * cos_pa + (θy[i, j] - θyc) * sin_pa
+         dy_r = - (θx[i, j] - θxc) * sin_pa + (θy[i, j] - θyc) * cos_pa
          ds_r = sqrt(q^2 * (sq^2 + dx_r^2) + dy_r^2)
          da_r = sqrt(q^2 * (aq^2 + dx_r^2) + dy_r^2)
 
@@ -155,8 +176,8 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV,
          ψy_r = (bq * q / sqrt(1 - q^2)) * (ψy_r1 - ψy_r2)
 
          # Rotate back to original frame and update the values
-         ψx[i, j] = ψx[i, j] + ψx_r * cos(deg2rad(pa)) - ψy_r * sin(deg2rad(pa))
-         ψy[i, j] = ψy[i, j] + ψx_r * sin(deg2rad(pa)) + ψy_r * cos(deg2rad(pa))
+         ψx[i, j] = ψx[i, j] + ψx_r * cos_pa - ψy_r * sin_pa
+         ψy[i, j] = ψy[i, j] + ψx_r * sin_pa + ψy_r * cos_pa
       end
    end
 end
@@ -176,9 +197,16 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
    sq = θs / sqrt(q)
    aq = θt / sqrt(q)
 
+   # Pre-compute angles
+   pa_rad = deg2rad(pa)
+   cos_pa = cos(pa_rad)
+   sin_pa = sin(pa_rad)
+   sin_2pa = sin(2.0 * pa_rad)
+   cos_2pa = cos(2.0 * pa_rad)
+
    # Coordinate in the rotated frame
-   dx_r = + (θx - θxc) * cos(deg2rad(pa)) + (θy - θyc) * sin(deg2rad(pa))
-   dy_r = - (θx - θxc) * sin(deg2rad(pa)) + (θy - θyc) * cos(deg2rad(pa))
+   dx_r = + (θx - θxc) * cos_pa + (θy - θyc) * sin_pa
+   dy_r = - (θx - θxc) * sin_pa + (θy - θyc) * cos_pa
    ds_r = sqrt(q^2 * (sq^2 + dx_r^2) + dy_r^2)
    da_r = sqrt(q^2 * (aq^2 + dx_r^2) + dy_r^2)
 
@@ -200,9 +228,9 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
    ψxy_r = bq * q * (ψxy_r1 - ψxy_r2)
 
    # Rotate back to original frame and update the values
-   ψxx_up = ψxx + ψxx_r * cos(deg2rad(pa))^2 - ψxy_r * sin(deg2rad(2*pa)) + ψyy_r * sin(deg2rad(pa))^2
-   ψyy_up = ψyy + ψxx_r * sin(deg2rad(pa))^2 + ψxy_r * sin(deg2rad(2*pa)) + ψyy_r * cos(deg2rad(pa))^2
-   ψxy_up = ψxy + 0.5 * sin(deg2rad(2*pa)) * (ψxx_r - ψyy_r) + cos(deg2rad(2*pa)) * ψxy_r
+   ψxx_up = ψxx + ψxx_r * cos_pa^2 - ψxy_r * sin_2pa + ψyy_r * sin_pa^2
+   ψyy_up = ψyy + ψxx_r * sin_pa^2 + ψxy_r * sin_2pa + ψyy_r * cos_pa^2
+   ψxy_up = ψxy + 0.5 * sin_2pa * (ψxx_r - ψyy_r) + cos_2pa * ψxy_r
    return ψxx_up, ψyy_up, ψxy_up
 end
 
@@ -220,12 +248,19 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
    sq = θs / sqrt(q)
    aq = θt / sqrt(q)
 
+   # Pre-compute angles
+   pa_rad = deg2rad(pa)
+   cos_pa = cos(pa_rad)
+   sin_pa = sin(pa_rad)
+   sin_2pa = sin(2.0 * pa_rad)
+   cos_2pa = cos(2.0 * pa_rad)
+
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
          # Coordinate in the rotated frame
-         dx_r = + (θx[i, j] - θxc) * cos(deg2rad(pa)) + (θy[i, j] - θyc) * sin(deg2rad(pa))
-         dy_r = - (θx[i, j] - θxc) * sin(deg2rad(pa)) + (θy[i, j] - θyc) * cos(deg2rad(pa))
+         dx_r = + (θx[i, j] - θxc) * cos_pa + (θy[i, j] - θyc) * sin_pa
+         dy_r = - (θx[i, j] - θxc) * sin_pa + (θy[i, j] - θyc) * cos_pa
          ds_r = sqrt(q^2 * (sq^2 + dx_r^2) + dy_r^2)
          da_r = sqrt(q^2 * (aq^2 + dx_r^2) + dy_r^2)
 
@@ -247,9 +282,9 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
          ψxy_r = bq * q * (ψxy_r1 - ψxy_r2)
 
          # Rotate back to original frame and update the values
-         ψxx[i, j] = ψxx[i, j] + ψxx_r * cos(deg2rad(pa))^2 - ψxy_r * sin(deg2rad(2*pa)) + ψyy_r * sin(deg2rad(pa))^2
-         ψyy[i, j] = ψyy[i, j] + ψxx_r * sin(deg2rad(pa))^2 + ψxy_r * sin(deg2rad(2*pa)) + ψyy_r * cos(deg2rad(pa))^2
-         ψxy[i, j] = ψxy[i, j] + 0.5 * sin(deg2rad(2*pa)) * (ψxx_r - ψyy_r) + cos(deg2rad(2*pa)) * ψxy_r
+         ψxx[i, j] = ψxx[i, j] + ψxx_r * cos_pa^2 - ψxy_r * sin_2pa + ψyy_r * sin_pa^2
+         ψyy[i, j] = ψyy[i, j] + ψxx_r * sin_pa^2 + ψxy_r * sin_2pa + ψyy_r * cos_pa^2
+         ψxy[i, j] = ψxy[i, j] + 0.5 * sin_2pa * (ψxx_r - ψyy_r) + cos_2pa * ψxy_r
       end
    end
 end
