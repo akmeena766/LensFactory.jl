@@ -394,25 +394,25 @@ end
 #---------------------- Composite and Multi-plane lens constructors -------------------------------#
 # Dictionary to map lens types to their initialization functions and arguments
 const lens_init_functions = Dict{Symbol, Function}(
-   :PointLens       =>   (c -> init_PointLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass)),
-   :PlummerLens     =>   (c -> init_PlummerLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_s=c.x_s)),
-   :SISLens         =>   (c -> init_SISLens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d)),
-   :NSISPLens       =>   (c -> init_NSISPLens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s)),
-   :NSISMDLens      =>   (c -> init_NSISMDLens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s)),
-   :GaussianLens    =>   (c -> init_GaussianLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_s=c.x_s)),
-   :SersicLens      =>   (c -> init_SersicLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_e=c.x_e, n=c.n)),
-   :ExternalEffects =>   (c -> init_ExternalEffects(kappa=c.kappa, gamma1=c.gamma1, gamma2=c.gamma2)),
-   :PIEPLens        =>   (c -> init_PIEPLens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s, eps=c.eps, pa=c.pa)),
-   :SIELens         =>   (c -> init_SIELens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s, eps=c.eps, pa=c.pa)),
-   :PJELens         =>   (c -> init_PJELens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s, x_t=c.x_t, eps=c.eps, pa=c.pa)),
-   :HernquistLens   =>   (c -> init_HernquistLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_e=c.x_e)),
-   :NFWLens         =>   (c -> init_NFWLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, x_s=c.x_s, rho_s=c.rho_s)),
-   :tNFWLens        =>   (c -> init_tNFWLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, x_s=c.x_s, x_t=c.x_t, rho_s=c.rho_s)),
-   :gNFWLens        =>   (c -> init_gNFWLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, x_s=c.x_s, rho_s=c.rho_s, n=c.n)),
-   :EinastoLens     =>   (c -> init_EinastoLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, x_s=c.x_s, rho_s=c.rho_s, n=c.n)),
-   :MultiPlummerLens =>  (c -> init_MultiPlummerLens(D_d=c.D_d, n=c.n, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_s=c.x_s)),
+   :PointLens         => (c -> init_PointLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass)),
+   :PlummerLens       => (c -> init_PlummerLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_s=c.x_s)),
+   :SISLens           => (c -> init_SISLens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d)),
+   :NSISPLens         => (c -> init_NSISPLens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s)),
+   :NSISMDLens        => (c -> init_NSISMDLens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s)),
+   :GaussianLens      => (c -> init_GaussianLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_s=c.x_s)),
+   :SersicLens        => (c -> init_SersicLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_e=c.x_e, n=c.n)),
+   :ExternalEffects   => (c -> init_ExternalEffects(kappa=c.kappa, gamma1=c.gamma1, gamma2=c.gamma2)),
+   :PIEPLens          => (c -> init_PIEPLens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s, eps=c.eps, pa=c.pa)),
+   :SIELens           => (c -> init_SIELens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s, eps=c.eps, pa=c.pa)),
+   :PJELens           => (c -> init_PJELens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s, x_t=c.x_t, eps=c.eps, pa=c.pa)),
+   :HernquistLens     => (c -> init_HernquistLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_e=c.x_e)),
+   :NFWLens           => (c -> init_NFWLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, x_s=c.x_s, rho_s=c.rho_s)),
+   :tNFWLens          => (c -> init_tNFWLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, x_s=c.x_s, x_t=c.x_t, rho_s=c.rho_s)),
+   :gNFWLens          => (c -> init_gNFWLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, x_s=c.x_s, rho_s=c.rho_s, n=c.n)),
+   :EinastoLens       => (c -> init_EinastoLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, x_s=c.x_s, rho_s=c.rho_s, n=c.n)),
+   :MultiPlummerLens  => (c -> init_MultiPlummerLens(D_d=c.D_d, n=c.n, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_s=c.x_s)),
    :MultiGaussianLens => (c -> init_MultiGaussianLens(D_d=c.D_d, n=c.n, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_s=c.x_s)),
-   :MultiPJELens     =>  (c -> init_MultiPJELens(n=c.n, x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s, x_t=c.x_t, eps=c.eps, pa=c.pa))
+   :MultiPJELens      => (c -> init_MultiPJELens(n=c.n, x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s, x_t=c.x_t, eps=c.eps, pa=c.pa))
    )
 # Constructor for composite lens
 function init_CompositeLens(lens::Vector{<:NamedTuple})
