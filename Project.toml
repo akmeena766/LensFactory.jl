@@ -1,7 +1,7 @@
 name = "LensFactory"
 uuid = "e2630f5e-de23-4bea-bc0a-959d40375e7e"
 authors = ["Ashish K Meena <ashishmeena766@gmail.com>"]
-version = "0.0.3"
+version = "0.0.4"
 
 [deps]
 FITSIO = "525bcba6-941b-5504-bd06-fd0dc1a4d2eb"
