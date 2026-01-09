@@ -5,6 +5,26 @@ using LensFactory.Constants
 using Makie
 
 
+function LensFactory.Lenses.plot_sky(θx::Matrix{<:RV}, θy::Matrix{<:RV}; figure_size::NTuple{2, RV} = (500, 400), resolution::Int = 2)
+   # Initialize empty figure
+   fig = Figure(size=figure_size, figure_padding=15, fontsize=20, fonts=(; regular="Times New Roman"))
+
+   # create axis for the plot
+   ax = Axis(fig[1, 1])
+
+   # Set plot keywords
+   set_plotKws!(ax)
+
+   # Set axis labels and limits
+   ax.xlabel = L"\theta_1 \text{(in arcseconds)}"
+   ax.ylabel = L"\theta_2 \text{(in arcseconds)}"
+   xlims!(minimum(θx), maximum(θx))
+   ylims!(minimum(θy), maximum(θy))
+
+   return fig, ax
+end
+
+
 """
     LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::ROA, θy::ROA, adis::RV)
 
