@@ -5,6 +5,17 @@ using LensFactory.Constants
 using Makie
 
 
+"""
+    LensFactory.Lenses.plot_sky(θx::ROA, θy::ROA)
+
+# Additional keyword arguments and their default values
+- `figure_size::NTuple{2, RV} = (500, 400)` -- Figure size
+- `resolution::Int = 2` -- Resolution of the plot
+
+This function initializes a blank sky plot with specified axis labels and limits. The user can then 
+add additional elements to the plot as needed. The function returns the `figure` and `axis` objects 
+for further customization.
+"""
 function LensFactory.Lenses.plot_sky(θx::Matrix{<:RV}, θy::Matrix{<:RV}; figure_size::NTuple{2, RV} = (500, 400), resolution::Int = 2)
    # Initialize empty figure
    fig = Figure(size=figure_size, figure_padding=15, fontsize=20, fonts=(; regular="Times New Roman"))
