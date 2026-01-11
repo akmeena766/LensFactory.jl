@@ -9,17 +9,7 @@ module MultiPlane
 using ..Constants
 using ..Cosmology
 using ..Lenses
-
-include("../LensFactoryUtils/ContourFinder.jl")
-using .ContourFinder
-
-# Module to get intersection points of two contours
-include("../LensFactoryUtils/IntersectionFinder.jl")
-using .IntersectionFinder
-
-# Module for various polygon operations
-include("../LensFactoryUtils/PolygonOps.jl")
-using .PolygonOps
+using ..LFUtils
 
 # Various lensing function to export
 export get_deflection

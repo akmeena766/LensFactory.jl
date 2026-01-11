@@ -391,7 +391,7 @@ end
 end
 
 
-#---------------------- Composite and Multi-plane lens constructors -------------------------------#
+#---------------------- Composite and Multi-plane lens constructors --------------------------------
 # Dictionary to map lens types to their initialization functions and arguments
 const lens_init_functions = Dict{Symbol, Function}(
    :PointLens         => (c -> init_PointLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass)),
@@ -457,7 +457,7 @@ function init_MultiPlaneLens(lens::Vector{<:NamedTuple})
 end
 
 
-#---------------------- Parameter functions for various lenses ------------------------------------#
+#---------------------- Parameter functions for various lenses -------------------------------------
 # Parameters for NFW lens
 function parameter_NFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d::RV=NaN, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN)
    # Overdensity value
