@@ -329,9 +329,9 @@ end
 
 
 """
-    get_time_delay(lens::AbstractLens, θx::T, θy::T, z_d::RV, D_d::RV, adis::Float64, β::NTuple{2, RV}) where T <: RV --> RV
+    get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::RV, D_d::RV, β::NTuple{2, RV}) where T <: RV --> RV
 """
-function get_time_delay(lens::AbstractLens, θx::T, θy::T, z_d::RV, D_d, adis::Float64, β::NTuple{2, RV}) where T <: RV
+function get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::RV, D_d::RV, β::NTuple{2, RV}) where T <: RV
    # Constant multiplicative factor
    constant_factor =  (1.0 + z_d) / CONST_C * (D_d / adis) * ANGLE_ARCSEC^2
 
@@ -344,7 +344,7 @@ function get_time_delay(lens::AbstractLens, θx::T, θy::T, z_d::RV, D_d, adis::
 end
 
 """
-    get_time_delay(lens::AbstractLens, θx::T, θy::T, z_d::RV, D_d::RV, adis::Float64, β::NTuple{2, RV}) where T <: ROA --> ROA
+    get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::RV, D_d::RV, β::NTuple{2, RV}) where T <: ROA --> ROA
 Calculates the time delay for a given lens model. The corresponding expression is given as,
 ```math
 t_d(\\pmb{θ}; \\pmb{β}) = \\frac{1+z_l}{\\rm c} \\frac{D_d D_s}{D_{ds}} \\theta_0^2
@@ -352,7 +352,7 @@ t_d(\\pmb{θ}; \\pmb{β}) = \\frac{1+z_l}{\\rm c} \\frac{D_d D_s}{D_{ds}} \\thet
 ```
 where ``\\theta_0`` is normalizing angular unit.
 """
-function get_time_delay(lens::AbstractLens, θx::T, θy::T, z_d::RV, D_d::RV, adis::Float64, β::NTuple{2, RV}) where T <: ROA
+function get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::RV, D_d::RV, β::NTuple{2, RV}) where T <: ROA
    # Constant multiplicative factor
    constant_factor =  (1.0 + z_d) / CONST_C * (D_d / adis) * ANGLE_ARCSEC^2
 
