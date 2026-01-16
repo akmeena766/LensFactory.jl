@@ -25,4 +25,8 @@ export MultiPlane
 include("./Sources/Sources.jl")
 export Sources
 
+# Module for lens modeling
+include("./LensModel/LensModel.jl")
+export LensModel
+
 end

@@ -1,5 +1,9 @@
-# Accurate gnomonic (north up, east left)
-function gnomonic_offsets_arcsec(ra_ref, dec_ref, ra_cat, dec_cat)
+module AstrometricOps
+
+# --------------------------------------------------------------------------------------------------
+# Gnomonic projection offsets (north up, east left)
+# --------------------------------------------------------------------------------------------------
+function gnomonic_offsets_arcsec(ra_ref::Float64, dec_ref::Float64, ra_cat::Vector{Float64}, dec_cat::Vector{Float64})
    deg2rad = π / 180.0
    rad2as  = 180.0 * 3600.0 / π
 
@@ -18,4 +22,11 @@ function gnomonic_offsets_arcsec(ra_ref, dec_ref, ra_cat, dec_cat)
    y = @. +(cos(dec0)*sin(dec) - sin(dec0)*cos(dec)*cos(Δra)) / cosc
 
    return x .* rad2as, y .* rad2as
+end
+
+function gnomonic_offsets_arcsec(ra_ref::Float64, dec_ref::Float64, ra_cat::Float64, dec_cat::Float64)
+   x, y = gnomonic_offsets_arcsec(ra_ref, dec_ref, [ra_cat], [dec_cat])
+   return x[1], y[1]
+end
+
 end
