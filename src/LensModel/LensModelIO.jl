@@ -7,16 +7,8 @@ abstract type AbstractMCMCConfig <: AbstractLensConfig end
 
 
 # --------------------------------------------------------------------------------------------------
-# ---------------- Abstract type: Lens model -------------------------------------------------------
+# ---------------- Abstract type: Observation ------------------------------------------------------
 # --------------------------------------------------------------------------------------------------
-@kwdef struct Parameter <: AbstractLensConfig
-   owner::Symbol
-   name::Symbol
-   refer::Float64
-   lower::Float64
-   upper::Float64
-end
-
 @kwdef struct Observation <: AbstractLensConfig
    modeler::String
    lens::String
@@ -26,6 +18,22 @@ end
    FOV::NTuple{2,Float64}
 end
 
+# --------------------------------------------------------------------------------------------------
+# ---------------- Abstract type: Parameter --------------------------------------------------------
+# --------------------------------------------------------------------------------------------------
+@kwdef struct Parameter <: AbstractLensConfig
+   owner::Symbol
+   name::Symbol
+   refer::Float64
+   lower::Float64
+   upper::Float64
+   key::Tuple{Symbol, Symbol} = (owner, name)
+end
+
+
+# --------------------------------------------------------------------------------------------------
+# ---------------- Abstract type: Source model -------------------------------------------------------
+# --------------------------------------------------------------------------------------------------
 @kwdef struct Knot <: AbstractLensConfig
    x::Vector{Float64}
    σx::Vector{Float64}
@@ -360,6 +368,7 @@ function _source!(dict::Dict, cosmo::Cosmology.AbstractCosmology, params::Vector
 
    # Run over sources
    sources = Vector{Source}(undef, n_source)
+   adis_ref = Vector{Float64}(undef, n_source)
    for i in 1:n_source
       source_id = Symbol(:source, i)
       individual_source_dict = source_dict[source_id]
@@ -371,6 +380,9 @@ function _source!(dict::Dict, cosmo::Cosmology.AbstractCosmology, params::Vector
       D_ds = Cosmology.angular_diameter_distance(cosmo, z_d, r)
       D_os = Cosmology.angular_diameter_distance(cosmo, 0.0, r)
       adis_r = D_ds / D_os
+      
+      # Store reference adis
+      adis_ref[i] = adis_r
 
       if l == u
          adis_l = adis_r
