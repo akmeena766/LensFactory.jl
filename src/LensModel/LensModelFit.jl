@@ -45,32 +45,48 @@ function transform_params!(pvals::Dict{Tuple{Symbol,Symbol}, Float64})
 end
 
 
-# # --------------------------------------------------------------------------------------------------
-# # Build lens model from physical paramerters
-# # --------------------------------------------------------------------------------------------------
-# function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, Float64})
-#    n_lens = length(model.lens_model.lenses)
-#    lens_vector = NamedTuple[]
+# --------------------------------------------------------------------------------------------------
+# Build lens model from physical paramerters
+# --------------------------------------------------------------------------------------------------
+function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, Float64})
+   # Determine the number of components from the lens model container
+   n_lens = length(model.lens_model._components_)
+   println(pvals)
+   erro("AAA")
+   # Initialize an empty vector to store lens parameters
+   lens_vector = NamedTuple[]
 
-#    for i in 1:n_lens
-#       lens_id = Symbol(:lens, i)
-#       lens_params = Dict{Symbol, Union{Symbol, Float64}}()
+   # Iterate over each lens component
+   for i in 1:n_lens
+      lens_id = Symbol(:lens, i)
+      lens_params = Dict{Symbol, Union{Symbol, Float64}}()
       
-#       for (k, v) in pvals
-#          if k[1] == lens_id
-#             lens_params[k[2]] = v
-#          end
-#       end
-      
-#    end
-# end
+      for (k, v) in pvals
+         if k[1] == lens_id
+            lens_params[k[2]] = v
+         end
+      end
+      push!(lens_vector, (; lens_params...))
+   end
+   return Lenses.init_CompositeLens(lens_vector)
+end
 
 
 # --------------------------------------------------------------------------------------------------
 # Log-likelihood
 # --------------------------------------------------------------------------------------------------
-function log_likelihood(model::ModelConfig, θ::Vector{Float64})
+function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tuple{Symbol,Symbol}, Float64})
+   # 1. Merge θ (free parameters) with param_ref (fixed parameters)
+   # param_dict is a utility that creates a full parameter mapping 
+   pvals = LensModelUtils.param_dict(model, θ, param_ref)
+   
+   # Transform parameters (from sample space to physical space)
+   transform_params!(pvals)
 
+   # Build lens model
+   lens_model = build_lens(model, pvals)
+
+   return 0.0
 end
 
 
@@ -78,12 +94,8 @@ end
 # Log-prior
 # --------------------------------------------------------------------------------------------------
 function log_prior(model::ModelConfig, θ::Vector{Float64})
-   @inbounds for (j, i) in enumerate(model.free_param_idxs)
-      p = model.parameters[i]
-      x = θ[j]
-      if x < p.lower || x > p.upper
-         return -Inf
-      end
+   @inbounds for (x, p) in zip(θ, free_parameters(model))
+      (x < p.lower || x > p.upper) && return -Inf
    end
    return 0.0
 end
@@ -92,27 +104,43 @@ end
 # --------------------------------------------------------------------------------------------------
 # Posterior (may return -Inf)
 # --------------------------------------------------------------------------------------------------
-function log_posterior(model::ModelConfig, θ::Vector{Float64})
-   log_prior(model, θ) + log_likelihood(model, θ)
+function log_posterior(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tuple{Symbol,Symbol}, Float64})
+   # Calculate log-prior (returns -Inf if any parameter is out of bounds)
+   lp = log_prior(model, θ)
+   if lp == -Inf
+      return -Inf
+   end
+
+   # Calculate log-likelihood
+   ll = log_likelihood(model, θ, param_ref)
+   
+   # Return log-posterior
+   return lp + ll
 end
 
 
 # --------------------------------------------------------------------------------------------------
 # Optimizer-safe objective (finite value)
 # --------------------------------------------------------------------------------------------------
-function objective(model::ModelConfig, θ::Vector{Float64})
+function objective(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tuple{Symbol,Symbol}, Float64})
+   # Calculate log-prior (returns a large negative value if any parameter is out of bounds)
    lp = log_prior(model, θ)
    if lp == -Inf
       return -1e300
    end
-   return lp + log_likelihood(model, θ)
+
+   # Calculate log-likelihood
+   ll = log_likelihood(model, θ, param_ref)
+   
+   # Return negative log-posterior
+   return - (lp + ll)
 end
 
 
 # --------------------------------------------------------------------------------------------------
 # Run Optimizer
 # --------------------------------------------------------------------------------------------------
-function run_optimizer(model::ModelConfig, opt::OptimizerConfig, cfg::NMConfig, verbose::Bool)
+function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol}, Float64}, opt::OptimizerConfig, cfg::NMConfig, verbose::Bool)
    θ_initial = θ_initializer(model)
 
    best_θ   = nothing
@@ -122,12 +150,13 @@ function run_optimizer(model::ModelConfig, opt::OptimizerConfig, cfg::NMConfig, 
    converged_results = []
 
    if verbose
-      println("Running optimizer...")
+      println("Running Nelder-Mead optimizer...")
    end
    for θ0 in θ_initial
       θ = copy(θ0)
 
-      θ_opt, fmax, _, _, converged = nmsmax(x -> objective(model, x), θ; tol = cfg.tolerance, max_its = cfg.max_iter)
+      # Call optimizer
+      θ_opt, fmax, _, _, converged = nmsmax(x -> objective(model, x, param_ref), θ; tol = cfg.tolerance, max_its = cfg.max_iter)
 
       # Process only if the simplex size reached tolerance
       if converged
@@ -154,11 +183,9 @@ function run_optimizer(model::ModelConfig, opt::OptimizerConfig, cfg::NMConfig, 
    
    # Print statistics
    if verbose
-      println("Optimization Summary: Total Runs | Converged | Same Best | Best LogL")
-      println("Values:               $total_runs | 
-                                 $total_converged | 
-                                 $same_best_count | 
-                                 $(total_converged > 0 ? round(best_val, digits=4) : "N/A")")
+      w = 12
+      println("Optimization Summary: ", rpad("Total Runs", w), "| ", rpad("Converged", w), "| ", rpad("Same Best", w), "| ", rpad("Best LogL", w))
+      println("Values:               ", rpad(total_runs, w), "| ", rpad(total_converged, w), "| ", rpad(same_best_count, w), "| ", rpad(total_converged > 0 ? round(best_val, digits=4) : "N/A", w))
    end
 
    return best_θ, best_val
@@ -172,7 +199,7 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
    # Initial vectors in free-parameter space
    θ_initial = LensModelUtils.θ_initializer(model)
 
-   return run_optimizer(model, opt, opt.config, verbose)
+   return run_optimizer(model, param_ref, opt, opt.config, verbose)
 end
 
 

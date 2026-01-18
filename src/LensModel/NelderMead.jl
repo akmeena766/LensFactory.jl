@@ -63,7 +63,7 @@ function nmsmax(fun, x; trace=false, initial_simplex=0, target_f=Inf, max_its=In
    k = 0; m = 0;
 
    # Set up initial simplex.
-   scale = max(norm(x0,Inf),1);
+   scale = max(maximum(abs.(x0)), 1);
    if initial_simplex == 0
       # Regular simplex - all edges have same length.
       # Generated from construction given in reference [18, pp. 80-81] of [1].
@@ -131,7 +131,7 @@ function nmsmax(fun, x; trace=false, initial_simplex=0, target_f=Inf, max_its=In
 
       # Stopping Test 4 - converged?   This is test (4.3) in [1].
       v1 = V[:,1];
-      size_simplex = norm(V[:,2:n+1]-v1[:,ones(Int,n)],1) / max(1, norm(v1,1));
+      size_simplex = sum(abs.(V[:, 2:n+1] .- v1)) / max(1.0, sum(abs.(v1)));
       if size_simplex <= tol
          msg = "Simplex size $(round(size_simplex, sigdigits=5)) <= $(round(tol, sigdigits=5))...quitting\n"
          converged = true
@@ -143,7 +143,7 @@ function nmsmax(fun, x; trace=false, initial_simplex=0, target_f=Inf, max_its=In
       #       Changed each `fr < f[1]' type test to `>' for maximization
       #       and re-ordered function values after sort.
 
-      vbar = (sum(V[:,1:n]',1)/n)';  # Mean value
+      vbar = sum(V[:, 1:n], dims=2) ./ n;  # Mean value
       vr = (1 + alpha)*vbar - alpha*V[:,n+1]; x[:] = vr; fr = fun(x);
       nf = nf + 1;
       vk = vr;  fk = fr; how = "reflect, ";
