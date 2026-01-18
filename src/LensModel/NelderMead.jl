@@ -3,44 +3,44 @@ module NelderMead
 
 export nmsmax
 
-"""
-    nmsmax(fun, x[, trace = true, initial_simplex = 0, target_f = Inf, max_its = Inf, max_evals = Inf, tol = 1e-3])
+# """
+#     nmsmax(fun, x[, trace = true, initial_simplex = 0, target_f = Inf, max_its = Inf, max_evals = Inf, tol = 1e-3])
 
-Nelder-Mead simplex method for direct search optimization.
+# Nelder-Mead simplex method for direct search optimization.
 
-This function attempts to maximize the function `fun`, using the
-starting vector `x`. The Nelder-Mead direct search method is used.
+# This function attempts to maximize the function `fun`, using the
+# starting vector `x`. The Nelder-Mead direct search method is used.
 
-Adaption of the original *MATLAB* source by Nick Higham to *Julia*.
+# Adaption of the original *MATLAB* source by Nick Higham to *Julia*.
 
-# Output arguments:
-      `x`    = vector yielding largest function value found,
-      `fmax` = function value at `x`,
-      `nf`   = number of function evaluations,
-      `its`  = number of iterations required.
+# # Output arguments:
+#       `x`    = vector yielding largest function value found,
+#       `fmax` = function value at `x`,
+#       `nf`   = number of function evaluations,
+#       `its`  = number of iterations required.
 
-# Parameters:
-The iteration is terminated when either
- - the relative size of the simplex is <= `tol`
-   (default `1e-3`),
- - max_evals function evaluations have been performed
-   (default `Inf`, i.e., no limit), or
- - a function value equals or exceeds `target_f`
-   (default `Inf`, i.e., no test on function values).
+# # Parameters:
+# The iteration is terminated when either
+#  - the relative size of the simplex is <= `tol`
+#    (default `1e-3`),
+#  - max_evals function evaluations have been performed
+#    (default `Inf`, i.e., no limit), or
+#  - a function value equals or exceeds `target_f`
+#    (default `Inf`, i.e., no test on function values).
 
-The form of the initial simplex is determined by initial_simplex:
- - `initial_simplex = 0`: regular simplex (sides of equal length, the default)
- - `initial_simplex = 1`: right-angled simplex.
-Progress of the iteration is not shown if `trace = true` (default `false`).
+# The form of the initial simplex is determined by initial_simplex:
+#  - `initial_simplex = 0`: regular simplex (sides of equal length, the default)
+#  - `initial_simplex = 1`: right-angled simplex.
+# Progress of the iteration is not shown if `trace = true` (default `false`).
 
-# References:
- - N. J. Higham. The Matrix Computation Toolbox.
-   http://www.ma.man.ac.uk/~higham/mctoolbox.
- - N. J. Higham, Optimization by direct search in matrix computations,
-   SIAM J. Matrix Anal. Appl, 14(2): 317-333, 1993.
- - C. T. Kelley, Iterative Methods for Optimization, Society for Industrial
-   and Applied Mathematics, Philadelphia, PA, 1999.
-"""
+# # References:
+#  - N. J. Higham. The Matrix Computation Toolbox.
+#    http://www.ma.man.ac.uk/~higham/mctoolbox.
+#  - N. J. Higham, Optimization by direct search in matrix computations,
+#    SIAM J. Matrix Anal. Appl, 14(2): 317-333, 1993.
+#  - C. T. Kelley, Iterative Methods for Optimization, Society for Industrial
+#    and Applied Mathematics, Philadelphia, PA, 1999.
+# """
 function nmsmax(fun, x; trace=false, initial_simplex=0, target_f=Inf, max_its=Inf, max_evals=Inf, tol=1e-3)
    x0 = x[:];  # Work with column vector internally.
    n = length(x0);

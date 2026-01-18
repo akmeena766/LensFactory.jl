@@ -139,6 +139,7 @@ end
 
 @kwdef struct SamplerConfig <: AbstractLensConfig
    scheme::Symbol = :SourcePlane
+   verbose::Bool = true
    optimizer::Union{Nothing, AbstractOptimizerConfig} = nothing
    mcmc::Union{Nothing, AbstractMCMCConfig} = nothing
 end
@@ -590,6 +591,9 @@ function _sampling!(dict::Dict)
    # Get sampler details
    _require(sampling_dict, :scheme)
 
+   # Get verbose flag
+   _optional!(sampling_dict, :verbose, true)
+
    # Get optimizer details
    optimizer_params = _optimizer!(sampling_dict)
 
@@ -598,6 +602,7 @@ function _sampling!(dict::Dict)
 
    return SamplerConfig(
          scheme = Symbol(sampling_dict[:scheme]),
+         verbose = sampling_dict[:verbose],
          optimizer = optimizer_params,
          mcmc = mcmc_params
       )

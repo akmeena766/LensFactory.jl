@@ -78,7 +78,9 @@ end
 # Log-prior
 # --------------------------------------------------------------------------------------------------
 function log_prior(model::ModelConfig, θ::Vector{Float64})
-   for (x, p) in zip(θ, free_parameters(model))
+   @inbounds for (j, i) in enumerate(model.free_param_idxs)
+      p = model.parameters[i]
+      x = θ[j]
       if x < p.lower || x > p.upper
          return -Inf
       end
@@ -91,7 +93,7 @@ end
 # Posterior (may return -Inf)
 # --------------------------------------------------------------------------------------------------
 function log_posterior(model::ModelConfig, θ::Vector{Float64})
-    log_prior(model, θ) + log_likelihood(model, θ)
+   log_prior(model, θ) + log_likelihood(model, θ)
 end
 
 
@@ -99,16 +101,18 @@ end
 # Optimizer-safe objective (finite value)
 # --------------------------------------------------------------------------------------------------
 function objective(model::ModelConfig, θ::Vector{Float64})
-    lp = log_prior(model, θ)
-    lp == -Inf && return -1e300
-    return lp + log_likelihood(model, θ)
+   lp = log_prior(model, θ)
+   if lp == -Inf
+      return -1e300
+   end
+   return lp + log_likelihood(model, θ)
 end
 
 
 # --------------------------------------------------------------------------------------------------
 # Run Optimizer
 # --------------------------------------------------------------------------------------------------
-function run_optimizer(model::ModelConfig, opt::OptimizerConfig, cfg::NMConfig)
+function run_optimizer(model::ModelConfig, opt::OptimizerConfig, cfg::NMConfig, verbose::Bool)
    θ_initial = θ_initializer(model)
 
    best_θ   = nothing
@@ -117,7 +121,9 @@ function run_optimizer(model::ModelConfig, opt::OptimizerConfig, cfg::NMConfig)
    # Store results to check for convergence
    converged_results = []
 
-   println("Running optimizer...")
+   if verbose
+      println("Running optimizer...")
+   end
    for θ0 in θ_initial
       θ = copy(θ0)
 
@@ -147,16 +153,18 @@ function run_optimizer(model::ModelConfig, opt::OptimizerConfig, cfg::NMConfig)
    end
    
    # Print statistics
-   println("Optimization Summary: Total Runs | Converged | Same Best | Best LogL")
-   println("Values:               $total_runs | 
+   if verbose
+      println("Optimization Summary: Total Runs | Converged | Same Best | Best LogL")
+      println("Values:               $total_runs | 
                                  $total_converged | 
                                  $same_best_count | 
                                  $(total_converged > 0 ? round(best_val, digits=4) : "N/A")")
+   end
 
    return best_θ, best_val
 end
 
-function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},Float64})
+function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},Float64}, verbose::Bool)
    opt = model.sampler.optimizer
 
    opt === nothing && return nothing
@@ -164,7 +172,7 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
    # Initial vectors in free-parameter space
    θ_initial = LensModelUtils.θ_initializer(model)
 
-   return run_optimizer(model, opt, opt.config)
+   return run_optimizer(model, opt, opt.config, verbose)
 end
 
 
@@ -186,6 +194,7 @@ end
 function fit_model(model::ModelConfig)
    # Extract sampler
    sampler = model.sampler
+   verbose = sampler.verbose
    
    # Freeze reference once
    param_ref = Dict(p.key => p.refer for p in model.parameters)
@@ -195,7 +204,7 @@ function fit_model(model::ModelConfig)
 
    # Optimization
    if sampler.optimizer !== nothing
-      θ_start, _ = run_optimizer(model, param_ref)
+      θ_start, _ = run_optimizer(model, param_ref, verbose)
    else
       θ_start = θ_initializer(model)[1]
    end
