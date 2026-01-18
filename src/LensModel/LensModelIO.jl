@@ -24,6 +24,9 @@ export ModelConfig
 export Observation
 export Parameter
 export SourceModel
+export NMConfig
+export GDConfig
+export OptimizerConfig
 export SamplerConfig
 
 

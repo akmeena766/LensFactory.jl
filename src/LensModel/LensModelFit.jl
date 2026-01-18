@@ -14,6 +14,10 @@ using ..Lenses
 using ..LensModelIO
 using ..LensModelUtils
 
+include("./NelderMead.jl")
+using .NelderMead
+
+
 # --------------------------------------------------------------------------------------------------
 # Functions to export
 # --------------------------------------------------------------------------------------------------
@@ -62,40 +66,105 @@ end
 # end
 
 
-# # --------------------------------------------------------------------------------------------------
-# # Log-likelihood
-# # --------------------------------------------------------------------------------------------------
-# function log_likelihood(model::ModelConfig, θ::Vector{Float64})
+# --------------------------------------------------------------------------------------------------
+# Log-likelihood
+# --------------------------------------------------------------------------------------------------
+function log_likelihood(model::ModelConfig, θ::Vector{Float64})
 
-# end
+end
 
 
-# # --------------------------------------------------------------------------------------------------
-# # Log-prior
-# # --------------------------------------------------------------------------------------------------
-# function log_prior(model::ModelConfig, θ::Vector{Float64})
-#    for (x, p) in zip(θ, free_parameters(model))
-#       if x < p.lower || x > p.upper
-#          return -Inf
-#       end
-#    end
-#    return 0.0
-# end
+# --------------------------------------------------------------------------------------------------
+# Log-prior
+# --------------------------------------------------------------------------------------------------
+function log_prior(model::ModelConfig, θ::Vector{Float64})
+   for (x, p) in zip(θ, free_parameters(model))
+      if x < p.lower || x > p.upper
+         return -Inf
+      end
+   end
+   return 0.0
+end
+
+
+# --------------------------------------------------------------------------------------------------
+# Posterior (may return -Inf)
+# --------------------------------------------------------------------------------------------------
+function log_posterior(model::ModelConfig, θ::Vector{Float64})
+    log_prior(model, θ) + log_likelihood(model, θ)
+end
+
+
+# --------------------------------------------------------------------------------------------------
+# Optimizer-safe objective (finite value)
+# --------------------------------------------------------------------------------------------------
+function objective(model::ModelConfig, θ::Vector{Float64})
+    lp = log_prior(model, θ)
+    lp == -Inf && return -1e300
+    return lp + log_likelihood(model, θ)
+end
 
 
 # --------------------------------------------------------------------------------------------------
 # Run Optimizer
 # --------------------------------------------------------------------------------------------------
+function run_optimizer(model::ModelConfig, opt::OptimizerConfig, cfg::NMConfig)
+   θ_initial = θ_initializer(model)
+
+   best_θ   = nothing
+   best_val = -Inf
+
+   # Store results to check for convergence
+   converged_results = []
+
+   println("Running optimizer...")
+   for θ0 in θ_initial
+      θ = copy(θ0)
+
+      θ_opt, fmax, _, _, converged = nmsmax(x -> objective(model, x), θ; tol = cfg.tolerance, max_its = cfg.max_iter)
+
+      # Process only if the simplex size reached tolerance
+      if converged
+         push!(converged_results, (θ=copy(θ_opt), f=fmax))
+
+         # Update best parameters 
+         if fmax > best_val
+            best_val = fmax
+            best_θ   = copy(θ_opt)
+         end
+      end
+   end
+
+   # Statistics and consistency checks
+   total_runs = opt.max_runs
+   total_converged = length(converged_results)
+   same_best_count = 0
+   
+   for result in converged_results
+      if all(abs.(result.θ .- best_θ) .< opt.tolerance) && isapprox(result.f, best_val, atol=opt.tolerance)
+         same_best_count += 1
+      end
+   end
+   
+   # Print statistics
+   println("Optimization Summary: Total Runs | Converged | Same Best | Best LogL")
+   println("Values:               $total_runs | 
+                                 $total_converged | 
+                                 $same_best_count | 
+                                 $(total_converged > 0 ? round(best_val, digits=4) : "N/A")")
+
+   return best_θ, best_val
+end
+
 function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},Float64})
    opt = model.sampler.optimizer
+
    opt === nothing && return nothing
 
    # Initial vectors in free-parameter space
-   θ0 = LensModelUtils.θ_initializer(model)
-   println(θ0)
-   θ_best = nothing
-   ll_best = -Inf
-   return θ_best, ll_best   
+   θ_initial = LensModelUtils.θ_initializer(model)
+
+   return run_optimizer(model, opt, opt.config)
 end
 
 
@@ -127,6 +196,8 @@ function fit_model(model::ModelConfig)
    # Optimization
    if sampler.optimizer !== nothing
       θ_start, _ = run_optimizer(model, param_ref)
+   else
+      θ_start = θ_initializer(model)[1]
    end
    
    # # MCMC
