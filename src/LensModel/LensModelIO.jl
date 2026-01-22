@@ -23,7 +23,8 @@ export read_input
 export ModelConfig
 export Observation
 export Parameter
-export SourceModel
+export SourceConfig
+export LensConfig
 export NMConfig
 export GDConfig
 export OptimizerConfig
@@ -62,6 +63,17 @@ end
    key::Tuple{Symbol, Symbol} = (owner, name)
 end
 
+# --------------------------------------------------------------------------------------------------
+# Abstract type: Lens component
+# --------------------------------------------------------------------------------------------------
+@kwdef struct LensComponent <: AbstractLensConfig
+   owner::Symbol
+   name::Symbol
+end
+
+@kwdef struct LensConfig <: AbstractLensConfig
+   components::Vector{LensComponent}
+end
 
 # --------------------------------------------------------------------------------------------------
 # Abstract type: Source model
@@ -77,7 +89,7 @@ end
    knots::Vector{Knot}
 end
 
-@kwdef struct SourceModel <: AbstractLensConfig
+@kwdef struct SourceConfig <: AbstractLensConfig
    sources::Vector{Source}
 end
 
@@ -151,8 +163,8 @@ end
 @kwdef struct ModelConfig <: AbstractLensConfig
    observation::Observation
    cosmology::Cosmology.AbstractCosmology
-   lens_model::Lenses.AbstractLens
-   source_model::SourceModel
+   lens_config::LensConfig
+   source_config::SourceConfig
    parameters::Vector{Parameter}
    free_param_idxs::Vector{Int64}
    sampler::SamplerConfig
@@ -310,72 +322,68 @@ end
 # ---------------- Read Lens Model -----------------------------------------------------------------
 # --------------------------------------------------------------------------------------------------
 function _lensmodel!(dict::Dict, params::Vector{Parameter})
-   lens_model_dict = dict[:lens_model]
+   lens_dict = dict[:lens_model]
    
    # Check if we do single or multiplane lensing. Default: single plane
-   _optional!(lens_model_dict, :multiplane, false)
+   _optional!(lens_dict, :multiplane, false)
    
    # Make sure that total number of lenses is greater than zero
-   _require(lens_model_dict, :total_lenses)
-   if lens_model_dict[:total_lenses] <= 0
+   _require(lens_dict, :total_lenses)
+   if lens_dict[:total_lenses] <= 0
       error("Total number of lenses must be greater than zero.")
    end
 
    # Construct a composite lens using initial values
-   n_lenses = lens_model_dict[:total_lenses]
-   lens_vector = NamedTuple[]
+   n_lenses = lens_dict[:total_lenses]
 
    # Reference point
    ref_ra  = dict[:observation][:reference][1]
    ref_dec = dict[:observation][:reference][2]
    use_ref = !(ref_ra == 0.0 && ref_dec == 0.0)
 
-   if lens_model_dict[:multiplane] == false
+   # Initialize lens name vector
+   lens_name = Vector{LensComponent}(undef, n_lenses)
+
+   # Single plane vs. multiplane lensing
+   if lens_dict[:multiplane] == false
+      
       # Single plane lensing
       for i in 1:n_lenses
          lens_id = Symbol(:lens, i)
-         lens_dict = lens_model_dict[lens_id]
+         indi_lens_dict = lens_dict[lens_id]
 
-         # Initialize lens parameter Dict
-         lens_params = Dict{Symbol, Union{Symbol, Float64}}()
-         lens_params[:lens] = Symbol(lens_dict[:lens])
+         # Store lens model name in lens_name vector
+         lens_name[i] = LensComponent(owner=lens_id, name=Symbol(indi_lens_dict[:lens]))
 
          # --- Lens position parameters (always provided) ---
-         rx, lx, ux = _extract_param_range(lens_dict[:x_c])
-         ry, ly, uy = _extract_param_range(lens_dict[:y_c])
+         rx, lx, ux = _extract_param_range(indi_lens_dict[:x_c])
+         ry, ly, uy = _extract_param_range(indi_lens_dict[:y_c])
          
+         # Check if a valid (RA, Dec) is provided as reference or (0, 0) is used
+         # reference = (0, 0) ⇒ Lens positions are provided in arcseconds
+         # reference = (RA, Dec) ⇒ Lens positions are provided in RA and Dec. Conversion needed.
          if use_ref
             x_ref, y_ref = AstrometricOps.gnomonic_offsets_arcsec(ref_ra, ref_dec, rx, ry)
          else
             x_ref, y_ref = rx, ry
          end
 
-         # Add lens position parameters to the lens_params Dict
-         lens_params[:x_c] = x_ref
-         lens_params[:y_c] = y_ref
-
          # Add lens position parameters to the parameter vector
          push!(params, Parameter(owner=lens_id, name=:x_c, refer=x_ref, lower=lx, upper=ux))
          push!(params, Parameter(owner=lens_id, name=:y_c, refer=y_ref, lower=ly, upper=uy))
 
          # --- Remaining lens parameters ---
-         for (k, v) in lens_dict
+         for (k, v) in indi_lens_dict
             k ∈ (:lens, :x_c, :y_c) && continue
 
             # Extract parameter values and bounds
             r, l, u = _extract_param_range(v)
 
-            # Add reference parameter to the lens_params Dict
-            lens_params[k] = r
-
             # Add parameter to the reference, lower, and upper vectors
             push!(params, Parameter(owner=lens_id, name=k, refer=r, lower=l, upper=u))
          end
-         # Store lens tuple
-         push!(lens_vector, (; lens_params...))
       end
-      composite_lens = Lenses.init_CompositeLens(lens_vector)
-      return composite_lens
+      return LensConfig(lens_name)
    else
       # Multi-plane lensing not yet implemented
       error("Multi-plane lensing support is not yet implemented.")
@@ -459,7 +467,7 @@ function _source!(dict::Dict, cosmo::Cosmology.AbstractCosmology, params::Vector
 
       sources[i] = Source(knots=knots)
    end
-   return SourceModel(sources=sources)
+   return SourceConfig(sources=sources)
 end
 
 # --------------------------------------------------------------------------------------------------
@@ -625,10 +633,10 @@ function read_input(filename::AbstractString)
    cosmology = _cosmology!(dict, params)
 
    # Get lens model and its parameters
-   lens = _lensmodel!(dict, params)
+   lens_config = _lensmodel!(dict, params)
 
    # Get source model and its parameters
-   source = _source!(dict, cosmology, params)
+   source_config = _source!(dict, cosmology, params)
 
    # Get sampling details
    sampler = _sampling!(dict)
@@ -639,8 +647,8 @@ function read_input(filename::AbstractString)
    return ModelConfig(
       observation = observation,
       cosmology = cosmology,
-      lens_model = lens,
-      source_model = source,
+      lens_config = lens_config,
+      source_config = source_config,
       parameters = params,
       free_param_idxs = free_param_idxs,
       sampler = sampler

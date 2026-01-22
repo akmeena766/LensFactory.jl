@@ -9,7 +9,7 @@ using Random
 # LensFactory modules to use
 # --------------------------------------------------------------------------------------------------
 using ..LensModelIO
-
+using ..Lenses
 
 # --------------------------------------------------------------------------------------------------
 # Functions to export
@@ -118,5 +118,55 @@ end
    return (_get_adis(pvals, model.adis_ref[i], model.parameters[i].key) for i in eachindex(model.adis_ref))
 end
 
+
+function adis_current(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol},Float64})
+   nsrc = length(model.source_config.sources)
+   adis = Vector{Float64}(undef, nsrc)
+
+   @inbounds for i in 1:nsrc
+      key = (Symbol(:source, i), Symbol(:adis, i))
+      adis[i] = pvals[key]
+   end
+
+   return adis
+end
+
+function lens_quantities(model::ModelConfig, lens::Lenses.AbstractLens)
+   # Count the total number of knots in the lens model
+   n_knots = sum(length(s.knots) for s in model.source_config.sources)
+
+   # Allocate outputs (vector of vectors)
+   ψ_all  = Vector{Vector{Float64}}(undef, n_knots)
+   αx_all = Vector{Vector{Float64}}(undef, n_knots)
+   αy_all = Vector{Vector{Float64}}(undef, n_knots)
+   A_all  = Vector{Vector{NTuple{4,Float64}}}(undef, n_knots)
+   P_all  = Vector{Vector{Int64}}(undef, n_knots)
+
+   kid = 1
+   for src in model.source_config.sources
+      for knot in src.knots
+         # One image system knot positions
+         x = knot.x
+         y = knot.y
+
+         # Potential
+         ψ_all[kid] = Lenses.get_potential(lens, x, y)
+
+         # Deflection
+         αx_all[kid], αy_all[kid] = Lenses.get_deflection(lens, x, y)
+
+         # Deformation tensor
+         ψxx, ψyy, ψxy = Lenses.get_jacobian(lens, x, y)
+         A_all[kid] = @. (xx, xy, xy, yy)
+         
+         # Parity
+         P_all[kid] = sign.( @. ψxx * ψyy - ψxy * ψxy )
+         
+         # Increment
+         kid = kid + 1
+      end
+   end
+   return ψ_all, αx_all, αy_all, A_all, P_all
+end
 
 end
