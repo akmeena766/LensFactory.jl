@@ -167,7 +167,6 @@ function LogL_position(model::ModelConfig, adis::Vector{Float64}, αx_all::Vecto
       end
       sid = sid + 1
    end
-   error("Log(L): ",LogL)
    return logL
 end
 

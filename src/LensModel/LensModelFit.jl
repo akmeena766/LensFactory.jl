@@ -69,7 +69,7 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
    pos_ll = Likelihood.LogL_position(model, adis, αx_all, αy_all, A_all)
 
    
-   return 0.0
+   return pos_ll
 end
 
 
@@ -116,7 +116,7 @@ function objective(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tupl
    ll = log_likelihood(model, θ, param_ref)
    
    # Return negative log-posterior
-   return - (lp + ll)
+   return lp + ll
 end
 
 
