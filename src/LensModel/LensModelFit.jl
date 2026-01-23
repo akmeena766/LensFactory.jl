@@ -18,6 +18,7 @@ using ..Likelihood
 
 using ..NelderMead
 
+
 # --------------------------------------------------------------------------------------------------
 # Functions to export
 # --------------------------------------------------------------------------------------------------
@@ -46,45 +47,10 @@ end
 
 
 # --------------------------------------------------------------------------------------------------
-# Build lens model from physical paramerters
-# --------------------------------------------------------------------------------------------------
-function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, Float64})
-   # Determine the number of components from the lens model container
-   n_lens = length(model.lens_config.components)
-
-   # Initialize an empty vector to store lens parameters
-   lens_vector = NamedTuple[]
-
-   # Iterate over each lens component
-   components = model.lens_config.components
-
-   for i in 1:n_lens
-      lens_id = Symbol(:lens, i)
-      lens_params = Dict{Symbol, Union{Symbol, Float64}}()
-      
-      for (k, v) in enumerate(components)
-         if v.owner == lens_id
-            lens_params[:lens] = v.name
-         end
-      end
-
-      for (k, v) in pvals
-         if k[1] == lens_id
-            lens_params[k[2]] = v
-         end
-      end
-      push!(lens_vector, (; lens_params...))
-   end
-   return Lenses.init_CompositeLens(lens_vector)
-end
-
-
-# --------------------------------------------------------------------------------------------------
 # Log-likelihood
 # --------------------------------------------------------------------------------------------------
 function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tuple{Symbol,Symbol}, Float64})
-   # 1. Merge θ (free parameters) with param_ref (fixed parameters)
-   # param_dict is a utility that creates a full parameter mapping 
+   # Merge θ (free parameters) with param_ref (fixed parameters)
    pvals = LensModelUtils.param_dict(model, θ, param_ref)
 
    # Transform parameters (from sample space to physical space)
@@ -95,19 +61,16 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
 
    # Get angular-diameter distance ratios
    adis = LensModelUtils.adis_current(model, pvals)
-   
+
    # Calculate deflection at image positions
    ψ_all, αx_all, αy_all, A_all, P_all = LensModelUtils.lens_quantities(model, lens_model)
 
    # Calculate position likelihood
-   pos_ll = Likelihood.LogL_position(model, adis, αx_all, αy_all)
+   pos_ll = Likelihood.LogL_position(model, adis, αx_all, αy_all, A_all)
 
    
    return 0.0
 end
-
-
-
 
 
 # --------------------------------------------------------------------------------------------------

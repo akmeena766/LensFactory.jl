@@ -98,6 +98,10 @@ function θ_initializer(model::ModelConfig)
    end
 end
 
+
+# --------------------------------------------------------------------------------------------------
+# Parameter dictionary (θ -> pvals)
+# --------------------------------------------------------------------------------------------------
 function param_dict(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tuple{Symbol,Symbol}, Float64})
    # Make a copy of the reference dictionary
    pvals = copy(param_ref)
@@ -110,6 +114,10 @@ function param_dict(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tup
    return pvals
 end
 
+
+# --------------------------------------------------------------------------------------------------
+# Angular-diameter distance (pvals -> adis)
+# --------------------------------------------------------------------------------------------------
 @inline function _get_adis(pvals, adis_ref, key)
    return get(pvals, key, adis_ref)
 end
@@ -127,10 +135,47 @@ function adis_current(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol},Float
       key = (Symbol(:source, i), Symbol(:adis, i))
       adis[i] = pvals[key]
    end
-
    return adis
 end
 
+
+# --------------------------------------------------------------------------------------------------
+# Build lens model from physical paramerters
+# --------------------------------------------------------------------------------------------------
+function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, Float64})
+   # Determine the number of components from the lens model container
+   n_lens = length(model.lens_config.components)
+
+   # Initialize an empty vector to store lens parameters
+   lens_vector = NamedTuple[]
+
+   # Iterate over each lens component
+   components = model.lens_config.components
+
+   for i in 1:n_lens
+      lens_id = Symbol(:lens, i)
+      lens_params = Dict{Symbol, Union{Symbol, Float64}}()
+      
+      for (k, v) in enumerate(components)
+         if v.owner == lens_id
+            lens_params[:lens] = v.name
+         end
+      end
+
+      for (k, v) in pvals
+         if k[1] == lens_id
+            lens_params[k[2]] = v
+         end
+      end
+      push!(lens_vector, (; lens_params...))
+   end
+   return Lenses.init_CompositeLens(lens_vector)
+end
+
+
+# --------------------------------------------------------------------------------------------------
+# All lensing quantities needed for log-likelihood 
+# --------------------------------------------------------------------------------------------------
 function lens_quantities(model::ModelConfig, lens::Lenses.AbstractLens)
    # Count the total number of knots in the lens model
    n_knots = sum(length(s.knots) for s in model.source_config.sources)
@@ -139,7 +184,7 @@ function lens_quantities(model::ModelConfig, lens::Lenses.AbstractLens)
    ψ_all  = Vector{Vector{Float64}}(undef, n_knots)
    αx_all = Vector{Vector{Float64}}(undef, n_knots)
    αy_all = Vector{Vector{Float64}}(undef, n_knots)
-   A_all  = Vector{Vector{NTuple{4,Float64}}}(undef, n_knots)
+   A_all  = Vector{NTuple{4, Vector{Float64}}}(undef, n_knots)
    P_all  = Vector{Vector{Int64}}(undef, n_knots)
 
    kid = 1
@@ -157,7 +202,7 @@ function lens_quantities(model::ModelConfig, lens::Lenses.AbstractLens)
 
          # Deformation tensor
          ψxx, ψyy, ψxy = Lenses.get_jacobian(lens, x, y)
-         A_all[kid] = (ψxx, ψxy, ψxy, ψyy)
+         A_all[kid] = (ψxx, ψxy, copy(ψxy), ψyy)
          
          # Parity
          P_all[kid] = sign.( @. ψxx * ψyy - ψxy * ψxy )

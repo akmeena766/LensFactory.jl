@@ -48,7 +48,7 @@ end
    return _inverse(S11, S12, S21, S22)
 end
 
-@inline function _weighted_position(βx::Vector{Float64}, βy::Vector{Float64}, A::Vector{NTuple{4,Float64}}, σx::Vector{Float64}, σy::Vector{Float64}, θ::Vector{Float64}, n::Int64)
+@inline function _weighted_position(βx::Vector{Float64}, βy::Vector{Float64}, A::NTuple{4, Vector{Float64}}, σx::Vector{Float64}, σy::Vector{Float64}, θ::Vector{Float64}, n::Int64)
    # Weight matrix: W = Σᵢ μᵢᵀ * Sᵢ⁻¹ * μᵢ
    sumW11 = 0.0
    sumW12 = 0.0
@@ -108,7 +108,7 @@ end
 end
 
 
-function LogL_position(model::ModelConfig, adis::Vector{Float64}, αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, A_all::Vector{Vector{NTuple{4,Float64}}})
+function LogL_position(model::ModelConfig, adis::Vector{Float64}, αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, A_all::Vector{NTuple{4, Vector{Float64}}})
    # Initialize log-likelihood
    logL = 0.0
 
@@ -130,22 +130,24 @@ function LogL_position(model::ModelConfig, adis::Vector{Float64}, αx_all::Vecto
          σy = knot.σy
          θ  = knot.θ
          
+         # Number of images for this knot
+         n = length(x)
+
          # Deflection vector at the knot positions
          αx = @. adis_value * αx_all[kid]
          αy = @. adis_value * αy_all[kid]
-         
-         # Deformation tensor at the knot positions
-         A  = @. I4 - adis_value * A_all[kid]
 
-         # Number of images for this knot
-         n = length(x)
+         # Deformation tensor at the knot positions
+         for i in eachindex(A_all[kid])
+            @. A_all[kid][i] = I4[i] - (adis_value * A_all[kid][i])
+         end
 
          # Individual source positions using broadcasting
          βx_ind = @. x - αx
          βy_ind = @. y - αy
 
          # Get weighted source position (Section 4.1 in https://arxiv.org/pdf/astro-ph/0102340)
-         βx_model, βy_model, W_all = _weighted_position(βx_ind, βy_ind, A, σx, σy, θ, n)
+         βx_model, βy_model, W_all = _weighted_position(βx_ind, βy_ind, A_all[kid], σx, σy, θ, n)
 
          # Calculate knot log-likelihood
          χ² = 0.0
@@ -165,6 +167,7 @@ function LogL_position(model::ModelConfig, adis::Vector{Float64}, αx_all::Vecto
       end
       sid = sid + 1
    end
+   error("Log(L): ",LogL)
    return logL
 end
 
