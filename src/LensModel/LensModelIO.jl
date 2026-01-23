@@ -470,10 +470,10 @@ function _source!(dict::Dict, cosmo::Cosmology.AbstractCosmology, params::Vector
          ref_ra = dict[:observation][:reference][1]
          ref_dec = dict[:observation][:reference][2]
          if ref_ra == 0.0 || ref_dec == 0.0
-            knots[k] = Knot(x  = x, σx = σx, y  = y, σy = σy, θ = θ)
+            knots[k] = Knot(x  = x, σx = σx, y  = y, σy = σy, θ = deg2rad.(θ))
          else
             x_arcsec, y_arcsec = AstrometricOps.gnomonic_offsets_arcsec(ref_ra, ref_dec, x, y)
-            knots[k] = Knot(x  = x_arcsec, σx = σx, y  = y_arcsec, σy = σy, θ = θ)
+            knots[k] = Knot(x  = x_arcsec, σx = σx, y  = y_arcsec, σy = σy, θ = deg2rad.(θ))
          end
       end
 

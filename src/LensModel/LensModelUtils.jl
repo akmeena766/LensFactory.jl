@@ -157,7 +157,7 @@ function lens_quantities(model::ModelConfig, lens::Lenses.AbstractLens)
 
          # Deformation tensor
          ψxx, ψyy, ψxy = Lenses.get_jacobian(lens, x, y)
-         A_all[kid] = @. (xx, xy, xy, yy)
+         A_all[kid] = (ψxx, ψxy, ψxy, ψyy)
          
          # Parity
          P_all[kid] = sign.( @. ψxx * ψyy - ψxy * ψxy )
