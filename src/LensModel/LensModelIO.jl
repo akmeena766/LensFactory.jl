@@ -83,6 +83,7 @@ end
    σx::Vector{Float64}
    y::Vector{Float64}
    σy::Vector{Float64}
+   θ::Vector{Float64}
 end
 
 @kwdef struct Source <: AbstractLensConfig
@@ -445,23 +446,34 @@ function _source!(dict::Dict, cosmo::Cosmology.AbstractCosmology, params::Vector
       n_knot = individual_source_dict[:total_knots]
       knots = Vector{Knot}(undef, n_knot)
       for k in 1:n_knot
-         x = individual_source_dict[Symbol(:x, k)]
-         y = individual_source_dict[Symbol(:y, k)]
+         knot_id = Symbol(:knot, k)
+         x = individual_source_dict[knot_id][:x]
+         y = individual_source_dict[knot_id][:y]
+
+         if haskey(individual_source_dict[knot_id], :sigma)
+            σx = individual_source_dict[knot_id][:sigma]
+            σy = individual_source_dict[knot_id][:sigma]
+            θ = 0.0 .* individual_source_dict[knot_id][:sigma]
+         elseif haskey(individual_source_dict[knot_id], :sigma_x) && haskey(individual_source_dict[knot_id], :sigma_y) && haskey(individual_source_dict[knot_id], :theta)
+            σx = individual_source_dict[knot_id][:sigma_x]
+            σy = individual_source_dict[knot_id][:sigma_y]
+            θ = individual_source_dict[knot_id][:theta]
+         else
+            error("Invalid knot parameters in source-$i, knot-$k")
+         end
 
          # Assert that the number of knots is the same for x and y
-         if length(x[:value]) != length(x[:sigma]) || 
-            length(x[:value]) != length(y[:value]) || 
-            length(x[:value]) != length(y[:sigma])
+         if length(x) != length(σx) || length(x) != length(y) || length(x) != length(σy) || length(x) != length(θ)
             error("Inconsistent knot dimensions in source-$i, knot-$k")
          end
 
          ref_ra = dict[:observation][:reference][1]
          ref_dec = dict[:observation][:reference][2]
          if ref_ra == 0.0 || ref_dec == 0.0
-            knots[k] = Knot(x  = x[:value], σx = x[:sigma], y  = y[:value], σy = y[:sigma])
+            knots[k] = Knot(x  = x, σx = σx, y  = y, σy = σy, θ = θ)
          else
-            x_arcsec, y_arcsec = AstrometricOps.gnomonic_offsets_arcsec(ref_ra, ref_dec, x[:value], y[:value])
-            knots[k] = Knot(x  = x_arcsec, σx = x[:sigma], y  = y_arcsec, σy = y[:sigma])
+            x_arcsec, y_arcsec = AstrometricOps.gnomonic_offsets_arcsec(ref_ra, ref_dec, x, y)
+            knots[k] = Knot(x  = x_arcsec, σx = σx, y  = y_arcsec, σy = σy, θ = θ)
          end
       end
 

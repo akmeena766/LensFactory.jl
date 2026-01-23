@@ -8,7 +8,7 @@ module Likelihood
 # --------------------------------------------------------------------------------------------------
 # LensFactory modules to use
 # --------------------------------------------------------------------------------------------------
-
+using ..LensModelIO
 
 # --------------------------------------------------------------------------------------------------
 # Functions to export
@@ -73,7 +73,8 @@ function LogL_position(model::ModelConfig, adis::Vector{Float64}, αx_all::Vecto
          βx_individual = @. x - adis * αx
          βy_individual = @. y - adis * αy
 
-         # 
+         # Get weighted source position
+                  
 
 
          kid = kid + 1
