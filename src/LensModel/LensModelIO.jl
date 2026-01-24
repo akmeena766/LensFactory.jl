@@ -28,6 +28,7 @@ export LensConfig
 export NMConfig
 export GDConfig
 export OptimizerConfig
+export MHConfig
 export SamplerConfig
 
 
@@ -124,8 +125,7 @@ end
 # Metropolis-Hastings
 @kwdef struct MHConfig <: AbstractMCMCConfig
    n_steps::Int = 10000
-   proposal_scale::Float64 = 0.1
-   burn_in::Int = 100
+   n_adapt::Int = Int64(n_steps / 10)
 end
 
 # Hamiltonian Monte Carlo
@@ -571,14 +571,14 @@ function _mcmc!(sampling_dict::Dict)
 
    # Infer mcmc method from keys
    method = _infer_mcmc_method(mcmc)
+   n_chains = get(mcmc, :n_chains, 1)
    config = mcmc[method]
    
    algorithm_config = 
    if method == :MH
       MHConfig(
          n_steps        = config[:n_steps],
-         proposal_scale = config[:proposal_scale],
-         burn_in        = get(config, :burn_in, 100)
+         n_adapt        = config[:n_adapt]
       )
    elseif method == :HMC
       HMCConfig(
@@ -600,6 +600,7 @@ function _mcmc!(sampling_dict::Dict)
 
    return MCMCConfig(
       method   = method,
+      n_chains = n_chains,
       config   = algorithm_config
    )
 end
