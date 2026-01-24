@@ -352,26 +352,29 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter})
       for i in 1:n_lenses
          lens_id = Symbol(:lens, i)
          indi_lens_dict = lens_dict[lens_id]
+         name = Symbol(indi_lens_dict[:lens])
 
          # Store lens model name in lens_name vector
-         lens_name[i] = LensComponent(owner=lens_id, name=Symbol(indi_lens_dict[:lens]))
+         lens_name[i] = LensComponent(owner=lens_id, name=name)
 
          # --- Lens position parameters (always provided) ---
-         rx, lx, ux = _extract_param_range(indi_lens_dict[:x_c])
-         ry, ly, uy = _extract_param_range(indi_lens_dict[:y_c])
+         if name != (:ExternalEffects)
+            rx, lx, ux = _extract_param_range(indi_lens_dict[:x_c])
+            ry, ly, uy = _extract_param_range(indi_lens_dict[:y_c])
          
-         # Check if a valid (RA, Dec) is provided as reference or (0, 0) is used
-         # reference = (0, 0) ⇒ Lens positions are provided in arcseconds
-         # reference = (RA, Dec) ⇒ Lens positions are provided in RA and Dec. Conversion needed.
-         if use_ref
-            x_ref, y_ref = AstrometricOps.gnomonic_offsets_arcsec(ref_ra, ref_dec, rx, ry)
-         else
-            x_ref, y_ref = rx, ry
-         end
+            # Check if a valid (RA, Dec) is provided as reference or (0, 0) is used
+            # reference = (0, 0) ⇒ Lens positions are provided in arcseconds
+            # reference = (RA, Dec) ⇒ Lens positions are provided in RA and Dec. Conversion needed.
+            if use_ref
+               x_ref, y_ref = AstrometricOps.gnomonic_offsets_arcsec(ref_ra, ref_dec, rx, ry)
+            else
+               x_ref, y_ref = rx, ry
+            end
 
-         # Add lens position parameters to the parameter vector
-         push!(params, Parameter(owner=lens_id, name=:x_c, refer=x_ref, lower=lx, upper=ux))
-         push!(params, Parameter(owner=lens_id, name=:y_c, refer=y_ref, lower=ly, upper=uy))
+            # Add lens position parameters to the parameter vector
+            push!(params, Parameter(owner=lens_id, name=:x_c, refer=x_ref, lower=lx, upper=ux))
+            push!(params, Parameter(owner=lens_id, name=:y_c, refer=y_ref, lower=ly, upper=uy))
+         end
 
          # --- Remaining lens parameters ---
          for (k, v) in indi_lens_dict

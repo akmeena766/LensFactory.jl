@@ -254,6 +254,24 @@ function get_unique_seeds(results::Vector{@NamedTuple{θ::Vector{Float64}, f::Fl
    return seeds
 end
 
+function get_best_seeds(results::Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, n_chains::Int64; jitter::Float64=0.001)
+   # Sort by LogL (highest/best first)
+   # results should be a vector of structs/objects with .θ and .f (LogL)
+   sorted_res = sort(results, by = x -> x.f, rev = true)
+ 
+   n_params = length(sorted_res[1].θ)
+    
+    # Create seeds by adding a tiny amount of Gaussian noise to the best solution.
+    # We use relative jitter (jitter * best_theta) so that parameters with 
+    # large absolute values (like v_d ≈ 250) get scaled appropriately.
+    seeds = [
+        sorted_res[1].θ .+ (jitter .* abs.(sorted_res[1].θ) .* randn(n_params)) 
+        for _ in 1:n_chains
+    ]
+    
+    return seeds
+end
+
 function run_mcmc(model::ModelConfig, mcmc_config::MHConfig, param_ref::Dict{Tuple{Symbol,Symbol},Float64}, θ_start::Vector{Vector{Float64}}, verbose::Bool)
    return MH.mh_runner(x -> log_posterior(model, x, param_ref), θ_start, mcmc_config.n_steps, mcmc_config.n_adapt)
 end
@@ -268,7 +286,7 @@ function run_mcmc(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},Float
 
    # Initialize seeds (No optimizer → random initial parameters)
    seeds = if θ_start !== nothing
-      get_unique_seeds(θ_start, mcmc.n_chains)
+      get_best_seeds(θ_start, mcmc.n_chains)
    else
       [LensModelUtils.θ_random(model) for _ in 1:mcmc.n_chains]
    end

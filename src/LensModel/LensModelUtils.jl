@@ -289,8 +289,15 @@ function print_gr_report(chains::Array{Float64, 3}; param_names=nothing, burn_in
     header = "| " * rpad("Owner", w_owner) * " | " * rpad("Parameter", w_param) * " | " * rpad("R-hat", w_rhat) * " | " * rpad("Status", w_stat) * " |"
     border = "-"^length(header)
 
+    total_inner_width = w_owner + w_param + w_rhat + w_stat + (3 * 3)
+    title = "GELMAN-RUBIN CONVERGENCE DIAGNOSTIC"
+    padding = total_inner_width - length(title)
+    left_pad = div(padding, 2)
+    right_pad = padding - left_pad + 2
+    centered_title = " "^left_pad * title * " "^right_pad
+
     println("\n" * border)
-    println("      GELMAN-RUBIN CONVERGENCE DIAGNOSTIC")
+    println("|" * centered_title * "|")
     println(border)
     println(header)
     println(border)
