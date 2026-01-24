@@ -44,5 +44,7 @@ using .LensModelFit
 # Functions to export
 # --------------------------------------------------------------------------------------------------
 export read_input, fit_model
+export free_parameter_names
+export calculate_gr, print_gr_report
 
 end

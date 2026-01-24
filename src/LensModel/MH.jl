@@ -13,7 +13,7 @@ using ProgressMeter
 # --------------------------------------------------------------------------------------------------
 # LensFactory modules to use
 # --------------------------------------------------------------------------------------------------
-
+export mh_runner
 
 
 function _mh_runner_adaptive(log_posterior, start_θ::Vector{Float64}, n_steps::Int64, n_adapt::Int64, initial_σ::Vector{Float64}, p::Progress)
@@ -120,7 +120,7 @@ function mh_runner(log_posterior, seeds::Vector{Vector{Float64}}, n_steps::Int64
    all_rates = zeros(Float64, num_blocks, n_chains)
 
    # Run Metropolis-Hastings sampler
-   p = Progress(n_steps * n_chains; dt=0.1, desc="Sampling Lens Posterior... ", barlen=50)
+   p = Progress(n_steps * n_chains; dt=0.1, desc="Sampling Posterior... ", barlen=50)
    @threads for c in 1:n_chains
       # Each thread runs its own independent adaptive sampler
       chains, rate_history = _mh_runner_adaptive(log_posterior, seeds[c], n_steps, n_adapt, σ_initial, p)
