@@ -236,7 +236,7 @@ function calculate_gr(chains::Array{Float64, 3}; burn_in::Float64=0.5)
    n_iter, n_params, n_chains = size(chains)
    
    if n_chains < 2
-      return fill(NaN, n_params)
+      error("At least 2 chains are required for Gelman-Rubin diagnostic.")
    end
 
    # Remove burn-in (the adaptation blocks)

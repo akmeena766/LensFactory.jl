@@ -30,9 +30,15 @@ function _mh_runner_adaptive(log_posterior, start_θ::Vector{Float64}, n_steps::
     
    # Target acceptance rate
    target_rate = 0.234
+   target_window = (0.23, 0.24)
    block_size = n_adapt
    num_blocks = div(n_steps, block_size)
    rate_history = zeros(Float64, num_blocks)
+
+   # Adaptation lock variables
+   adaptation_locked = false
+   stable_blocks = 0
+   required_stable_blocks = 2
 
    for b in 1:num_blocks
       block_accepted = 0
@@ -66,11 +72,22 @@ function _mh_runner_adaptive(log_posterior, start_θ::Vector{Float64}, n_steps::
       current_rate = block_accepted / block_size
       rate_history[b] = current_rate
         
-      # Exponential scaling: 
-      # rate > target -> σ increases
-      # rate < target -> σ decreases
-      γ = 0.5 / sqrt(b)
-      σ .*= exp.(γ .* (current_rate .- target_rate))
+      if !adaptation_locked
+         # Check if we are in the "Goldilocks" zone (23% - 24%)
+         if target_window[1] <= current_rate <= target_window[2]
+            stable_blocks += 1
+         else
+            # Outside window: Update σ and reset stability counter
+            γ = 0.5 / sqrt(b)
+            σ .*= exp.(γ .* (current_rate .- target_rate))
+            stable_blocks = 0 
+         end
+        
+         # Lock σ if we've been stable long enough
+         if stable_blocks >= required_stable_blocks
+            adaptation_locked = true
+         end
+      end
    end
    return full_chain, rate_history
 end

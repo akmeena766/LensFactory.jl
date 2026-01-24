@@ -322,7 +322,11 @@ end
 # --------------------------------------------------------------------------------------------------
 # ---------------- Read Lens Model -----------------------------------------------------------------
 # --------------------------------------------------------------------------------------------------
-function _lensmodel!(dict::Dict, params::Vector{Parameter})
+NO_POSITION = Set([:ExternalEffects])
+REQUIRE_ADD = Set([:PointLens, :PlummerLens, :GaussianLens, :SersicLens, :HernquistLens, :NFWLens,
+                  :tNFWLens, :gNFWLens, :EinastoLens, :aHernquistLens, :aNFWLens, :eHernquistMDLens,
+                  :eNFWMDLens, :MultiPlummerLens, :MultiGaussianLens])
+function _lensmodel!(dict::Dict, params::Vector{Parameter}, Dol_ref::Float64)
    lens_dict = dict[:lens_model]
    
    # Check if we do single or multiplane lensing. Default: single plane
@@ -358,7 +362,7 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter})
          lens_name[i] = LensComponent(owner=lens_id, name=name)
 
          # --- Lens position parameters (always provided) ---
-         if name != (:ExternalEffects)
+         if name ∉ NO_POSITION
             rx, lx, ux = _extract_param_range(indi_lens_dict[:x_c])
             ry, ly, uy = _extract_param_range(indi_lens_dict[:y_c])
          
@@ -376,6 +380,11 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter})
             push!(params, Parameter(owner=lens_id, name=:y_c, refer=y_ref, lower=ly, upper=uy))
          end
 
+         # Add distance parameters
+         if name ∈ REQUIRE_ADD
+            push!(params, Parameter(owner=lens_id, name=:D_d, refer=Dol_ref, lower=Dol_ref, upper=Dol_ref))
+         end
+            
          # --- Remaining lens parameters ---
          for (k, v) in indi_lens_dict
             k ∈ (:lens, :x_c, :y_c) && continue
@@ -457,7 +466,9 @@ function _source!(dict::Dict, cosmo::Cosmology.AbstractCosmology, params::Vector
             σx = individual_source_dict[knot_id][:sigma]
             σy = individual_source_dict[knot_id][:sigma]
             θ = 0.0 .* individual_source_dict[knot_id][:sigma]
-         elseif haskey(individual_source_dict[knot_id], :sigma_x) && haskey(individual_source_dict[knot_id], :sigma_y) && haskey(individual_source_dict[knot_id], :theta)
+         elseif haskey(individual_source_dict[knot_id], :sigma_x) && 
+                haskey(individual_source_dict[knot_id], :sigma_y) && 
+                haskey(individual_source_dict[knot_id], :theta)
             σx = individual_source_dict[knot_id][:sigma_x]
             σy = individual_source_dict[knot_id][:sigma_y]
             θ = individual_source_dict[knot_id][:theta]
@@ -648,8 +659,11 @@ function read_input(filename::AbstractString)
    # Get cosmology and its parameters
    cosmology = _cosmology!(dict, params)
 
+   # Calculate reference angular diameter distance
+   Dol_ref = Cosmology.angular_diameter_distance(cosmology, 0.0, observation.z_d)
+
    # Get lens model and its parameters
-   lens_config = _lensmodel!(dict, params)
+   lens_config = _lensmodel!(dict, params, Dol_ref)
 
    # Get source model and its parameters
    source_config = _source!(dict, cosmology, params)

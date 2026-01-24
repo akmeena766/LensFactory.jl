@@ -35,7 +35,7 @@ const PARAM_TRANSFORM = Dict{Symbol,Function}(
    :v_d => x -> x * 1.0E3,
    
    # Mass:Log10(M/M☉) -> kg
-   :m => x -> 10^x * MASS_SUN,
+   :mass => x -> 10^x * MASS_SUN,
 )
 
 function transform_params!(pvals::Dict{Tuple{Symbol,Symbol}, Float64})
