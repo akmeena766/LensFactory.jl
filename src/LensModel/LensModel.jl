@@ -47,4 +47,12 @@ export read_input, fit_model
 export free_parameter_names
 export calculate_gr, print_gr_report
 
+
+# Plotting functions (see ../../ext folder for functions)
+export plot_corner
+export plot_trace
+
+function plot_corner end
+function plot_trace end
+
 end

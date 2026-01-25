@@ -6,7 +6,7 @@
    gamma1 = gamma * cos(2.0 * deg2rad(angle))
    gamma2 = gamma * sin(2.0 * deg2rad(angle))
    
-   lens = Lenses.init_ExternalEffects(kappa=kappa, gamma=gamma, angle=angle)
+   lens = Lenses.init_ExternalEffects(kappa=kappa, gamma1=gamma1, gamma2=gamma2)
    pot1 = Lenses.get_potential(lens, xt1, yt1)
    dex1 = Lenses.get_deflection(lens, xt1, yt1)
    jac1 = Lenses.get_jacobian(lens, xt1, yt1)
@@ -52,7 +52,7 @@
    gamma1 = gamma * cos(2.0 * deg2rad(angle))
    gamma2 = gamma * sin(2.0 * deg2rad(angle))
 
-   lens = Lenses.init_ExternalEffects(kappa=kappa, gamma=gamma, angle=angle)
+   lens = Lenses.init_ExternalEffects(kappa=kappa, gamma1=gamma1, gamma2=gamma2)
    pot1 = Lenses.get_potential(lens, xt1, yt1)
    dex1 = Lenses.get_deflection(lens, xt1, yt1)
    jac1 = Lenses.get_jacobian(lens, xt1, yt1)
@@ -98,7 +98,7 @@
    gamma1 = gamma * cos(2.0 * deg2rad(angle))
    gamma2 = gamma * sin(2.0 * deg2rad(angle))
 
-   lens = Lenses.init_ExternalEffects(kappa=kappa, gamma=gamma, angle=angle)
+   lens = Lenses.init_ExternalEffects(kappa=kappa, gamma1=gamma1, gamma2=gamma2)
    pot1 = Lenses.get_potential(lens, xt1, yt1)
    dex1 = Lenses.get_deflection(lens, xt1, yt1)
    jac1 = Lenses.get_jacobian(lens, xt1, yt1)
@@ -145,7 +145,7 @@
    gamma1 = gamma * cos(2.0 * deg2rad(angle))
    gamma2 = gamma * sin(2.0 * deg2rad(angle))
 
-   lens = Lenses.init_ExternalEffects(kappa=kappa, gamma=gamma, angle=angle)
+   lens = Lenses.init_ExternalEffects(kappa=kappa, gamma1=gamma1, gamma2=gamma2)
    pot1 = Lenses.get_potential(lens, xt1, yt1)
    dex1 = Lenses.get_deflection(lens, xt1, yt1)
    jac1 = Lenses.get_jacobian(lens, xt1, yt1)

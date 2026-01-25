@@ -4,7 +4,7 @@ module LensModelUtils
 # Julia inbuilt functions to import
 # --------------------------------------------------------------------------------------------------
 using Random
-using Statistics
+using StatsBase
 
 # --------------------------------------------------------------------------------------------------
 # LensFactory modules to use
@@ -232,31 +232,31 @@ end
 # --------------------------------------------------------------------------------------------------
 # Gelman-Rubin diagnostic
 # --------------------------------------------------------------------------------------------------
-function calculate_gr(chains::Array{Float64, 3}; burn_in::Float64=0.5)
-   n_iter, n_params, n_chains = size(chains)
+function calculate_gr(chains::Array{Float64, 3}; burn_in::Float64=0.3)
+   n_steps, n_chains, n_params = size(chains)
    
    if n_chains < 2
       error("At least 2 chains are required for Gelman-Rubin diagnostic.")
    end
 
    # Remove burn-in (the adaptation blocks)
-   start_idx = Int(floor(burn_in * n_iter))
+   start_idx = Int(floor(burn_in * n_steps))
    samples = chains[start_idx:end, :, :]
 
-   n = size(samples, 1) # Samples per chain
-   m = n_chains        # Number of chains
+   n = n_steps - start_idx + 1
+   m = n_chains
    r_hats = zeros(Float64, n_params)
 
    for p in 1:n_params
-      param_samples = samples[:, p, :] # [n, m]
+      @views param_samples = samples[start_idx:end, :, p]
         
       # W: Within-chain variance
-      chain_vars = Statistics.var(param_samples, dims=1)
-      W = Statistics.mean(chain_vars)
+      chain_vars = StatsBase.var(param_samples, dims=1)
+      W = StatsBase.mean(chain_vars)
         
       # B: Between-chain variance
-      chain_means = Statistics.mean(param_samples, dims=1)
-      grand_mean = Statistics.mean(chain_means)
+      chain_means = StatsBase.mean(param_samples, dims=1)
+      grand_mean = StatsBase.mean(chain_means)
       B = (n / (m - 1)) * sum((chain_means .- grand_mean).^2)
         
       # V_hat: Pooled variance estimate
@@ -266,7 +266,7 @@ function calculate_gr(chains::Array{Float64, 3}; burn_in::Float64=0.5)
    return r_hats
 end
 
-function print_gr_report(chains::Array{Float64, 3}; param_names=nothing, burn_in=0.5)
+function print_gr_report(chains::Array{Float64, 3}; param_names=nothing, burn_in=0.3)
    # Calculate R̂
    r_hats = calculate_gr(chains, burn_in=burn_in)
    n_params = length(r_hats)
@@ -304,8 +304,14 @@ function print_gr_report(chains::Array{Float64, 3}; param_names=nothing, burn_in
 
    for i in 1:n_params
         # Extract metadata from the parameter object
-        owner = string(param_names[i][1])
-        param = string(param_names[i][2])
+        if param_names !== nothing
+            owner = string(param_names[i][1])
+            param = string(param_names[i][2])
+        else
+            owner = "Unknown"
+            param = "theta_$i"
+        end
+
         val   = round(r_hats[i], digits=4)
         
         status = val < 1.1 ? "Converged" : "FAILED"

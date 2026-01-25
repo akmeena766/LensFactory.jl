@@ -11,12 +11,9 @@ export deflection!
 export jacobian!
 
 """
-    potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: RV
+    potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: RV
 """
-function potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: RV
-   gamma1 = gamma * cos(2.0 * deg2rad(angle))
-   gamma2 = gamma * sin(2.0 * deg2rad(angle))
-
+function potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: RV
    f1 = 0.5 * (kappa + gamma1)
    f2 = 0.5 * (kappa - gamma1)
 
@@ -25,12 +22,9 @@ function potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) wher
 end
 
 """
-    potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: ROA
+    potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: ROA
 """
-function potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: ROA
-   gamma1 = gamma * cos(2.0 * deg2rad(angle))
-   gamma2 = gamma * sin(2.0 * deg2rad(angle))
-
+function potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: ROA
    f1 = 0.5 * (kappa + gamma1)
    f2 = 0.5 * (kappa - gamma1)
 
@@ -44,12 +38,9 @@ end
 
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: RV
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: RV
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: RV
-   gamma1 = gamma * cos(2.0 * deg2rad(angle))
-   gamma2 = gamma * sin(2.0 * deg2rad(angle))
-
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: RV
    f1 = (kappa + gamma1)
    f2 = (kappa - gamma1)
 
@@ -59,12 +50,9 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: ROA
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: ROA
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: ROA
-   gamma1 = gamma * cos(2.0 * deg2rad(angle))
-   gamma2 = gamma * sin(2.0 * deg2rad(angle))
-
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: ROA
    f1 = (kappa + gamma1)
    f2 = (kappa - gamma1)
 
@@ -79,25 +67,22 @@ end
 
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: RV
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: RV
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: RV
-   gamma1 = gamma * cos(2.0 * deg2rad(angle))
-   gamma2 = gamma * sin(2.0 * deg2rad(angle))
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: RV
+   f1 = (kappa + gamma1)
+   f2 = (kappa - gamma1)
 
-   ψxx_up = ψxx + (kappa + gamma1)
-   ψyy_up = ψyy + (kappa - gamma1)
+   ψxx_up = ψxx + f1
+   ψyy_up = ψyy + f2
    ψxy_up = ψxy + gamma2
    return ψxx_up, ψyy_up, ψxy_up
 end
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: ROA
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: ROA
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: ROA
-   gamma1 = gamma * cos(2.0 * deg2rad(angle))
-   gamma2 = gamma * sin(2.0 * deg2rad(angle))
-
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: ROA
    f1 = (kappa + gamma1)
    f2 = (kappa - gamma1)
 

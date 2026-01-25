@@ -137,8 +137,8 @@ Initialize constant external effects with the given parameters.
    _lens_::Symbol = :ExternalEffects
    _lid_::Int = 8
    kappa::RV = NaN
-   gamma::RV = NaN
-   angle::RV = NaN
+   gamma1::RV = NaN
+   gamma2::RV = NaN
 end
 
 
@@ -401,7 +401,7 @@ const lens_init_functions = Dict{Symbol, Function}(
    :NSISMDLens        => (c -> init_NSISMDLens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s)),
    :GaussianLens      => (c -> init_GaussianLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_s=c.x_s)),
    :SersicLens        => (c -> init_SersicLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_e=c.x_e, n=c.n)),
-   :ExternalEffects   => (c -> init_ExternalEffects(kappa=c.kappa, gamma=c.gamma, angle=c.angle)),
+   :ExternalEffects   => (c -> init_ExternalEffects(kappa=c.kappa, gamma1=c.gamma1, gamma2=c.gamma2)),
    :PIEPLens          => (c -> init_PIEPLens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s, eps=c.eps, pa=c.pa)),
    :SIELens           => (c -> init_SIELens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s, eps=c.eps, pa=c.pa)),
    :PJELens           => (c -> init_PJELens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s, x_t=c.x_t, eps=c.eps, pa=c.pa)),
