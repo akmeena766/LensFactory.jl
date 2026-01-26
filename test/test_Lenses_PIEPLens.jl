@@ -5,7 +5,7 @@
    v_d = 200E3
    x_s = 0.1
    eps = 0.2
-   q = 1.0 - eps
+   q = (1.0 - eps) / (1.0 + eps)
 
    # Create lens
    lens = Lenses.init_PIEPLens(v_d=v_d, x_s=x_s, eps=eps, pa=0)

@@ -5,8 +5,10 @@
    v_d = 200E3
    x_s = 0.5
    x_t = 5.0
+   eps_old = 0.2
+   eps_new = eps_old / (2.0 - eps_old)
 
-   lens = Lenses.init_PJELens(v_d=v_d, eps=0.2, pa=0.0, x_s=x_s, x_t=x_t)
+   lens = Lenses.init_PJELens(v_d=v_d, eps=eps_new, pa=0.0, x_s=x_s, x_t=x_t)
 
    pot1 = adis  * Lenses.get_potential(lens, xt1, yt1)
    dex1 = adis .* Lenses.get_deflection(lens, xt1, yt1)
@@ -52,7 +54,7 @@
    @test jacc[3][2] ≈ jac2[3] atol=1e-15 rtol=1e-15
 
 
-   lens = Lenses.init_PJELens(v_d=v_d, eps=0.2, pa=30.0, x_s=x_s, x_t=x_t)
+   lens = Lenses.init_PJELens(v_d=v_d, eps=eps_new, pa=30.0, x_s=x_s, x_t=x_t)
    pot1 = adis  * Lenses.get_potential(lens, xt1, yt1)
    dex1 = adis .* Lenses.get_deflection(lens, xt1, yt1)
    jac1 = adis .* Lenses.get_jacobian(lens, xt1, yt1)

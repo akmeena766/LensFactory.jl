@@ -2,9 +2,10 @@
 @testset "aHernquist lens" begin
    mass = 1E11 * MASS_SUN
    x_s = 0.3
-   eps = 0.0
+   eps_old = 0.0
+   eps_new = eps_old / (2.0 - eps_old)
    pa = 0.0
-   lens = Lenses.init_aHernquistLens(D_d=Dol, mass=mass, x_s=x_s, eps=eps, pa=pa)
+   lens = Lenses.init_aHernquistLens(D_d=Dol, mass=mass, x_s=x_s, eps=eps_new, pa=pa)
 
    pot1 = adis  * Lenses.get_potential(lens, xt1, yt1)
    dex1 = adis .* Lenses.get_deflection(lens, xt1, yt1)
@@ -50,9 +51,10 @@
 
 
    # Get aHernquist lens with ellipticity
-   eps = 0.3
+   eps_old = 0.3
+   eps_new = eps_old / (2.0 - eps_old)
    pa = 45.0
-   lens = Lenses.init_aHernquistLens(D_d=Dol, mass=mass, x_s=x_s, eps=eps, pa=pa)
+   lens = Lenses.init_aHernquistLens(D_d=Dol, mass=mass, x_s=x_s, eps=eps_new, pa=pa)
    pot1 = adis  * Lenses.get_potential(lens, xt1, yt1)
    dex1 = adis .* Lenses.get_deflection(lens, xt1, yt1)
    jac1 = adis .* Lenses.get_jacobian(lens, xt1, yt1)

@@ -1,10 +1,11 @@
 #!!!!!!!!!!!!!! Testing/cross-checked AGAINST Glafic !!!!!!!!!!!!!!
 @testset "eNFWMD lens" begin
    mass = 1E11 * MASS_SUN
-   
+   eps_old = 0.0
+   eps_new = eps_old / (2.0 - eps_old)
    # Get NFW lens parameters
    param = Lenses.parameter_NFWLens(cosmology=cosmo, z_d=zl, mass=mass, c=6)
-   lens = Lenses.init_eNFWMDLens(D_d=Dol, rho_s=param.rho_s, x_s=param.x_s, eps=0.0, pa=0.0)
+   lens = Lenses.init_eNFWMDLens(D_d=Dol, rho_s=param.rho_s, x_s=param.x_s, eps=eps_new, pa=0.0)
 
    lens1 = Lenses.init_NFWLens(D_d=Dol, rho_s=param.rho_s, x_s=param.x_s)
    pot1_1 = adis  * Lenses.get_potential(lens1, xt1, yt1)
@@ -53,7 +54,9 @@
    @test jacc[3][2] ≈ jac2[3] atol=1e-15 rtol=1e-15
 
    # Get eNFWMD lens with ellipticity
-   lens = Lenses.init_eNFWMDLens(D_d=Dol, rho_s=param.rho_s, x_s=param.x_s, eps=0.3, pa=45.0)
+   eps_old = 0.3
+   eps_new = eps_old / (2.0 - eps_old)
+   lens = Lenses.init_eNFWMDLens(D_d=Dol, rho_s=param.rho_s, x_s=param.x_s, eps=eps_new, pa=45.0)
 
    # pot1 = adis  * Lenses.get_potential(lens, xt1, yt1)
    dex1 = adis .* Lenses.get_deflection(lens, xt1, yt1)

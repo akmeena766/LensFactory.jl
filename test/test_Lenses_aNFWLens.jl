@@ -3,10 +3,11 @@
    mass = 1E11 * MASS_SUN
    
    # Get aNFW lens parameters
-   eps = 0.0
+   eps_old = 0.0
+   eps_new = eps_old / (2.0 - eps_old)
    pa = 0.0
    param = Lenses.parameter_NFWLens(cosmology=cosmo, z_d=zl, mass=mass, c=6)
-   lens = Lenses.init_aNFWLens(D_d=Dol, rho_s=param.rho_s, x_s=param.x_s, eps=eps, pa=pa)
+   lens = Lenses.init_aNFWLens(D_d=Dol, rho_s=param.rho_s, x_s=param.x_s, eps=eps_new, pa=pa)
 
    pot1 = adis  * Lenses.get_potential(lens, xt1, yt1)
    dex1 = adis .* Lenses.get_deflection(lens, xt1, yt1)
@@ -52,10 +53,11 @@
 
 
    # Get aNFW lens parameters
-   eps = 0.3
+   eps_old = 0.3
+   eps_new = eps_old / (2.0 - eps_old)
    pa = 45.0
    param = Lenses.parameter_NFWLens(cosmology=cosmo, z_d=zl, mass=mass, c=6)
-   lens = Lenses.init_aNFWLens(D_d=Dol, rho_s=param.rho_s, x_s=param.x_s, eps=eps, pa=pa)
+   lens = Lenses.init_aNFWLens(D_d=Dol, rho_s=param.rho_s, x_s=param.x_s, eps=eps_new, pa=pa)
 
    pot1 = adis  * Lenses.get_potential(lens, xt1, yt1)
    dex1 = adis .* Lenses.get_deflection(lens, xt1, yt1)

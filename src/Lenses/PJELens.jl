@@ -13,7 +13,7 @@ export jacobian!
 """
 function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, θt::RV, ϵ::RV, pa::RV) where T <: RV
    # Get axis-ratio
-   q = 1.0 - ϵ
+   q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Get b_sie(q)
    bq = (4.0 * pi * (vd / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
@@ -52,7 +52,7 @@ end
 """
 function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, θt::RV, ϵ::RV, pa::RV) where T <: ROA
    # Get axis-ratio
-   q = 1.0 - ϵ
+   q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Get b_sie(q)
    bq = (4.0 * pi * (vd / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
@@ -96,7 +96,7 @@ end
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, θt::RV, ϵ::RV, pa::RV) where T <: RV
    # Get axis-ratio
-   q = 1.0 - ϵ
+   q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Get b_sie(q)
    bq = (4.0 * pi * (vd / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
@@ -139,7 +139,7 @@ end
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, θt::RV, ϵ::RV, pa::RV) where T <: ROA
    # Get axis-ratio
-   q = 1.0 - ϵ
+   q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Get b_sie(q)
    bq = (4.0 * pi * (vd / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
@@ -188,7 +188,7 @@ end
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, θt::RV, ϵ::RV, pa::RV) where T <: RV
    # Get axis-ratio
-   q = 1.0 - ϵ
+   q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Get b_sie(q)
    bq = (4.0 * pi * (vd / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
@@ -239,7 +239,7 @@ end
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, θt::RV, ϵ::RV, pa::RV) where T <: ROA
    # Get axis-ratio
-   q = 1.0 - ϵ
+   q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Get b_sie(q)
    bq = (4.0 * pi * (vd / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC

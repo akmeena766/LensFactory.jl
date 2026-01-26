@@ -598,6 +598,39 @@ function get_einstein_angle(lens::AbstractLens, θx::T, θy::T, adis::Float64) w
 end
 
 
+"""
+    shear_cartesian2polar(γ1::T, γ2::T) where T <: RV --> Tuple{Float64, Float64}
+"""
+function shear_cartesian2polar(γ1::T, γ2::T) where T <: RV
+   return hypot(γ1, γ2), 0.5 * rad2deg(atan(γ2, γ1))
+end
+
+
+"""
+    shear_polar2cartesian(γ::T, phi::T) where T <: RV --> Tuple{Float64, Float64}
+"""
+function shear_polar2cartesian(γ::T, phi::T) where T <: RV
+   return γ * cos(2.0 * deg2rad(phi)), γ * sin(2.0 * deg2rad(phi))
+end
+
+
+"""
+    ellipticity_cartesian2polar(e1::T, e2::T) where T <: RV --> Tuple{Float64, Float64}
+"""
+function ellipticity_cartesian2polar(e1::T, e2::T) where T <: RV
+   return hypot(e1, e2), 0.5 * rad2deg(atan(e2, e1))
+end
+
+
+"""
+    ellipticity_polar2cartesian(e::T, phi::T) where T <: RV --> Tuple{Float64, Float64}
+"""
+function ellipticity_polar2cartesian(e::T, phi::T) where T <: RV
+   return e * cos(2.0 * deg2rad(phi)), e * sin(2.0 * deg2rad(phi))
+end
+
+
+
 #--------------------- Potential functions for specific lens models -------------------------------#
 @inline function potential_helper!(ψ::T, lens::init_PointLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return PointLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass)

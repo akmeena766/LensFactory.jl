@@ -68,7 +68,7 @@ end
 """
 function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
    # Get axis-ratio
-   q = 1.0 - ϵ
+   q = (1.0 - ϵ) / (1.0 + ϵ)
    θs_p = θs / sqrt(q)
 
    # Get normalization constant κs
@@ -102,7 +102,7 @@ end
 """
 function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
    # Get axis-ratio
-   q = 1.0 - ϵ
+   q = (1.0 - ϵ) / (1.0 + ϵ)
    θs_p = θs / sqrt(q)
 
    # Get normalization constant κs
@@ -140,7 +140,7 @@ end
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
    # Get axis-ratio
-   q = 1.0 - ϵ
+   q = (1.0 - ϵ) / (1.0 + ϵ)
    θs_p = θs / sqrt(q)
 
    # Get normalization constant κs
@@ -180,7 +180,7 @@ end
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
    # Get axis-ratio
-   q = 1.0 - ϵ
+   q = (1.0 - ϵ) / (1.0 + ϵ)
    θs_p = θs / sqrt(q)
 
    # Get normalization constant κs
@@ -224,7 +224,7 @@ end
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
    # Get axis-ratio
-   q = 1.0 - ϵ
+   q = (1.0 - ϵ) / (1.0 + ϵ)
    θs_p = θs / sqrt(q)
 
    # Get normalization constant κs
@@ -270,7 +270,7 @@ end
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
    # Get axis-ratio
-   q = 1.0 - ϵ
+   q = (1.0 - ϵ) / (1.0 + ϵ)
    θs_p = θs / sqrt(q)
 
    # Get normalization constant κs

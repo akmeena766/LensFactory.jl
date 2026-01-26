@@ -13,7 +13,7 @@ export jacobian!
 """
 function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
-   q = 1.0 - ϵ
+   q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Pre-compute angles
    pa_rad = deg2rad(pa)
@@ -33,7 +33,7 @@ end
 """
 function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
-   q = 1.0 - ϵ
+   q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Pre-compute angles
    pa_rad = deg2rad(pa)
@@ -57,7 +57,7 @@ end
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
-   q = 1.0 - ϵ
+   q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Pre-compute angles
    pa_rad = deg2rad(pa)
@@ -85,7 +85,7 @@ end
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
-   q = 1.0 - ϵ
+   q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Pre-compute angles
    pa_rad = deg2rad(pa)
@@ -117,7 +117,7 @@ end
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
-   q = 1.0 - ϵ
+   q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Pre-compute angles
    pa_rad = deg2rad(pa)
@@ -149,7 +149,7 @@ end
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
-   q = 1.0 - ϵ
+   q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Pre-compute angles
    pa_rad = deg2rad(pa)

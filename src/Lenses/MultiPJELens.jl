@@ -13,7 +13,7 @@ function potential!(ψ::T, θx::T, θy::T, θxc::S, θyc::S, vd::S, θs::S, θt:
    ψ_up = ψ
    for k in 1:nl
       # Get axis-ratio
-      q = 1.0 - ϵ[k]
+      q = (1.0 - ϵ[k]) / (1.0 + ϵ[k])
 
       # Get b_sie(q)
       bq = (4.0 * pi * (vd[k] / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
@@ -52,7 +52,7 @@ function potential!(ψ::T, θx::T, θy::T, θxc::S, θyc::S, vd::S, θs::S, θt:
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    for k in 1:nl
       # Get axis-ratio
-      q = 1.0 - ϵ[k]
+      q = (1.0 - ϵ[k]) / (1.0 + ϵ[k])
 
       # Get b_sie(q)
       bq = (4.0 * pi * (vd[k] / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
@@ -96,7 +96,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::S, θyc::S, vd::S, θ
    ψy_up = ψy
    for k in 1:nl
       # Get axis-ratio
-      q = 1.0 - ϵ[k]
+      q = (1.0 - ϵ[k]) / (1.0 + ϵ[k])
 
       # Get b_sie(q)
       bq = (4.0 * pi * (vd[k] / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
@@ -140,7 +140,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::S, θyc::S, vd::S, θ
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    for k in 1:nl
       # Get axis-ratio
-      q = 1.0 - ϵ[k]
+      q = (1.0 - ϵ[k]) / (1.0 + ϵ[k])
 
       # Get b_sie(q)
       bq = (4.0 * pi * (vd[k] / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
@@ -189,7 +189,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::S, θyc::S, 
    ψxy_up = ψxy
    for k in 1:nl
       # Get axis-ratio
-      q = 1.0 - ϵ[k]
+      q = (1.0 - ϵ[k]) / (1.0 + ϵ[k])
 
       # Get b_sie(q)
       bq = (4.0 * pi * (vd[k] / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
@@ -240,7 +240,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::S, θyc::S, 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    for k in 1:nl
       # Get axis-ratio
-      q = 1.0 - ϵ[k]
+      q = (1.0 - ϵ[k]) / (1.0 + ϵ[k])
 
       # Get b_sie(q)
       bq = (4.0 * pi * (vd[k] / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC

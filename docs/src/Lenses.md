@@ -13,4 +13,8 @@ Lenses.get_critical_curve
 Lenses.get_caustic
 Lenses.get_critical_area
 Lenses.get_einstein_angle
+Lenses.shear_cartesian2polar
+Lenses.shear_polar2cartesian
+Lenses.ellipticity_cartesian2polar
+Lenses.ellipticity_polar2cartesian
 ```
