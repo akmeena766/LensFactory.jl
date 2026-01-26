@@ -23,6 +23,8 @@ export build_lens
 export lens_quantities
 export free_parameter_names
 export calculate_gr, print_gr_report
+export time_series_diagnostics
+export acceptance_diagnostics
 
 
 function free_parameters(model::ModelConfig)
@@ -331,5 +333,124 @@ function print_gr_report(chains::Array{Float64, 3}; param_names=nothing, burn_in
     end
    println(border * "\n")
 end
+
+
+# --------------------------------------------------------------------------------------------------
+# Time series diagnostics
+# --------------------------------------------------------------------------------------------------
+function time_series_diagnostics(chains::Array{Float64, 3}; param_names=nothing, burn_in::Float64=0.3)
+   # 1. Map dimensions: [Step, Chain, Param]
+   n_steps, n_chains, n_params = size(chains)
+   
+   # Calculate burn-in offset
+   start_idx = max(1, Int(floor(n_steps * burn_in)) + 1)
+   n_steps_post = n_steps - start_idx + 1
+   
+   # Table UI setup
+   println("\n" * "-"^77)
+   header = "| " * rpad("Owner", 14) * 
+            "| " * rpad("Parameter", 16) * 
+            "| " * rpad("Tau (τ)", 12) * 
+            "| " * rpad("ESS", 12) * 
+            "| " * rpad("ESS %", 10) * "  |"
+   println(header)
+   println("-" * "─"^75 * "-")
+    
+   for i in 1:n_params
+      tau_total = 0.0
+      
+      # Calculate Tau per chain to avoid artificial "jumps" from flattening
+      for c in 1:n_chains
+         @views chain_data = chains[start_idx:end, c, i]
+         
+         # 2. Autocorrelation using StatsBase
+         # Limit lags to 2000; if it hasn't decayed by then, the chain is stuck.
+         max_lag = min(length(chain_data) ÷ 5, 2000)
+         ac = autocor(chain_data, 0:max_lag)
+         
+         # 3. Integrated Autocorrelation Time (Tau)
+         # Sum until the autocorrelation becomes negative or noise-dominated
+         idx = findfirst(val -> val <= 0.0, ac)
+         stop_at = isnothing(idx) ? length(ac) : idx
+         
+         # Tau formula: 1 + 2 * sum(autocorrelations)
+         tau_total += 1.0 + 2.0 * sum(@view ac[2:stop_at])
+      end
+      
+      avg_tau = tau_total / n_chains
+      total_samples = n_steps_post * n_chains
+      ess = total_samples / avg_tau
+      ess_per = (ess / total_samples) * 100
+      
+      # Identify parameter labels
+      owner = (param_names !== nothing && i <= length(param_names)) ? string(param_names[i][1]) : "Lens"
+      p_name = (param_names !== nothing && i <= length(param_names)) ? string(param_names[i][2]) : "theta_$i"
+      
+      # 4. Print Row
+      row = "| " * rpad(owner, 14) * 
+            "| " * rpad(p_name, 16) * 
+            "| " * rpad(string(round(avg_tau, digits=1)), 12) * 
+            "| " * rpad(string(round(Int, ess)), 12) * 
+            "| " * rpad(string(round(ess_per, digits=2)) * "%", 10) * "  |"
+      println(row)
+   end
+   println("-"^77 * "\n")
+end
+
+
+function acceptance_diagnostics(chains::Array{Float64, 3}; burn_in::Float64=0.3)
+    n_steps, n_chains, _ = size(chains)
+    start_idx = max(1, Int(floor(n_steps * burn_in)) + 1)
+    
+    # 1. Calculate per-chain acceptance
+    chain_rates = zeros(n_chains)
+    for c in 1:n_chains
+        accepted = 0
+        for s in (start_idx + 1):n_steps
+            @views if chains[s, c, 1] != chains[s-1, c, 1]
+                accepted += 1
+            end
+        end
+        chain_rates[c] = (accepted / (n_steps - start_idx)) * 100
+    end
+
+    # 2. Summary Statistics
+    avg_acc = StatsBase.mean(chain_rates)
+    min_acc = minimum(chain_rates)
+    max_acc = maximum(chain_rates)
+    
+    # 3. Printing the UI
+    println("\n" * "─"^60)
+    println(" ACCEPTANCE RATE DIAGNOSTICS")
+    println("─"^60)
+    
+    println(" Overall Average Rate:  ", lpad(round(avg_acc, digits=2), 6), "%")
+    println(" Lowest Chain Rate:     ", lpad(round(min_acc, digits=2), 6), "%")
+    println(" Highest Chain Rate:    ", lpad(round(max_acc, digits=2), 6), "%")
+    println("─"^60)
+    
+    # 4. Visual Sparkline
+    print(" Ensemble Spread: [")
+    blocks = [" ", "▂", "▃", "▄", "▅", "▆", "▇", "█"]
+    for rate in chain_rates
+        # Map rate 0-100% to block index 1-8
+        b_idx = clamp(Int(ceil(rate / 12.5)), 1, 8)
+        print(blocks[b_idx])
+    end
+    println("]")
+    
+    # 5. Guidance Logic
+    println("─"^60)
+    print(" Status: ")
+    if avg_acc < 15.0
+        println("⚠️  LOW (Stiff). Consider decreasing stretch parameter 'a'.")
+    elseif avg_acc > 60.0
+        println("⚠️  HIGH (Baby steps). Consider increasing stretch parameter 'a'.")
+    else
+        println("✅ HEALTHY. The sampler is mixing well.")
+    end
+    println("─"^60 * "\n")
+end
+
    
 end

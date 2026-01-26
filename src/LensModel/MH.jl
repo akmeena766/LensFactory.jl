@@ -15,9 +15,11 @@ using ProgressMeter
 # --------------------------------------------------------------------------------------------------
 export mh_runner
 export report_rates
-export get_diagnostics
 
 
+# --------------------------------------------------------------------------------------------------
+# Functions
+# --------------------------------------------------------------------------------------------------
 function _mh_runner_adaptive(log_posterior, start_θ::Vector{Float64}, n_steps::Int64, n_adapt::Int64, initial_σ::Vector{Float64}, p::Progress)
    # Number of free parameters
    n_params = length(start_θ)
@@ -121,63 +123,6 @@ function report_rates(all_rates::Matrix{Float64}, target::Float64=0.234)
       println(row)
    end
    println(line)
-end
-
-
-function get_diagnostics(chains::Array{Float64, 3}; param_names=nothing, burn_in::Float64=0.3)
-   # 1. Map dimensions to the [Param, Chain, Step] convention
-   n_steps, n_chains, n_params = size(chains)
-   
-   # Calculate burn-in offset for the 3rd dimension
-   start_idx = max(1, Int(floor(n_steps * burn_in)) + 1)
-   n_steps_post = n_steps - start_idx + 1
-   total_samples = n_steps_post * n_chains
-   
-   # Table UI setup
-   println("\n" * "-"^77)
-   header = "| " * rpad("Owner", 14) * 
-            "| " * rpad("Parameter", 16) * 
-            "| " * rpad("Tau (τ)", 12) * 
-            "| " * rpad("ESS", 12) * 
-            "| " * rpad("ESS %", 10) * "  |"
-   println(header)
-   println("-" * "─"^75 * "-")
-    
-   for i in 1:n_params
-      # 2. Extract and Flatten: [Chain, Step] -> 1D Vector
-      # We loop through chains and then steps to preserve temporal order per chain
-      @views flat_data = vec(chains[start_idx:end, :, i])
-      total_samples = length(flat_data)
-      
-      # Identify parameter labels
-      owner = param_names !== nothing ? string(param_names[i][1]) : "Unknown"
-      p_name = param_names !== nothing ? string(param_names[i][2]) : "theta_$i"
-      
-      # 3. Statistical Calculations
-      # Limit lags to prevent excessive computation on 5M steps
-      max_lag = min(total_samples ÷ 5, 10000)
-      ac = StatsBase.autocor(flat_data, 0:max_lag)
-      
-      # Integrated Autocorrelation Time (Tau)
-      # Find where autocorrelation drops below noise level (0.05)
-      idx = findfirst(val -> val < 0.05, ac)
-      stop_at = isnothing(idx) ? length(ac) : idx
-      tau = 1 + 2 * sum(@view ac[2:stop_at])
-      
-      # Effective Sample Size
-      ess = total_samples / tau
-      ess_per = (ess / total_samples) * 100
-      
-      # 4. Print Row
-      row = "| " * rpad(owner, 14) * 
-            "| " * rpad(p_name, 16) * 
-            "| " * rpad(string(round(tau, digits=1)), 12) * 
-            "| " * rpad(string(round(Int, ess)), 12) * 
-            "| " * rpad(string(round(ess_per, digits=3)) * "%", 10) * 
-            "  |"
-      println(row)
-   end
-   println("-"^77 * "\n")
 end
 
 

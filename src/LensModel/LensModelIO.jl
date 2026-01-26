@@ -29,6 +29,7 @@ export NMConfig
 export GDConfig
 export OptimizerConfig
 export MHConfig
+export AIESConfig
 export SamplerConfig
 
 
@@ -138,10 +139,8 @@ end
 
 # Affine-Invariant Ensemble Sampler
 @kwdef struct AIESConfig <: AbstractMCMCConfig
-   n_walkers::Int = 100
    n_steps::Int = 10000
    a::Float64 = 2.0
-   burn_in::Int = 100
 end
 
 @kwdef struct MCMCConfig <: AbstractMCMCConfig
@@ -594,19 +593,10 @@ function _mcmc!(sampling_dict::Dict)
          n_steps        = config[:n_steps],
          n_adapt        = config[:n_adapt]
       )
-   elseif method == :HMC
-      HMCConfig(
-         n_steps        = config[:n_steps],
-         step_size      = config[:step_size],
-         leapfrog_steps = config[:leapfrog_steps],
-         burn_in        = get(config, :burn_in, 100)
-      )
    elseif method == :AIES
       AIESConfig(
-         n_walkers      = config[:n_walkers],
          n_steps        = config[:n_steps],
          a              = get(config, :a, 2.0),
-         burn_in        = get(config, :burn_in, 100)
       )
    else
       error("Unknown MCMC method: $method")

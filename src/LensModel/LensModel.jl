@@ -26,7 +26,9 @@ using .NelderMead
 include("./MH.jl")
 using .MH
 
-# Include the lens model IO file
+include("./AIES.jl")
+using .AIES
+
 include("./LensModelIO.jl")
 using .LensModelIO
 

@@ -5,7 +5,6 @@ module AIES
 # Julia inbuilt functions to import
 # --------------------------------------------------------------------------------------------------
 using Random
-using Statistics
 using ProgressMeter
 using Base.Threads
 
