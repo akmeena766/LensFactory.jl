@@ -9,12 +9,14 @@ using StatsBase
 using .Threads
 using ProgressMeter
 
+
 # --------------------------------------------------------------------------------------------------
-# LensFactory modules to use
+# Functions to export
 # --------------------------------------------------------------------------------------------------
 export mh_runner
 export report_rates
 export get_diagnostics
+
 
 function _mh_runner_adaptive(log_posterior, start_θ::Vector{Float64}, n_steps::Int64, n_adapt::Int64, initial_σ::Vector{Float64}, p::Progress)
    # Number of free parameters
@@ -179,7 +181,7 @@ function get_diagnostics(chains::Array{Float64, 3}; param_names=nothing, burn_in
 end
 
 
-function mh_runner(log_posterior, seeds::Vector{Vector{Float64}}, n_steps::Int64, n_adapt::Int64)
+function mh_runner(log_posterior::Function, seeds::Vector{Vector{Float64}}, n_steps::Int64, n_adapt::Int64)
    # Number of chains
    n_chains = length(seeds)
    
