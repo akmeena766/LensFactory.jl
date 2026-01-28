@@ -6,7 +6,7 @@ module MH
 # --------------------------------------------------------------------------------------------------
 using Random
 using StatsBase
-using .Threads
+using Base.Threads
 using ProgressMeter
 
 
@@ -26,6 +26,9 @@ function _mh_runner_adaptive(log_posterior, start_θ::Vector{Float64}, n_steps::
    
    # Pre-allocate memory for the full chain
    full_chain = zeros(Float64, n_steps, n_params)
+   
+   # Pre-allocate memory for the log-likelihood history
+   ll_history = zeros(Float64, n_steps)
     
    # Current state
    current_θ = copy(start_θ)
@@ -70,6 +73,7 @@ function _mh_runner_adaptive(log_posterior, start_θ::Vector{Float64}, n_steps::
             
          # Record State
          @views full_chain[idx, :] .= current_θ
+         ll_history[i] = current_logp
 
          next!(p)
       end
@@ -126,7 +130,7 @@ function report_rates(all_rates::Matrix{Float64}, target::Float64=0.234)
 end
 
 
-function mh_runner(log_posterior::Function, seeds::Vector{Vector{Float64}}, n_steps::Int64, n_adapt::Int64)
+function mh_runner(log_posterior::Function, seeds::Vector{Vector{Float64}}, n_steps::Int64, n_adapt::Int64, verbose::Bool)
    # Number of chains
    n_chains = length(seeds)
    
@@ -143,6 +147,7 @@ function mh_runner(log_posterior::Function, seeds::Vector{Vector{Float64}}, n_st
    # Pre-allocate 3D Tensor: [Iteration, Parameter, Chain]
    all_chains = zeros(Float64, n_steps, n_chains, n_params)
    all_rates = zeros(Float64, num_blocks, n_chains)
+   all_llhoods = zeros(Float64, n_steps, n_chains) # NEW: Likelihood tensor
 
    # Run Metropolis-Hastings sampler
    p = Progress(n_steps * n_chains; dt=0.1, desc="Sampling Posterior... ", barlen=50)
@@ -151,12 +156,15 @@ function mh_runner(log_posterior::Function, seeds::Vector{Vector{Float64}}, n_st
       chains, rate_history = _mh_runner_adaptive(log_posterior, seeds[c], n_steps, n_adapt, σ_initial, p)
       @views all_chains[:, c, :] .= chains
       all_rates[:, c] .= rate_history
+      all_llhoods[:, c] .= ll_history
    end
 
    # Check rate stability
-   report_rates(all_rates)
+   if verbose
+      report_rates(all_rates)
+   end
 
-   return all_chains, all_rates
+   return all_chains, all_llhoods
 end
 
 end

@@ -25,6 +25,7 @@ export free_parameter_names
 export calculate_gr, print_gr_report
 export time_series_diagnostics
 export acceptance_diagnostics
+export get_best_fit, get_best_fit_with_errors
 
 
 function free_parameters(model::ModelConfig)
@@ -399,58 +400,129 @@ end
 
 
 function acceptance_diagnostics(chains::Array{Float64, 3}; burn_in::Float64=0.3)
-    n_steps, n_chains, _ = size(chains)
-    start_idx = max(1, Int(floor(n_steps * burn_in)) + 1)
-    
-    # 1. Calculate per-chain acceptance
-    chain_rates = zeros(n_chains)
-    for c in 1:n_chains
-        accepted = 0
-        for s in (start_idx + 1):n_steps
-            @views if chains[s, c, 1] != chains[s-1, c, 1]
-                accepted += 1
-            end
-        end
-        chain_rates[c] = (accepted / (n_steps - start_idx)) * 100
-    end
+   n_steps, n_chains, _ = size(chains)
+   start_idx = max(1, Int(floor(n_steps * burn_in)) + 1)
+   
+   # Calculate per-chain acceptance
+   chain_rates = zeros(n_chains)
+   for c in 1:n_chains
+      accepted = 0
+      for s in (start_idx + 1):n_steps
+         @views if chains[s, c, 1] != chains[s-1, c, 1]
+               accepted += 1
+         end
+      end
+      chain_rates[c] = (accepted / (n_steps - start_idx)) * 100
+   end
 
-    # 2. Summary Statistics
-    avg_acc = StatsBase.mean(chain_rates)
-    min_acc = minimum(chain_rates)
-    max_acc = maximum(chain_rates)
+   # Summary Statistics
+   avg_acc = StatsBase.mean(chain_rates)
+   min_acc = minimum(chain_rates)
+   max_acc = maximum(chain_rates)
     
-    # 3. Printing the UI
-    println("\n" * "─"^60)
-    println(" ACCEPTANCE RATE DIAGNOSTICS")
-    println("─"^60)
+   # Printing the UI
+   println("\n" * "─"^60)
+   println(" ACCEPTANCE RATE DIAGNOSTICS")
+   println("─"^60)
+   
+   println(" Overall Average Rate:  ", lpad(round(avg_acc, digits=2), 6), "%")
+   println(" Lowest Chain Rate:     ", lpad(round(min_acc, digits=2), 6), "%")
+   println(" Highest Chain Rate:    ", lpad(round(max_acc, digits=2), 6), "%")
+   println("─"^60)
+
+   # Visual Sparkline
+   print(" Ensemble Spread: [")
+   blocks = [" ", "▂", "▃", "▄", "▅", "▆", "▇", "█"]
+   for rate in chain_rates
+      # Map rate 0-100% to block index 1-8
+      b_idx = clamp(Int(ceil(rate / 12.5)), 1, 8)
+      print(blocks[b_idx])
+   end
+   println("]")
     
-    println(" Overall Average Rate:  ", lpad(round(avg_acc, digits=2), 6), "%")
-    println(" Lowest Chain Rate:     ", lpad(round(min_acc, digits=2), 6), "%")
-    println(" Highest Chain Rate:    ", lpad(round(max_acc, digits=2), 6), "%")
-    println("─"^60)
-    
-    # 4. Visual Sparkline
-    print(" Ensemble Spread: [")
-    blocks = [" ", "▂", "▃", "▄", "▅", "▆", "▇", "█"]
-    for rate in chain_rates
-        # Map rate 0-100% to block index 1-8
-        b_idx = clamp(Int(ceil(rate / 12.5)), 1, 8)
-        print(blocks[b_idx])
-    end
-    println("]")
-    
-    # 5. Guidance Logic
-    println("─"^60)
-    print(" Status: ")
-    if avg_acc < 15.0
-        println("⚠️  LOW (Stiff). Consider decreasing stretch parameter 'a'.")
-    elseif avg_acc > 60.0
-        println("⚠️  HIGH (Baby steps). Consider increasing stretch parameter 'a'.")
-    else
-        println("✅ HEALTHY. The sampler is mixing well.")
-    end
-    println("─"^60 * "\n")
+   # Guidance Logic
+   println("─"^60)
+   print(" Status: ")
+   if avg_acc < 15.0
+      println("⚠️  LOW (Stiff). Consider decreasing stretch parameter 'a'.")
+   elseif avg_acc > 60.0
+      println("⚠️  HIGH (Baby steps). Consider increasing stretch parameter 'a'.")
+   else
+      println("✅ HEALTHY. The sampler is mixing well.")
+   end
+   println("─"^60 * "\n")
 end
 
+
+# --------------------------------------------------------------------------------------------------
+# Get best-fit from the full optimization/MCMC results
+# --------------------------------------------------------------------------------------------------
+function get_best_fit(results, chains=nothing)
+   best_θ = nothing
+   best_logL = -Inf
+
+   # Case A: Input is from the Parallel Optimizer (Vector of NamedTuples)
+   if results isa Vector && eltype(results) <: NamedTuple
+      # We already sorted the results in descending order of logL, so results[1] is the best fit
+      best_run = results[1]
+      best_θ = best_run.θ
+      best_logL = best_run.f
+
+   # Case B: Input is from MCMC (ll_history matrix)
+   elseif results isa Matrix{Float64} && chains !== nothing
+      # Get (step, chain) of the best logL by finding the index of the maximum value in the logL matrix
+      best_idx = argmax(results) 
+      step, chain_num = best_idx[1], best_idx[2]
+      
+      best_θ = chains[step, chain_num, :]
+      best_logL = results[step, chain_num]
+   else
+      error("Please provide either Optimization results or both MCMC ll_history and chains.")
+    end
+
+   # Calculate Chi2: χ² = -2 * logL
+   # Note: If your objective includes priors (log-posterior), 
+   # this technically gives you the MAP (Maximum A Posteriori) chi2.
+   chi2 = -2.0 * best_logL
+
+   return best_θ, best_logL, chi2
+end
+
+
+function get_best_fit_with_errors(chains::Array{Float64, 3}, lls::Matrix{Float64}; burn_in=0.2, thinning=100)
+   # Get chain details 
+   n_steps, n_chains, n_params = size(chains)
+    
+   # Extract Best-Fit (Maximum Likelihood Estimate)
+   best_idx = argmax(lls) 
+   step_bf, chain_bf = best_idx[1], best_idx[2]
    
+   # Best parameter and LogL values
+   best_θ = chains[step_bf, chain_bf, :]
+   best_logL = lls[step_bf, chain_bf]
+
+   # Remove Burn-in
+   start_idx = Int(floor(n_steps * burn_in)) + 1
+   thinned_chain = chains[start_idx:thinning:end, :, :]
+
+   # Reshape the thinned chain into a flat array
+   flat_chain = reshape(thinned_chain, :, n_params)
+    
+   # Calculate (asymmetric) errors as we are defining errors relative to the Best-Fit value
+   lower_err = zeros(n_params)
+   upper_err = zeros(n_params)
+
+   for i in 1:n_params
+      # Get 16th and 84th percentiles of the posterior
+      q16, q84 = StatsBase.quantile(flat_chain[:, i], [0.16, 0.84])
+        
+      # Asymmetric error: distance from best-fit to the quantiles
+      lower_err[i] = best_θ[i] - q16
+      upper_err[i] = q84 - best_θ[i]
+   end
+
+   # Return as a NamedTuple for easy access
+   return best_θ, lower_err, upper_err, best_logL, -2.0 * best_logL
+end
+
 end

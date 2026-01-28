@@ -4,7 +4,7 @@ module LensModelFit
 # --------------------------------------------------------------------------------------------------
 # Julia inbuilt functions to import
 # --------------------------------------------------------------------------------------------------
-
+using Base.Threads
 
 # --------------------------------------------------------------------------------------------------
 # LensFactory modules to use
@@ -127,34 +127,42 @@ end
 # Run Optimizer
 # --------------------------------------------------------------------------------------------------
 function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol}, Float64}, opt::OptimizerConfig, cfg::NMConfig, verbose::Bool)
+   # Initialize free parameter vector
    θ_initial = θ_initializer(model)
 
-   best_θ   = nothing
-   best_val = -Inf
+   # Number of runs
+   n_runs = length(θ_initial)
 
    # Store results to check for convergence
-   converged_results = Vector{NamedTuple{(:θ, :f), Tuple{Vector{Float64}, Float64}}}(undef, 0)
+   results = Vector{Union{Nothing, NamedTuple{(:θ, :f), Tuple{Vector{Float64}, Float64}}}}(nothing, n_runs)
 
    if verbose
       println("\nRunning Nelder-Mead optimizer...")
    end
-   for θ0 in θ_initial
-      θ = copy(θ0)
+   
+   @threads for i in 1:n_runs
+      # Copying input ensures thread isolation
+      θ0 = copy(θ_initial[i])
 
       # Call optimizer
-      θ_opt, fmax, _, _, converged = nmsmax(x -> objective(model, x, param_ref), θ; tol = cfg.tolerance, max_its = cfg.max_iter)
+      θ_opt, fmax, _, _, converged = nmsmax(x -> objective(model, x, param_ref), θ0; tol = cfg.tolerance, max_its = cfg.max_iter)
 
-      # Process only if the simplex size reached tolerance
+      # Write to the specific memory slot reserved for individual run
       if converged
-         push!(converged_results, (θ=copy(θ_opt), f=fmax))
-
-         # Update best parameters 
-         if fmax > best_val
-            best_val = fmax
-            best_θ   = copy(θ_opt)
-         end
+         results[i] = (θ=copy(θ_opt), f=fmax)
       end
    end
+
+   # Filter out the 'nothing' entries (failed convergences) and collect
+   converged_results = collect(skipmissing([r === nothing ? missing : r for r in results]))
+   if isempty(converged_results)
+      error("No optimization runs converged.")
+   end
+
+   # Sort results (Best LogL first)
+   sort!(converged_results, by = x -> x.f, rev = true)
+   best_θ = converged_results[1].θ
+   best_val = converged_results[1].f
 
    # Statistics and consistency checks
    total_runs = opt.max_runs
@@ -274,7 +282,7 @@ function get_best_seeds(results::Vector{@NamedTuple{θ::Vector{Float64}, f::Floa
 end
 
 function run_mcmc(model::ModelConfig, mcmc_config::MHConfig, param_ref::Dict{Tuple{Symbol,Symbol},Float64}, θ_start::Vector{Vector{Float64}}, verbose::Bool)
-   return MH.mh_runner(x -> log_posterior(model, x, param_ref), θ_start, mcmc_config.n_steps, mcmc_config.n_adapt)
+   return MH.mh_runner(x -> log_posterior(model, x, param_ref), θ_start, mcmc_config.n_steps, mcmc_config.n_adapt, verbose)
 end
 
 function run_mcmc(model::ModelConfig, mcmc_config::AIESConfig, param_ref::Dict{Tuple{Symbol,Symbol},Float64}, θ_start::Vector{Vector{Float64}}, verbose::Bool)

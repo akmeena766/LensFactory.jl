@@ -172,6 +172,12 @@ end
 
 """
     get_potential(lens::AbstractLens, θx::T, θy::T) where T <: ROA --> ROA
+
+Calculates the lensing potential~``(ψ)`` at the given angular coordinates ``(θx, θy)`` for the given 
+lens model.
+```math
+ψ(θ_x, θ_y) = \\frac{1}{2}
+```
 """
 function get_potential(lens::AbstractLens, θx::T, θy::T) where T <: Union{ROA, Vector{Int64}}
    # Check if the input coordinates are of the same size
@@ -228,8 +234,10 @@ end
 
 """
     get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: ROA --> Tuple{ROA, ROA}
-Calculates the deflection angles (i.e., the gradient of the potential) for a given lens model. 
-Returns a tuple of deflection components, i.e., ``(ψ_x, ψ_y)``.
+Calculates the vector deflection angle (i.e., the gradient of the potential) for a given lens model. 
+```math
+\\pmb{α}(θ_x, θ_y) = \\pmb{∇}ψ(θ_x, θ_y)
+```
 """
 function get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: ROA
    # Check if the input coordinates are of the same size

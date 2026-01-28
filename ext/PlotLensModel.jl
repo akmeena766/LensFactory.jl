@@ -1,38 +1,23 @@
-function _get_marginal_stats(v)
-    q16, q50, q84 = StatsBase.quantile(v, [0.16, 0.50, 0.84])
-    return (val=q50, low=q50-q16, high=q84-q50)
-end
-
 function _get_levels(dens; quantiles=[0.393, 0.865, 0.989])
    sorted_dens = sort(vec(dens), rev=true)
    cumulative_dens = cumsum(sorted_dens) ./ sum(sorted_dens)
    return [sorted_dens[findfirst(x -> x >= q, cumulative_dens)] for q in quantiles]
 end
 
-function LensFactory.LensModel.plot_corner(chains; param_names=nothing, burn_in=0.3, thinning=100)
-   # 1. New dimension mapping: [n_params, n_chains, n_steps]
+function LensFactory.LensModel.plot_corner(chains, lls; param_names=nothing, burn_in=0.3, thinning=100)
+   # Get chain details 
    n_steps, n_chains, n_params = size(chains)
    
-   # Calculate Step range
-   start_idx = max(1, Int(floor(n_steps * burn_in)) + 1)
-   step_indices = start_idx:thinning:n_steps
-   n_thinned_steps = length(step_indices)
-   
-   # 2. Extract and Flatten efficiently
-   # We want a 2D matrix: [Total Samples, Parameters]
-   # Total Samples = (Remaining Steps / Thinning) * n_chains
-   @views thinned_subset = chains[step_indices, :, :]
-   flat_data = reshape(thinned_subset, n_thinned_steps * n_chains, n_params)
-      
-   for i in 1:n_params
-      curr = 1
-      for c in 1:n_chains
-         # Extract the thinned slice for this parameter and chain
-         @views flat_data[curr : curr + n_thinned_steps - 1, i] .= chains[step_indices, c, i]
-         curr += n_thinned_steps
-      end
-   end
+   # Get best-fit parameter and errors
+   best_θ, lower_err, upper_err, _, _ = LensFactory.LensModel.get_best_fit_with_errors(chains, lls; burn_in=burn_in, thinning=thinning)
 
+   # Remove Burn-in
+   start_idx = Int(floor(n_steps * burn_in)) + 1
+   thinned_chain = chains[start_idx:thinning:end, :, :]
+
+   # Reshape the thinned chain into a flat array
+   flat_chain = reshape(thinned_chain, :, n_params)
+    
    # Initialize figure
    fig = Figure(size=(1200, 1200), figure_padding=15, fontsize=20, fonts=(; regular="Times New Roman"))
 
@@ -41,9 +26,7 @@ function LensFactory.LensModel.plot_corner(chains; param_names=nothing, burn_in=
       p_name = string(param_names[i][2])
 
       # Marginal Stats for Title
-      stats = _get_marginal_stats(flat_data[:, i])
-      val, plus, minus = stats.val, stats.high, stats.low
-      title_str = L"%$(p_name) = %$(round(val, digits=2))^{+ %$(round(plus, digits=2))}_{- %$(round(minus, digits=2))}"
+      title_str = L"%$(p_name) = %$(round(best_θ[i], digits=2))^{+ %$(round(upper_err[i], digits=2))}_{- %$(round(lower_err[i], digits=2))}"
       
       for j in 1:i
          p_name_j = string(param_names[j][2])
@@ -58,16 +41,16 @@ function LensFactory.LensModel.plot_corner(chains; param_names=nothing, burn_in=
          
          if i == j
                # Diagonal: 1D Density
-               density!(ax, flat_data[:, i], color=(:dodgerblue, 0.5), strokewidth=2)
+               density!(ax, flat_chain[:, i], color=(:dodgerblue, 0.5), strokewidth=2)
                
                # Sigma lines
-               vlines!(ax, [val - minus, val, val + plus], color=:black, linestyle=:dash)
+               vlines!(ax, [best_θ[i] - lower_err[i], best_θ[i], best_θ[i] + upper_err[i]], color=:black, linestyle=:dash)
 
                ylims!(ax, 0, nothing)
          else
                # 2D Corner: KDE Contours
                # Note: j is x-axis (column), i is y-axis (row)
-               k = kde((flat_data[:, j], flat_data[:, i]))
+               k = kde((flat_chain[:, j], flat_chain[:, i]))
                levels = _get_levels(k.density)
                
                contour_levels = sort(unique([levels..., maximum(k.density) + 1e-10]))
