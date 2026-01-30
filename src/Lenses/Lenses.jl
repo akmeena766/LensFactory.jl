@@ -1,10 +1,16 @@
 module Lenses
 
+
+# --------------------------------------------------------------------------------------------------
 # Julia inbuilt functions to import
+# --------------------------------------------------------------------------------------------------
 using QuadGK
 using SpecialFunctions
 
+
+# --------------------------------------------------------------------------------------------------
 # LensFactory modules to use
+# --------------------------------------------------------------------------------------------------
 using ..Constants
 using ..Cosmology
 using ..LFUtils
@@ -35,7 +41,10 @@ include("./MultiPlummerLens.jl")
 include("./MultiGaussianLens.jl")
 include("./MultiPJELens.jl")
 
+
+# --------------------------------------------------------------------------------------------------
 # Various lensing function to export
+# --------------------------------------------------------------------------------------------------
 export get_meshgrid
 export get_critical_density
 export get_potential
@@ -50,7 +59,10 @@ export get_caustic
 export get_critical_area
 export get_einstein_angle
 
+
+# --------------------------------------------------------------------------------------------------
 # Plotting functions (see ../../ext folder for functions)
+# --------------------------------------------------------------------------------------------------
 export plot_sky
 export plot_image_plane
 export plot_surface_density
@@ -173,11 +185,8 @@ end
 """
     get_potential(lens::AbstractLens, θx::T, θy::T) where T <: ROA --> ROA
 
-Calculates the lensing potential~``(ψ)`` at the given angular coordinates ``(θx, θy)`` for the given 
+Calculates the lensing potential, ``ψ``, at the given angular coordinates ``(θ_x, θ_y)`` for the given 
 lens model.
-```math
-ψ(θ_x, θ_y) = \\frac{1}{2}
-```
 """
 function get_potential(lens::AbstractLens, θx::T, θy::T) where T <: Union{ROA, Vector{Int64}}
    # Check if the input coordinates are of the same size
@@ -235,9 +244,6 @@ end
 """
     get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: ROA --> Tuple{ROA, ROA}
 Calculates the vector deflection angle (i.e., the gradient of the potential) for a given lens model. 
-```math
-\\pmb{α}(θ_x, θ_y) = \\pmb{∇}ψ(θ_x, θ_y)
-```
 """
 function get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: ROA
    # Check if the input coordinates are of the same size
@@ -372,7 +378,7 @@ end
 
 
 """
-    get_magnification_image(lens::AbstractLens, θx::T, θy::T) where T <: RV
+    get_magnification_image(lens::AbstractLens, θx::T, θy::T) where T <: RV --> RV
 """
 function get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: RV
    # Get the jacobian components
@@ -388,7 +394,8 @@ function get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float
 end
 
 """
-    get_magnification_image(lens::AbstractLens, θx::T, θy::T) where T <: ROA 
+    get_magnification_image(lens::AbstractLens, θx::T, θy::T) where T <: ROA --> ROA
+Calculates the magnification at the given angular coordinates ``(θ_x, θ_y)`` for a given lens model.
 """
 function get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: ROA
    # Get the jacobian components
@@ -404,6 +411,13 @@ function get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float
 end
 
 
+"""
+    get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Float64; rays_per_pixel::Int64=1) where T <: Matrix{<:RV} --> Matrix{RV}
+Calculates the magnification map in source plane using inverse ray shooting (IRS) for a given lens 
+model. The number of rays per pixel can be specified using the `rays_per_pixel` keyword argument. 
+This implementation is not optimized for speed and is only intended to visualize the magnification 
+map. For more optimized implementations, see various methods in `LensFactory.Microlensing` module.
+"""
 function get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Float64; rays_per_pixel::Int64=1) where T <: Matrix{<:RV}
    # Deflection field
    ψx, ψy = get_deflection(lens, θx, θy)
@@ -638,8 +652,9 @@ function ellipticity_polar2cartesian(e::T, phi::T) where T <: RV
 end
 
 
-
-#--------------------- Potential functions for specific lens models -------------------------------#
+# --------------------------------------------------------------------------------------------------
+# -------------------- Potential functions for specific lens models --------------------------------
+# --------------------------------------------------------------------------------------------------
 @inline function potential_helper!(ψ::T, lens::init_PointLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return PointLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass)
 end
@@ -733,7 +748,9 @@ end
 end
 
 
-#--------------------- Deflection functions for specific lens models -------------------------------#
+# --------------------------------------------------------------------------------------------------
+# -------------------- Deflection functions for specific lens models -------------------------------
+# --------------------------------------------------------------------------------------------------
 @inline function deflection_helper!(ψx::T, ψy::T, lens::init_PointLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return PointLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass)
 end
@@ -827,7 +844,9 @@ end
 end
 
 
-#--------------------- Deformation tensor for various lens models ---------------------------------#
+# --------------------------------------------------------------------------------------------------
+# -------------------- Deformation tensor for various lens models ----------------------------------
+# --------------------------------------------------------------------------------------------------
 @inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PointLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return PointLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass)
 end

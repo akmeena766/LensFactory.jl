@@ -2,8 +2,13 @@
 The `Constants` module contains the list of global constants defined in `LensFactory`. For examples 
 on how to import and use various constants, please see 
 [Example - 1](https://github.com/akmeena766/LensFactory_Examples/blob/main/Example-1%3A%20Constants%20and%20Cosmology.ipynb).
-Below is the full list of various constants available. 
+Below is the full list of various constants available.
 
+### Typed constants
+```
+RV = Union{Int64, Float64}
+ROA = Union{Vector{T}, Matrix{T}} where T <: Float64
+```
 
 ### Natural constants
 ```

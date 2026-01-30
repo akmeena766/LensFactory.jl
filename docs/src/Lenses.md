@@ -8,6 +8,7 @@ Lenses.get_deflection
 Lenses.get_jacobian
 Lenses.get_time_delay
 Lenses.get_magnification_image
+Lenses.get_magnification_source
 Lenses.get_image
 Lenses.get_critical_curve
 Lenses.get_caustic
