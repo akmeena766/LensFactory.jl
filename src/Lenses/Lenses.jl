@@ -751,10 +751,10 @@ end
 Converts the Cartesian components of the shear (i.e., ``γ_1`` and ``γ_2``) to polar components
 (i.e., ``γ`` and ``φ``) using the relations,
 ```math
-\\begin{align}
+\\begin{align*}
 γ &= \\sqrt{γ_1^2 + γ_2^2}, \\\\
 φ &= \\frac{1}{2} \\tan^{-1}\\left(\\frac{γ_2}{γ_1}\\right).
-\\end{align}
+\\end{align*}
 ```
 
 - Input:
@@ -763,7 +763,7 @@ Converts the Cartesian components of the shear (i.e., ``γ_1`` and ``γ_2``) to 
 
 - Output:
    - `γ::Float64`: Polar component of the shear (i.e., ``γ``).
-   - `φ::Float64`: Polar component of the shear (i.e., ``φ``).
+   - `φ::Float64`: Polar component of the shear (i.e., ``φ`` in ``\\rm \\mathbf{degrees}``).
 """
 function shear_cartesian2polar(γ1::T, γ2::T) where T <: RV
    return hypot(γ1, γ2), 0.5 * rad2deg(atan(γ2, γ1))
@@ -775,15 +775,15 @@ end
 Converts the polar components of the shear (i.e., ``γ`` and ``φ``) to Cartesian components
 (i.e., ``γ_1`` and ``γ_2``) using the relations,
 ```math
-\\begin{align}
+\\begin{align*}
 γ_1 &= γ \\cos(2φ), \\\\
 γ_2 &= γ \\sin(2φ).
-\\end{align}
+\\end{align*}
 ```
 
 - Input:
    - `γ::T`: Polar component of the shear (i.e., ``γ``).
-   - `φ::T`: Polar component of the shear (i.e., ``φ``).
+   - `φ::T`: Polar component of the shear (i.e., ``φ`` in ``\\rm \\mathbf{degrees}``).
 
 - Output:
    - `γ1::Float64`: Cartesian component of the shear (i.e., ``γ_1``).
@@ -799,10 +799,10 @@ end
 Converts the Cartesian components of the ellipticity (i.e., ``e_1`` and ``e_2``) to polar components
 (i.e., ``e`` and ``φ``) using the relations,
 ```math
-\\begin{align}
+\\begin{align*}
 e &= \\sqrt{e_1^2 + e_2^2}, \\\\
 φ &= \\frac{1}{2} \\tan^{-1}\\left(\\frac{e_2}{e_1}\\right).
-\\end{align}
+\\end{align*}
 ```
 
 - Input:
@@ -811,7 +811,7 @@ e &= \\sqrt{e_1^2 + e_2^2}, \\\\
 
 - Output:
    - `e::Float64`: Polar component of the ellipticity (i.e., ``e``).
-   - `φ::Float64`: Polar component of the ellipticity (i.e., ``φ``).
+   - `φ::Float64`: Polar component of the ellipticity (i.e., ``φ`` in ``\\rm \\mathbf{degrees}``).
 """
 function ellipticity_cartesian2polar(e1::T, e2::T) where T <: RV
    return hypot(e1, e2), 0.5 * rad2deg(atan(e2, e1))
@@ -823,15 +823,15 @@ end
 Converts the polar components of the ellipticity (i.e., ``e`` and ``φ``) to Cartesian components
 (i.e., ``e_1`` and ``e_2``) using the relations,
 ```math
-\\begin{align}
+\\begin{align*}
 e_1 &= e \\cos(2φ), \\\\
 e_2 &= e \\sin(2φ).
-\\end{align}
+\\end{align*}
 ```
 
 - Input:
    - `e::T`: Polar component of the ellipticity (i.e., ``e``).
-   - `φ::T`: Polar component of the ellipticity (i.e., ``φ``).
+   - `φ::T`: Polar component of the ellipticity (i.e., ``φ`` in ``\\rm \\mathbf{degrees}``).
 
 - Output:
    - `e1::Float64`: Cartesian component of the ellipticity (i.e., ``e_1``).
