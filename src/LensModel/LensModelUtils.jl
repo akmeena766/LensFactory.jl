@@ -525,4 +525,16 @@ function get_best_fit_with_errors(chains::Array{Float64, 3}, lls::Matrix{Float64
    return best_θ, lower_err, upper_err, best_logL, -2.0 * best_logL
 end
 
+
+# --------------------------------------------------------------------------------------------------
+# Get best-fit model RMS and parity check
+# --------------------------------------------------------------------------------------------------
+function check_parity(chains::Array{Float64, 3}, lls::Matrix{Float64})
+   
+end
+
+function get_best_fit_rms(chains::Array{Float64, 3}, lls::Matrix{Float64}; check_parity::Bool=false)
+   
+end
+
 end

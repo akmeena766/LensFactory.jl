@@ -47,10 +47,14 @@ using .LensModelFit
 # --------------------------------------------------------------------------------------------------
 export read_input, fit_model
 export free_parameter_names
-export calculate_gr, print_gr_report
+export calculate_gr
+export print_gr_report
 
 
+
+# --------------------------------------------------------------------------------------------------
 # Plotting functions (see ../../ext folder for functions)
+# --------------------------------------------------------------------------------------------------
 export plot_corner
 export plot_trace
 

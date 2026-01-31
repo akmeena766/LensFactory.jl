@@ -1,5 +1,7 @@
 # Lenses
 
+This module 
+
 ```@docs
 Lenses.get_meshgrid
 Lenses.get_critical_density

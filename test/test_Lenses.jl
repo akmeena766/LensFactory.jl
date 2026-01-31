@@ -20,9 +20,6 @@
       # Σ_cr > 0 
       @test Σcr > 0.0
 
-      # Σ_cr using distance ratio
-      @test Σcr ≈ Lenses.get_critical_density(D_d, 0.5)
-
       # Unit conversion: kg/m^2 --> msun/pc^2
       @test Σcr * (DIST_PC^2 / MASS_SUN) ≈ Lenses.get_critical_density(D_d, D_ds, D_s; unit=:msun_pc2)
 

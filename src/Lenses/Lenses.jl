@@ -78,10 +78,18 @@ function plot_magnification_profile end
 
 """
     get_meshgrid(θx::RV, θy::RV, dθ::RV) --> Tuple{Matrix{Float64}, Matrix{Float64}}
-
 Generate a meshgrid of coordinates on which various quantities can be evaluated. At present,
 this function only generates square pixels. In future if the need arises, it can be extended 
 to generate rectangular pixels as well.
+
+- Input:
+   - `θx::RV`: Half-size of the grid in x-direction
+   - `θy::RV`: Half-size of the grid in y-direction
+   - `dθ::RV`: Pixel size
+
+- Output:
+   - `grid_x::Matrix{Float64}`: x-coordinates of the grid
+   - `grid_y::Matrix{Float64}`: y-coordinates of the grid
 """
 function get_meshgrid(θx::RV, θy::RV, dθ::RV)
    # Making sure that grid and pixel size are positive
@@ -110,36 +118,24 @@ end
 
 
 """
-    get_critical_density(D_d::Float64, adis::Float64; unit::Symbol=:kg_m2) --> Float64
-"""
-function get_critical_density(D_d::Float64, adis::Float64; unit::Symbol=:kg_m2)
-   # Calculate Σ_cr in kg/m^2 based type of input parameters
-   Σ_cr = (CONST_C^2 / (4.0 * π * CONST_G)) * (1.0 / (D_d * adis))
-   
-   # Convert to the requested unit
-   if unit == :kg_m2
-      return Σ_cr
-   elseif unit == :msun_pc2
-      return Σ_cr * ( DIST_PC^2 / MASS_SUN )
-   elseif unit == :msun_arcsec2
-      return Σ_cr * ( D_d^2 * ANGLE_ARCSEC^2 / MASS_SUN )
-   else
-      throw(ArgumentError("Invalid unit: $unit. Must be 'kg_m2' or 'msun_pc2' or 'msun_arcsec2'."))
-   end
-end
-
-"""
-    get_critical_density(D_d::Float64, D_ds::Float64, D_s::Float64s; unit::Symbol=:kg_m2) --> Float64
-
+    get_critical_density(D_d::Float64, D_ds::Float64, D_s::Float64s; unit::Symbol=:kg_m2) --> Float64s
 Calculate the critical surface density,
 ```math
 Σ_{\\rm cr} = \\frac{c^2}{4 π {\\rm G}} \\frac{D_s}{D_d D_{ds}},
 ```
-given the angular diameter distances. The result can be returned in different units,
-- `:kg_m2` ``\\Rightarrow{\\rm kg/m^2}``, 
-- `:msun_pc2` ``\\Rightarrow{\\rm M_⊙/pc^2}``, 
-- `:msun_arcsec2` ``\\Rightarrow{\\rm M_⊙/arcsec^2}``.
+given the angular diameter distances. 
 
+- Input:
+   - `D_d::Float64`: Angular diameter distance to the lens (in Mpc)
+   - `D_ds::Float64`: Angular diameter distance to the source (in Mpc)
+   - `D_s::Float64`: Angular diameter distance to the lens (in Mpc)
+   - `unit::Symbol`: Unit of the result (default is `:kg_m2`)
+      - `:kg_m2` ``\\Rightarrow{\\rm kg/m^2}``, 
+      - `:msun_pc2` ``\\Rightarrow{\\rm M_⊙/pc^2}``, 
+      - `:msun_arcsec2` ``\\Rightarrow{\\rm M_⊙/arcsec^2}``
+
+- Output:
+   - `Σ_cr::Float64`: Critical surface density in the requested unit
 """
 function get_critical_density(D_d::Float64, D_ds::Float64, D_s::Float64; unit::Symbol=:kg_m2)
    # Calculate Σ_cr in kg/m^2 based type of input parameters
@@ -184,9 +180,18 @@ end
 
 """
     get_potential(lens::AbstractLens, θx::T, θy::T) where T <: ROA --> ROA
+Calculate lensing potential at the given angular coordinates for the given lens model,
+```math
+ψ(\\pmb{θ}) = \\frac{4{\\rm G}}{\\rm c^2} \\frac{1}{D_d} \\int d^2 \\pmb{θ}' \\, Σ(\\pmb{θ}') \\, \\ln\\left(|\\pmb{θ} - \\pmb{θ'}|\\right).
+```
 
-Calculates the lensing potential, ``ψ``, at the given angular coordinates ``(θ_x, θ_y)`` for the given 
-lens model.
+- Input:
+   - `lens::AbstractLens`: Lens model
+   - `θx::T`: x-coordinate(s)
+   - `θy::T`: y-coordinate(s)
+
+- Output:
+   - `ψ::ROA`: Lensing potential at the given angular coordinate(s)
 """
 function get_potential(lens::AbstractLens, θx::T, θy::T) where T <: Union{ROA, Vector{Int64}}
    # Check if the input coordinates are of the same size
@@ -243,7 +248,20 @@ end
 
 """
     get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: ROA --> Tuple{ROA, ROA}
-Calculates the vector deflection angle (i.e., the gradient of the potential) for a given lens model. 
+Calculate (vector) deflection angle at the given angular coordinate(s) for a given lens model,
+```math
+\\pmb{α}(\\pmb{θ}) = \\pmb{∇} ψ(\\pmb{θ}) 
+= \\frac{4{\\rm G}}{\\rm c^2} \\frac{1}{D_d} \\int d^2 \\pmb{θ}' \\, Σ(\\pmb{θ}') \\frac{\\pmb{θ} - \\pmb{θ}'}{|\\pmb{θ} - \\pmb{θ}'|^2}.
+```
+
+- Input:
+   - `lens::AbstractLens`: Lens model
+   - `θx::T`: x-coordinate(s)
+   - `θy::T`: y-coordinate(s)
+
+- Output:
+   - `αx::ROA`: x-component of the deflection angle at the given angular coordinate(s)
+   - `αy::ROA`: y-component of the deflection angle at the given angular coordinate(s)
 """
 function get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: ROA
    # Check if the input coordinates are of the same size
@@ -304,9 +322,27 @@ end
 
 """
     get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: ROA --> Tuple{ROA, ROA, ROA}
-Calculates the jacobian (i.e., deformation tensor) of the lens mapping for a given lens model.
+Calculate jacobian (i.e., deformation tensor) of the lens mapping for a given lens model,
+```math
+\\mathcal{A}(\\pmb{θ}) = 
+\\begin{pmatrix}
+   ψ_{xx} & ψ_{xy} \\\\
+   ψ_{xy} & ψ_{yy}
+\\end{pmatrix}.
+```
+
 Since the jacobian is symmetric (for single lens plane), only three components are returned,
 i.e., ``(ψ_{xx}, ψ_{yy}, ψ_{xy})``.
+
+- Input:
+   - `lens::AbstractLens`: Lens model
+   - `θx::T`: x-coordinate(s)
+   - `θy::T`: y-coordinate(s)
+
+- Output:
+   - `ψxx::ROA`: xx-component of the jacobian at the given angular coordinate(s)
+   - `ψyy::ROA`: yy-component of the jacobian at the given angular coordinate(s)
+   - `ψxy::ROA`: xy-component of the jacobian at the given angular coordinate(s)
 """
 function get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: ROA
    # Check if the input coordinates are of the same size
@@ -359,12 +395,24 @@ end
 
 """
     get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::RV, D_d::RV, β::NTuple{2, RV}) where T <: ROA --> ROA
-Calculates the time delay for a given lens model. The corresponding expression is given as,
+Calculate time delay for a given lens model and source position. The corresponding expression is given as,
 ```math
 t_d(\\pmb{θ}; \\pmb{β}) = \\frac{1+z_l}{\\rm c} \\frac{D_d D_s}{D_{ds}} \\theta_0^2
    \\left[ \\frac{(\\pmb{θ} - \\pmb{β})^2}{2} - \\frac{D_{ds}}{D_s} \\psi(\\pmb{θ}) \\right],
 ```
 where ``\\theta_0`` is normalizing angular unit.
+
+- Input:
+   - `lens::AbstractLens`: Lens model
+   - `θx::T`: x-coordinate(s)
+   - `θy::T`: y-coordinate(s)
+   - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``)
+   - `z_d::RV`: Lens redshift
+   - `D_d::RV`: Angular diameter distance to the lens (in meters)
+   - `β::NTuple{2, RV}`: Source angular position (in arcseconds)
+
+- Output:
+   - `t_d::ROA`: Time delay at the given angular coordinate(s)
 """
 function get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::RV, D_d::RV, β::NTuple{2, RV}) where T <: ROA
    # Constant multiplicative factor
@@ -395,7 +443,21 @@ end
 
 """
     get_magnification_image(lens::AbstractLens, θx::T, θy::T) where T <: ROA --> ROA
-Calculates the magnification at the given angular coordinates ``(θ_x, θ_y)`` for a given lens model.
+Calculate signed magnification at the given angular coordinate(s) for a given lens model,
+```math
+\\mu(\\pmb{θ}) = \\frac{1}{det\\left[ \\mathbb{I} - \\mathcal{A} \\right]} 
+= \\frac{1}{1 + ψ_{xx} ψ_{yy} - ψ_{xx} - ψ_{yy} - ψ_{xy}^2},
+```
+where ``\\mathbb{I}`` is the identity matrix.
+
+- Input:
+   - `lens::AbstractLens`: Lens model
+   - `θx::T`: x-coordinate(s)
+   - `θy::T`: y-coordinate(s)
+   - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``)
+
+- Output:
+   - `μ::ROA`: Magnification at the given angular coordinate(s)
 """
 function get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: ROA
    # Get the jacobian components
@@ -406,7 +468,7 @@ function get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float
    @. ψyy = adis * ψyy
    @. ψxy = adis * ψxy
 
-   # μ = 1 / det(A)
+   # μ = 1 / det(1 - A)
    return @. 1.0 / (1.0 + ψxx * ψyy - ψxx - ψyy - ψxy^2)
 end
 
@@ -414,9 +476,18 @@ end
 """
     get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Float64; rays_per_pixel::Int64=1) where T <: Matrix{<:RV} --> Matrix{RV}
 Calculates the magnification map in source plane using inverse ray shooting (IRS) for a given lens 
-model. The number of rays per pixel can be specified using the `rays_per_pixel` keyword argument. 
-This implementation is not optimized for speed and is only intended to visualize the magnification 
-map. For more optimized implementations, see various methods in `LensFactory.Microlensing` module.
+model. The number of average rays per pixel can be specified using the `rays_per_pixel` keyword argument. 
+This function is not optimized for speed and is only intended to visualize the magnification map.
+
+- Input:
+   - `lens::AbstractLens`: Lens model
+   - `θx::Matrix{<:RV}`: x-grid
+   - `θy::Matrix{<:RV}`: y-grid
+   - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``)
+   - `rays_per_pixel::Int64`: Average number of rays per pixel
+
+- Output:
+   - `μ_source::Matrix{<:RV}`: Magnification map in source plane
 """
 function get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Float64; rays_per_pixel::Int64=1) where T <: Matrix{<:RV}
    # Deflection field
@@ -467,6 +538,24 @@ end
 
 """
     get_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64, β::NTuple{2, RV}) --> Vector{NTuple{2, RV}}
+Calculate image positions for a given lens model and source position. To get the image positions,
+this implementation finds the intersection points of contours corresponding to,
+```math
+\\pmb{β} - \\pmb{θ} + a_{\\rm dis} \\, \\pmb{α}(\\pmb{θ}) = 0,
+```
+where ``\\pmb{β}`` is the source position, ``\\pmb{θ}`` is the image plane grid, ``a_{\\rm dis}`` is the 
+distance ratio (i.e., ``D_{ds}/D_s``), and ``\\pmb{α}(\\pmb{θ})`` is the deflection angle. To find 
+the intersection points inside the pixels, we use bi-linear interpolation.
+
+- Input:
+   - `lens::AbstractLens`: Lens model
+   - `θx::ROA`: x-grid
+   - `θy::ROA`: y-grid
+   - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``)
+   - `β::NTuple{2, RV}`: Source position
+
+- Output:
+   - `image_position::Vector{NTuple{2, RV}}`: Image positions
 """
 function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::NTuple{2, RV}) where T <: Matrix{<:RV}
    # Get the potential gradient
@@ -544,7 +633,9 @@ function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::T) whe
 end
 
 """
-    get_critical_curve(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
+    get_critical_curve(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV} --> Tuple{Vector{Vector{Vector{Float64}}}, Vector{Vector{Vector{Float64}}}}
+
+Calculates the critical curves for a given lens model.
 """
 function get_critical_curve(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
    # Get the jacobian components
