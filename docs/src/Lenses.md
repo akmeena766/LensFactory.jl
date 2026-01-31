@@ -1,6 +1,16 @@
 # Lenses
 
-This module 
+The `Lenses` is the interface between the user and the lens models. User is expected to call functions
+from this module to compute various lensing quantities. For examples on how to use this module and 
+various functions within it, see 
+[Example - 2](https://github.com/akmeena766/LensFactory_Examples/blob/main/Example-2%3A%20Basic%20strong%20lensing.ipynb)
+and 
+[Example - 3](https://github.com/akmeena766/LensFactory_Examples/blob/main/Example-3%3A%20Lensing%20quantities.ipynb).
+
+!!! note
+    Keeping in mind that most of the astrophysical scenario (primarily strong lensing by galaxies or 
+    galaxy clusters), the Einstein angle is ~[0.1, 50] arcseconds, the default input coordinate 
+    units are arcseconds.
 
 ```@docs
 Lenses.get_meshgrid

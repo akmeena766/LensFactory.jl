@@ -26,8 +26,17 @@ abstract type AbstractCosmology end
 
 """
     init_cosmology(H0::RV=70.0, w::RV=-1.0, Omega_m0::RV=0.3, Omega_r0::RV=0.0, Omega_w0::RV=0.7)
+An Abstract type to initialize a cosmology with given parameters.
 
-An Abstract type to initialize a given cosmology.
+- Input:
+   - `H0::RV`: Hubble constant in ``{\\rm \\mathbf{km/s/Mpc}}``.
+   - `w::RV`: Dark energy equation of state parameter.
+   - `Omega_m0::RV`: Matter density parameter.
+   - `Omega_r0::RV`: Radiation density parameter.
+   - `Omega_w0::RV`: Dark energy density parameter.
+
+- Output:
+   - `Omega_k0`: Curvature density parameter.
 """
 @kwdef struct init_cosmology <: AbstractCosmology
    H0::RV = 70.0
@@ -42,11 +51,16 @@ end
 """ 
     scale_factor(z::RV) --> RV
 
-Calculates the scale factor ``(a)`` at redshift ``z``. The formula is,
-
+Calculate scale factor ``(a)`` at redshift ``z``,
 ```math
-a = \\frac{1}{1+z}
+a = \\frac{1}{1+z}.
 ```
+
+- Input:
+   - `z::RV`: Redshift.
+
+- Output:
+   - `a::RV`: Scale factor.
 """
 function scale_factor(z::RV)
    return 1.0 / (1.0 + z)
@@ -55,12 +69,17 @@ end
 
 """
     Ez(cosmology::AbstractCosmology, z::RV) --> RV
-
-Calculates the dimensionless Hubble parameter ``(E)`` at redshift, ``z``. 
-The formula is,
+Calculate dimensionless Hubble parameter ``(E)`` at redshift, ``z``,
 ```math
-E(z) = \\sqrt{ Ω_{m0} (1+z)^2 + Ω_{r0} (1+z)^4 + Ω_{k0} (1+z)^2 + Ω_{w0} (1+z)^{3(1+w)} }
+E(z) = \\sqrt{ Ω_{m0} (1+z)^2 + Ω_{r0} (1+z)^4 + Ω_{k0} (1+z)^2 + Ω_{w0} (1+z)^{3(1+w)} }.
 ```
+
+- Input:
+   - `cosmology::AbstractCosmology`: Cosmology object.
+   - `z::RV`: Redshift.
+
+- Output:
+   - `Ez::RV`: Dimensionless Hubble parameter.
 """
 function Ez(cosmology::AbstractCosmology, z::RV)
       return sqrt(cosmology.Omega_m0 * (1.0 + z)^3 +  
@@ -72,12 +91,17 @@ end
 
 """
     hubble_parameter(cosmology::AbstractCosmology, z::RV) --> RV
-
-Calculates the Hubble parameter ``(H)`` at redshift ``z`` in ``{\\rm \\mathbf{km/s/Mpc}}``. 
-The formula is,
+Calculate Hubble parameter ``(H)`` at redshift ``z`` in ``{\\rm \\mathbf{km/s/Mpc}}``,
 ```math
-H(z) = H_0 \\: E(z)
+H(z) = H_0 \\: E(z).
 ```
+
+- Input:
+   - `cosmology::AbstractCosmology`: Cosmology object.
+   - `z::RV`: Redshift.
+
+- Output:
+   - `H::RV`: Hubble parameter.
 """
 function hubble_parameter(cosmology::AbstractCosmology, z::RV)
    return cosmology.H0 * Ez(cosmology, z)
@@ -86,11 +110,16 @@ end
 
 """ 
     hubble_time(H0::RV) --> RV
-
-Calculates the Hubble time ``(t_H)`` in ``{\\rm \\mathbf{Gyr}}``. The formula is,
+Calculate Hubble time ``(t_H)`` in ``{\\rm \\mathbf{Gyr}}``,
 ```math
-t_H = \\frac{1}{H_0}
+t_H = \\frac{1}{H_0}.
 ```
+
+- Input:
+   - `H0::RV`: Hubble constant in ``{\\rm \\mathbf{km/s/Mpc}}``.
+
+- Output:
+   - `tH::RV`: Hubble time in ``{\\rm \\mathbf{Gyr}}``.
 """
 function hubble_time(H0::RV)
    return DIST_MPC / H0 / 1.0E3 / YEAR2SECOND / 1.0E9
@@ -99,12 +128,17 @@ end
 
 """
     age(cosmology::AbstractCosmology, z::RV) --> RV
-
-Calculates the age ``(t_{\\rm age})`` of the Universe at redshift ``z`` in ``{\\rm \\mathbf{Gyr}}``.
-The formula is,
+Calculate age ``(t_{\\rm age})`` of the Universe at redshift ``z`` in ``{\\rm \\mathbf{Gyr}}``,
 ```math 
-t_{\\rm age}(z) = \\int_z^\\infty \\frac{1}{(1+z')H(z')} dz' 
+t_{\\rm age}(z) = \\int_z^\\infty \\frac{1}{(1+z')H(z')} dz'.
 ```
+
+- Input:
+   - `cosmology::AbstractCosmology`: Cosmology object.
+   - `z::RV`: Redshift.
+
+- Output:
+   - `age::RV`: Age of the Universe in ``{\\rm \\mathbf{Gyr}}``.
 """
 function age(cosmology::AbstractCosmology, z::RV)
    # Hubble time (in years)
@@ -126,12 +160,17 @@ end
 
 """
     lookback_time(cosmology::AbstractCosmology, z::RV) --> RV
-
-Calculates lookbak time ``(t_L)`` to a given redshift ``z`` in ``{\\rm \\mathbf{Gyr}}``.
-The formula is,
-```math 
-t_L(z) = \\int_0^z \\frac{1}{(1+z')H(z')} dz' 
+Calculate lookbak time ``(t_L)`` to a given redshift ``z`` in ``{\\rm \\mathbf{Gyr}}``,
+```math
+t_L(z) = \\int_0^z \\frac{1}{(1+z')H(z')} dz'.
 ```
+
+- Input:
+   - `cosmology::AbstractCosmology`: Cosmology object.
+   - `z::RV`: Redshift.
+
+- Output:
+   - `tL::RV`: Lookback time in ``{\\rm \\mathbf{Gyr}}``.
 """
 function lookback_time(cosmology::AbstractCosmology, z::RV)
    # Hubble time (in years)
@@ -153,12 +192,17 @@ end
 
 """
     rho_cz(cosmology::AbstractCosmology, z::RV) --> RV
-
-Calculates the critical density ``(\\rho_c)`` of the Universe at redshift ``z`` in ``{\\rm \\mathbf{kg/m^3}}``.
-The formula is,
+Calculate the critical density ``(\\rho_c)`` of the Universe at redshift ``z`` in ``{\\rm \\mathbf{kg/m^3}}``,
 ```math
-\\rho_c(z) = \\frac{3 H^2(z)}{8 π {\\rm G} }
+\\rho_c(z) = \\frac{3 H^2(z)}{8 π {\\rm G} }.
 ```
+
+- Input:
+   - `cosmology::AbstractCosmology`: Cosmology object.
+   - `z::RV`: Redshift.
+
+- Output:
+   - `rho_c::RV`: Critical density in ``{\\rm \\mathbf{kg/m^3}}``.
 """
 function rho_cz(cosmology::AbstractCosmology, z::RV)
    return (3.0 / 8.0 / π / CONST_G) * hubble_parameter(cosmology, z)^2 * (1.0E3 / DIST_MPC)^2
@@ -167,12 +211,17 @@ end
 
 """
     Omega_mz(cosmology::AbstractCosmology, z::RV) --> RV
-
-Calculates the matter density parameter ``(\\Omega_{m})`` at redshift ``z``. The formula is,
-
+Calculate the dimensionless matter density parameter ``(\\Omega_{m})`` at redshift ``z``,
 ```math
-Ω_{m}(z) = Ω_{m}(0) \\: (1+z)^3 \\left( \\frac{H0}{H(z)} \\right)^2
+Ω_{m}(z) = Ω_{m}(0) \\: (1+z)^3 \\left( \\frac{H0}{H(z)} \\right)^2.
 ```
+
+- Input:
+   - `cosmology::AbstractCosmology`: Cosmology object.
+   - `z::RV`: Redshift.
+
+- Output:
+   - `Omega_m::RV`: Dimensionless matter density parameter.
 """
 function Omega_mz(cosmology::AbstractCosmology, z::RV)
    return cosmology.Omega_m0 * (1 + z)^3 * (cosmology.H0 / hubble_parameter(cosmology, z))^2
@@ -181,12 +230,17 @@ end
 
 """
     Omega_rz(cosmology::AbstractCosmology, z::RV) --> RV
-
-Calculates the matter density parameter ``(\\Omega_{r})`` at redshift ``z``. The formula is,
-
+Calculate the dimensionless radiation density parameter ``(\\Omega_{r})`` at redshift ``z``,
 ```math
-Ω_{r}(z) = Ω_{r}(0) \\: (1+z)^4 \\left( \\frac{H_0}{H(z)} \\right)^2
+Ω_{r}(z) = Ω_{r}(0) \\: (1+z)^4 \\left( \\frac{H_0}{H(z)} \\right)^2.
 ```
+
+- Input:
+   - `cosmology::AbstractCosmology`: Cosmology object.
+   - `z::RV`: Redshift.
+
+- Output:
+   - `Omega_r::RV`: Dimensionless radiation density parameter.
 """
 function Omega_rz(cosmology::AbstractCosmology, z::RV)
    return cosmology.Omega_r0 * (1 + z)^4 * (cosmology.H0 / hubble_parameter(cosmology, z))^2
@@ -195,12 +249,17 @@ end
 
 """
     Omega_wz(cosmology::AbstractCosmology, z::RV) --> RV
-
-Calculates the dark energy density parameter ``(\\Omega_{w})`` at redshift ``z``. The formula is,
-
+Calculate the dimensionless dark energy density parameter ``(\\Omega_{w})`` at redshift ``z``,
 ```math
-Ω_{w}(z) = Ω_{w0} (1+z)^{3(1+w)} \\left( \\frac{H_0}{H(z)} \\right)^2
+Ω_{w}(z) = Ω_{w0} (1+z)^{3(1+w)} \\left( \\frac{H_0}{H(z)} \\right)^2.
 ```
+
+- Input:
+   - `cosmology::AbstractCosmology`: Cosmology object.
+   - `z::RV`: Redshift.
+
+- Output:
+   - `Omega_w::RV`: Dimensionless dark energy density parameter.
 """
 function Omega_wz(cosmology::AbstractCosmology, z::RV)
    return cosmology.Omega_w0 * (1 + z)^(3.0 * (1.0 + cosmology.w)) * (cosmology.H0/hubble_parameter(cosmology, z))^2
@@ -209,12 +268,17 @@ end
 
 """
     Omega_kz(cosmology::AbstractCosmology, z::RV) --> RV
-
-Calculates the curvature density parameter ``(\\Omega_{k})`` at redshift ``z``. The formula is,
-
+Calculate the dimensionless curvature density parameter ``(\\Omega_{k})`` at redshift ``z``,
 ```math 
-Ω_{k}(z) = Ω_{k0} (1+z)^2 \\left( \\frac{H_0}{H(z)} \\right)^2
+Ω_{k}(z) = Ω_{k0} (1+z)^2 \\left( \\frac{H_0}{H(z)} \\right)^2.
 ```
+
+- Input:
+   - `cosmology::AbstractCosmology`: Cosmology object.
+   - `z::RV`: Redshift.
+
+- Output:
+   - `Omega_k::RV`: Dimensionless curvature density parameter.
 """
 function Omega_kz(cosmology::AbstractCosmology, z::RV)
    return cosmology.Omega_k0 * (1 + z)^2 * (cosmology.H0/hubble_parameter(cosmology, z))^2
@@ -223,13 +287,16 @@ end
 
 """ 
     hubble_distance(H0::RV) --> RV
-
-Calculates HUbble distance (i.e., size of the observable Universe) ``(D_H)`` in ``{\\rm \\mathbf{meters}}``. 
-The formula is
-
+Calculate the Hubble distance (i.e., size of the observable Universe) ``(D_H)`` in ``{\\rm \\mathbf{meters}}``,
 ```math 
-D_H = \\frac{\\rm c}{\\rm H_0} 
+D_H = \\frac{\\rm c}{\\rm H_0}.
 ```
+
+- Input:
+   - `H0::RV`: Hubble constant in ``{\\rm \\mathbf{km/s/Mpc}}``.
+
+- Output:
+   - `D_H::RV`: Hubble distance in ``{\\rm \\mathbf{meters}}``.
 """
 function hubble_distance(H0::RV)
    return CONST_C * DIST_MPC / H0 / 1.0E3
@@ -238,12 +305,19 @@ end
 
 """
     comoving_distance_radial(cosmo::AbstractCosmology, z1::RV, z2::RV) --> RV
-
-Calculates the comoving radial distance ``(D_C)`` between ``z_1`` and ``z_2`` in ``{\\rm \\mathbf{meters}}``.
+Calculate the comoving radial distance ``(D_C)`` between ``z_1`` and ``z_2`` in ``{\\rm \\mathbf{meters}}``.
 The formula is,
 ```math
-D_C = D_H \\int_{z_1}^{z_2} \\frac{dz'}{E(z')}
+D_C = D_H \\int_{z_1}^{z_2} \\frac{dz'}{E(z')}.
 ```
+
+- Input:
+   - `cosmology::AbstractCosmology`: Cosmology object.
+   - `z1::RV`: Redshift.
+   - `z2::RV`: Redshift.
+
+- Output:
+   - `D_C::RV`: Comoving radial distance in ``{\\rm \\mathbf{meters}}``.
 """
 function comoving_distance_radial(cosmology::AbstractCosmology, z1::RV, z2::RV)
    # Hubble distance
@@ -265,16 +339,22 @@ end
 
 """
     comoving_distance_transverse(cosmo::AbstractCosmology, z1::RV, z2::RV) --> RV
-
-Calculates the comoving radial distance ``(D_M)`` between, ``z_1`` and ``z_2`` in ``{\\rm \\mathbf{meters}}``.
-The formula is,
+Calculate the comoving radial distance ``(D_M)`` between, ``z_1`` and ``z_2`` in ``{\\rm \\mathbf{meters}}``,
 ```math
 D_M = \\begin{cases} 
-D_H \\frac{1}{\\sqrt{\\Omega_k}}   \\sinh \\left[ \\sqrt{\\Omega_k} \\:   D_C / D_H \\right] & \\text{if } \\Omega_k > 0 \\\\
-D_C                                                                                          & \\text{if } \\Omega_k = 0 \\\\
-D_H \\frac{1}{\\sqrt{|\\Omega_k|}}  \\sin \\left[ \\sqrt{|\\Omega_k|} \\: D_C / D_H \\right] & \\text{if } \\Omega_k < 0 \\\\
+D_H \\frac{1}{\\sqrt{\\Omega_k}}   \\sinh \\left[ \\sqrt{\\Omega_k} \\:   D_C / D_H \\right], & \\text{if } \\Omega_k > 0, \\\\
+D_C,                                                                                          & \\text{if } \\Omega_k = 0, \\\\
+D_H \\frac{1}{\\sqrt{|\\Omega_k|}}  \\sin \\left[ \\sqrt{|\\Omega_k|} \\: D_C / D_H \\right], & \\text{if } \\Omega_k < 0. \\\\
 \\end{cases}
 ```
+
+- Input:
+   - `cosmology::AbstractCosmology`: Cosmology object.
+   - `z1::RV`: Redshift.
+   - `z2::RV`: Redshift.
+
+- Output:
+   - `D_M::RV`: Comoving radial distance in ``{\\rm \\mathbf{meters}}``.
 """
 function comoving_distance_transverse(cosmology::AbstractCosmology, z1::RV, z2::RV)
    # Get the Hubble distance
@@ -301,11 +381,17 @@ end
 
 """
     luminosity_distance(cosmology::AbstractCosmology, z::RV) --> RV
-Calculates the luminosity distance ``(D_L)`` to redshift ``z`` in ``{\\rm \\mathbf{meters}}``. 
-The formula is,
+Calculate the luminosity distance ``(D_L)`` to redshift ``z`` in ``{\\rm \\mathbf{meters}}``,
 ```math
-D_L(z) = (1+z) D_M(z)
+D_L(z) = (1+z) D_M(z).
 ```
+
+- Input:
+   - `cosmology::AbstractCosmology`: Cosmology object.
+   - `z::RV`: Redshift.
+
+- Output:
+   - `D_L::RV`: Luminosity distance in ``{\\rm \\mathbf{meters}}``.
 """
 function luminosity_distance(cosmology::AbstractCosmology, z::RV)
    return (1.0 + z) * comoving_distance_transverse(cosmology, 0.0, z)
@@ -314,11 +400,18 @@ end
 
 """
     angular_diameter_distance(cosmology::AbstractCosmology, z1::RV, z2::RV) --> RV
-Calculates the angular diameter distance ``(D_A)`` between redshifts ``z_1`` and ``z_2`` in ``{\\rm \\mathbf{meters}}``. 
-The formula is,
+Calculate the angular diameter distance ``(D_A)`` between redshifts ``z_1`` and ``z_2`` in ``{\\rm \\mathbf{meters}}``,
 ```math
-D_A(z_1, z_2) = \\frac{D_M(z_1, z_2)}{1+z_2}
+D_A(z_1, z_2) = \\frac{D_M(z_1, z_2)}{1+z_2}.
 ```
+
+- Input:
+   - `cosmology::AbstractCosmology`: Cosmology object.
+   - `z1::RV`: Redshift.
+   - `z2::RV`: Redshift.
+
+- Output:
+   - `D_A::RV`: Angular diameter distance in ``{\\rm \\mathbf{meters}}``.
 """
 function angular_diameter_distance(cosmology::AbstractCosmology, z1::RV, z2::RV)
    return comoving_distance_transverse(cosmology, z1, z2) / (1.0 + z2)
@@ -327,12 +420,17 @@ end
 
 """
     distance_modulus(cosmo::AbstractCosmology, z::RV) --> RV
-
-Calculates the distance modulus ``(\\mu)`` to a given redshift ``z``. 
-The formula is,
+Calculate the distance modulus ``(\\mu)`` to a given redshift ``z``,
 ```math
-\\mu = 5 \\log\\left( \\frac{D_L}{\\rm pc} \\right) - 5
+\\mu = 5 \\log\\left( \\frac{D_L}{\\rm pc} \\right) - 5.
 ```
+
+- Input:
+   - `cosmology::AbstractCosmology`: Cosmology object.
+   - `z::RV`: Redshift.
+
+- Output:
+   - `mu::RV`: Distance modulus.
 """
 function distance_modulus(cosmology::AbstractCosmology, z::RV)
    return 5.0 * log10(luminosity_distance(cosmology, z) / DIST_PC) - 5.0
@@ -341,12 +439,17 @@ end
 
 """
     angular_scale(cosmology::AbstractCosmology, z::RV) --> RV
-
-Calculates the angular size in ``{\\rm \\mathbf{Kpc}}`` for ``1''`` on sky at redhsift, ``z``. 
-The formula is
+Calculate the angular size in ``{\\rm \\mathbf{Kpc}}`` for ``1''`` on sky at redhsift, ``z``,
 ```math
-d = 1'' \\times \\left( \\frac{D_A}{\\rm{kpc}} \\right)
+d = 1'' \\times \\left( \\frac{D_A}{\\rm{kpc}} \\right).
 ```
+
+- Input:
+   - `cosmology::AbstractCosmology`: Cosmology object.
+   - `z::RV`: Redshift.
+
+- Output:
+   - `d::RV`: Angular size in ``{\\rm \\mathbf{Kpc}}``.
 """
 function angular_scale(cosmology::AbstractCosmology, z::RV)
    return (angular_diameter_distance(cosmology, 0.0, z) / DIST_KPC) * ANGLE_ARCSEC
@@ -355,12 +458,17 @@ end
 
 """
     comoving_volume_element(cosmology::AbstractCosmology, z::RV) --> RV
-
-Calculates the comving volume element ``(dV_C)`` at redshift ``z`` in ``{\\rm \\mathbf{Gpc^3}}``.
-The formula is
+Calculate the comving volume element ``(dV_C)`` at redshift ``z`` in ``{\\rm \\mathbf{Gpc^3}}``,
 ```math
-dV_C = D_H \\frac{D_M^2(z)}{E(z)}
+dV_C = D_H \\frac{D_M^2(z)}{E(z)}.
 ```
+
+- Input:
+   - `cosmology::AbstractCosmology`: Cosmology object.
+   - `z::RV`: Redshift.
+
+- Output:
+   - `dV_C::RV`: Comving volume element in ``{\\rm \\mathbf{Gpc^3}}``.
 """
 function comoving_volume_element(cosmology::AbstractCosmology, z::RV)
    # Get the Hubble distance
@@ -378,19 +486,24 @@ end
 
 """
     comoving_volume(cosmology::AbstractCosmology, z::RV) --> RV
-
-Calculates the total comving volume up to redshift ``z`` in ``{\\rm \\mathbf{Gpc^3}}``.
-The formula is,
+Calculate the total comving volume up to redshift ``z`` in ``{\\rm \\mathbf{Gpc^3}}``,
 ```math
 V_C = \\begin{cases} 
 \\frac{4π}{2} \\frac{D_H^3}{Ω_k} 
    \\left[ \\frac{D_M}{D_H} \\sqrt{1+Ω_k \\left(\\frac{D_M}{D_H}\\right)^2} 
-   - \\frac{1}{\\sqrt{|Ω_k|}} {\\rm arcsinh}\\left( \\sqrt{|Ω_k|} \\frac{D_M}{D_H}  \\right) \\right] & \\text{if } Ω_k > 0 \\\\
-\\frac{4π}{3} D_M^3                                                  & \\text{if } Ω_k = 0 \\\\
+   - \\frac{1}{\\sqrt{|Ω_k|}} {\\rm arcsinh}\\left( \\sqrt{|Ω_k|} \\frac{D_M}{D_H}  \\right) \\right], & \\text{if } Ω_k > 0, \\\\
+\\frac{4π}{3} D_M^3,                                                  & \\text{if } Ω_k = 0, \\\\
 \\frac{4π}{2} \\frac{D_H^3}{|Ω_k|} \\left[ \\frac{D_M}{D_H} \\sqrt{1+Ω_k \\left(\\frac{D_M}{D_H}\\right)^2} 
-      - \\frac{1}{\\sqrt{|Ω_k|}} \\arcsin\\left( \\sqrt{|Ω_k|} \\frac{D_M}{D_H}  \\right) \\right] & \\text{if } Ω_k < 0 \\\\
+      - \\frac{1}{\\sqrt{|Ω_k|}} \\arcsin\\left( \\sqrt{|Ω_k|} \\frac{D_M}{D_H}  \\right) \\right], & \\text{if } Ω_k < 0. \\\\
 \\end{cases}
 ```
+
+- Input:
+   - `cosmology::AbstractCosmology`: Cosmology object.
+   - `z::RV`: Redshift.
+
+- Output:
+   - `com_vol::RV`: Comving volume up to redshift ``z`` in ``{\\rm \\mathbf{Gpc^3}}``.
 """
 function comoving_volume(cosmology::AbstractCosmology, z::RV)
    # Get the Hubble distance
