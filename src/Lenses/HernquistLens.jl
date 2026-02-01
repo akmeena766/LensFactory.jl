@@ -9,14 +9,19 @@ export deflection!
 export jacobian!
 
 @inline function F_x(x::RV)
-   if x < 1.0 
-      arg = sqrt( 1.0 - x^2 )
-      f_x = atanh( arg ) / arg
-   else 
+   if x < 0.999999999
+      if x > 1E-6 
+         arg = sqrt( 1.0 - x^2 )
+         return atanh( arg ) / arg
+      else
+         return log(2.0 / x)
+      end
+   elseif x > 1.000000001 
       arg = sqrt( x^2 - 1.0 )
-      f_x =  atan( arg ) / arg
+      return atan( arg ) / arg
+   else
+      return 1.0
    end
-   return f_x
 end
 
 """
