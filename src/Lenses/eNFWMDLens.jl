@@ -91,8 +91,8 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV
    dy_r = - (θx - θxc) * sin_pa + (θy - θyc) * cos_pa
 
    # Scaled coordinates
-   x = dx_r / θs_p
-   y = dy_r / θs_p
+   x = dx_r / θs_p + eps()
+   y = dy_r / θs_p + eps()
 
    # Calculate integral
    I = I_integral(x, y, q)
@@ -128,8 +128,8 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV
          dy_r = - (θx[i, j] - θxc) * sin_pa + (θy[i, j] - θyc) * cos_pa
 
          # Scaled coordinates
-         x = dx_r / θs_p
-         y = dy_r / θs_p
+         x = dx_r / θs_p + eps()
+         y = dy_r / θs_p + eps()
 
          # Calculate integral
          I = I_integral(x, y, q)
@@ -163,8 +163,8 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
    dy_r = - (θx - θxc) * sin_pa + (θy - θyc) * cos_pa
 
    # Scaled coordinates
-   x = dx_r / θs_p
-   y = dy_r / θs_p
+   x = dx_r / θs_p + eps()
+   y = dy_r / θs_p + eps()
 
       # Calculate integrals
    J_0 = J_integral(x, y, q, 0)
@@ -206,8 +206,8 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
          dy_r = - (θx[i, j] - θxc) * sin_pa + (θy[i, j] - θyc) * cos_pa
 
          # Scaled coordinates
-         x = dx_r / θs_p
-         y = dy_r / θs_p
+         x = dx_r / θs_p + eps()
+         y = dy_r / θs_p + eps()
 
          # Calculate integrals
          J_0 = J_integral(x, y, q, 0)
@@ -248,8 +248,8 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
    dy_r = - (θx - θxc) * sin_pa + (θy - θyc) * cos_pa
 
    # Scaled coordinates
-   x = dx_r / θs_p
-   y = dy_r / θs_p
+   x = dx_r / θs_p + eps()
+   y = dy_r / θs_p + eps()
    
    # Calculate integrals
    J_0 = J_integral(x, y, q, 0)
@@ -297,8 +297,8 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
          dy_r = - (θx[i, j] - θxc) * sin_pa + (θy[i, j] - θyc) * cos_pa
 
          # Scaled coordinates
-         x = dx_r / θs_p
-         y = dy_r / θs_p
+         x = dx_r / θs_p + eps()
+         y = dy_r / θs_p + eps()
 
          # Calculate integrals
          J_0 = J_integral(x, y, q, 0)

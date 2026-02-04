@@ -82,10 +82,12 @@ end
 # --------------------------------------------------------------------------------------------------
 @kwdef struct Knot <: AbstractLensConfig
    x::Vector{Float64}
-   σx::Vector{Float64}
    y::Vector{Float64}
+   σx::Vector{Float64}
    σy::Vector{Float64}
-   θ::Vector{Float64}
+   σθ::Vector{Float64}
+   use_parity::Bool = false
+   parity::Vector{Int64} = []
 end
 
 @kwdef struct Source <: AbstractLensConfig
@@ -413,6 +415,10 @@ function _source!(dict::Dict, cosmo::Cosmology.AbstractCosmology, params::Vector
       error("Total number of sources must be greater than zero.")
    end
 
+   # Check if parity is enforced
+   _optional!(source_dict, :use_parity, false)
+   use_parity = source_dict[:use_parity]
+
    # Get number of sources
    n_source = source_dict[:total_sources]
 
@@ -458,35 +464,60 @@ function _source!(dict::Dict, cosmo::Cosmology.AbstractCosmology, params::Vector
       knots = Vector{Knot}(undef, n_knot)
       for k in 1:n_knot
          knot_id = Symbol(:knot, k)
+         # Read knot image position(s)
          x = individual_source_dict[knot_id][:x]
          y = individual_source_dict[knot_id][:y]
 
+         # Assert that the number of values is the same for (x, y, σx, σy, θ)
+         if length(x) != length(y)
+            error("Inconsistent knot position dimensions in source-$i, knot-$k")
+         end
+
+         # Read knot image error(s)
          if haskey(individual_source_dict[knot_id], :sigma)
             σx = individual_source_dict[knot_id][:sigma]
             σy = individual_source_dict[knot_id][:sigma]
-            θ = 0.0 .* individual_source_dict[knot_id][:sigma]
+            σθ = 0.0 .* individual_source_dict[knot_id][:sigma]
          elseif haskey(individual_source_dict[knot_id], :sigma_x) && 
                 haskey(individual_source_dict[knot_id], :sigma_y) && 
-                haskey(individual_source_dict[knot_id], :theta)
+                haskey(individual_source_dict[knot_id], :sigma_theta)
             σx = individual_source_dict[knot_id][:sigma_x]
             σy = individual_source_dict[knot_id][:sigma_y]
-            θ = individual_source_dict[knot_id][:theta]
+            σθ = individual_source_dict[knot_id][:sigma_theta]
          else
-            error("Invalid knot parameters in source-$i, knot-$k")
+            error("Invalid knot error parameters in source-$i, knot-$k")
+         end
+         # Assert that the number of values is the same for (x, y, σx, σy, σθ)
+         if length(x) != length(σx) || length(x) != length(σy) || length(x) != length(σθ)
+            error("Inconsistent knot position and error dimensions in source-$i, knot-$k")
          end
 
-         # Assert that the number of knots is the same for x and y
-         if length(x) != length(σx) || length(x) != length(y) || length(x) != length(σy) || length(x) != length(θ)
-            error("Inconsistent knot dimensions in source-$i, knot-$k")
+         # Read knot parity if use_parity is true and parity is present
+         if use_parity && haskey(individual_source_dict[knot_id], :parity)
+            p_temp = individual_source_dict[knot_id][:parity]
+            if length(p_temp) != length(x)
+               error("Inconsistent knot parity dimensions in source-$i, knot-$k")
+            end
+            
+            # Check if all values are 1 or -1. otherwise set knot_parity to false
+            if all(abs.(p_temp) .== 1)
+               knot_parity = true
+               p = p_temp
+            else
+               knot_parity = false
+               p = 0 .* p_temp
+            end
          end
 
+
+         # Convert to arcsec if reference is not (0, 0)
          ref_ra = dict[:observation][:reference][1]
          ref_dec = dict[:observation][:reference][2]
          if ref_ra == 0.0 || ref_dec == 0.0
-            knots[k] = Knot(x  = x, σx = σx, y  = y, σy = σy, θ = deg2rad.(θ))
+            knots[k] = Knot(x=x, σx=σx, y=y, σy=σy, σθ=deg2rad.(σθ), use_parity=knot_parity, parity=p)
          else
             x_arcsec, y_arcsec = AstrometricOps.gnomonic_offsets_arcsec(ref_ra, ref_dec, x, y)
-            knots[k] = Knot(x  = x_arcsec, σx = σx, y  = y_arcsec, σy = σy, θ = deg2rad.(θ))
+            knots[k] = Knot(x=x_arcsec, σx=σx, y=y_arcsec, σy=σy, σθ=deg2rad.(σθ), use_parity=knot_parity, parity=p)
          end
       end
 
