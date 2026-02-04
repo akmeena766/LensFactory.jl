@@ -66,13 +66,18 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
    adis = LensModelUtils.adis_current(model, pvals)
 
    # Calculate deflection at image positions
-   ψ_all, αx_all, αy_all, A_all, P_all = LensModelUtils.lens_quantities(model, lens_model)
-
+   ψ_all, αx_all, αy_all, A_all = LensModelUtils.lens_quantities(model, lens_model)
+   
    # Calculate position likelihood
    pos_ll = Likelihood.LogL_position(model, adis, αx_all, αy_all, A_all)
 
-   
-   return pos_ll
+   # Calculate parity likelihood
+   par_ll = 0.0
+   if model.source_config.use_parity
+      par_ll = Likelihood.LogL_parity(model, adis, A_all)
+   end
+   tot_ll = pos_ll + par_ll
+   return tot_ll
 end
 
 
@@ -333,7 +338,9 @@ function fit_model(model::ModelConfig)
    end
 
    # Nothing to do
-   error("Neither optimizer nor MCMC enabled.")
+   if sampler.optimizer === nothing && sampler.mcmc === nothing
+      error("Neither optimizer nor MCMC enabled.")
+   end
 end
 
 end

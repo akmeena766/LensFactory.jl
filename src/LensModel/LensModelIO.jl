@@ -96,6 +96,8 @@ end
 
 @kwdef struct SourceConfig <: AbstractLensConfig
    sources::Vector{Source}
+   use_parity::Bool = false
+   parity_force::Int64 = 0
 end
 
 
@@ -418,6 +420,10 @@ function _source!(dict::Dict, cosmo::Cosmology.AbstractCosmology, params::Vector
    # Check if parity is enforced
    _optional!(source_dict, :use_parity, false)
    use_parity = source_dict[:use_parity]
+   parity_force = 0.0
+   if use_parity
+      parity_force = source_dict[:parity_force]
+   end
 
    # Get number of sources
    n_source = source_dict[:total_sources]
@@ -507,6 +513,9 @@ function _source!(dict::Dict, cosmo::Cosmology.AbstractCosmology, params::Vector
                knot_parity = false
                p = 0 .* p_temp
             end
+         else
+            knot_parity = false
+            p = 0 .* x
          end
 
 
@@ -523,7 +532,7 @@ function _source!(dict::Dict, cosmo::Cosmology.AbstractCosmology, params::Vector
 
       sources[i] = Source(knots=knots)
    end
-   return SourceConfig(sources=sources)
+   return SourceConfig(sources=sources, use_parity=use_parity, parity_force=parity_force)
 end
 
 # --------------------------------------------------------------------------------------------------

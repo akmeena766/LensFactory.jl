@@ -194,7 +194,6 @@ function lens_quantities(model::ModelConfig, lens::Lenses.AbstractLens)
    αx_all = Vector{Vector{Float64}}(undef, n_knots)
    αy_all = Vector{Vector{Float64}}(undef, n_knots)
    A_all  = Vector{NTuple{4, Vector{Float64}}}(undef, n_knots)
-   P_all  = Vector{Vector{Int64}}(undef, n_knots)
 
    kid = 1
    for src in model.source_config.sources
@@ -212,15 +211,12 @@ function lens_quantities(model::ModelConfig, lens::Lenses.AbstractLens)
          # Deformation tensor
          ψxx, ψyy, ψxy = Lenses.get_jacobian(lens, x, y)
          A_all[kid] = (ψxx, ψxy, copy(ψxy), ψyy)
-         
-         # Parity
-         P_all[kid] = sign.( @. ψxx * ψyy - ψxy * ψxy )
-         
+                  
          # Increment
          kid = kid + 1
       end
    end
-   return ψ_all, αx_all, αy_all, A_all, P_all
+   return ψ_all, αx_all, αy_all, A_all
 end
 
 

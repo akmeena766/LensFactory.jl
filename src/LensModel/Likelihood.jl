@@ -128,18 +128,19 @@ function LogL_position(model::ModelConfig, adis::Vector{Float64}, αx_all::Vecto
          y  = knot.y
          σx = knot.σx
          σy = knot.σy
-         θ  = knot.θ
+         σθ = knot.σθ
          
          # Number of images for this knot
          n = length(x)
-
+         
          # Deflection vector at the knot positions
          αx = @. adis_value * αx_all[kid]
          αy = @. adis_value * αy_all[kid]
 
          # Deformation tensor at the knot positions
-         for i in eachindex(A_all[kid])
-            @. A_all[kid][i] = I4[i] - (adis_value * A_all[kid][i])
+         A = @. adis_value * A_all[kid]
+         for i in eachindex(A)
+            @. A[i] = I4[i] - A[i]
          end
 
          # Individual source positions using broadcasting
@@ -147,7 +148,7 @@ function LogL_position(model::ModelConfig, adis::Vector{Float64}, αx_all::Vecto
          βy_ind = @. y - αy
 
          # Get weighted source position (Section 4.1 in https://arxiv.org/pdf/astro-ph/0102340)
-         βx_model, βy_model, W_all = _weighted_position(βx_ind, βy_ind, A_all[kid], σx, σy, θ, n)
+         βx_model, βy_model, W_all = _weighted_position(βx_ind, βy_ind, A, σx, σy, σθ, n)
 
          # Calculate knot log-likelihood
          χ² = 0.0
@@ -162,7 +163,6 @@ function LogL_position(model::ModelConfig, adis::Vector{Float64}, αx_all::Vecto
          end
          logL = logL - 0.5 * χ²
          
-         # Knot increment
          kid = kid + 1
       end
       sid = sid + 1
@@ -171,11 +171,47 @@ function LogL_position(model::ModelConfig, adis::Vector{Float64}, αx_all::Vecto
 end
 
 
-function LogL_parity()
+function LogL_parity(model::ModelConfig, adis::Vector{Float64}, A_all::Vector{NTuple{4, Vector{Float64}}})
+   # Initialize log-likelihood for parity
+   logL = 0.0
+   
    # Penalty for wrong parity
-   
-   
-   return 0.0
+   penalty = model.source_config.parity_force
+
+   # Identity tuple
+   I4 = (1.0, 0.0, 0.0, 1.0)
+
+   # Calculate log-likelihood for each source
+   sid = 1
+   kid = 1
+   for src in model.source_config.sources
+      # Distance ratio for this source
+      adis_value = adis[sid]
+
+      for knot in src.knots
+         # Input knot image parities
+         parity_input = knot.parity
+         
+         # Deformation tensor at the knot positions
+         A = @. adis_value * A_all[kid]
+         for i in eachindex(A)
+            @. A[i] = I4[i] - A[i]
+         end
+         
+         # Model parity of knot images
+         parity_model = @. Int64(sign(A[1] * A[4] - A[2] * A[3]))
+
+         # Parity log-likelihood
+         for i in eachindex(parity_input)
+            if parity_input[i] != parity_model[i]
+               logL = logL - penalty
+            end
+         end   
+         kid = kid + 1
+      end      
+      sid = sid + 1
+   end
+   return logL
 end
 
 
