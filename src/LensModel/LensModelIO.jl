@@ -5,7 +5,7 @@ module LensModelIO
 # Julia inbuilt functions to import
 # --------------------------------------------------------------------------------------------------
 using YAML
-
+using DelimitedFiles
 
 # --------------------------------------------------------------------------------------------------
 # LensFactory modules to use
@@ -409,8 +409,10 @@ end
 # --------------------------------------------------------------------------------------------------
 # ---------------- Read Source Model ---------------------------------------------------------------
 # --------------------------------------------------------------------------------------------------  
-function _source!(dict::Dict, cosmo::Cosmology.AbstractCosmology, params::Vector{Parameter})
+function _source_direct!(dict::Dict, cosmo::Cosmology.AbstractCosmology, params::Vector{Parameter})
+   # Get source dictionary from the full dictionary
    source_dict = dict[:source]
+
    # Make sure that total number of sources is present and greater than zero
    _require(source_dict, :total_sources)
    if source_dict[:total_sources] <= 0
@@ -436,10 +438,10 @@ function _source!(dict::Dict, cosmo::Cosmology.AbstractCosmology, params::Vector
    adis_ref = Vector{Float64}(undef, n_source)
    for i in 1:n_source
       source_id = Symbol(:source, i)
-      individual_source_dict = source_dict[source_id]
+      indi_source_dict = source_dict[source_id]
 
       # Extract parameter values and bounds
-      r, l, u = _extract_param_range(individual_source_dict[:z_s])
+      r, l, u = _extract_param_range(indi_source_dict[:z_s])
 
       # Convert redshift to adis
       D_ds = Cosmology.angular_diameter_distance(cosmo, z_d, r)
@@ -466,13 +468,13 @@ function _source!(dict::Dict, cosmo::Cosmology.AbstractCosmology, params::Vector
       push!(params, Parameter(owner=source_id, name=Symbol(:adis, i), refer=adis_r, lower=adis_l, upper=adis_u))
 
       # Run over knots
-      n_knot = individual_source_dict[:total_knots]
+      n_knot = indi_source_dict[:total_knots]
       knots = Vector{Knot}(undef, n_knot)
       for k in 1:n_knot
          knot_id = Symbol(:knot, k)
          # Read knot image position(s)
-         x = individual_source_dict[knot_id][:x]
-         y = individual_source_dict[knot_id][:y]
+         x = indi_source_dict[knot_id][:x]
+         y = indi_source_dict[knot_id][:y]
 
          # Assert that the number of values is the same for (x, y, σx, σy, θ)
          if length(x) != length(y)
@@ -480,16 +482,16 @@ function _source!(dict::Dict, cosmo::Cosmology.AbstractCosmology, params::Vector
          end
 
          # Read knot image error(s)
-         if haskey(individual_source_dict[knot_id], :sigma)
-            σx = individual_source_dict[knot_id][:sigma]
-            σy = individual_source_dict[knot_id][:sigma]
-            σθ = 0.0 .* individual_source_dict[knot_id][:sigma]
-         elseif haskey(individual_source_dict[knot_id], :sigma_x) && 
-                haskey(individual_source_dict[knot_id], :sigma_y) && 
-                haskey(individual_source_dict[knot_id], :sigma_theta)
-            σx = individual_source_dict[knot_id][:sigma_x]
-            σy = individual_source_dict[knot_id][:sigma_y]
-            σθ = individual_source_dict[knot_id][:sigma_theta]
+         if haskey(indi_source_dict[knot_id], :sigma)
+            σx = indi_source_dict[knot_id][:sigma]
+            σy = indi_source_dict[knot_id][:sigma]
+            σθ = 0.0 .* indi_source_dict[knot_id][:sigma]
+         elseif haskey(indi_source_dict[knot_id], :sigma_x) && 
+                haskey(indi_source_dict[knot_id], :sigma_y) && 
+                haskey(indi_source_dict[knot_id], :sigma_theta)
+            σx = indi_source_dict[knot_id][:sigma_x]
+            σy = indi_source_dict[knot_id][:sigma_y]
+            σθ = indi_source_dict[knot_id][:sigma_theta]
          else
             error("Invalid knot error parameters in source-$i, knot-$k")
          end
@@ -499,8 +501,8 @@ function _source!(dict::Dict, cosmo::Cosmology.AbstractCosmology, params::Vector
          end
 
          # Read knot parity if use_parity is true and parity is present
-         if use_parity && haskey(individual_source_dict[knot_id], :parity)
-            p_temp = individual_source_dict[knot_id][:parity]
+         if use_parity && haskey(indi_source_dict[knot_id], :parity)
+            p_temp = indi_source_dict[knot_id][:parity]
             if length(p_temp) != length(x)
                error("Inconsistent knot parity dimensions in source-$i, knot-$k")
             end
@@ -529,10 +531,169 @@ function _source!(dict::Dict, cosmo::Cosmology.AbstractCosmology, params::Vector
             knots[k] = Knot(x=x_arcsec, σx=σx, y=y_arcsec, σy=σy, σθ=deg2rad.(σθ), use_parity=knot_parity, parity=p)
          end
       end
-
       sources[i] = Source(knots=knots)
    end
    return SourceConfig(sources=sources, use_parity=use_parity, parity_force=parity_force)
+end
+
+
+function _source_from_file!(dict::Dict, cosmo::Cosmology.AbstractCosmology, params::Vector{Parameter})
+   # Get source dictionary from the full dictionary
+   source_dict = dict[:source]
+
+   # Get file name
+   file_name = source_dict[:source_file]
+
+   file_data = readdlm(file_name)
+   file_data = Float64.(file_data)
+   
+   # Make sure that total number of sources is present and greater than zero
+   _require(source_dict, :total_sources)
+   if source_dict[:total_sources] <= 0
+      error("Total number of sources must be greater than zero.")
+   end
+
+   # --- Parameters directly read from the YAML file -----------------------------------------------
+   # Check if parity is enforced
+   _optional!(source_dict, :use_parity, false)
+   use_parity = source_dict[:use_parity]
+   parity_force = 0.0
+   if use_parity
+      parity_force = source_dict[:parity_force]
+   end
+
+   # Get number of sources
+   n_source = source_dict[:total_sources]
+
+   # Get reference lens redshift
+   z_d = dict[:observation][:z_d]
+
+   # --- Parameters read from the source file ------------------------------------------------------
+   sources = Vector{Source}(undef, n_source)
+   adis_ref = Vector{Float64}(undef, n_source)
+   for i in 1:n_source
+      # Generate source ID
+      source_id = Symbol(:source, i)
+      
+      # Get individual source data from file
+      mask = file_data[:, 1] .== i
+      source_data = file_data[mask, :]
+
+      # Get source redshift
+      if haskey(source_dict, source_id)
+         # Get individual source dict from YAML file
+         indi_source_dict = source_dict[source_id]
+
+         # Extract parameter values and bounds
+         r, l, u = _extract_param_range(indi_source_dict[:z_s])
+
+         # Convert redshift to adis
+         D_ds = Cosmology.angular_diameter_distance(cosmo, z_d, r)
+         D_os = Cosmology.angular_diameter_distance(cosmo, 0.0, r)
+         adis_r = D_ds / D_os
+      
+         # Store reference adis
+         adis_ref[i] = adis_r
+
+         if l == u
+            adis_l = adis_r
+            adis_u = adis_r
+         else
+            D_ds = Cosmology.angular_diameter_distance(cosmo, z_d, l)
+            D_os = Cosmology.angular_diameter_distance(cosmo, 0.0, l)
+            adis_l = D_ds / D_os
+
+            D_ds = Cosmology.angular_diameter_distance(cosmo, z_d, u)
+            D_os = Cosmology.angular_diameter_distance(cosmo, 0.0, u)
+            adis_u = D_ds / D_os
+         end
+
+         # Add redshift parameter to the reference, lower, and upper vectors
+         push!(params, Parameter(owner=source_id, name=Symbol(:adis, i), refer=adis_r, lower=adis_l, upper=adis_u))
+      else
+         # Get the source redshift from the file
+         z_s = source_data[1, 5]
+         
+         # Convert redshift to adis
+         D_ds = Cosmology.angular_diameter_distance(cosmo, z_d, z_s)
+         D_os = Cosmology.angular_diameter_distance(cosmo, 0.0, z_s)
+         adis_r = D_ds / D_os
+
+         # Store reference adis
+         adis_ref[i] = adis_r
+
+         # Redshift fixed. Set lower and upper bounds to the same value
+         adis_l = adis_r
+         adis_u = adis_r
+
+         # Add redshift parameter to the reference, lower, and upper vectors
+         push!(params, Parameter(owner=source_id, name=Symbol(:adis, i), refer=adis_r, lower=adis_l, upper=adis_u))
+      end
+      
+      # Run over knots
+      n_knot = Int64(maximum(source_data[:, 2]))
+      knots = Vector{Knot}(undef, n_knot)
+      for k in 1:n_knot
+         # Generate knot id
+         knot_id = Symbol(:knot, k)
+
+         # Get individual knot data from file
+         mask = source_data[:, 2] .== k
+         knot_data = source_data[mask, :]
+
+         # Get knot parameters
+         x = knot_data[:, 3]
+         y = knot_data[:, 4]
+         
+         σx = knot_data[:, 6]
+         σy = knot_data[:, 7]
+         σθ = knot_data[:, 8]
+
+         # Read knot parity if use_parity is true otherwise assign zero
+         if use_parity
+            # Get parity values from file
+            p_temp = knot_data[:, 9]
+            # Check if all values are 1 or -1. otherwise set knot_parity to false
+            if all(abs.(p_temp) .== 1)
+               knot_parity = true
+               p = p_temp
+            else
+               knot_parity = false
+               p = 0 .* p_temp
+            end
+         else
+            knot_parity = false
+            p = 0 .* x
+         end
+
+         # Convert to arcsec if reference is not (0, 0)
+         ref_ra = dict[:observation][:reference][1]
+         ref_dec = dict[:observation][:reference][2]
+         if ref_ra == 0.0 || ref_dec == 0.0
+            knots[k] = Knot(x=x, σx=σx, y=y, σy=σy, σθ=deg2rad.(σθ), use_parity=knot_parity, parity=p)
+         else
+            x_arcsec, y_arcsec = AstrometricOps.gnomonic_offsets_arcsec(ref_ra, ref_dec, x, y)
+            knots[k] = Knot(x=x_arcsec, σx=σx, y=y_arcsec, σy=σy, σθ=deg2rad.(σθ), use_parity=knot_parity, parity=p)
+         end
+      end
+      sources[i] = Source(knots=knots)
+   end
+   return SourceConfig(sources=sources, use_parity=use_parity, parity_force=parity_force)
+end
+
+function _source!(dict::Dict, cosmo::Cosmology.AbstractCosmology, params::Vector{Parameter})
+   # Get source dictionary from the full dictionary
+   source_dict = dict[:source]
+
+   # Determine if we need to read source details from a file
+   from_file = get(source_dict, :from_file, false)
+
+   if from_file
+      source_config = _source_from_file!(dict, cosmo, params)
+   else
+      source_config = _source_direct!(dict, cosmo, params)
+   end
+   return source_config
 end
 
 # --------------------------------------------------------------------------------------------------

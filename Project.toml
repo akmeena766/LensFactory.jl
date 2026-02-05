@@ -4,6 +4,7 @@ version = "0.0.5"
 authors = ["Ashish K Meena <ashishmeena766@gmail.com>"]
 
 [deps]
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 FITSIO = "525bcba6-941b-5504-bd06-fd0dc1a4d2eb"
 HypergeometricFunctions = "34004b35-14d8-5ef3-9330-4cdb6864b03a"
 ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
@@ -22,6 +23,7 @@ Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 PlotExt = ["Makie", "KernelDensity", "LaTeXStrings"]
 
 [compat]
+DelimitedFiles = "1.9.1"
 FITSIO = "0.17.5"
 HypergeometricFunctions = "0.3.28"
 KernelDensity = "0.6.11"
