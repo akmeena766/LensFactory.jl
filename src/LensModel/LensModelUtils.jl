@@ -650,8 +650,8 @@ function check_parity(model::ModelConfig, chains::Array{Float64, 3}, lls::Matrix
             println(row)
          end
          kid = kid + 1
+         println("─"^length(header))
       end
-      println("─"^length(header))
       sid = sid + 1
    end
    return nothing
@@ -692,6 +692,7 @@ function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, lls::Ma
    # Print Header
    # Table Header
    header_line = "-"^72
+   knot_sep  = "             " * "-"^59
    println(header_line)
    println("| ", col("Source", 10), 
           " | ", col("Knot", 10), 
@@ -800,10 +801,9 @@ function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, lls::Ma
                    " |"
             )
          end
-         
+         println("-"^72)
          kid = kid + 1
       end
-      println("-"^72)
       sid = sid + 1
    end
 
