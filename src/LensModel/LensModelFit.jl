@@ -29,35 +29,11 @@ export fit_model
 
 
 # --------------------------------------------------------------------------------------------------
-# Parameter-space → Physical-space transformation
-# --------------------------------------------------------------------------------------------------
-const PARAM_TRANSFORM = Dict{Symbol,Function}(
-   # Velocity dispersion: km/s -> m/s
-   :v_d => x -> x * 1.0E3,
-   
-   # Mass:Log10(M/M☉) -> kg
-   :mass => x -> 10^x * MASS_SUN,
-)
-
-function transform_params!(pvals::Dict{Tuple{Symbol,Symbol}, Float64})
-   for key in collect(keys(pvals))
-      name = key[2]
-      if haskey(PARAM_TRANSFORM, name)
-         pvals[key] = PARAM_TRANSFORM[name](pvals[key])
-      end
-   end
-end
-
-
-# --------------------------------------------------------------------------------------------------
 # Log-likelihood
 # --------------------------------------------------------------------------------------------------
 function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tuple{Symbol,Symbol}, Float64})
    # Merge θ (free parameters) with param_ref (fixed parameters)
    pvals = LensModelUtils.param_dict(model, θ, param_ref)
-
-   # Transform parameters (from sample space to physical space)
-   transform_params!(pvals)
 
    # Build lens model
    lens_model = LensModelUtils.build_lens(model, pvals)

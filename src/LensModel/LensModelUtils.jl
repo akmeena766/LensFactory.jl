@@ -9,8 +9,9 @@ using StatsBase
 # --------------------------------------------------------------------------------------------------
 # LensFactory modules to use
 # --------------------------------------------------------------------------------------------------
-using ..LensModelIO
+using ..Constants
 using ..Lenses
+using ..LensModelIO
 
 # --------------------------------------------------------------------------------------------------
 # Functions to export
@@ -26,12 +27,41 @@ export calculate_gr, print_gr_report
 export time_series_diagnostics
 export acceptance_diagnostics
 export get_best_fit, get_best_fit_with_errors
+export check_parity
 
 
+# --------------------------------------------------------------------------------------------------
+# Parameter-space → Physical-space transformation
+# --------------------------------------------------------------------------------------------------
+const PARAM_TRANSFORM = Dict{Symbol,Function}(
+   # Velocity dispersion: km/s -> m/s
+   :v_d => x -> x * 1.0E3,
+   
+   # Mass:Log10(M/M☉) -> kg
+   :mass => x -> 10^x * MASS_SUN,
+)
+
+function transform_params!(pvals::Dict{Tuple{Symbol,Symbol}, Float64})
+   for key in collect(keys(pvals))
+      name = key[2]
+      if haskey(PARAM_TRANSFORM, name)
+         pvals[key] = PARAM_TRANSFORM[name](pvals[key])
+      end
+   end
+end
+
+
+# --------------------------------------------------------------------------------------------------
+# Get free parameters
+# --------------------------------------------------------------------------------------------------
 function free_parameters(model::ModelConfig)
    return @view model.parameters[model.free_param_idxs]
 end
 
+
+# --------------------------------------------------------------------------------------------------
+# Get parameter values
+# --------------------------------------------------------------------------------------------------
 function θ_reference(model::ModelConfig)
    getfield.(free_parameters(model), :refer)
 end
@@ -155,6 +185,9 @@ function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, Float6
    # Determine the number of components from the lens model container
    n_lens = length(model.lens_config.components)
 
+   # Transform parameters
+   transform_params!(pvals)
+
    # Initialize an empty vector to store lens parameters
    lens_vector = NamedTuple[]
 
@@ -211,7 +244,7 @@ function lens_quantities(model::ModelConfig, lens::Lenses.AbstractLens)
          # Deformation tensor
          ψxx, ψyy, ψxy = Lenses.get_jacobian(lens, x, y)
          A_all[kid] = (ψxx, ψxy, copy(ψxy), ψyy)
-                  
+
          # Increment
          kid = kid + 1
       end
@@ -525,11 +558,102 @@ end
 # --------------------------------------------------------------------------------------------------
 # Get best-fit model RMS and parity check
 # --------------------------------------------------------------------------------------------------
-function check_parity(chains::Array{Float64, 3}, lls::Matrix{Float64})
+function check_parity(model::ModelConfig, chains::Array{Float64, 3}, lls::Matrix{Float64})
+   # Check if parity was enforced during modelling
+   if model.source_config.use_parity === false
+      error("Parity was not enforced during modelling. Please set model.use_parity = true.")
+   end
    
+   # Get the best parameters based on likelihood (lls)
+   best_θ, _, _ = get_best_fit(lls, chains)
+
+   # Get list of parameters for the lens model
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+   
+   # Replace free parameter values by best-fit values
+   pvals = param_dict(model, best_θ, param_ref)
+
+   # Get best-fit model
+   best_model = build_lens(model, pvals)
+
+   # Get angular-diameter distance ratios
+   adis = adis_current(model, pvals)
+
+   # Calculate deformation at all image positions
+   ψ_all, αx_all, αy_all, A_all = lens_quantities(model, best_model)
+   
+   # Print Table Header using string padding for alignment
+   header = string(
+      "| ", rpad("Source", 8), 
+      "| ", rpad("Knot", 6), 
+      "| ", rpad("Input Parity", 10), 
+      "| ", rpad("Best Parity", 10), 
+      "| ", "Status",
+      " |"
+   )
+
+   println("─"^length(header))
+   println(header)
+   println("─"^length(header))
+   
+   # Identity tuple
+   I4 = (1.0, 0.0, 0.0, 1.0)
+
+   # Calculate log-likelihood for each source
+   sid = 1
+   kid = 1
+   for src in model.source_config.sources
+      # Distance ratio for this source
+      adis_value = adis[sid]
+
+      # Generate source id
+      src_id = Symbol(:src, sid)
+   
+      for knot in src.knots
+         # Generate knot id
+         knot_id = Symbol(:knot, kid)
+
+         # Input knot image parities
+         parity_input = knot.parity
+
+         # Deformation tensor at the knot positions
+         A = @. adis_value * A_all[kid]
+         for i in eachindex(A)
+            @. A[i] = I4[i] - A[i]
+         end
+
+         # Model parity of knot images
+         parity_model = @. Int64(sign(A[1] * A[4] - A[2] * A[3]))
+
+         # Parity log-likelihood
+         for i in eachindex(parity_input)
+            # Check if parity is correct
+            status = (parity_input[i] == parity_model[i]) ? "✅" : "❌"
+
+            # Manually formatting the sign for the parities
+            input_str = parity_input[i] >= 0 ? "+$(parity_input[i])" : "$(parity_input[i])"
+            best_str  = parity_model[i] >= 0 ? "+$(parity_model[i])" : "$(parity_model[i])"
+
+            # Format the row using rpad (Right Pad)
+            row = string(
+               "| ", rpad(src_id, 8), 
+               "| ", rpad(knot_id, 6), 
+               "| ", rpad(input_str, 12), 
+               "| ", rpad(best_str,  11), 
+               "| ", status,
+               "     |"
+            )
+            println(row)
+         end
+         kid = kid + 1
+      end
+      println("─"^length(header))
+      sid = sid + 1
+   end
+   return nothing
 end
 
-function get_best_fit_rms(chains::Array{Float64, 3}, lls::Matrix{Float64}; check_parity::Bool=false)
+function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, lls::Matrix{Float64}; check_parity::Bool=false)
    
 end
 
