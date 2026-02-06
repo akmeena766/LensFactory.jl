@@ -32,11 +32,12 @@ using .AIES
 include("./LensModelIO.jl")
 using .LensModelIO
 
+include("./Likelihood.jl")
+using .Likelihood
+
 include("./LensModelUtils.jl")
 using .LensModelUtils
 
-include("./Likelihood.jl")
-using .Likelihood
 
 include("./LensModelFit.jl")
 using .LensModelFit

@@ -12,6 +12,7 @@ using StatsBase
 using ..Constants
 using ..Lenses
 using ..LensModelIO
+using ..Likelihood
 
 # --------------------------------------------------------------------------------------------------
 # Functions to export
@@ -28,6 +29,7 @@ export time_series_diagnostics
 export acceptance_diagnostics
 export get_best_fit, get_best_fit_with_errors
 export check_parity
+export get_best_fit_rms
 
 
 # --------------------------------------------------------------------------------------------------
@@ -580,12 +582,13 @@ function check_parity(model::ModelConfig, chains::Array{Float64, 3}, lls::Matrix
    adis = adis_current(model, pvals)
 
    # Calculate deformation at all image positions
-   ψ_all, αx_all, αy_all, A_all = lens_quantities(model, best_model)
+   _, _, _, A_all = lens_quantities(model, best_model)
    
    # Print Table Header using string padding for alignment
    header = string(
       "| ", rpad("Source", 8), 
       "| ", rpad("Knot", 6), 
+      "| ", rpad("Image", 6), 
       "| ", rpad("Input Parity", 10), 
       "| ", rpad("Best Parity", 10), 
       "| ", "Status",
@@ -638,6 +641,7 @@ function check_parity(model::ModelConfig, chains::Array{Float64, 3}, lls::Matrix
             row = string(
                "| ", rpad(src_id, 8), 
                "| ", rpad(knot_id, 6), 
+               "| ", rpad(i, 6), 
                "| ", rpad(input_str, 12), 
                "| ", rpad(best_str,  11), 
                "| ", status,
@@ -654,7 +658,160 @@ function check_parity(model::ModelConfig, chains::Array{Float64, 3}, lls::Matrix
 end
 
 function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, lls::Matrix{Float64}; check_parity::Bool=false)
+   # Get the best parameters based on likelihood (lls)
+   best_θ, _, _ = get_best_fit(lls, chains)
+
+   # Get list of parameters for the lens model
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
    
+   # Replace free parameter values by best-fit values
+   pvals = param_dict(model, best_θ, param_ref)
+
+   # Get best-fit model
+   best_model = build_lens(model, pvals)
+
+   # Get angular-diameter distance ratios
+   adis = adis_current(model, pvals)
+
+   # Calculate deformation at all image positions
+   ψ_all, αx_all, αy_all, A_all = lens_quantities(model, best_model)
+
+   # Identity tuple
+   I4 = (1.0, 0.0, 0.0, 1.0)
+
+   # Create a grid to search for the best-fit image positions
+   x_grid, y_grid = Lenses.get_meshgrid(5, 5, 0.05)
+
+   # Global RMS and image count variables
+   global_sq_dist = 0.0
+   global_count = 0
+
+   # Helper for column padding
+   col(txt, width) = rpad(string(txt), width)
+
+   # Print Header
+   # Table Header
+   header_line = "-"^72
+   println(header_line)
+   println("| ", col("Source", 10), 
+          " | ", col("Knot", 10), 
+          " | ", col("Img", 6), 
+          " | ", col("Image Dist (arcsec)", 20), 
+          " | ", col("Knot RMS", 10), 
+          " |")
+   println(header_line)
+
+   # Calculate RMS for each image
+   sid = 1
+   kid = 1
+   for src in model.source_config.sources
+      # Get angular-diameter distance ratio for this source
+      adis_value = adis[sid]
+         
+      # Generate source id
+      src_id = Symbol(:src, sid)
+      for knot in src.knots
+         # Generate knot id
+         knot_id = Symbol(:knot, kid)
+
+         # Knot positions and measurement errors
+         x  = knot.x
+         y  = knot.y
+         σx = knot.σx
+         σy = knot.σy
+         σθ = knot.σθ
+         
+         # Number of images for this knot
+         n = length(x)
+
+         # Deflection vector at the knot positions
+         αx = @. adis_value * αx_all[kid]
+         αy = @. adis_value * αy_all[kid]
+
+         # Deformation tensor at the knot positions
+         A = @. adis_value * A_all[kid]
+         for i in eachindex(A)
+            @. A[i] = I4[i] - A[i]
+         end
+
+         # Individual source positions using broadcasting
+         βx_ind = @. x - αx
+         βy_ind = @. y - αy
+
+         # Get weighted source position (Section 4.1 in https://arxiv.org/pdf/astro-ph/0102340)
+         βx_model, βy_model, _ = Likelihood._weighted_position(βx_ind, βy_ind, A, σx, σy, σθ, n)
+
+         # Get image positions
+         predicted_image = Lenses.get_image(best_model, x_grid, y_grid, adis_value, (βx_model, βy_model))
+
+         # Convert predicted to mutable arrays for iterative removal
+         pred_x = Float64[p[1] for p in predicted_image]
+         pred_y = Float64[p[2] for p in predicted_image]
+
+         # Knot counters
+         knot_sq_dist = 0.0
+         knot_count = 0
+
+         # Store distances to print after matching is done for the whole knot
+         results = []
+         
+         # Matching observed images to predicted images
+         for i in 1:n
+            if isempty(pred_x)
+               push!(results, "MISSING")
+               continue
+            end
+
+            # Calculate distances to all remaining candidates
+            dx = @. pred_x .- x[i]
+            dy = @. pred_y .- y[i]
+            dist_sq = @. dx^2 + dy^2
+
+            # Find the closest predicted image index
+            best_idx = argmin(dist_sq)
+
+            d2 = dist_sq[best_idx]
+            dist = sqrt(d2)
+
+            # Update global and knot totals
+            global_sq_dist += d2
+            global_count += 1
+            knot_sq_dist += d2
+            knot_count += 1
+
+            push!(results, round(dist, digits=6))
+
+            # Remove this candidate so it can't be matched twice
+            deleteat!(pred_x, best_idx)
+            deleteat!(pred_y, best_idx)
+         end
+         
+         # Calculate RMS for this specific knot
+         k_rms = knot_count > 0 ? round(sqrt(knot_sq_dist / knot_count), digits=6) : "N/A"
+
+         # Print image-by-image breakdown
+         for (i, d_val) in enumerate(results)
+            k_display = (i == 1) ? string(k_rms) : ""
+            println("| ", col("src$sid", 10), 
+                   " | ", col("knot$kid", 10), 
+                   " | ", col(i, 6), 
+                   " | ", col(d_val, 20), 
+                   " | ", col(k_display, 10), 
+                   " |"
+            )
+         end
+         
+         kid = kid + 1
+      end
+      println("-"^72)
+      sid = sid + 1
+   end
+
+   final_rms = global_count > 0 ? sqrt(global_sq_dist / global_count) : 0.0
+   println("| GLOBAL TOTAL RMS: ", col(round(final_rms, digits=6), 50), " |")
+   println("-"^72)
+   
+   return nothing
 end
 
 end

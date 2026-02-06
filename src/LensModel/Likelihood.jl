@@ -61,14 +61,14 @@ end
    # Position vector: b = Σᵢ μᵢᵀ * Sᵢ⁻¹ * μᵢ * βᵢ
    b1 = 0.0
    b2 = 0.0
-
+   
    @inbounds for i in 1:n
       # Cosine and sine of the angle
       cθ = cos(θ[i])
       sθ = sin(θ[i])
-      
+
       # μ = A⁻¹
-      μ11, μ12, μ21, μ22 = _inverse(A[i][1], A[i][2], A[i][3], A[i][4])
+      μ11, μ12, μ21, μ22 = _inverse(A[1][i], A[2][i], A[3][i], A[4][i])
 
       # Inverse covariance matrix
       iS11, iS12, iS21, iS22 = _inverse_covariance(σx[i], σy[i], θ[i])
