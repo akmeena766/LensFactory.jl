@@ -148,12 +148,7 @@ function age(cosmology::AbstractCosmology, z::RV)
    function integrand(cosmology, z)
       return 1.0 / ( (1.0 + z) * Ez(cosmology, z) )
    end
-   tC, tC_err = quadgk(x -> integrand(cosmology, x), z, Inf)  
-   
-   # Throw error if integration error is large
-   if tC_err > 1E-8
-      throw(ArgumentError("Error in lookback time estimation is $tC_err."))
-   end
+   tC, _ = quadgk(x -> integrand(cosmology, x), z, Inf, atol=1E-10)
    return tH * tC
 end
 
@@ -180,12 +175,7 @@ function lookback_time(cosmology::AbstractCosmology, z::RV)
    function integrand(cosmology, z)
       return 1.0 / ( (1.0 + z) * Ez(cosmology, z) )
    end
-   tC, tC_err = quadgk(x -> integrand(cosmology, x), 0, z)
-
-   # Throw error if integration error is large
-   if tC_err > 1E-8
-      throw(ArgumentError("Error in lookback time estimation is $tC_err."))
-   end
+   tC, _ = quadgk(x -> integrand(cosmology, x), 0, z, atol=1E-10)
    return tH * tC
 end
 
@@ -327,12 +317,7 @@ function comoving_distance_radial(cosmology::AbstractCosmology, z1::RV, z2::RV)
    function integrand(cosmology, z)
       return 1.0 / Ez(cosmology, z)
    end
-   dC, dC_err = quadgk(x -> integrand(cosmology, x), z1, z2)
-
-   # Throw error if integration error is large
-   if dC_err > 1E-8
-      throw(ArgumentError("Error in comoving distance estimation is $dC_err."))
-   end
+   dC, _ = quadgk(x -> integrand(cosmology, x), z1, z2, atol=1E-10)
    return dH * dC
 end
 
