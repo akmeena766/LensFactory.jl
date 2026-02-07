@@ -406,6 +406,7 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter}, Dol_ref::Float64)
    end
 end
 
+
 # --------------------------------------------------------------------------------------------------
 # ---------------- Read Source Model ---------------------------------------------------------------
 # --------------------------------------------------------------------------------------------------  
@@ -547,13 +548,10 @@ function _source_from_file!(dict::Dict, cosmo::Cosmology.AbstractCosmology, para
    file_data = readdlm(file_name)
    file_data = Float64.(file_data)
    
-   # Make sure that total number of sources is present and greater than zero
-   _require(source_dict, :total_sources)
-   if source_dict[:total_sources] <= 0
-      error("Total number of sources must be greater than zero.")
-   end
-
    # --- Parameters directly read from the YAML file -----------------------------------------------
+   # Get total number of sources from first column in file
+   n_source = Int64(maximum(file_data[:, 1]))
+
    # Check if parity is enforced
    _optional!(source_dict, :use_parity, false)
    use_parity = source_dict[:use_parity]
@@ -561,9 +559,6 @@ function _source_from_file!(dict::Dict, cosmo::Cosmology.AbstractCosmology, para
    if use_parity
       parity_force = source_dict[:parity_force]
    end
-
-   # Get number of sources
-   n_source = source_dict[:total_sources]
 
    # Get reference lens redshift
    z_d = dict[:observation][:z_d]
