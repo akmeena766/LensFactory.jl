@@ -18,6 +18,9 @@ export comoving_distance_radial
 export comoving_distance_transverse
 export angular_diameter_distance
 export luminosity_distance
+export distance_modulus, angular_scale
+export comoving_volume_element, comoving_volume
+export adis_to_zs
 
 
 # Initialize an abstract type for cosmology
@@ -511,6 +514,54 @@ function comoving_volume(cosmology::AbstractCosmology, z::RV)
       com_vol = (4.0 * π / 3) * dM^3
    end
    return com_vol / DIST_GPC^3
+end
+
+
+"""
+    adis2zs(cosmology::AbstractCosmology, z_d::RV, adis::RV; max_iter::Int64=10000, tol::Float64=1e-6) --> RV
+Calculate the source redshift (``z_s``) from the distance ratio (``a_{\\rm dis}``), using Bi-section method.
+
+- Input:
+   - `cosmology::AbstractCosmology`: Cosmology object.
+   - `z_d::RV`: Lens redshift.
+   - `adis::RV`: Distance ratio, ``a_{\\rm dis}``.
+   - `max_iter::Int64=10000`: Maximum number of iterations.
+   - `tol::Float64=1e-6`: Tolerance for the root finding algorithm.
+
+- Output:
+   - `z_s::RV`: Redshift of the source.
+"""
+function adis2zs(cosmology::AbstractCosmology, z_d::RV, adis::RV; max_iter::Int64=100_000, tol::Float64=1e-10)
+   # Source low and high redshift bounds
+   z_l = z_d + 1E-6
+   z_u = 100.0
+
+   # Get distance ratio between [0, 1]
+   adis_a = angular_diameter_distance(cosmology, z_d, z_l) / angular_diameter_distance(cosmology, 0.0, z_l)
+   adis_b = angular_diameter_distance(cosmology, z_d, z_u) / angular_diameter_distance(cosmology, 0.0, z_u)
+
+   for _ in 1:max_iter
+      # Get the middle redshift
+      z_m = (z_l + z_u) / 2.0
+
+      # Get the middle redshift angular diameter distance
+      adis_m = angular_diameter_distance(cosmology, z_d, z_m) / angular_diameter_distance(cosmology, 0.0, z_m)
+
+      # Check if the middle redsfhit adis is close to the target adis
+      if abs(adis_m - adis) < tol
+         return z_m
+      end
+
+      # Update the low and high redshift bounds
+      if adis_m < adis
+         z_l = z_m
+      else
+         z_u = z_m
+      end
+   end
+   
+   error("Failed to converge after $max_iter iterations.")
+   return nothing
 end
 
 end

@@ -41,6 +41,7 @@ Cosmology.luminosity_distance
 Cosmology.angular_diameter_distance
 Cosmology.distance_modulus
 Cosmology.angular_scale
+Cosmology.adis2zs
 ```
 
 ## Volumes
