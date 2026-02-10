@@ -69,6 +69,7 @@ function LensFactory.LensModel.plot_corner(chains, lls; param_names=nothing, bur
    return fig
 end
 
+
 function LensFactory.LensModel.plot_trace(chains; param_names=nothing, burn_in=0.0, thinning=1)
    # Adapt to [n_params, n_chains, n_steps]
    n_steps, n_chains, n_params = size(chains)
@@ -108,5 +109,83 @@ function LensFactory.LensModel.plot_trace(chains; param_names=nothing, burn_in=0
    end
 
    save("./trace.png", fig)
+   return fig
+end
+
+
+function LensFactory.LensModel.plot_best_model(θx::Matrix{<:RV}, θy::Matrix{<:RV}, model::LensModel.ModelConfig, chains::Array{Float64, 3}, lls::Matrix{Float64})
+   # Get the best parameters based on likelihood (lls)
+   best_θ, _, _ = LensModel.get_best_fit(lls, chains)
+
+   # Get list of parameters for the lens model
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+   
+   # Replace free parameter values by best-fit values
+   pvals = LensModel.param_dict(model, best_θ, param_ref)
+
+   # Get best-fit model
+   best_model = LensModel.build_lens(model, pvals)
+
+   # Get angular-diameter distance ratios
+   adis = LensModel.adis_current(model, pvals)
+
+   # Calculate deformation at all image positions
+   ψ_all, αx_all, αy_all, A_all = LensModel.lens_quantities(model, best_model)
+
+   # Identity tuple
+   I4 = (1.0, 0.0, 0.0, 1.0)
+
+   # Initialize empty figure
+   fig = Figure(size=(600, 600), figure_padding=15, fontsize=20, fonts=(; regular="Times New Roman"))
+   ax = Axis(fig[1, 1])
+   
+   # Calculate RMS for each image
+   sid = 1
+   kid = 1
+   for src in model.source_config.sources
+      # Get angular-diameter distance ratio for this source
+      adis_value = adis[sid]
+      
+      # Generate source id
+      src_id = Symbol(:src, sid)
+      for knot in src.knots
+         # Generate knot id
+         knot_id = Symbol(:knot, kid)
+
+         # Knot positions and measurement errors
+         x  = knot.x
+         y  = knot.y
+         σx = knot.σx
+         σy = knot.σy
+         σθ = knot.σθ
+         
+         # Plot observed positions of knots
+         scatter!(ax, x, y, markersize=20, marker=:circle, color=:transparent, strokecolor=:black, strokewidth=2)
+
+         # Number of images for this knot
+         n = length(x)
+
+         # Deflection vector at the knot positions
+         αx = @. adis_value * αx_all[kid]
+         αy = @. adis_value * αy_all[kid]
+
+         # Deformation tensor at the knot positions
+         A = @. adis_value * A_all[kid]
+         for i in eachindex(A)
+            @. A[i] = I4[i] - A[i]
+         end
+
+         # Individual source positions using broadcasting
+         βx_ind = @. x - αx
+         βy_ind = @. y - αy
+
+         # Get weighted source position (Section 4.1 in https://arxiv.org/pdf/astro-ph/0102340)
+         βx_model, βy_model, _ = LensModel.Likelihood._weighted_position(βx_ind, βy_ind, A, σx, σy, σθ, n)
+
+         # Get image positions
+         predicted_image = Lenses.get_image(best_model, θx, θy, adis_value, (βx_model, βy_model))
+         scatter!(ax, first.(predicted_image), last.(predicted_image), markersize=20, marker=:diamond, color=:transparent, strokecolor=:red, strokewidth=2)
+      end
+   end
    return fig
 end

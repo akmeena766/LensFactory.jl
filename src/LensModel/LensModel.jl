@@ -58,8 +58,10 @@ export print_gr_report
 # --------------------------------------------------------------------------------------------------
 export plot_corner
 export plot_trace
+export plot_best_model
 
 function plot_corner end
 function plot_trace end
+function plot_best_model end
 
 end

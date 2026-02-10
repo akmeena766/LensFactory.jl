@@ -13,6 +13,7 @@ using KernelDensity
 # --------------------------------------------------------------------------------------------------
 using LensFactory
 using LensFactory.Constants
+using LensFactory.LensModel
 
 
 

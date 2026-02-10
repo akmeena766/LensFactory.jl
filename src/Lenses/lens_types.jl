@@ -206,7 +206,7 @@ Initialize a Hernquist lens with the given parameters.
 end
 
 """
-    init_NFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, mass::RV=NaN)
+    init_NFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, rho_s::RV=NaN)
 Initialize a Navarro-Frenk-White (NFW) lens with the given parameters
 """
 @kwdef struct init_NFWLens <: AbstractLens
@@ -221,7 +221,7 @@ end
 
 
 """
-    init_tNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, x_t::RV=NaN, c::RV=NaN, mass::RV=NaN)
+    init_tNFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, x_t::RV=NaN, rho_s::RV=NaN)
 Initialize a truncated Navarro-Frenk-White (tNFW) lens with the given parameters.
 """
 @kwdef struct init_tNFWLens <: AbstractLens
@@ -237,7 +237,7 @@ end
 
 
 """
-    init_gNFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, rho_s::RV=NaN, mass::RV=NaN, n::RV=-2.0)
+    init_gNFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, rho_s::RV=NaN, n::RV=-2.0)
 Initialize a generalized Navarro-Frenk-White (gNFW) lens with the given parameters.
 """
 @kwdef struct init_gNFWLens <: AbstractLens
@@ -253,7 +253,7 @@ end
 
 
 """
-    init_EinastoLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, c::RV=NaN, rho_s::RV=NaN, mass::RV=NaN, n::RV=-2.0)
+    init_EinastoLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, rho_s::RV=NaN, n::RV=-2.0)
 Initialize an Einasto lens with the given parameters. The lens model can be initialized with either
 the concentration `c` or the scale radius `x_s`. 
 **If both are provided, `c` will be used to calculate `x_s` and the input `x_s` will be overwritten.**
@@ -478,7 +478,7 @@ function parameter_NFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d
    elseif isfinite(x_s)
       c = θ_vir / x_s
    else
-      throw(ArgumentError("Provide concentration (c) or scale radius (x_s) in ** parameter_NFWLens **"))
+      throw(ArgumentError("Provide concentration (c) or scale radius (x_s) in **parameter_NFWLens**."))
    end
    ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
 
@@ -505,7 +505,7 @@ function parameter_tNFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_
    elseif isfinite(x_s)
       c = θ_vir / x_s
    else
-      throw(ArgumentError("Provide at least c or x_s in ** parameter_tNFWLens **"))
+      throw(ArgumentError("Provide at least c or x_s in **parameter_tNFWLens**."))
    end
    ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
 
@@ -516,7 +516,7 @@ end
 function parameter_gNFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d::RV, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, n::RV=1.0)
    # Check for valid slope parameter
    if !(0.0 < n < 2.0)
-      throw(ArgumentError("Slope parameter outside allowed range n ∈ (0, 2) in ** parameter_gNFWLens **"))
+      throw(ArgumentError("Slope parameter outside allowed range n ∈ (0, 2) in **parameter_gNFWLens**."))
    end
 
    # Integrand function for mass calculation
@@ -542,7 +542,7 @@ function parameter_gNFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_
    elseif isfinite(x_s)
       c = θ_vir / x_s
    else
-      throw(ArgumentError("Provide at least c or x_s in ** parameter_gNFWLens **"))
+      throw(ArgumentError("Provide at least c or x_s in **parameter_gNFWLens**."))
    end
    mass, _ = quadgk(x -> integrand(x, n), 0, c)
    ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / mass
@@ -570,7 +570,7 @@ function parameter_EinastoLens(; cosmology::Cosmology.AbstractCosmology=nothing,
    elseif isfinite(x_s)
       c = θ_vir / x_s
    else
-      throw(ArgumentError("Provide at least c or x_s in ** parameter_EinastoLens **"))
+      throw(ArgumentError("Provide at least c or x_s in **parameter_EinastoLens**."))
    end
    Pax, _ = gamma_inc(3.0 / n, (2.0 / n) * c^n)
    m_v = (1.0 / n) * (n / 2.0)^(3.0 / n) * gamma(3.0 / n) * Pax
