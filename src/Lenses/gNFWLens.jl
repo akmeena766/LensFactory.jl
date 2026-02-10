@@ -36,10 +36,10 @@ end
 
 
 """
-    potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, n::RV) where T <: RV
+    potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV, θs::RV, n::RV) where T <: RV
 """
-function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, n::RV) where T <: RV
-   κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV, θs::RV, n::RV) where T <: RV
+   κs = 4.0 * k_s
 
    dx = (θx - θxc) / θs
    dy = (θy - θyc) / θs
@@ -50,10 +50,10 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV
 end
 
 """
-    potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, n::RV) where T <: ROA
+    potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV, θs::RV, n::RV) where T <: ROA
 """
-function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, n::RV) where T <: ROA
-   κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV, θs::RV, n::RV) where T <: ROA
+   κs = 4.0 * k_s
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -67,10 +67,10 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, n::RV) where T <: RV
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV, θs::RV, n::RV) where T <: RV
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, n::RV) where T <: RV
-   κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV, θs::RV, n::RV) where T <: RV
+   κs = 4.0 * k_s
 
    dx = (θx - θxc) / θs
    dy = (θy - θyc) / θs
@@ -82,10 +82,10 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, n::RV) where T <: ROA
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV, θs::RV, n::RV) where T <: ROA
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, n::RV) where T <: ROA
-   κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV, θs::RV, n::RV) where T <: ROA
+   κs = 4.0 * k_s
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -102,10 +102,10 @@ end
 
 
 """
-    deflection!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, n::RV) where T <: RV
+    deflection!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV, θs::RV, n::RV) where T <: RV
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, n::RV) where T <: RV
-   κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV, θs::RV, n::RV) where T <: RV
+   κs = 4.0 * k_s
 
    dx = (θx - θxc) / θs
    dy = (θy - θyc) / θs
@@ -121,10 +121,10 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
 end
 
 """
-    deflection!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, n::RV) where T <: ROA
+    deflection!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV, θs::RV, n::RV) where T <: ROA
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, ρs:: RV, θs::RV, n::RV) where T <: ROA
-   κs = 4.0 * ρs * D_d * θs * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV, θs::RV, n::RV) where T <: ROA
+   κs = 4.0 * k_s
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2

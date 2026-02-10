@@ -206,7 +206,7 @@ Initialize a Hernquist lens with the given parameters.
 end
 
 """
-    init_NFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, rho_s::RV=NaN)
+    init_NFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, k_s::RV=NaN, x_s::RV=NaN)
 Initialize a Navarro-Frenk-White (NFW) lens with the given parameters
 """
 @kwdef struct init_NFWLens <: AbstractLens
@@ -215,13 +215,13 @@ Initialize a Navarro-Frenk-White (NFW) lens with the given parameters
    D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
-   rho_s::RV = NaN
+   k_s::RV = NaN
    x_s::RV = NaN
 end
 
 
 """
-    init_tNFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, x_t::RV=NaN, rho_s::RV=NaN)
+    init_tNFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, k_s::RV=NaN, x_s::RV=NaN, x_t::RV=NaN)
 Initialize a truncated Navarro-Frenk-White (tNFW) lens with the given parameters.
 """
 @kwdef struct init_tNFWLens <: AbstractLens
@@ -230,14 +230,14 @@ Initialize a truncated Navarro-Frenk-White (tNFW) lens with the given parameters
    D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
-   rho_s::RV = NaN
+   k_s::RV = NaN
    x_s::RV = NaN
    x_t::RV = NaN
 end
 
 
 """
-    init_gNFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, rho_s::RV=NaN, n::RV=-2.0)
+    init_gNFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, k_s::RV=NaN, x_s::RV=NaN, n::RV=-2.0)
 Initialize a generalized Navarro-Frenk-White (gNFW) lens with the given parameters.
 """
 @kwdef struct init_gNFWLens <: AbstractLens
@@ -246,14 +246,14 @@ Initialize a generalized Navarro-Frenk-White (gNFW) lens with the given paramete
    D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
-   rho_s::RV = NaN
+   k_s::RV = NaN
    x_s::RV = NaN
    n::RV   = NaN
 end
 
 
 """
-    init_EinastoLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, x_s::RV=NaN, rho_s::RV=NaN, n::RV=-2.0)
+    init_EinastoLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, k_s::RV=NaN, x_s::RV=NaN, n::RV=-2.0)
 Initialize an Einasto lens with the given parameters. The lens model can be initialized with either
 the concentration `c` or the scale radius `x_s`. 
 **If both are provided, `c` will be used to calculate `x_s` and the input `x_s` will be overwritten.**
@@ -265,9 +265,9 @@ The parameter `n` defines the slope of the density profile.
    D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
-   rho_s::RV = NaN
+   k_s::RV = NaN
    x_s::RV = NaN
-   n::RV   =-2.0
+   n::RV   = 0.2
 end
 
 
@@ -289,7 +289,7 @@ Initialize an approximate Hernquist lens (aHernquistLens) with the given paramet
 end
 
 """
-    init_aNFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, rho_s::RV=NaN, x_s::RV=NaN, eps::RV=NaN, pa::RV=NaN)
+    init_aNFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, k_s::RV=NaN, x_s::RV=NaN, eps::RV=NaN, pa::RV=NaN)
 Initialize an approximate Navarro-Frenk-White lens (aNFWLens) with the given parameters based on 
 [Oguri (2021)](https://ui.adsabs.harvard.edu/abs/2021PASP..133g4504O/abstract).
 """
@@ -299,7 +299,7 @@ Initialize an approximate Navarro-Frenk-White lens (aNFWLens) with the given par
    D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
-   rho_s::RV = NaN
+   k_s::RV = NaN
    x_s::RV  = NaN
    eps::RV  = NaN
    pa::RV   = NaN
@@ -322,7 +322,7 @@ Initialize an elliptical Hernquist mass distribution lens (eHernquistMDLens) wit
 end
 
 """
-    init_eNFWMDLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, rho_s::RV=NaN, x_s::RV=NaN, eps::RV=NaN, pa::RV=NaN)
+    init_eNFWMDLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, k_s::RV=NaN, x_s::RV=NaN, eps::RV=NaN, pa::RV=NaN)
 Initialize an elliptical Navarro-Frenk-White mass distribution lens (eNFWMDLens) with the given parameters.
 """
 @kwdef struct init_eNFWMDLens <: AbstractLens
@@ -331,7 +331,7 @@ Initialize an elliptical Navarro-Frenk-White mass distribution lens (eNFWMDLens)
    D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
-   rho_s::RV = NaN
+   k_s::RV = NaN
    x_s::RV  = NaN
    eps::RV  = NaN
    pa::RV   = NaN
@@ -391,28 +391,228 @@ end
 end
 
 
+#---------------------- Constructor for various lenses ---------------------------------------------
+function init_NFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN)
+   # Overdensity value
+   Δ_z = 200.0
+
+   # ADD to the lens
+   D_d = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
+   
+   # Critical density at the lens redshift (in kg/m^3)
+   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
+
+   # Virial radius of the lens (in ANGLE_ARCSEC)
+   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
+
+   # Check if concentration is given
+   if isfinite(c)
+      x_s = θ_vir / c
+   elseif isfinite(x_s)
+      c = θ_vir / x_s
+   else
+      throw(ArgumentError("Provide concentration (c) or scale radius (x_s) in **parameter_NFWLens**."))
+   end
+   # 3D characteristic density
+   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
+
+   # 2D (normalized) characteristic density
+   k_s = ρ_s * D_d * x_s * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+
+   return init_NFWLens(x_c=x_c, y_c=y_c, D_d=D_d, k_s=k_s, x_s=x_s)
+end
+
+function init_tNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, x_t::RV=NaN)
+   # Overdensity value
+   Δ_z = 200.0
+
+   # ADD to the lens
+   D_d = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
+   
+   # Critical density at the lens redshift (in kg/m^3)
+   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
+
+   # Virial radius of the lens (in ANGLE_ARCSEC)
+   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
+
+   # Check if concentration is given
+   if isfinite(c)
+      x_s = θ_vir / c
+   elseif isfinite(x_s)
+      c = θ_vir / x_s
+   else
+      throw(ArgumentError("Provide concentration (c) or scale radius (x_s) in **parameter_NFWLens**."))
+   end
+   # 3D characteristic density
+   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
+
+   # 2D (normalized) characteristic density
+   k_s = ρ_s * D_d * x_s * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+
+   return init_tNFWLens(x_c=x_c, y_c=y_c, D_d=D_d, k_s=k_s, x_s=x_s, x_t=x_t)
+end
+
+function init_gNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, n::RV=1.0)
+   # Check for valid slope parameter
+   if !(0.0 < n < 2.0)
+      throw(ArgumentError("Slope parameter outside allowed range n ∈ (0, 2) in **parameter_gNFWLens**."))
+   end
+
+   # Integrand function for mass calculation
+   function integrand(x::RV, α::RV)
+      return x^(2.0 - α) / (1.0 + x)^(3.0 - α)
+   end
+
+   # Overdensity value
+   Δ_z = 200.0
+
+   # ADD to the lens
+   D_d = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
+   
+   # Critical density at the lens redshift
+   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
+
+   # Virial radius of the lens (in ANGLE_ARCSEC)
+   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
+
+   # Check if concentration is given
+   if isfinite(c)
+      x_s = θ_vir / c
+   elseif isfinite(x_s)
+      c = θ_vir / x_s
+   else
+      throw(ArgumentError("Provide at least c or x_s in **parameter_gNFWLens**."))
+   end
+   mass_c, _ = quadgk(x -> integrand(x, n), 0, c)
+   
+   # 3D characteristic density
+   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / mass_c
+
+   # 2D (normalized) characteristic density
+   k_s = ρ_s * D_d * x_s * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+
+   return init_gNFWLens(x_c=x_c, y_c=y_c, D_d=D_d, k_s=k_s, x_s=x_s, n=n)
+end
+
+function init_EinastoLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, n::RV=0.2)
+   # Overdensity value
+   Δ_z = 200.0
+
+   # ADD to the lens
+   D_d  = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
+
+   # Critical density at the lens redshift
+   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
+
+   # Virial radius of the lens (in ANGLE_ARCSEC)
+   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
+
+   # Check if concentration is given
+   if isfinite(c)
+      x_s = θ_vir / c
+   elseif isfinite(x_s)
+      c = θ_vir / x_s
+   else
+      throw(ArgumentError("Provide at least c or x_s in **parameter_EinastoLens**."))
+   end
+   Pax, _ = gamma_inc(3.0 / n, (2.0 / n) * c^n)
+   mass_e = (1.0 / n) * (n / 2.0)^(3.0 / n) * gamma(3.0 / n) * Pax
+   
+   # 3D characteristic density
+   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / mass_e
+
+   # 2D (normalized) characteristic density
+   k_s = ρ_s * D_d * x_s * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+
+   return init_EinastoLens(x_c=x_c, y_c=y_c, D_d=D_d, k_s=k_s, x_s=x_s, n=n)
+end
+
+function init_aNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, eps::RV=NaN, pa::RV=NaN)
+   # Overdensity value
+   Δ_z = 200.0
+
+   # ADD to the lens
+   D_d = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
+   
+   # Critical density at the lens redshift (in kg/m^3)
+   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
+
+   # Virial radius of the lens (in ANGLE_ARCSEC)
+   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
+
+   # Check if concentration is given
+   if isfinite(c)
+      x_s = θ_vir / c
+   elseif isfinite(x_s)
+      c = θ_vir / x_s
+   else
+      throw(ArgumentError("Provide concentration (c) or scale radius (x_s) in **parameter_NFWLens**."))
+   end
+   # 3D characteristic density
+   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
+
+   # 2D (normalized) characteristic density
+   k_s = ρ_s * D_d * x_s * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+
+   return init_aNFWLens(x_c=x_c, y_c=y_c, D_d=D_d, k_s=k_s, x_s=x_s, eps=eps, pa=pa)
+end
+
+function init_eNFWMDLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, eps::RV=NaN, pa::RV=NaN)
+   # Overdensity value
+   Δ_z = 200.0
+
+   # ADD to the lens
+   D_d = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
+   
+   # Critical density at the lens redshift (in kg/m^3)
+   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
+
+   # Virial radius of the lens (in ANGLE_ARCSEC)
+   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
+
+   # Check if concentration is given
+   if isfinite(c)
+      x_s = θ_vir / c
+   elseif isfinite(x_s)
+      c = θ_vir / x_s
+   else
+      throw(ArgumentError("Provide concentration (c) or scale radius (x_s) in **parameter_NFWLens**."))
+   end
+   # 3D characteristic density
+   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
+
+   # 2D (normalized) characteristic density
+   k_s = ρ_s * D_d * x_s * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+
+   return init_eNFWMDLens(x_c=x_c, y_c=y_c, D_d=D_d, k_s=k_s, x_s=x_s, eps=eps, pa=pa)
+end
+
+
 #---------------------- Composite and Multi-plane lens constructors --------------------------------
 # Dictionary to map lens types to their initialization functions and arguments
 const lens_init_functions = Dict{Symbol, Function}(
-   :PointLens         => (c -> init_PointLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass)),
-   :PlummerLens       => (c -> init_PlummerLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_s=c.x_s)),
-   :SISLens           => (c -> init_SISLens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d)),
-   :NSISPLens         => (c -> init_NSISPLens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s)),
-   :NSISMDLens        => (c -> init_NSISMDLens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s)),
-   :GaussianLens      => (c -> init_GaussianLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_s=c.x_s)),
-   :SersicLens        => (c -> init_SersicLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_e=c.x_e, n=c.n)),
-   :ExternalEffects   => (c -> init_ExternalEffects(kappa=c.kappa, gamma1=c.gamma1, gamma2=c.gamma2)),
-   :PIEPLens          => (c -> init_PIEPLens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s, eps=c.eps, pa=c.pa)),
-   :SIELens           => (c -> init_SIELens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s, eps=c.eps, pa=c.pa)),
-   :PJELens           => (c -> init_PJELens(x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s, x_t=c.x_t, eps=c.eps, pa=c.pa)),
-   :HernquistLens     => (c -> init_HernquistLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_s=c.x_s)),
-   :NFWLens           => (c -> init_NFWLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, x_s=c.x_s, rho_s=c.rho_s)),
-   :tNFWLens          => (c -> init_tNFWLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, x_s=c.x_s, x_t=c.x_t, rho_s=c.rho_s)),
-   :gNFWLens          => (c -> init_gNFWLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, x_s=c.x_s, rho_s=c.rho_s, n=c.n)),
-   :EinastoLens       => (c -> init_EinastoLens(D_d=c.D_d, x_c=c.x_c, y_c=c.y_c, x_s=c.x_s, rho_s=c.rho_s, n=c.n)),
-   :MultiPlummerLens  => (c -> init_MultiPlummerLens(D_d=c.D_d, n=c.n, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_s=c.x_s)),
-   :MultiGaussianLens => (c -> init_MultiGaussianLens(D_d=c.D_d, n=c.n, x_c=c.x_c, y_c=c.y_c, mass=c.mass, x_s=c.x_s)),
-   :MultiPJELens      => (c -> init_MultiPJELens(n=c.n, x_c=c.x_c, y_c=c.y_c, v_d=c.v_d, x_s=c.x_s, x_t=c.x_t, eps=c.eps, pa=c.pa))
+   :PointLens         => (comp -> init_PointLens(D_d=comp.D_d, x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass)),
+   :PlummerLens       => (comp -> init_PlummerLens(D_d=comp.D_d, x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, x_s=comp.x_s)),
+   :SISLens           => (comp -> init_SISLens(x_c=comp.x_c, y_c=comp.y_c, v_d=comp.v_d)),
+   :NSISPLens         => (comp -> init_NSISPLens(x_c=comp.x_c, y_c=comp.y_c, v_d=comp.v_d, x_s=comp.x_s)),
+   :NSISMDLens        => (comp -> init_NSISMDLens(x_c=comp.x_c, y_c=comp.y_c, v_d=comp.v_d, x_s=comp.x_s)),
+   :GaussianLens      => (comp -> init_GaussianLens(D_d=comp.D_d, x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, x_s=comp.x_s)),
+   :SersicLens        => (comp -> init_SersicLens(D_d=comp.D_d, x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, x_e=comp.x_e, n=comp.n)),
+   :ExternalEffects   => (comp -> init_ExternalEffects(kappa=comp.kappa, gamma1=comp.gamma1, gamma2=comp.gamma2)),
+   :PIEPLens          => (comp -> init_PIEPLens(x_c=comp.x_c, y_c=comp.y_c, v_d=comp.v_d, x_s=comp.x_s, eps=comp.eps, pa=comp.pa)),
+   :SIELens           => (comp -> init_SIELens(x_c=comp.x_c, y_c=comp.y_c, v_d=comp.v_d, x_s=comp.x_s, eps=comp.eps, pa=comp.pa)),
+   :PJELens           => (comp -> init_PJELens(x_c=comp.x_c, y_c=comp.y_c, v_d=comp.v_d, x_s=comp.x_s, x_t=comp.x_t, eps=comp.eps, pa=comp.pa)),
+   :HernquistLens     => (comp -> init_HernquistLens(D_d=comp.D_d, x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, x_s=comp.x_s)),
+   :aHernquistLens    => (comp -> init_aHernquistLens(D_d=comp.D_d, x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, x_s=comp.x_s)),
+   :NFWLens           => (comp -> init_NFWLens(comp.cosmology, comp.z_d; x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, c=comp.c)),
+   :aNFWLens          => (comp -> init_aNFWLens(comp.cosmology, comp.z_d; x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, c=comp.c, eps=comp.eps, pa=comp.pa)),
+   :eNFWMDLens        => (comp -> init_eNFWMDLens(comp.cosmology, comp.z_d; x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, c=comp.c, eps=comp.eps, pa=comp.pa)),
+   :tNFWLens          => (comp -> init_tNFWLens(comp.cosmology, comp.z_d; x_c=comp.x_c, y_c=comp.y_c, x_s=comp.x_s, x_t=comp.x_t)),
+   :gNFWLens          => (comp -> init_gNFWLens(comp.cosmology, comp.z_d; x_c=comp.x_c, y_c=comp.y_c, x_s=comp.x_s, n=comp.n)),
+   :EinastoLens       => (comp -> init_EinastoLens(comp.cosmology, comp.z_d; x_c=comp.x_c, y_c=comp.y_c, x_s=comp.x_s, n=comp.n)),
+   :MultiPlummerLens  => (comp -> init_MultiPlummerLens(D_d=comp.D_d, n=comp.n, x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, x_s=comp.x_s)),
+   :MultiGaussianLens => (comp -> init_MultiGaussianLens(D_d=comp.D_d, n=comp.n, x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, x_s=comp.x_s)),
+   :MultiPJELens      => (comp -> init_MultiPJELens(n=comp.n, x_c=comp.x_c, y_c=comp.y_c, v_d=comp.v_d, x_s=comp.x_s, x_t=comp.x_t, eps=comp.eps, pa=comp.pa))
    )
 # Constructor for composite lens
 function init_CompositeLens(lens::Vector{<:NamedTuple})
@@ -480,36 +680,13 @@ function parameter_NFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d
    else
       throw(ArgumentError("Provide concentration (c) or scale radius (x_s) in **parameter_NFWLens**."))
    end
-   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
+   # 3D characteristic density
+   mass_c = log(1.0 + c) - (c / (1.0 + c))
+   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / mass_c
 
-   return (mass=mass, rho_s=ρ_s, c=c, x_s=x_s)
-end
-
-# Parameters for tNFW lens
-function parameter_tNFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d::RV=NaN, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, x_t::RV=NaN)
-   # Overdensity value
-   Δ_z = 200.0
-
-   # ADD to the lens
-   D_d = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
-   
-   # Critical density at the lens redshift
-   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
-
-   # Virial radius of the lens (in ANGLE_ARCSEC)
-   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
-
-   # Check if concentration is given
-   if isfinite(c)
-      x_s = θ_vir / c
-   elseif isfinite(x_s)
-      c = θ_vir / x_s
-   else
-      throw(ArgumentError("Provide at least c or x_s in **parameter_tNFWLens**."))
-   end
-   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
-
-   return (mass=mass, rho_s=ρ_s, c=c, x_s=x_s, x_t=x_t)
+   # 2D (normalized) characteristic density
+   k_s = ρ_s * D_d * x_s * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+   return (mass=mass, rho_s=ρ_s, k_s=k_s, c=c, x_s=x_s)
 end
 
 # Parameters for generalized NFW lens
@@ -544,10 +721,14 @@ function parameter_gNFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_
    else
       throw(ArgumentError("Provide at least c or x_s in **parameter_gNFWLens**."))
    end
-   mass, _ = quadgk(x -> integrand(x, n), 0, c)
-   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / mass
+   mass_c, _ = quadgk(x -> integrand(x, n), 0, c)
+   
+   # 3D characteristic density
+   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / mass_c
 
-   return (mass=mass, rho_s=ρ_s, c=c, x_s=x_s, n=n)
+   # 2D (normalized) characteristic density
+   k_s = ρ_s * D_d * x_s * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+   return (mass=mass, rho_s=ρ_s, k_s=k_s, c=c, x_s=x_s, n=n)
 end
 
 # Parameters for Einasto lens
@@ -573,8 +754,12 @@ function parameter_EinastoLens(; cosmology::Cosmology.AbstractCosmology=nothing,
       throw(ArgumentError("Provide at least c or x_s in **parameter_EinastoLens**."))
    end
    Pax, _ = gamma_inc(3.0 / n, (2.0 / n) * c^n)
-   m_v = (1.0 / n) * (n / 2.0)^(3.0 / n) * gamma(3.0 / n) * Pax
-   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / m_v
+   mass_e = (1.0 / n) * (n / 2.0)^(3.0 / n) * gamma(3.0 / n) * Pax
+   
+   # 3D characteristic density
+   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / mass_e
 
-   return (mass=mass, rho_s=ρ_s, c=c, x_s=x_s, n=n)
+   # 2D (normalized) characteristic density
+   k_s = ρ_s * D_d * x_s * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+   return (mass=mass, rho_s=ρ_s, k_s=k_s, c=c, x_s=x_s, n=n)
 end

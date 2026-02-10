@@ -23,7 +23,7 @@
    param = Lenses.parameter_NFWLens(cosmology=cosmo, z_d=zl, mass=mass, c=6)
    @test_throws ArgumentError Lenses.parameter_NFWLens(cosmology=cosmo, z_d=zl, mass=mass)
 
-   lens = Lenses.init_NFWLens(D_d=Dol, rho_s=param.rho_s, x_s=param.x_s)
+   lens = Lenses.init_NFWLens(cosmo, zl; mass=mass, c=6)
 
    pot1 = adis  * Lenses.get_potential(lens, xt1, yt1)
    dex1 = adis .* Lenses.get_deflection(lens, xt1, yt1)

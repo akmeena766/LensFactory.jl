@@ -329,7 +329,8 @@ NO_POSITION = Set([:ExternalEffects])
 REQUIRE_ADD = Set([:PointLens, :PlummerLens, :GaussianLens, :SersicLens, :HernquistLens, :NFWLens,
                   :tNFWLens, :gNFWLens, :EinastoLens, :aHernquistLens, :aNFWLens, :eHernquistMDLens,
                   :eNFWMDLens, :MultiPlummerLens, :MultiGaussianLens])
-function _lensmodel!(dict::Dict, params::Vector{Parameter}, Dol_ref::Float64)
+REQUIRE_COSMO = Set([:NFWLens, :eNFWMDLens, :aNFWLens, :tNFWLens, :gNFWLens, :EinastoLens])
+function _lensmodel!(dict::Dict, params::Vector{Parameter}, cosmology::Cosmology.AbstractCosmology, Dol_ref::Float64)
    lens_dict = dict[:lens_model]
    
    # Check if we do single or multiplane lensing. Default: single plane
@@ -353,8 +354,7 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter}, Dol_ref::Float64)
    lens_name = Vector{LensComponent}(undef, n_lenses)
 
    # Single plane vs. multiplane lensing
-   if lens_dict[:multiplane] == false
-      
+   if lens_dict[:multiplane] == false      
       # Single plane lensing
       for i in 1:n_lenses
          lens_id = Symbol(:lens, i)
@@ -387,7 +387,7 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter}, Dol_ref::Float64)
          if name ∈ REQUIRE_ADD
             push!(params, Parameter(owner=lens_id, name=:D_d, refer=Dol_ref, lower=Dol_ref, upper=Dol_ref))
          end
-            
+                     
          # --- Remaining lens parameters ---
          for (k, v) in indi_lens_dict
             k ∈ (:lens, :x_c, :y_c) && continue
@@ -849,7 +849,7 @@ function read_input(filename::AbstractString)
    Dol_ref = Cosmology.angular_diameter_distance(cosmology, 0.0, observation.z_d)
 
    # Get lens model and its parameters
-   lens_config = _lensmodel!(dict, params, Dol_ref)
+   lens_config = _lensmodel!(dict, params, cosmology, Dol_ref)
 
    # Get source model and its parameters
    source_config = _source!(dict, cosmology, params)

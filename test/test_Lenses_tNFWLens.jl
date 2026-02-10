@@ -6,11 +6,7 @@
    Δ_z = 200.0
    θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / Dol / ANGLE_ARCSEC
 
-   # Get NFW lens parameters
-   param = Lenses.parameter_tNFWLens(cosmology=cosmo, z_d=zl, mass=mass, c=6, x_t=2.0*θ_vir)
-   @test_throws ArgumentError Lenses.parameter_tNFWLens(cosmology=cosmo, z_d=zl, mass=mass)
-
-   lens = Lenses.init_tNFWLens(D_d=Dol, rho_s=param.rho_s, x_s=param.x_s, x_t=param.x_t)
+   lens = Lenses.init_tNFWLens(cosmo, zl; mass=mass, c=6, x_t=2.0*θ_vir)
 
    pot1 = adis  * Lenses.get_potential(lens, xt1, yt1)
    dex1 = adis .* Lenses.get_deflection(lens, xt1, yt1)

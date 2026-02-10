@@ -7,7 +7,7 @@
    param = Lenses.parameter_EinastoLens(cosmology=cosmo, z_d=zl, mass=mass, c=6)
    @test_throws ArgumentError Lenses.parameter_EinastoLens(cosmology=cosmo, z_d=zl, mass=mass)
 
-   lens = Lenses.init_EinastoLens(D_d=Dol, rho_s=param.rho_s, x_s=param.x_s, n=param.n)
+   lens = Lenses.init_EinastoLens(cosmo, zl, mass=mass, c=6)
 
    # pot1 = adis  * Lenses.get_potential(lens, xt1, yt1)
    dex1 = adis .* Lenses.get_deflection(lens, xt1, yt1)
