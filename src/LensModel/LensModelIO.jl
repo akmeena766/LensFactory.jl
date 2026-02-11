@@ -329,8 +329,7 @@ NO_POSITION = Set([:ExternalEffects])
 REQUIRE_ADD = Set([:PointLens, :PlummerLens, :GaussianLens, :SersicLens, :HernquistLens, :NFWLens,
                   :tNFWLens, :gNFWLens, :EinastoLens, :aHernquistLens, :aNFWLens, :eHernquistMDLens,
                   :eNFWMDLens, :MultiPlummerLens, :MultiGaussianLens])
-REQUIRE_COSMO = Set([:NFWLens, :eNFWMDLens, :aNFWLens, :tNFWLens, :gNFWLens, :EinastoLens])
-function _lensmodel!(dict::Dict, params::Vector{Parameter}, cosmology::Cosmology.AbstractCosmology, Dol_ref::Float64)
+function _lensmodel!(dict::Dict, params::Vector{Parameter}, Dol_ref::Float64)
    lens_dict = dict[:lens_model]
    
    # Check if we do single or multiplane lensing. Default: single plane
@@ -849,7 +848,7 @@ function read_input(filename::AbstractString)
    Dol_ref = Cosmology.angular_diameter_distance(cosmology, 0.0, observation.z_d)
 
    # Get lens model and its parameters
-   lens_config = _lensmodel!(dict, params, cosmology, Dol_ref)
+   lens_config = _lensmodel!(dict, params, Dol_ref)
 
    # Get source model and its parameters
    source_config = _source!(dict, cosmology, params)

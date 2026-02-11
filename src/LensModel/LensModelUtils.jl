@@ -10,6 +10,7 @@ using StatsBase
 # LensFactory modules to use
 # --------------------------------------------------------------------------------------------------
 using ..Constants
+using ..Cosmology
 using ..Lenses
 using ..LensModelIO
 using ..Likelihood
@@ -183,6 +184,7 @@ end
 # --------------------------------------------------------------------------------------------------
 # Build lens model from physical paramerters
 # --------------------------------------------------------------------------------------------------
+REQUIRE_COSMO = Set([:NFWLens, :eNFWMDLens, :aNFWLens, :tNFWLens, :gNFWLens, :EinastoLens])
 function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, Float64})
    # Determine the number of components from the lens model container
    n_lens = length(model.lens_config.components)
@@ -198,7 +200,7 @@ function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, Float6
 
    for i in 1:n_lens
       lens_id = Symbol(:lens, i)
-      lens_params = Dict{Symbol, Union{Symbol, Float64}}()
+      lens_params = Dict{Symbol, Union{Symbol, Float64, Cosmology.AbstractCosmology}}()
       
       for (k, v) in enumerate(components)
          if v.owner == lens_id
@@ -210,6 +212,12 @@ function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, Float6
          if k[1] == lens_id
             lens_params[k[2]] = v
          end
+      end
+
+      # Add cosmology and lens redshift if required
+      if lens_params[:lens] ∈ REQUIRE_COSMO
+         lens_params[:cosmology] = model.cosmology
+         lens_params[:z_d] = model.observation.z_d
       end
       push!(lens_vector, (; lens_params...))
    end
