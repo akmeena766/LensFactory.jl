@@ -48,7 +48,7 @@ abstract type AbstractMCMCConfig <: AbstractLensConfig end
    modeler::String
    lens::String
    z_d::Float64
-   reference::NTuple{2, Float64}
+   reference::NTuple{2,Float64}
    pixel_scale::Float64
    FOV::NTuple{2,Float64}
 end
@@ -62,7 +62,7 @@ end
    refer::Float64
    lower::Float64
    upper::Float64
-   key::Tuple{Symbol, Symbol} = (owner, name)
+   key::Tuple{Symbol,Symbol} = (owner, name)
 end
 
 # --------------------------------------------------------------------------------------------------
@@ -73,8 +73,29 @@ end
    name::Symbol
 end
 
+@kwdef struct GalaxyComponent <: AbstractLensConfig
+   n::Int64
+   x_c::Vector{Float64}
+   y_c::Vector{Float64}
+   obs_mag::Vector{Float64}
+   eps::Vector{Float64}
+   pa::Vector{Float64}
+end
+
+@kwdef struct ScalingRelation <: AbstractLensConfig
+   ref_mag::Float64
+   ref_sigma::Float64
+   ref_core::Float64 = 0.0
+   ref_cut::Float64
+   slope_sigma::Float64 = 0.25
+   slope_core::Float64 = 0.50
+   slope_cut::Float64 = 0.50
+end
+
 @kwdef struct LensConfig <: AbstractLensConfig
    components::Vector{LensComponent}
+   galaxies::Union{Nothing, GalaxyComponent} = nothing
+   scaling::Union{Nothing, ScalingRelation} = nothing
 end
 
 # --------------------------------------------------------------------------------------------------
@@ -183,18 +204,18 @@ end
 function _symbolize!(x::Dict)
    # Collect string keys first to avoid modification during iteration
    str_keys = String[]
-   
+
    for k in keys(x)
       k isa String && push!(str_keys, k)
    end
-   
+
    # Convert string keys to symbols and recursively symbolize values
    for k in str_keys
       v = x[k]
-       delete!(x, k)
+      delete!(x, k)
       x[Symbol(k)] = v
-       _symbolize!(v)
-     end
+      _symbolize!(v)
+   end
    return nothing
 end
 
@@ -211,7 +232,7 @@ _symbolize!(x::Any) = nothing
 end
 
 # Assign default value to optional key if it does not exist
-@inline function _optional!(dict::Dict, key::Symbol, default::Union{Bool, String})
+@inline function _optional!(dict::Dict, key::Symbol, default::Union{Bool,String})
    if !haskey(dict, key)
       dict[key] = default
    end
@@ -219,9 +240,9 @@ end
 end
 
 # Internal function: Extract parameter values
-function _extract_param_range(x::Union{Int64, Float64, Dict})::Tuple{Float64, Float64, Float64}
+function _extract_param_range(x::Union{Int64,Float64,Dict})::Tuple{Float64,Float64,Float64}
    # Extract parameter values in case of Int64 or Float64
-   if x isa Union{Int64, Float64}
+   if x isa Union{Int64,Float64}
       val = Float64(x)
       return val, val, val
    elseif x isa Dict
@@ -254,20 +275,20 @@ function _observation(dict::Dict)
    obs_dict = dict[:observation]
    _optional!(obs_dict, :modeler, "LensFactory")
    _optional!(obs_dict, :lens, "WhoKnows")
-   
+
    _require(obs_dict, :z_d)
    _require(obs_dict, :reference)
    _require(obs_dict, :pixel_scale)
    _require(obs_dict, :FOV)
-   
+
    # Make sure that reference is tuple and convert it to Float64
    ref_point = obs_dict[:reference]
    ref = (Float64(ref_point[1]), Float64(ref_point[2]))
-   
+
    # Make sure that FOV size is a single value or tuple
    # If it is a single value --> Create a square grid based on that
    FOV = obs_dict[:FOV]
-   if FOV isa Union{Int64, Float64}
+   if FOV isa Union{Int64,Float64}
       FOV = (Float64(FOV), Float64(FOV))
    elseif FOV isa Vector
       FOV = (Float64(FOV[1]), Float64(FOV[2]))
@@ -277,12 +298,12 @@ function _observation(dict::Dict)
 
    # Construct struct with the given inputs
    obs = Observation(
-      modeler     = obs_dict[:modeler],
-      lens        = obs_dict[:lens],
-      z_d         = obs_dict[:z_d],
-      reference   = ref,
-      pixel_scale = obs_dict[:pixel_scale],
-      FOV         = FOV
+      modeler=obs_dict[:modeler],
+      lens=obs_dict[:lens],
+      z_d=obs_dict[:z_d],
+      reference=ref,
+      pixel_scale=obs_dict[:pixel_scale],
+      FOV=FOV
    )
    return obs
 end
@@ -327,14 +348,15 @@ end
 # --------------------------------------------------------------------------------------------------
 NO_POSITION = Set([:ExternalEffects])
 REQUIRE_ADD = Set([:PointLens, :PlummerLens, :GaussianLens, :SersicLens, :HernquistLens, :NFWLens,
-                  :tNFWLens, :gNFWLens, :EinastoLens, :aHernquistLens, :aNFWLens, :eHernquistMDLens,
-                  :eNFWMDLens, :MultiPlummerLens, :MultiGaussianLens])
+                   :tNFWLens, :gNFWLens, :EinastoLens, :aHernquistLens, :aNFWLens, :eHernquistMDLens,
+                   :eNFWMDLens, :MultiPlummerLens, :MultiGaussianLens])
+REQUIRE_SCALING = Set([:MultiPJELens])
 function _lensmodel!(dict::Dict, params::Vector{Parameter}, Dol_ref::Float64)
    lens_dict = dict[:lens_model]
-   
+
    # Check if we do single or multiplane lensing. Default: single plane
    _optional!(lens_dict, :multiplane, false)
-   
+
    # Make sure that total number of lenses is greater than zero
    _require(lens_dict, :total_lenses)
    if lens_dict[:total_lenses] <= 0
@@ -345,15 +367,19 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter}, Dol_ref::Float64)
    n_lenses = lens_dict[:total_lenses]
 
    # Reference point
-   ref_ra  = dict[:observation][:reference][1]
+   ref_ra = dict[:observation][:reference][1]
    ref_dec = dict[:observation][:reference][2]
    use_ref = !(ref_ra == 0.0 && ref_dec == 0.0)
 
    # Initialize lens name vector
    lens_name = Vector{LensComponent}(undef, n_lenses)
 
+   # Initialize galaxy component and scaling flag
+   galaxy_comp = nothing
+   needs_scaling = false
+
    # Single plane vs. multiplane lensing
-   if lens_dict[:multiplane] == false      
+   if lens_dict[:multiplane] == false
       # Single plane lensing
       for i in 1:n_lenses
          lens_id = Symbol(:lens, i)
@@ -363,42 +389,118 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter}, Dol_ref::Float64)
          # Store lens model name in lens_name vector
          lens_name[i] = LensComponent(owner=lens_id, name=name)
 
-         # --- Lens position parameters (always provided) ---
-         if name ∉ NO_POSITION
-            rx, lx, ux = _extract_param_range(indi_lens_dict[:x_c])
-            ry, ly, uy = _extract_param_range(indi_lens_dict[:y_c])
-         
-            # Check if a valid (RA, Dec) is provided as reference or (0, 0) is used
-            # reference = (0, 0) ⇒ Lens positions are provided in arcseconds
-            # reference = (RA, Dec) ⇒ Lens positions are provided in RA and Dec. Conversion needed.
-            if use_ref
-               x_ref, y_ref = AstrometricOps.gnomonic_offsets_arcsec(ref_ra, ref_dec, rx, ry)
-            else
-               x_ref, y_ref = rx, ry
-            end
-
-            # Add lens position parameters to the parameter vector
-            push!(params, Parameter(owner=lens_id, name=:x_c, refer=x_ref, lower=lx, upper=ux))
-            push!(params, Parameter(owner=lens_id, name=:y_c, refer=y_ref, lower=ly, upper=uy))
-         end
-
          # Add distance parameters
          if name ∈ REQUIRE_ADD
             push!(params, Parameter(owner=lens_id, name=:D_d, refer=Dol_ref, lower=Dol_ref, upper=Dol_ref))
          end
-                     
-         # --- Remaining lens parameters ---
-         for (k, v) in indi_lens_dict
-            k ∈ (:lens, :x_c, :y_c) && continue
 
-            # Extract parameter values and bounds
-            r, l, u = _extract_param_range(v)
+         if name ∉ REQUIRE_SCALING
+            # --- Lens position parameters (always provided) ---
+            if name ∉ NO_POSITION
+               rx, lx, ux = _extract_param_range(indi_lens_dict[:x_c])
+               ry, ly, uy = _extract_param_range(indi_lens_dict[:y_c])
 
-            # Add parameter to the reference, lower, and upper vectors
-            push!(params, Parameter(owner=lens_id, name=k, refer=r, lower=l, upper=u))
+               # Check if a valid (RA, Dec) is provided as reference or (0, 0) is used
+               # reference = (0, 0) ⇒ Lens positions are provided in arcseconds
+               # reference = (RA, Dec) ⇒ Lens positions are provided in RA and Dec. Conversion needed.
+               if use_ref
+                  x_ref, y_ref = AstrometricOps.gnomonic_offsets_arcsec(ref_ra, ref_dec, rx, ry)
+               else
+                  x_ref, y_ref = rx, ry
+               end
+
+               # Add lens position parameters to the parameter vector
+               push!(params, Parameter(owner=lens_id, name=:x_c, refer=x_ref, lower=lx, upper=ux))
+               push!(params, Parameter(owner=lens_id, name=:y_c, refer=y_ref, lower=ly, upper=uy))
+            end
+
+            # --- Remaining lens parameters ---
+            for (k, v) in indi_lens_dict
+               k ∈ (:lens, :x_c, :y_c) && continue
+
+               # Extract parameter values and bounds
+               r, l, u = _extract_param_range(v)
+
+               # Add parameter to the reference, lower, and upper vectors
+               push!(params, Parameter(owner=lens_id, name=k, refer=r, lower=l, upper=u))
+            end
+         else
+            # Update scaling flag
+            needs_scaling = true
+
+            # Get file name
+            file_name = indi_lens_dict[:galaxy_file]
+
+            # Load catalog and create the GalaxyComponent
+            catalog_data = readdlm(file_name)
+            catalog_data = Float64.(catalog_data)
+
+            # Total number of galaxies
+            catalog_n = size(catalog_data, 1)
+
+            # Get fixed galaxy components
+            galaxy_comp = GalaxyComponent(
+               n = catalog_n,
+               x_c = catalog_data[:, 2], 
+               y_c = catalog_data[:, 3], 
+               obs_mag = catalog_data[:, 4],
+               eps = catalog_data[:, 5],
+               pa = catalog_data[:, 6]
+            )
          end
       end
-      return LensConfig(lens_name)
+
+      # Initialize scaling object
+      scaling_obj = nothing
+
+      # Get scaling relations
+      if needs_scaling
+         # Get scaling relations dictionary
+         scaling_dict = dict[:scaling_relation]
+         
+         # Owner of scaling parameters
+         owner = :scaling
+         
+         # Get reference magnitude
+         rm, lm, um = _extract_param_range(scaling_dict[:ref_mag])
+         push!(params, Parameter(owner=:scaling, name=:ref_mag, refer=rm, lower=lm, upper=um))
+
+         # Get reference sigma_star
+         rs, ls, us = _extract_param_range(scaling_dict[:ref_sigma])
+         push!(params, Parameter(owner=:scaling, name=:ref_sigma, refer=rs, lower=ls, upper=us))
+
+         # Get reference rcore_star
+         rc, lc, uc = _extract_param_range(scaling_dict[:ref_core])
+         push!(params, Parameter(owner=:scaling, name=:ref_core, refer=rc, lower=lc, upper=uc))
+
+         # Get reference rcut_star
+         rt, lt, ut = _extract_param_range(scaling_dict[:ref_cut])
+         push!(params, Parameter(owner=:scaling, name=:ref_cut, refer=rt, lower=lt, upper=ut))
+
+         # Get reference slope_sigma
+         ss, ls, us = _extract_param_range(scaling_dict[:slope_sigma])
+         push!(params, Parameter(owner=:scaling, name=:slope_sigma, refer=ss, lower=ls, upper=us))
+
+         # Get reference slope_core
+         sc, lc, uc = _extract_param_range(scaling_dict[:slope_core])
+         push!(params, Parameter(owner=:scaling, name=:slope_core, refer=sc, lower=lc, upper=uc))
+
+         # Get reference slope_cut
+         st, lt, ut = _extract_param_range(scaling_dict[:slope_cut])
+         push!(params, Parameter(owner=:scaling, name=:slope_cut, refer=st, lower=lt, upper=ut))
+
+         scaling_obj = ScalingRelation(
+            ref_mag = rm,
+            ref_sigma = rs,
+            ref_core = rc,
+            ref_cut = rt,
+            slope_sigma = ss,
+            slope_core = sc,
+            slope_cut = st
+         )
+      end
+      
+      return LensConfig(components=lens_name, galaxies=galaxy_comp, scaling=scaling_obj)
    else
       # Multi-plane lensing not yet implemented
       error("Multi-plane lensing support is not yet implemented.")
@@ -447,7 +549,7 @@ function _source_direct!(dict::Dict, cosmo::Cosmology.AbstractCosmology, params:
       D_ds = Cosmology.angular_diameter_distance(cosmo, z_d, r)
       D_os = Cosmology.angular_diameter_distance(cosmo, 0.0, r)
       adis_r = D_ds / D_os
-      
+
       # Store reference adis
       adis_ref[i] = adis_r
 
@@ -486,8 +588,8 @@ function _source_direct!(dict::Dict, cosmo::Cosmology.AbstractCosmology, params:
             σx = indi_source_dict[knot_id][:sigma]
             σy = indi_source_dict[knot_id][:sigma]
             σθ = 0.0 .* indi_source_dict[knot_id][:sigma]
-         elseif haskey(indi_source_dict[knot_id], :sigma_x) && 
-                haskey(indi_source_dict[knot_id], :sigma_y) && 
+         elseif haskey(indi_source_dict[knot_id], :sigma_x) &&
+                haskey(indi_source_dict[knot_id], :sigma_y) &&
                 haskey(indi_source_dict[knot_id], :sigma_theta)
             σx = indi_source_dict[knot_id][:sigma_x]
             σy = indi_source_dict[knot_id][:sigma_y]
@@ -506,7 +608,7 @@ function _source_direct!(dict::Dict, cosmo::Cosmology.AbstractCosmology, params:
             if length(p_temp) != length(x)
                error("Inconsistent knot parity dimensions in source-$i, knot-$k")
             end
-            
+
             # Check if all values are 1 or -1. otherwise set knot_parity to false
             if all(abs.(p_temp) .== 1)
                knot_parity = true
@@ -546,7 +648,7 @@ function _source_from_file!(dict::Dict, cosmo::Cosmology.AbstractCosmology, para
 
    file_data = readdlm(file_name)
    file_data = Float64.(file_data)
-   
+
    # --- Parameters directly read from the YAML file -----------------------------------------------
    # Get total number of sources from first column in file
    n_source = Int64(maximum(file_data[:, 1]))
@@ -568,7 +670,7 @@ function _source_from_file!(dict::Dict, cosmo::Cosmology.AbstractCosmology, para
    for i in 1:n_source
       # Generate source ID
       source_id = Symbol(:source, i)
-      
+
       # Get individual source data from file
       mask = file_data[:, 1] .== i
       source_data = file_data[mask, :]
@@ -585,7 +687,7 @@ function _source_from_file!(dict::Dict, cosmo::Cosmology.AbstractCosmology, para
          D_ds = Cosmology.angular_diameter_distance(cosmo, z_d, r)
          D_os = Cosmology.angular_diameter_distance(cosmo, 0.0, r)
          adis_r = D_ds / D_os
-      
+
          # Store reference adis
          adis_ref[i] = adis_r
 
@@ -607,7 +709,7 @@ function _source_from_file!(dict::Dict, cosmo::Cosmology.AbstractCosmology, para
       else
          # Get the source redshift from the file
          z_s = source_data[1, 5]
-         
+
          # Convert redshift to adis
          D_ds = Cosmology.angular_diameter_distance(cosmo, z_d, z_s)
          D_os = Cosmology.angular_diameter_distance(cosmo, 0.0, z_s)
@@ -623,7 +725,7 @@ function _source_from_file!(dict::Dict, cosmo::Cosmology.AbstractCosmology, para
          # Add redshift parameter to the reference, lower, and upper vectors
          push!(params, Parameter(owner=source_id, name=Symbol(:adis, i), refer=adis_r, lower=adis_l, upper=adis_u))
       end
-      
+
       # Run over knots
       n_knot = Int64(maximum(source_data[:, 2]))
       knots = Vector{Knot}(undef, n_knot)
@@ -638,7 +740,7 @@ function _source_from_file!(dict::Dict, cosmo::Cosmology.AbstractCosmology, para
          # Get knot parameters
          x = knot_data[:, 3]
          y = knot_data[:, 4]
-         
+
          σx = knot_data[:, 6]
          σy = knot_data[:, 7]
          σθ = knot_data[:, 8]
@@ -710,7 +812,7 @@ end
 
 function _optimizer!(sampling_dict::Dict)
    optimizer = get(sampling_dict, :optimizer, nothing)
-   
+
    # Check if optimizer is missing or explicitly disabled
    if optimizer === nothing || !get(optimizer, :enabled, true)
       return nothing
@@ -719,35 +821,35 @@ function _optimizer!(sampling_dict::Dict)
    # Infer optimizer method from keys
    method = _infer_optimizer_method(optimizer)
    config = optimizer[method]
-   
+
    # Get convergence parameters (with defaults)
    convergence = get(optimizer, :convergence, Dict())
    run_mode = get(convergence, :run_mode, :random)
    max_runs = get(convergence, :max_runs, 100)
    tolerance = get(convergence, :tolerance, 1e-3)
-   
-   algorithm_config = 
-   if method == :NM
-      NMConfig(
-         max_iter    = config[:max_iter],
-         tolerance   = config[:tolerance]
-      )
-   elseif method == :GD
-      GDConfig(
-         learning_rate = config[:learning_rate],
-         max_iter      = config[:max_iter],
-         tolerance     = config[:tolerance]
-      )
-   else
-      error("Unknown optimizer method: $method")
-   end
+
+   algorithm_config =
+      if method == :NM
+         NMConfig(
+            max_iter=config[:max_iter],
+            tolerance=config[:tolerance]
+         )
+      elseif method == :GD
+         GDConfig(
+            learning_rate=config[:learning_rate],
+            max_iter=config[:max_iter],
+            tolerance=config[:tolerance]
+         )
+      else
+         error("Unknown optimizer method: $method")
+      end
 
    return OptimizerConfig(
-      method    = method,
-      run_mode  = run_mode,
-      max_runs  = max_runs,
-      tolerance = tolerance,
-      config    = algorithm_config
+      method=method,
+      run_mode=run_mode,
+      max_runs=max_runs,
+      tolerance=tolerance,
+      config=algorithm_config
    )
 end
 
@@ -771,7 +873,7 @@ end
 
 function _mcmc!(sampling_dict::Dict)
    mcmc = get(sampling_dict, :mcmc, nothing)
-   
+
    # Check if mcmc is missing or explicitly disabled
    if mcmc === nothing || !get(mcmc, :enabled, true)
       return nothing
@@ -781,26 +883,26 @@ function _mcmc!(sampling_dict::Dict)
    method = _infer_mcmc_method(mcmc)
    n_chains = get(mcmc, :n_chains, 1)
    config = mcmc[method]
-   
-   algorithm_config = 
-   if method == :MH
-      MHConfig(
-         n_steps        = config[:n_steps],
-         n_adapt        = config[:n_adapt]
-      )
-   elseif method == :AIES
-      AIESConfig(
-         n_steps        = config[:n_steps],
-         a              = get(config, :a, 2.0),
-      )
-   else
-      error("Unknown MCMC method: $method")
-   end
+
+   algorithm_config =
+      if method == :MH
+         MHConfig(
+            n_steps=config[:n_steps],
+            n_adapt=config[:n_adapt]
+         )
+      elseif method == :AIES
+         AIESConfig(
+            n_steps=config[:n_steps],
+            a=get(config, :a, 2.0),
+         )
+      else
+         error("Unknown MCMC method: $method")
+      end
 
    return MCMCConfig(
-      method   = method,
-      n_chains = n_chains,
-      config   = algorithm_config
+      method=method,
+      n_chains=n_chains,
+      config=algorithm_config
    )
 end
 
@@ -821,11 +923,11 @@ function _sampling!(dict::Dict)
    mcmc_params = _mcmc!(sampling_dict)
 
    return SamplerConfig(
-         scheme = Symbol(sampling_dict[:scheme]),
-         verbose = sampling_dict[:verbose],
-         optimizer = optimizer_params,
-         mcmc = mcmc_params
-      )
+      scheme=Symbol(sampling_dict[:scheme]),
+      verbose=sampling_dict[:verbose],
+      optimizer=optimizer_params,
+      mcmc=mcmc_params
+   )
 end
 
 # --------------------------------------------------------------------------------------------------
@@ -860,13 +962,13 @@ function read_input(filename::AbstractString)
    free_param_idxs = findall(p -> p.lower != p.upper, params)
 
    return ModelConfig(
-      observation = observation,
-      cosmology = cosmology,
-      lens_config = lens_config,
-      source_config = source_config,
-      parameters = params,
-      free_param_idxs = free_param_idxs,
-      sampler = sampler
+      observation=observation,
+      cosmology=cosmology,
+      lens_config=lens_config,
+      source_config=source_config,
+      parameters=params,
+      free_param_idxs=free_param_idxs,
+      sampler=sampler
    )
 end
 

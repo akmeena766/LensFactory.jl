@@ -185,6 +185,7 @@ end
 # Build lens model from physical paramerters
 # --------------------------------------------------------------------------------------------------
 REQUIRE_COSMO = Set([:NFWLens, :eNFWMDLens, :aNFWLens, :tNFWLens, :gNFWLens, :EinastoLens])
+REQUIRE_SCALING = Set([:MultiPJELens])
 function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, Float64})
    # Determine the number of components from the lens model container
    n_lens = length(model.lens_config.components)
@@ -200,7 +201,7 @@ function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, Float6
 
    for i in 1:n_lens
       lens_id = Symbol(:lens, i)
-      lens_params = Dict{Symbol, Union{Symbol, Float64, Cosmology.AbstractCosmology}}()
+      lens_params = Dict{Symbol, Union{Symbol, Int64, Float64, Vector{Float64}, Cosmology.AbstractCosmology}}()
       
       for (k, v) in enumerate(components)
          if v.owner == lens_id
@@ -218,6 +219,38 @@ function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, Float6
       if lens_params[:lens] ∈ REQUIRE_COSMO
          lens_params[:cosmology] = model.cosmology
          lens_params[:z_d] = model.observation.z_d
+      end
+
+      # Add galaxy component if scaling is required
+      if lens_params[:lens] ∈ REQUIRE_SCALING
+         # Total number of galaxies
+         lens_params[:n] = model.lens_config.galaxies.n
+         
+         # Position of the galaxies
+         lens_params[:x_c] = model.lens_config.galaxies.x_c
+         lens_params[:y_c] = model.lens_config.galaxies.y_c
+
+         # Ellipticity and PA of galaxies
+         lens_params[:eps] = model.lens_config.galaxies.eps
+         lens_params[:pa] = model.lens_config.galaxies.pa
+
+         # Observed magnitudes
+         obs_mag = model.lens_config.galaxies.obs_mag
+
+         # Reference magnitude
+         ref_mag = model.lens_config.scaling.ref_mag
+
+         # L/L⋆
+         l_lstar = @. 10.0^(-0.04 * (ref_mag - obs_mag))
+
+         # Velocity dispersion
+         lens_params[:v_d] = @. model.lens_config.scaling.ref_sigma * 1.0E3 * l_lstar^model.lens_config.scaling.slope_sigma
+         
+         # Core radius
+         lens_params[:x_s] = @. model.lens_config.scaling.ref_core * l_lstar^model.lens_config.scaling.slope_core
+
+         # Truncation radius
+         lens_params[:x_t] = @. model.lens_config.scaling.ref_cut * l_lstar^model.lens_config.scaling.slope_cut
       end
       push!(lens_vector, (; lens_params...))
    end
