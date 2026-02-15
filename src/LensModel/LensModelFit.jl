@@ -5,6 +5,7 @@ module LensModelFit
 # Julia inbuilt functions to import
 # --------------------------------------------------------------------------------------------------
 using Base.Threads
+using ProgressMeter
 
 # --------------------------------------------------------------------------------------------------
 # LensFactory modules to use
@@ -37,13 +38,13 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
 
    # Build lens model
    lens_model = LensModelUtils.build_lens(model, pvals)
-
+   
    # Get angular-diameter distance ratios
    adis = LensModelUtils.adis_current(model, pvals)
 
    # Calculate deflection at image positions
    ψ_all, αx_all, αy_all, A_all = LensModelUtils.lens_quantities(model, lens_model)
-   
+
    # Calculate position likelihood
    pos_ll = Likelihood.LogL_position(model, adis, αx_all, αy_all, A_all)
 
@@ -117,9 +118,8 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
    # Store results to check for convergence
    results = Vector{Union{Nothing, NamedTuple{(:θ, :f), Tuple{Vector{Float64}, Float64}}}}(nothing, n_runs)
 
-   if verbose
-      println("\nRunning Nelder-Mead optimizer...")
-   end
+   # Progress bar setup
+   p = Progress(n_runs; dt=0.1, desc="Running Nelder-Mead Optimizer... ", barlen=50)
    
    @threads for i in 1:n_runs
       # Copying input ensures thread isolation
@@ -132,6 +132,9 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
       if converged
          results[i] = (θ=copy(θ_opt), f=fmax)
       end
+      
+      # Update progress bar
+      next!(p)
    end
 
    # Filter out the 'nothing' entries (failed convergences) and collect
