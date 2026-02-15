@@ -24,6 +24,7 @@ export ModelConfig
 export Observation
 export Parameter
 export SourceConfig
+export ScalingRelation
 export LensConfig
 export NMConfig
 export GDConfig

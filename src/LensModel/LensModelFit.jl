@@ -46,12 +46,12 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
    ψ_all, αx_all, αy_all, A_all = LensModelUtils.lens_quantities(model, lens_model)
 
    # Calculate position likelihood
-   pos_ll = Likelihood.LogL_position(model, adis, αx_all, αy_all, A_all)
+   pos_ll = Likelihood.chi2_position(model, adis, αx_all, αy_all, A_all)
 
    # Calculate parity likelihood
    par_ll = 0.0
    if model.source_config.use_parity
-      par_ll = Likelihood.LogL_parity(model, adis, A_all)
+      par_ll = Likelihood.chi2_parity(model, adis, A_all)
    end
    tot_ll = pos_ll + par_ll
    return tot_ll
@@ -143,7 +143,7 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
       error("No optimization runs converged.")
    end
 
-   # Sort results (Best LogL first)
+   # Sort results (Best chi2 first)
    sort!(converged_results, by = x -> x.f, rev = true)
    best_θ = converged_results[1].θ
    best_val = converged_results[1].f
@@ -158,7 +158,7 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
       # Using 1e-8 as a floor to handle parameters that are exactly 0.0
       rel_diff_θ = abs.(result.θ .- best_θ) ./ (max.(abs.(best_θ), abs.(result.θ)) .+ 1e-8)
     
-      # Calculate relative difference for the LogL (objective value)
+      # Calculate relative difference for the chi2 (objective value)
       rel_diff_f = abs(result.f - best_val) / (abs(best_val) + 1e-8)
       # println(rel_diff_θ, " ", rel_diff_f)
       # Check if all parameters are within percentage tolerance (e.g., 0.1% = 0.001)
@@ -179,7 +179,7 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
          "| " * rpad("Total", 8) * 
          "| " * rpad("Convergence (%)", 12) * 
          "| " * rpad("Stability (%)", 12) * 
-         "| " * rpad("Best LogL", w) * 
+         "| " * rpad("Best -χ²", w) * 
          "|"
       
       val_r = 
@@ -212,8 +212,8 @@ end
 # Run MCMC
 # --------------------------------------------------------------------------------------------------
 function get_unique_seeds(results::Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, n_chains::Int64, tol::Float64=1E-2)
-   # Sort by LogL (highest/best first)
-   # results should be a vector of structs/objects with .θ and .f (LogL)
+   # Sort by chi2 (highest/best first)
+   # results should be a vector of structs/objects with .θ and .f (chi2)
    sorted_res = sort(results, by = x -> x.f, rev = true)
 
    # Start with the absolute best
@@ -248,8 +248,8 @@ function get_unique_seeds(results::Vector{@NamedTuple{θ::Vector{Float64}, f::Fl
 end
 
 function get_best_seeds(results::Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, n_chains::Int64; jitter::Float64=0.001)
-   # Sort by LogL (highest/best first)
-   # results should be a vector of structs/objects with .θ and .f (LogL)
+   # Sort by chi2 (highest/best first)
+   # results should be a vector of structs/objects with .θ and .f (chi2)
    sorted_res = sort(results, by = x -> x.f, rev = true)
  
    n_params = length(sorted_res[1].θ)

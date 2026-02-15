@@ -13,10 +13,10 @@ using ..LensModelIO
 # --------------------------------------------------------------------------------------------------
 # Functions to export
 # --------------------------------------------------------------------------------------------------
-export LogL_position
-export LogL_fluxratio
-export LogL_timedelay
-export LogL_parity
+export chi2_position
+export chi2_fluxratio
+export chi2_timedelay
+export chi2_parity
 
 # --------------------------------------------------------------------------------------------------
 # Functions
@@ -108,14 +108,14 @@ end
 end
 
 
-function LogL_position(model::ModelConfig, adis::Vector{Float64}, αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, A_all::Vector{NTuple{4, Vector{Float64}}})
-   # Initialize log-likelihood
-   logL = 0.0
+function chi2_position(model::ModelConfig, adis::Vector{Float64}, αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, A_all::Vector{NTuple{4, Vector{Float64}}})
+   # Initialize chi2 for position
+   chi2 = 0.0
 
    # Identity tuple
    I4 = (1.0, 0.0, 0.0, 1.0)
 
-   # Calculate log-likelihood
+   # Calculate chi2 for position
    sid = 1
    kid = 1
    for src in model.source_config.sources
@@ -161,19 +161,19 @@ function LogL_position(model::ModelConfig, adis::Vector{Float64}, αx_all::Vecto
             # χ² = δβᵀ * W * δβ
             χ² = χ² + δβx * (w11 * δβx + w12 * δβy) + δβy * (w21 * δβx + w22 * δβy)
          end
-         logL = logL - 0.5 * χ²
+         chi2 = chi2 - χ²
          
          kid = kid + 1
       end
       sid = sid + 1
    end
-   return logL
+   return chi2   
 end
 
 
-function LogL_parity(model::ModelConfig, adis::Vector{Float64}, A_all::Vector{NTuple{4, Vector{Float64}}})
-   # Initialize log-likelihood for parity
-   logL = 0.0
+function chi2_parity(model::ModelConfig, adis::Vector{Float64}, A_all::Vector{NTuple{4, Vector{Float64}}})
+   # Initialize chi2 for parity
+   chi2 = 0.0
    
    # Penalty for wrong parity
    penalty = model.source_config.parity_force
@@ -204,22 +204,22 @@ function LogL_parity(model::ModelConfig, adis::Vector{Float64}, A_all::Vector{NT
          # Parity log-likelihood
          for i in eachindex(parity_input)
             if parity_input[i] != parity_model[i]
-               logL = logL - penalty
+               chi2 = chi2 - penalty
             end
          end   
          kid = kid + 1
       end      
       sid = sid + 1
    end
-   return logL
+   return chi2
 end
 
 
-function LogL_fluxratio()
+function chi2_fluxratio()
    return 0.0
 end
 
-function LogL_timedelay()
+function chi2_timedelay()
    return 0.0
 end
 

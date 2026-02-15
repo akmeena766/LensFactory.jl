@@ -187,6 +187,34 @@ end
 REQUIRE_COSMO = Set([:NFWLens, :eNFWMDLens, :aNFWLens, :tNFWLens, :gNFWLens, :EinastoLens])
 REQUIRE_SCALING = Set([:MultiPJELens])
 function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, Float64})
+   # Update Cosmology if it has free parameters
+   cosmo_params = Dict{Symbol, Any}() 
+   for (k, v) in pvals
+      if k[1] == :cosmology
+         cosmo_params[k[2]] = v
+      end
+   end
+   
+   if !isempty(cosmo_params)
+      updated_cosmology = Cosmology.init_cosmology(; cosmo_params...)
+   else
+      updated_cosmology = model.cosmology
+   end
+
+   # Update scaling if it has free parameters
+   scaling_params = Dict{Symbol, Any}() 
+   for (k, v) in pvals
+      if k[1] == :scaling
+         scaling_params[k[2]] = v
+      end
+   end
+   
+   if !isempty(scaling_params)
+      updated_scaling = ScalingRelation(; scaling_params...)
+   else
+      updated_scaling = model.lens_config.scaling
+   end
+   
    # Determine the number of components from the lens model container
    n_lens = length(model.lens_config.components)
 
@@ -203,54 +231,56 @@ function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, Float6
       lens_id = Symbol(:lens, i)
       lens_params = Dict{Symbol, Union{Symbol, Int64, Float64, Vector{Float64}, Cosmology.AbstractCosmology}}()
       
+      # Get lens name and add it to the lens_params dictionary
       for (k, v) in enumerate(components)
          if v.owner == lens_id
             lens_params[:lens] = v.name
          end
       end
 
+      # Get other lens parameters and add it to the lens_params dictionary
       for (k, v) in pvals
          if k[1] == lens_id
             lens_params[k[2]] = v
          end
       end
 
-      # Add cosmology and lens redshift if required
+      # Check if this lens model requires cosmology and lens redshift
       if lens_params[:lens] ∈ REQUIRE_COSMO
-         lens_params[:cosmology] = model.cosmology
+         lens_params[:cosmology] = updated_cosmology
          lens_params[:z_d] = model.observation.z_d
       end
 
-      # Add galaxy component if scaling is required
+      # Check if this lens model requires galaxy component
       if lens_params[:lens] ∈ REQUIRE_SCALING
          # Total number of galaxies
          lens_params[:n] = model.lens_config.galaxies.n
          
-         # Position of the galaxies
+         # Position of the galaxies (vector)
          lens_params[:x_c] = model.lens_config.galaxies.x_c
          lens_params[:y_c] = model.lens_config.galaxies.y_c
 
-         # Ellipticity and PA of galaxies
+         # Ellipticity and PA of galaxies (vector)
          lens_params[:eps] = model.lens_config.galaxies.eps
          lens_params[:pa] = model.lens_config.galaxies.pa
 
-         # Observed magnitudes
+         # Observed magnitudes (vector)
          obs_mag = model.lens_config.galaxies.obs_mag
 
          # Reference magnitude
-         ref_mag = model.lens_config.scaling.ref_mag
+         ref_mag = updated_scaling.ref_mag
 
-         # L/L⋆
+         # L/L⋆ (vector)
          l_lstar = @. 10.0^(-0.04 * (ref_mag - obs_mag))
 
-         # Velocity dispersion
-         lens_params[:v_d] = @. model.lens_config.scaling.ref_sigma * 1.0E3 * l_lstar^model.lens_config.scaling.slope_sigma
+         # Velocity dispersion (vector)
+         lens_params[:v_d] = @. updated_scaling.ref_sigma * 1.0E3 * l_lstar^updated_scaling.slope_sigma
          
-         # Core radius
-         lens_params[:x_s] = @. model.lens_config.scaling.ref_core * l_lstar^model.lens_config.scaling.slope_core
+         # Core radius (vector)
+         lens_params[:x_s] = @. updated_scaling.ref_core * l_lstar^updated_scaling.slope_core
 
-         # Truncation radius
-         lens_params[:x_t] = @. model.lens_config.scaling.ref_cut * l_lstar^model.lens_config.scaling.slope_cut
+         # Truncation radius (vector)
+         lens_params[:x_t] = @. updated_scaling.ref_cut * l_lstar^updated_scaling.slope_cut
       end
       push!(lens_vector, (; lens_params...))
    end
@@ -698,7 +728,7 @@ function check_parity(model::ModelConfig, chains::Array{Float64, 3}, lls::Matrix
    return nothing
 end
 
-function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, lls::Matrix{Float64}; check_parity::Bool=false)
+function get_best_fit_rms(x_grid::Matrix{<:RV}, y_grid::Matrix{<:RV}, model::ModelConfig, chains::Array{Float64, 3}, lls::Matrix{Float64}; check_parity::Bool=false)
    # Get the best parameters based on likelihood (lls)
    best_θ, _, _ = get_best_fit(lls, chains)
 
@@ -719,9 +749,6 @@ function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, lls::Ma
 
    # Identity tuple
    I4 = (1.0, 0.0, 0.0, 1.0)
-
-   # Create a grid to search for the best-fit image positions
-   x_grid, y_grid = Lenses.get_meshgrid(5, 5, 0.05)
 
    # Global RMS and image count variables
    global_sq_dist = 0.0
@@ -752,9 +779,13 @@ function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, lls::Ma
          
       # Generate source id
       src_id = Symbol(:src, sid)
+      src_knot = 0
       for knot in src.knots
          # Generate knot id
          knot_id = Symbol(:knot, kid)
+
+         # Update knot counter
+         src_knot = src_knot + 1
 
          # Knot positions and measurement errors
          x  = knot.x
@@ -835,7 +866,7 @@ function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, lls::Ma
          for (i, d_val) in enumerate(results)
             k_display = (i == 1) ? string(k_rms) : ""
             println("| ", col("src$sid", 10), 
-                   " | ", col("knot$kid", 10), 
+                   " | ", col("knot$src_knot", 10), 
                    " | ", col(i, 6), 
                    " | ", col(d_val, 20), 
                    " | ", col(k_display, 10), 

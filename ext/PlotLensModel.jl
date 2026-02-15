@@ -4,6 +4,15 @@ function _get_levels(dens; quantiles=[0.393, 0.865, 0.989])
    return [sorted_dens[findfirst(x -> x >= q, cumulative_dens)] for q in quantiles]
 end
 
+# --------------------------------------------------------------------------------------------------
+# Corner Plot
+# --------------------------------------------------------------------------------------------------
+PARAM_NAME = Dict(:lens1 => "L1", :lens2 => "L2", :lens3 => "L3", :lens4 => "L4", :lens5 => "L5", 
+                  :lens6 => "L6", :lens7 => "L7", :lens8 => "L8", :lens9 => "L9", :lens10 => "L10",
+                  :scaling => "Scaling", 
+                  :x_c => "x_c", :y_c => "y_c", :eps => "\\epsilon", :pa => "\\phi", :mass => "\\log[M]", :c => "c",
+                  :gamma1 => "\\gamma_1", :gamma2 => "\\gamma_2",
+                  :ref_sigma => "\\sigma_{\\star}", :ref_core => "\\theta_{c,\\star}", :ref_cut => "\\theta_{t,\\star}")
 function LensFactory.LensModel.plot_corner(chains, lls; param_names=nothing, burn_in=0.3, thinning=100)
    # Get chain details 
    n_steps, n_chains, n_params = size(chains)
@@ -23,19 +32,20 @@ function LensFactory.LensModel.plot_corner(chains, lls; param_names=nothing, bur
 
    for i in 1:n_params
       # Get parameter labels
-      p_name = string(param_names[i][2])
+      p_name = PARAM_NAME[param_names[i][2]]
 
       # Marginal Stats for Title
-      title_str = L"%$(p_name) = %$(round(best_θ[i], digits=2))^{+ %$(round(upper_err[i], digits=2))}_{- %$(round(lower_err[i], digits=2))}"
+      title_str = L"%$(p_name) = %$(round(best_θ[i], digits=2))^{+ %$(round(upper_err[i], digits=2))}_{-%$(round(lower_err[i], digits=2))}"
       
       for j in 1:i
-         p_name_j = string(param_names[j][2])
-         
+         p_name_i = L"%$(PARAM_NAME[param_names[i][1]]): %$(PARAM_NAME[param_names[i][2]])"
+         p_name_j = L"%$(PARAM_NAME[param_names[j][1]]): %$(PARAM_NAME[param_names[j][2]])"
          ax = Axis(fig[i, j]; 
                   title = (i == j) ? title_str : "",
                   xlabel = (i == n_params) ? p_name_j : "",
-                  ylabel = (j == 1) ? p_name : "",
-                  titlesize = 18)
+                  ylabel = (j == 1) ? p_name_i : "",
+                  titlesize = 18,
+                  xticklabelrotation = π/4)
          
          set_plotKws!(ax)
          
@@ -158,7 +168,7 @@ function LensFactory.LensModel.plot_best_model(θx::Matrix{<:RV}, θy::Matrix{<:
          σx = knot.σx
          σy = knot.σy
          σθ = knot.σθ
-         
+
          # Plot observed positions of knots
          scatter!(ax, x, y, markersize=20, marker=:circle, color=:transparent, strokecolor=:black, strokewidth=2)
 
@@ -184,8 +194,15 @@ function LensFactory.LensModel.plot_best_model(θx::Matrix{<:RV}, θy::Matrix{<:
 
          # Get image positions
          predicted_image = Lenses.get_image(best_model, θx, θy, adis_value, (βx_model, βy_model))
+
+         # Plot predicted image positions
          scatter!(ax, first.(predicted_image), last.(predicted_image), markersize=20, marker=:diamond, color=:transparent, strokecolor=:red, strokewidth=2)
+         kid = kid + 1
       end
+      sid = sid + 1
    end
+
+   xlims!(ax, minimum(θx), maximum(θx))
+   ylims!(ax, minimum(θy), maximum(θy))
    return fig
 end
