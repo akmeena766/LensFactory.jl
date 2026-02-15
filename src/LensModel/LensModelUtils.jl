@@ -271,7 +271,7 @@ function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, Float6
          ref_mag = updated_scaling.ref_mag
 
          # L/L⋆ (vector)
-         l_lstar = @. 10.0^(-0.4 * (ref_mag - obs_mag))
+         l_lstar = @. 10.0^(-0.4 * (obs_mag - ref_mag))
 
          # Velocity dispersion (vector)
          lens_params[:v_d] = @. updated_scaling.ref_sigma * 1.0E3 * l_lstar^updated_scaling.slope_sigma
