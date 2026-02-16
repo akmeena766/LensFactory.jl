@@ -187,20 +187,6 @@ end
 REQUIRE_COSMO = Set([:NFWLens, :eNFWMDLens, :aNFWLens, :tNFWLens, :gNFWLens, :EinastoLens])
 REQUIRE_SCALING = Set([:MultiPJELens])
 function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, Float64})
-   # Update Cosmology if it has free parameters
-   cosmo_params = Dict{Symbol, Any}() 
-   for (k, v) in pvals
-      if k[1] == :cosmology
-         cosmo_params[k[2]] = v
-      end
-   end
-   
-   if !isempty(cosmo_params)
-      updated_cosmology = Cosmology.init_cosmology(; cosmo_params...)
-   else
-      updated_cosmology = model.cosmology
-   end
-
    # Update scaling if it has free parameters
    scaling_params = Dict{Symbol, Any}() 
    for (k, v) in pvals
@@ -247,7 +233,7 @@ function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, Float6
 
       # Check if this lens model requires cosmology and lens redshift
       if lens_params[:lens] ∈ REQUIRE_COSMO
-         lens_params[:cosmology] = updated_cosmology
+         lens_params[:cosmology] = model.cosmology
          lens_params[:z_d] = model.observation.z_d
       end
 
