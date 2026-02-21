@@ -23,7 +23,10 @@ export chi2_parity
 # --------------------------------------------------------------------------------------------------
 @inline function _inverse(a11, a12, a21, a22)
    det = a11*a22 - a12*a21
-   det == 0.0 && error("Singular 2x2 matrix.")
+   if det == 0.0
+      @warn "Singular 2x2 matrix."
+      return 0.0, 0.0, 0.0, 0.0
+   end
 
    ia11 =  a22 / det
    ia12 = -a12 / det
