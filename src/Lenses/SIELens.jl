@@ -37,7 +37,7 @@ function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, 
    ψy_r = (bq * q / sqrt(1 - q^2)) * atanh(sqrt(1 - q^2) * dy_r / (dr_r + q^2 * sq))
 
    # Get potential
-   ψ_up = ψ + dx_r * ψx_r + dy_r * ψy_r + bq * q * sq * log((1.0 + q) * sq / sqrt((dr_r + sq)^2 + (1.0 - q^2) * dx_r^2))
+   ψ_up = ψ + dx_r * ψx_r + dy_r * ψy_r + bq * q * sq * log((1.0 + q) * sq / sqrt((dr_r + sq)^2 + (1.0 - q^2) * dx_r^2) + 1E-12)
    return ψ_up
 end
 
@@ -71,7 +71,7 @@ function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, 
          ψx_r = (bq * q / sqrt(1 - q^2)) *  atan(sqrt(1 - q^2) * dx_r / (dr_r + sq))
          ψy_r = (bq * q / sqrt(1 - q^2)) * atanh(sqrt(1 - q^2) * dy_r / (dr_r + q^2 * sq))
 
-         ψ[i, j] = ψ[i, j] + dx_r * ψx_r + dy_r * ψy_r + bq * q * sq * log((1.0 + q) * sq / sqrt((dr_r + sq)^2 + (1.0 - q^2) * dx_r^2))
+         ψ[i, j] = ψ[i, j] + dx_r * ψx_r + dy_r * ψy_r + bq * q * sq * log((1.0 + q) * sq / sqrt((dr_r + sq)^2 + (1.0 - q^2) * dx_r^2) + 1E-12)
       end
    end
 end
