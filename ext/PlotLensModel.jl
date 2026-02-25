@@ -13,6 +13,20 @@ PARAM_NAME = Dict(:lens1 => "L1", :lens2 => "L2", :lens3 => "L3", :lens4 => "L4"
                   :x_c => "x_c", :y_c => "y_c", :eps => "\\epsilon", :pa => "\\phi", :mass => "\\log[M]", :c => "c",
                   :gamma1 => "\\gamma_1", :gamma2 => "\\gamma_2",
                   :ref_sigma => "\\sigma_{\\star}", :ref_core => "\\theta_{c,\\star}", :ref_cut => "\\theta_{t,\\star}")
+
+
+"""
+    LensFactory.LensModel.plot_corner(chains, lls; param_names=nothing, burn_in=0.3, thinning=100)
+Generates a corner plot for the given MCMC chains and log-likelihoods.
+# Arguments
+- `chains`: MCMC chains of shape (n_steps, n_chains, n_params).
+- `lls`: Log-likelihoods corresponding to the chains, of shape (n_steps, n_chains).
+- `param_names=nothing`: Optional list of parameter names for labeling the axes.
+- `burn_in=0.3`: Fraction of the initial samples to discard as burn-in.
+- `thinning=100`: Interval for thinning the chains to reduce autocorrelation.
+# Returns
+- A Makie figure object containing the corner plot.
+"""
 function LensFactory.LensModel.plot_corner(chains, lls; param_names=nothing, burn_in=0.3, thinning=100)
    # Get chain details 
    n_steps, n_chains, n_params = size(chains)
@@ -79,7 +93,17 @@ function LensFactory.LensModel.plot_corner(chains, lls; param_names=nothing, bur
    return fig
 end
 
-
+"""
+    LensFactory.LensModel.plot_trace(chains; param_names=nothing, burn_in=0.0, thinning=1)
+Generates trace plots for the given MCMC chains.
+# Arguments
+- `chains`: MCMC chains of shape (n_steps, n_chains, n_params).
+- `param_names=nothing`: Optional list of parameter names for labeling the axes.
+- `burn_in=0.0`: Fraction of the initial samples to discard as burn-in.
+- `thinning=1`: Interval for thinning the chains to reduce autocorrelation.
+# Returns
+- A Makie figure object containing the trace plots.
+"""
 function LensFactory.LensModel.plot_trace(chains; param_names=nothing, burn_in=0.0, thinning=1)
    # Adapt to [n_params, n_chains, n_steps]
    n_steps, n_chains, n_params = size(chains)
@@ -122,7 +146,18 @@ function LensFactory.LensModel.plot_trace(chains; param_names=nothing, burn_in=0
    return fig
 end
 
-
+"""
+    LensFactory.LensModel.plot_best_model(θx, θy, model, chains, lls)
+Generates a plot comparing the observed image positions with the predicted image positions from the best-fit lens model.
+# Arguments
+- `θx`: Matrix of x-coordinates of the image plane grid.
+- `θy`: Matrix of y-coordinates of the image plane grid.
+- `model`: The lens model configuration.
+- `chains`: MCMC chains of shape (n_steps, n_chains, n_params).
+- `lls`: Log-likelihoods corresponding to the chains, of shape (n_steps, n_chains).
+# Returns
+- A Makie figure object containing the comparison plot.
+"""
 function LensFactory.LensModel.plot_best_model(θx::Matrix{<:RV}, θy::Matrix{<:RV}, model::LensModel.ModelConfig, chains::Array{Float64, 3}, lls::Matrix{Float64})
    # Get the best parameters based on likelihood (lls)
    best_θ, _, _ = LensModel.get_best_fit(lls, chains)

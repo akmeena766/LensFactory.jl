@@ -42,7 +42,10 @@ makedocs(
                         ],
             "Multi-plane lensing" => "MultiPlane.md",
             "Sources" => "Sources.md",
-            "Plot Extension" => "PlotExt.md",
+            "Plot Extension" => [
+                        "Basics" => "PlotExt_Basic.md",
+                        "Lens Modeling" => "PlotExt_LensModel.md"
+                        ],
             "History" => "History.md",
         ]
 )
