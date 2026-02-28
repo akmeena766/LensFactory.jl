@@ -6,6 +6,8 @@ module LensModelFit
 # --------------------------------------------------------------------------------------------------
 using Base.Threads
 using ProgressMeter
+using JLD2
+using Dates
 
 # --------------------------------------------------------------------------------------------------
 # LensFactory modules to use
@@ -295,7 +297,7 @@ end
 # --------------------------------------------------------------------------------------------------
 # Fit model
 # --------------------------------------------------------------------------------------------------
-function fit_model(model::ModelConfig)
+function fit_model(model::ModelConfig; save::Bool=true, file_name::String="auto.jld2")
    # Extract sampler
    sampler = model.sampler
    verbose = sampler.verbose
@@ -313,13 +315,27 @@ function fit_model(model::ModelConfig)
 
    # MCMC
    if sampler.mcmc !== nothing
-      return run_mcmc(model, param_ref, θ_start, verbose)
+      chains, chi2 = run_mcmc(model, param_ref, θ_start, verbose)
    end
 
    # Nothing to do
    if sampler.optimizer === nothing && sampler.mcmc === nothing
       error("Neither optimizer nor MCMC enabled.")
    end
+
+   # Save best fit
+   if save
+      if file_name == "auto.jld2"
+         file_name = "$(model.observation.lens)_$(Dates.today()).jld2"
+      end
+      date = Dates.now(UTC)
+      jldsave(file_name; Date   = Dates.Date(date),
+                         Time   = Dates.Time(date),
+                         model  = model,
+                         chains = chains,
+                         chi2   = chi2)
+   end
+   return chains, chi2
 end
 
 end

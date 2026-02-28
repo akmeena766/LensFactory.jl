@@ -516,8 +516,8 @@ function get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Floa
 
          for k in 1:rays_per_pixel
             # Get the source plane position
-            βx = PolygonOps.interpolation(rand_x[k], rand_y[k], θx) - adis * PolygonOps.interpolation(rand_x[k], rand_y[k], ψx)
-            βy = PolygonOps.interpolation(rand_x[k], rand_y[k], θy) - adis * PolygonOps.interpolation(rand_x[k], rand_y[k], ψy)
+            βx = PolygonOps.bilinear_interpolation(rand_x[k], rand_y[k], θx) - adis * PolygonOps.bilinear_interpolation(rand_x[k], rand_y[k], ψx)
+            βy = PolygonOps.bilinear_interpolation(rand_x[k], rand_y[k], θy) - adis * PolygonOps.bilinear_interpolation(rand_x[k], rand_y[k], ψy)
 
             # Get the corresponding pixel values
             βx_p = round(Int64, βx/pixel_h + nx/2.0)

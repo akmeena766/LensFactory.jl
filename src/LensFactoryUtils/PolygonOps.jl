@@ -85,7 +85,7 @@ function hao_sun(point, polygon)
    return 1
 end
 
-function interpolation(x::Float64, y::Float64, df::Matrix{<:Float64})::Float64
+function bilinear_interpolation(x::Float64, y::Float64, df::Matrix{<:Float64})::Float64
    """
    Bilinear interpolation at (x, y) given in pixel coordinates.
    """
