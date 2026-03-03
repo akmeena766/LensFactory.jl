@@ -10,7 +10,8 @@ end
 PARAM_NAME = Dict(:lens1 => "L1", :lens2 => "L2", :lens3 => "L3", :lens4 => "L4", :lens5 => "L5", 
                   :lens6 => "L6", :lens7 => "L7", :lens8 => "L8", :lens9 => "L9", :lens10 => "L10",
                   :scaling => "S", 
-                  :x_c => "x_c", :y_c => "y_c", :eps => "\\epsilon", :pa => "\\phi", :mass => "\\log[M]", :c => "c",
+                  :x_c => "x_c", :y_c => "y_c", :eps => "\\epsilon", :pa => "\\phi", 
+                  :v_d => "v_d", :mass => "\\log[M]", :c => "c",
                   :gamma1 => "\\gamma_1", :gamma2 => "\\gamma_2",
                   :ref_sigma => "\\sigma_{\\star}", :ref_core => "\\theta_{c,\\star}", :ref_cut => "\\theta_{t,\\star}")
 
