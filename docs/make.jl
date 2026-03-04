@@ -18,7 +18,7 @@ makedocs(
             "Constants" => "Constants.md",
             "Cosmology" => "Cosmology.md",
             "Lenses" => [
-                        "Basics"           => "Lenses.md",
+                        "General"           => "Lenses.md",
                         "Point Lens"       => "PointLens.md",
                         "Plummer Lens"     => "PlummerLens.md",
                         "SIS Lens"         => "SISLens.md",
@@ -40,10 +40,13 @@ makedocs(
                         "elliptical Hernquist MD Lens" => "eHernquistMDLens.md",
                         "elliptical NFW MD Lens" => "eNFWMDLens.md"
                         ],
-            "Multi-plane lensing" => "MultiPlane.md",
+            "MultiPlane" => "MultiPlane.md",
             "Sources" => "Sources.md",
+            "LensModel" => [
+                        "General" => "LensModel.md"
+                        ],
             "Plot Extension" => [
-                        "Basics" => "PlotExt_Basic.md",
+                        "General" => "PlotExt_Basic.md",
                         "Lens Modeling" => "PlotExt_LensModel.md"
                         ],
             "History" => "History.md",

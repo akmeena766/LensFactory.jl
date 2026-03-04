@@ -1,8 +1,8 @@
 # Lenses
 
-The `Lenses` is the interface between the user and the lens models. User is expected to call functions
-from this module to compute various lensing quantities. For examples on how to use this module and 
-various functions within it, see 
+The `Lenses` module is the interface between the user and various lens models. The user will call 
+functions from this module to compute various lensing quantities. For examples on how to use this 
+module and various functions within it, see 
 [Example - 2](https://github.com/akmeena766/LensFactory_Examples/blob/main/Example-2%3A%20Basic%20strong%20lensing.ipynb)
 and 
 [Example - 3](https://github.com/akmeena766/LensFactory_Examples/blob/main/Example-3%3A%20Lensing%20quantities.ipynb).

@@ -1,6 +1,3 @@
-"""
-    MultiPlane
-"""
 module MultiPlane
 
 # Julia inbuilt functions to import

@@ -552,7 +552,7 @@ end
 # --------------------------------------------------------------------------------------------------
 # Get best-fit from the full optimization/MCMC results
 # --------------------------------------------------------------------------------------------------
-function get_best_fit(results, chains=nothing)
+function get_best_parameters(results, chains=nothing)
    best_θ = nothing
    best_logL = -Inf
 
@@ -584,7 +584,7 @@ function get_best_fit(results, chains=nothing)
 end
 
 
-function get_best_fit_with_errors(chains::Array{Float64, 3}, lls::Matrix{Float64}; burn_in=0.2, thinning=100)
+function get_best_parameters_with_errors(chains::Array{Float64, 3}, lls::Matrix{Float64}; burn_in=0.2, thinning=100)
    # Get chain details 
    n_steps, n_chains, n_params = size(chains)
     
@@ -618,6 +618,20 @@ function get_best_fit_with_errors(chains::Array{Float64, 3}, lls::Matrix{Float64
 
    # Return as a NamedTuple for easy access
    return best_θ, lower_err, upper_err, best_logL, -2.0 * best_logL
+end
+
+
+function get_best_model(model::ModelConfig, chains::Array{Float64, 3}, lls::Matrix{Float64})
+   # Get the best parameters based on likelihood (lls)
+   best_θ, _, _ = get_best_parameters(lls, chains)
+
+   # Get list of parameters for the lens model
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+   
+   # Replace free parameter values by best-fit values
+   pvals = param_dict(model, best_θ, param_ref)
+   
+   return build_lens(model, pvals)
 end
 
 
@@ -927,6 +941,65 @@ function _write_fits_header!(header::ImageHDU, model::ModelConfig;
    
 end
 
+
+"""
+    save_best_fit(file_name::String; save_potential::Bool=true, save_deflection::Bool=true, save_kappa::Bool=true, save_gamma::Bool=true)
+Save fits files for the best-fit model based on the MCMC results stored in `file_name`. The user can
+choose which lensing quantities to save by setting the corresponding boolean flags.
+# Arguments:
+- `file_name::String`: Path to the JLD2 file containing the MCMC results
+- `save_potential::Bool=true`: Whether to save the lensing potential as "potential.fits"
+- `save_deflection::Bool=true`: Whether to save the deflection angles as "alpha_x.fits" and "alpha_y.fits"
+- `save_kappa::Bool=true`: Whether to save the convergence map as "kappa.fits"
+- `save_gamma::Bool=true`: Whether to save the shear maps as "gamma1.fits" and "gamma2.fits"
+# Returns:
+- Nothing (saves FITS files to disk)
+"""
+function save_best_fit(file_name::String;                      
+                      save_potential::Bool = true, 
+                      save_deflection::Bool = true, 
+                      save_kappa::Bool = true, save_gamma::Bool = true)
+
+   # Load the chains and chi2 from the file
+   data = jldopen(file_name, "r")
+   model  = data["model"]
+   chains = data["chains"]
+   chi2   = data["chi2"]
+   date   = data["Date"]
+   time   = data["Time"]
+   close(data)
+
+   # Save the best fit
+   save_best_fit(model, chains, chi2; 
+                 date = date,
+                 time = time,
+                 save_potential=save_potential, 
+                 save_deflection=save_deflection, 
+                 save_kappa=save_kappa, save_gamma=save_gamma)
+   return nothing
+end
+
+
+"""
+    save_best_fit(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64}; 
+                   date::Union{Nothing, Date} = nothing, time::Union{Nothing, Time} = nothing,
+                   save_potential::Bool=true, save_deflection::Bool=true, 
+                   save_kappa::Bool=true, save_gamma::Bool=true)
+Save fits files for the best-fit model based on the MCMC results. The user can choose which lensing 
+quantities to save by setting the corresponding boolean flags.
+# Arguments:
+- `model::ModelConfig`: The lens model configuration used for the MCMC sampling
+- `chains::Array{Float64, 3}`: The MCMC chains with dimensions [Steps, Chains, Parameters]
+- `chi2::Matrix{Float64}`: The chi2 values for each step and chain, with dimensions [Steps, Chains]
+- `date::Union{Nothing, Date}`: Optional date to include in the FITS header
+- `time::Union{Nothing, Time}`: Optional time to include in the FITS header
+- `save_potential::Bool=true`: Whether to save the lensing potential as "potential.fits"
+- `save_deflection::Bool=true`: Whether to save the deflection angles as "alpha_x.fits" and "alpha_y.fits"
+- `save_kappa::Bool=true`: Whether to save the convergence map as "kappa.fits"
+- `save_gamma::Bool=true`: Whether to save the shear maps as "gamma1.fits" and "gamma2.fits"
+# Returns:
+- Nothing (saves FITS files to disk)
+"""
 function save_best_fit(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64};
                       date::Union{Nothing, Date} = nothing, time::Union{Nothing, Time} = nothing,
                       save_potential::Bool = true, 
@@ -1020,29 +1093,6 @@ function save_best_fit(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matr
       end
    end
    return nothing
-end
-
-function save_best_fit(file_name::String;                      
-                      save_potential::Bool = true, 
-                      save_deflection::Bool = true, 
-                      save_kappa::Bool = true, save_gamma::Bool = true)
-
-   # Load the chains and chi2 from the file
-   data = jldopen(file_name, "r")
-   model  = data["model"]
-   chains = data["chains"]
-   chi2   = data["chi2"]
-   date   = data["Date"]
-   time   = data["Time"]
-   close(data)
-
-   # Save the best fit
-   save_best_fit(model, chains, chi2; 
-                 date = date,
-                 time = time,
-                 save_potential=save_potential, 
-                 save_deflection=save_deflection, 
-                 save_kappa=save_kappa, save_gamma=save_gamma)
 end
 
 

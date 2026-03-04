@@ -934,6 +934,17 @@ end
 # --------------------------------------------------------------------------------------------------
 # ---------------- Read the input file -------------------------------------------------------------
 # --------------------------------------------------------------------------------------------------
+"""
+    read_input(filename::AbstractString) -> ModelConfig
+Reads the input YAML file and constructs a `ModelConfig` struct containing all the necessary 
+information for lens modeling and sampling. For details on the expected structure of the input YAML 
+file, please refer to [Example - 2](https://github.com/akmeena766/LensFactory_Examples/blob/).
+# Arguments
+- `filename::AbstractString`: Path to the input YAML file.
+# Returns
+- `ModelConfig::ModelConfig`: A struct containing the observation details, cosmology, lens 
+configuration, source configuration, parameter definitions, and sampling configuration.
+"""
 function read_input(filename::AbstractString)
    dict = YAML.load_file(filename)
    _symbolize!(dict)
