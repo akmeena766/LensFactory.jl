@@ -721,7 +721,7 @@ function check_parity(model::ModelConfig, chains::Array{Float64, 3}, lls::Matrix
    return nothing
 end
 
-function get_best_fit_rms(x_grid::Matrix{<:RV}, y_grid::Matrix{<:RV}, model::ModelConfig, chains::Array{Float64, 3}, lls::Matrix{Float64}; check_parity::Bool=false)
+function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, lls::Matrix{Float64}; check_parity::Bool=false)
    # Get the best parameters based on likelihood (lls)
    best_θ, _, _ = get_best_fit(lls, chains)
 
@@ -736,6 +736,11 @@ function get_best_fit_rms(x_grid::Matrix{<:RV}, y_grid::Matrix{<:RV}, model::Mod
 
    # Get angular-diameter distance ratios
    adis = adis_current(model, pvals)
+
+   # Generate grid
+   FOV = model.observation.FOV
+   pixel_scale = model.observation.pixel_scale
+   x_grid, y_grid = Lenses.get_meshgrid(0.5 * FOV[1], 0.5 * FOV[2], pixel_scale)
 
    # Calculate deformation at all image positions
    ψ_all, αx_all, αy_all, A_all = lens_quantities(model, best_model)
