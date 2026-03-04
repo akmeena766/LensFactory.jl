@@ -330,7 +330,7 @@ end
 # --------------------------------------------------------------------------------------------------
 # Gelman-Rubin diagnostic
 # --------------------------------------------------------------------------------------------------
-function calculate_gr(chains::Array{Float64, 3}; burn_in::Float64=0.3)
+function calculate_gr(chains::Array{Float64, 3}; burn_in::Float64=0.2)
    n_steps, n_chains, n_params = size(chains)
    
    if n_chains < 2
@@ -364,7 +364,7 @@ function calculate_gr(chains::Array{Float64, 3}; burn_in::Float64=0.3)
    return r_hats
 end
 
-function print_gr_report(chains::Array{Float64, 3}; param_names=nothing, burn_in=0.3)
+function print_gr_report(chains::Array{Float64, 3}; param_names=nothing, burn_in=0.2)
    # Calculate R̂
    r_hats = calculate_gr(chains, burn_in=burn_in)
    n_params = length(r_hats)
@@ -434,7 +434,7 @@ end
 # --------------------------------------------------------------------------------------------------
 # Time series diagnostics
 # --------------------------------------------------------------------------------------------------
-function time_series_diagnostics(chains::Array{Float64, 3}; param_names=nothing, burn_in::Float64=0.3)
+function time_series_diagnostics(chains::Array{Float64, 3}; param_names=nothing, burn_in::Float64=0.2)
    # 1. Map dimensions: [Step, Chain, Param]
    n_steps, n_chains, n_params = size(chains)
    
@@ -494,7 +494,7 @@ function time_series_diagnostics(chains::Array{Float64, 3}; param_names=nothing,
 end
 
 
-function acceptance_diagnostics(chains::Array{Float64, 3}; burn_in::Float64=0.3)
+function acceptance_diagnostics(chains::Array{Float64, 3}; burn_in::Float64=0.2)
    n_steps, n_chains, _ = size(chains)
    start_idx = max(1, Int(floor(n_steps * burn_in)) + 1)
    
