@@ -1,19 +1,30 @@
 module MultiPlane
 
+# --------------------------------------------------------------------------------------------------
 # Julia inbuilt functions to import
+# --------------------------------------------------------------------------------------------------
 
+
+# --------------------------------------------------------------------------------------------------
 # LensFactory modules to use
+# --------------------------------------------------------------------------------------------------
 using ..Constants
 using ..Cosmology
 using ..Lenses
 using ..LFUtils
 
-# Various lensing function to export
+
+# --------------------------------------------------------------------------------------------------
+# Function to export
+# --------------------------------------------------------------------------------------------------
 export get_deflection
 export get_jacobian
 export get_time_delay
 
+
+# --------------------------------------------------------------------------------------------------
 # Plotting functions (see ../../ext folder for functions)
+# --------------------------------------------------------------------------------------------------
 export plot_image_plane
 # export plot_surface_density
 # export plot_magnification_map
@@ -25,6 +36,9 @@ function plot_image_plane end
 # function plot_magnification_profile end
 
 
+"""
+    get_deflection(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: RV
+"""
 function get_deflection(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: RV
    # Initialize zero-valued deflection components
    ψx = 0.0
@@ -62,6 +76,10 @@ function get_deflection(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abs
    return ψx, ψy
 end
 
+"""
+    get_deflection(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: ROA
+
+"""
 function get_deflection(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: ROA
    # Initialize zero-valued deflection components
    ψx = zero(θx)
@@ -106,6 +124,9 @@ function get_deflection(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abs
 end
 
 
+"""
+    get_jacobian(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: RV
+"""
 function get_jacobian(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: RV
    # Initialize zero valued deformation tensor components
    ψrr = zeros(2, 2)
@@ -149,6 +170,10 @@ function get_jacobian(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abstr
    return ψrr[1, 1], ψrr[2, 2], ψrr[1, 2], ψrr[2, 1]
 end
 
+
+"""
+    get_jacobian(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: ROA
+"""
 function get_jacobian(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: ROA
    # Initialize zero valued deformation tensor components
    ψrr = zeros(size(θx,1), size(θx,2), 4)
@@ -205,6 +230,9 @@ function get_jacobian(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abstr
 end
 
 
+"""
+    get_time_delay(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV, β::NTuple{2, RV}) where T <: RV
+"""
 function get_time_delay(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV, β::NTuple{2, RV}) where T <: RV
    # Initialize zero-valued time delay function
    ϕ = 0.0
@@ -259,6 +287,10 @@ function get_time_delay(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abs
    return ϕ
 end
 
+
+"""
+    get_time_delay(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV, β::NTuple{2, RV}) where T <: ROA
+"""
 function get_time_delay(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV, β::NTuple{2, RV}) where T <: ROA
    # Initialize zero-valued time delay function
    ϕ = zero(θx)
@@ -317,6 +349,9 @@ function get_time_delay(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abs
 end
 
 
+"""
+    get_magnification_image(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: RV
+"""
 function get_magnification_image(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: Union{RV, ROA}
    # Get the deformation tensor components
    ψxx, ψyy, ψxy, ψyx = get_jacobian(cosmology, lens, θx, θy, zs)
@@ -326,6 +361,9 @@ function get_magnification_image(cosmology::Cosmology.AbstractCosmology, lens::L
 end
 
 
+"""
+    get_magnification_source(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV; rays_per_pixel::Int64=1) where T <: Matrix{<:RV}
+"""
 function get_magnification_source(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV; rays_per_pixel::Int64=1) where T <: Matrix{<:RV}
    # Deflection field
    ψx, ψy = get_deflection(cosmology, lens, θx, θy, zs)
@@ -367,6 +405,9 @@ function get_magnification_source(cosmology::Cosmology.AbstractCosmology, lens::
 end
 
 
+"""
+    get_image(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV, β::NTuple{2, RV}) where T <: Matrix{<:RV}
+"""
 function get_image(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV, β::NTuple{2, RV}) where T <: Matrix{<:RV}
    # Get the potential gradient
    ψx, ψy = get_deflection(cosmology, lens, θx, θy, zs)
@@ -391,6 +432,11 @@ function get_image(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abstract
    return image_position
 end
 
+
+
+"""
+    get_image(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV, β::T) where T <: Matrix{<:RV}
+"""
 function get_image(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV, β::T) where T <: Matrix{<:RV}
    # Get the potential gradient
    ψx, ψy = get_deflection(cosmology, lens, θx, θy, zs)
@@ -430,6 +476,9 @@ function get_image(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abstract
 end
 
 
+"""
+    get_critical_curve(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: Matrix{<:RV}
+"""
 function get_critical_curve(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: Matrix{<:RV}
    # Get the jacobian components
    ψxx, ψyy, ψxy, ψyx = get_jacobian(cosmology, lens, θx, θy, zs)
@@ -444,6 +493,9 @@ function get_critical_curve(cosmology::Cosmology.AbstractCosmology, lens::Lenses
 end
 
 
+"""
+    get_caustic(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: Matrix{<:RV}
+"""
 function get_caustic(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: Matrix{<:RV}
    # Generate critical curves
    critical_curve = get_critical_curve(cosmology, lens, θx, θy, zs)
