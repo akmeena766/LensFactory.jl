@@ -30,7 +30,6 @@ Initialize a point lens with the given parameters.
 """
 @kwdef struct init_PointLens <: AbstractLens
    _lens_::Symbol = :PointLens
-   _lid_::Int64 = 1
    D_d::RV  = NaN
    x_c::RV  = 0.0
    y_c::RV  = 0.0
@@ -45,7 +44,6 @@ Initialize a Plummer lens with the given parameters.
 """
 @kwdef struct init_PlummerLens <: AbstractLens
    _lens_::Symbol = :PlummerLens
-   _lid_::Int64 = 2
    D_d::RV  = NaN
    x_c::RV  = 0.0
    y_c::RV  = 0.0
@@ -61,7 +59,6 @@ Initialize a Singular Isothermal Sphere (SIS) lens with the given parameters.
 """
 @kwdef struct init_SISLens <: AbstractLens
    _lens_::Symbol = :SISLens
-   _lid_::Int64 = 3
    x_c::RV = 0.0
    y_c::RV = 0.0
    v_d::RV = NaN
@@ -75,7 +72,6 @@ Initialize a Non-Singular Isothermal Sphere potential (NSISP) lens with the give
 """
 @kwdef struct init_NSISPLens <: AbstractLens
    _lens_::Symbol = :NSISPLens
-   _lid_::Int64 = 4
    x_c::RV = 0.0
    y_c::RV = 0.0
    v_d::RV = NaN
@@ -90,7 +86,6 @@ Initialize a Non-Singular Isothermal Sphere mass distribution (NSISMD) lens with
 """
 @kwdef struct init_NSISMDLens <: AbstractLens
    _lens_::Symbol = :NSISMDLens
-   _lid_::Int64 = 5
    x_c::RV = 0.0
    y_c::RV = 0.0
    v_d::RV = NaN
@@ -104,7 +99,6 @@ Initialize a Gaussian lens with the given parameters.
 """
 @kwdef struct init_GaussianLens <: AbstractLens
    _lens_::Symbol = :GaussianLens
-   _lid_::Int = 6
    D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
@@ -119,7 +113,6 @@ Initialize a Sersic lens with the given parameters.
 """
 @kwdef struct init_SersicLens <: AbstractLens
    _lens_::Symbol = :SersicLens
-   _lid_::Int = 7
    D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
@@ -135,7 +128,6 @@ Initialize constant external effects with the given parameters.
 """
 @kwdef struct init_ExternalEffects <: AbstractLens
    _lens_::Symbol = :ExternalEffects
-   _lid_::Int = 8
    kappa::RV = NaN
    gamma1::RV = NaN
    gamma2::RV = NaN
@@ -148,7 +140,6 @@ Initialize pseudo isothermal elliptical potential (PIEP) lens with the given par
 """
 @kwdef struct init_PIEPLens <: AbstractLens
    _lens_::Symbol = :PIEPLens
-   _lid_::Int = 9
    x_c::RV = 0.0
    y_c::RV = 0.0
    v_d::RV = NaN
@@ -164,7 +155,6 @@ Initialize singular isothermal ellipsoid (SIE) lens with the given parameters.
 """
 @kwdef struct init_SIELens <: AbstractLens
    _lens_::Symbol = :SIELens
-   _lid_::Int = 10
    x_c::RV = 0.0
    y_c::RV = 0.0
    v_d::RV = NaN
@@ -180,7 +170,6 @@ Initialize Pseudo-Jaffe Ellipsoid (PJE) lens with the given parameters.
 """
 @kwdef struct init_PJELens <: AbstractLens
    _lens_::Symbol = :PJELens
-   _lid_::Int = 11
    x_c::RV = 0.0
    y_c::RV = 0.0
    v_d::RV = NaN
@@ -197,7 +186,6 @@ Initialize a Hernquist lens with the given parameters.
 """
 @kwdef struct init_HernquistLens <: AbstractLens
    _lens_::Symbol = :HernquistLens
-   _lid_::Int64 = 12
    D_d::RV  = NaN
    x_c::RV  = 0.0
    y_c::RV  = 0.0
@@ -211,7 +199,6 @@ Initialize a Navarro-Frenk-White (NFW) lens with the given parameters
 """
 @kwdef struct init_NFWLens <: AbstractLens
    _lens_::Symbol = :NFWLens
-   _lid_::Int64 = 13
    D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
@@ -226,7 +213,6 @@ Initialize a truncated Navarro-Frenk-White (tNFW) lens with the given parameters
 """
 @kwdef struct init_tNFWLens <: AbstractLens
    _lens_::Symbol = :tNFWLens
-   _lid_::Int64 = 14
    D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
@@ -242,7 +228,6 @@ Initialize a generalized Navarro-Frenk-White (gNFW) lens with the given paramete
 """
 @kwdef struct init_gNFWLens <: AbstractLens
    _lens_::Symbol = :gNFWLens
-   _lid_::Int64 = 15
    D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
@@ -261,7 +246,6 @@ The parameter `n` defines the slope of the density profile.
 """
 @kwdef struct init_EinastoLens <: AbstractLens
    _lens_::Symbol = :EinastoLens
-   _lid_::Int64 = 16
    D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
@@ -278,7 +262,6 @@ Initialize an approximate Hernquist lens (aHernquistLens) with the given paramet
 """
 @kwdef struct init_aHernquistLens <: AbstractLens
    _lens_::Symbol = :aHernquistLens
-   _lid_::Int64 = 17
    D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
@@ -295,7 +278,6 @@ Initialize an approximate Navarro-Frenk-White lens (aNFWLens) with the given par
 """
 @kwdef struct init_aNFWLens <: AbstractLens
    _lens_::Symbol = :aNFWLens
-   _lid_::Int64 = 17
    D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
@@ -311,7 +293,6 @@ Initialize an elliptical Hernquist mass distribution lens (eHernquistMDLens) wit
 """
 @kwdef struct init_eHernquistMDLens <: AbstractLens
    _lens_::Symbol = :eHernquistMDLens
-   _lid_::Int64 = 18
    D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
@@ -327,7 +308,6 @@ Initialize an elliptical Navarro-Frenk-White mass distribution lens (eNFWMDLens)
 """
 @kwdef struct init_eNFWMDLens <: AbstractLens
    _lens_::Symbol = :eNFWMDLens
-   _lid_::Int64 = 19
    D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
@@ -339,7 +319,6 @@ end
 
 @kwdef struct init_MultiPlummerLens <: AbstractLens
    _lens_::Symbol = :MultiPlummerLens
-   _lid_::Int64 = 101
    D_d::RV  = NaN
    n::Int64 = NaN
    x_c  = Vector{<:RV}()
@@ -351,7 +330,6 @@ end
 
 @kwdef struct init_MultiGaussianLens <: AbstractLens
    _lens_::Symbol = :MultiGaussianLens
-   _lid_::Int64 = 102
    D_d::RV  = NaN
    n::Int64 = NaN
    x_c  = Vector{Float64}()
@@ -363,7 +341,6 @@ end
 
 @kwdef struct init_MultiPJELens <: AbstractLens
    _lens_::Symbol = :MultiPJELens
-   _lid_::Int64 = 103
    n::Int64 = NaN
    x_c  = Vector{Float64}()
    y_c  = Vector{Float64}() 
@@ -377,14 +354,12 @@ end
 
 @kwdef struct init_CompositeLens <: AbstractLens
    _lens_::Symbol = :CompositeLens
-   _lid_::Int64 = 111
    _components_ = Vector{AbstractLens}()
 end
 
 
 @kwdef struct init_MultiPlaneLens <: AbstractLens
    _lens_::Symbol = :MultiPlaneLens
-   _lid_::Int64 = 222
    n_p::Int64   = NaN
    z_d = Vector{<:RV}()
    _plane_ = Vector{AbstractLens}()
