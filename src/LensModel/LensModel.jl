@@ -42,6 +42,9 @@ using .LensModelUtils
 include("./LensModelFit.jl")
 using .LensModelFit
 
+include("./Diagnostic.jl")
+using .Diagnostic
+
 
 # --------------------------------------------------------------------------------------------------
 # Functions to export
