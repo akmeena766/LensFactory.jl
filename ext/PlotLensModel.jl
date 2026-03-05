@@ -19,12 +19,16 @@ PARAM_NAME = Dict(:lens1 => "L1", :lens2 => "L2", :lens3 => "L3", :lens4 => "L4"
 """
     LensFactory.LensModel.plot_corner(chains, lls; param_names=nothing, burn_in=0.3, thinning=100)
 Generates a corner plot for the given MCMC chains and log-likelihoods.
+
 # Arguments
 - `chains`: MCMC chains of shape (n_steps, n_chains, n_params).
 - `lls`: Log-likelihoods corresponding to the chains, of shape (n_steps, n_chains).
+
+# Keyword arguments
 - `param_names=nothing`: Optional list of parameter names for labeling the axes.
 - `burn_in=0.3`: Fraction of the initial samples to discard as burn-in.
 - `thinning=100`: Interval for thinning the chains to reduce autocorrelation.
+
 # Returns
 - A Makie figure object containing the corner plot.
 """
@@ -97,11 +101,15 @@ end
 """
     LensFactory.LensModel.plot_trace(chains; param_names=nothing, burn_in=0.0, thinning=1)
 Generates trace plots for the given MCMC chains.
+
 # Arguments
 - `chains`: MCMC chains of shape (n_steps, n_chains, n_params).
+
+# Keyword arguments
 - `param_names=nothing`: Optional list of parameter names for labeling the axes.
 - `burn_in=0.0`: Fraction of the initial samples to discard as burn-in.
 - `thinning=1`: Interval for thinning the chains to reduce autocorrelation.
+
 # Returns
 - A Makie figure object containing the trace plots.
 """
@@ -150,27 +158,23 @@ end
 """
     LensFactory.LensModel.plot_best_model(θx, θy, model, chains, lls)
 Generates a plot comparing the observed image positions with the predicted image positions from the best-fit lens model.
+
 # Arguments
-- `θx`: Matrix of x-coordinates of the image plane grid.
-- `θy`: Matrix of y-coordinates of the image plane grid.
 - `model`: The lens model configuration.
 - `chains`: MCMC chains of shape (n_steps, n_chains, n_params).
 - `lls`: Log-likelihoods corresponding to the chains, of shape (n_steps, n_chains).
+
 # Returns
 - A Makie figure object containing the comparison plot.
 """
-function LensFactory.LensModel.plot_best_model(θx::Matrix{<:RV}, θy::Matrix{<:RV}, model::LensModel.ModelConfig, chains::Array{Float64, 3}, lls::Matrix{Float64})
-   # Get the best parameters based on likelihood (lls)
-   best_θ, _, _ = LensModel.get_best_fit(lls, chains)
-
-   # Get list of parameters for the lens model
-   param_ref = Dict(p.key => p.refer for p in model.parameters)
-   
-   # Replace free parameter values by best-fit values
-   pvals = LensModel.param_dict(model, best_θ, param_ref)
-
+function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig, chains::Array{Float64, 3}, lls::Matrix{Float64})
    # Get best-fit model
-   best_model = LensModel.build_lens(model, pvals)
+   best_model = LensModel.get_best_model(model, chains, lls)
+
+   # Generate grid
+   FOV = model.observation.FOV
+   pixel_scale = model.observation.pixel_scale
+   x_grid, y_grid = Lenses.get_meshgrid(0.5 * FOV[1], 0.5 * FOV[2], pixel_scale)
 
    # Get angular-diameter distance ratios
    adis = LensModel.adis_current(model, pvals)
@@ -229,7 +233,7 @@ function LensFactory.LensModel.plot_best_model(θx::Matrix{<:RV}, θy::Matrix{<:
          βx_model, βy_model, _ = LensModel.Likelihood._weighted_position(βx_ind, βy_ind, A, σx, σy, σθ, n)
 
          # Get image positions
-         predicted_image = Lenses.get_image(best_model, θx, θy, adis_value, (βx_model, βy_model))
+         predicted_image = Lenses.get_image(best_model, x_grid, y_grid, adis_value, (βx_model, βy_model))
 
          # Plot predicted image positions
          scatter!(ax, first.(predicted_image), last.(predicted_image), markersize=20, marker=:diamond, color=:transparent, strokecolor=:red, strokewidth=2)
@@ -238,7 +242,7 @@ function LensFactory.LensModel.plot_best_model(θx::Matrix{<:RV}, θy::Matrix{<:
       sid = sid + 1
    end
 
-   xlims!(ax, minimum(θx), maximum(θx))
-   ylims!(ax, minimum(θy), maximum(θy))
+   xlims!(ax, minimum(x_grid), maximum(x_grid))
+   ylims!(ax, minimum(y_grid), maximum(y_grid))
    return fig
 end

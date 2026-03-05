@@ -46,7 +46,8 @@ makedocs(
                         "General" => "LensModel.md"
                         ],
             "Plot Extension" => [
-                        "General" => "PlotExt_Basic.md",
+                        "General" => "PlotExt_Lenses.md",
+                        "Multi-Plane" => "PlotExt_MultiPlane.md",
                         "Lens Modeling" => "PlotExt_LensModel.md"
                         ],
             "History" => "History.md",

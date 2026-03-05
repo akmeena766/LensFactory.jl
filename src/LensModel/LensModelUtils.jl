@@ -643,18 +643,8 @@ function check_parity(model::ModelConfig, chains::Array{Float64, 3}, lls::Matrix
    if model.source_config.use_parity === false
       error("Parity was not enforced during modelling. Please set model.use_parity = true.")
    end
-   
-   # Get the best parameters based on likelihood (lls)
-   best_θ, _, _ = get_best_fit(lls, chains)
-
-   # Get list of parameters for the lens model
-   param_ref = Dict(p.key => p.refer for p in model.parameters)
-   
-   # Replace free parameter values by best-fit values
-   pvals = param_dict(model, best_θ, param_ref)
-
    # Get best-fit model
-   best_model = build_lens(model, pvals)
+   best_model = get_best_model(model, chains, lls)
 
    # Get angular-diameter distance ratios
    adis = adis_current(model, pvals)
@@ -736,17 +726,8 @@ function check_parity(model::ModelConfig, chains::Array{Float64, 3}, lls::Matrix
 end
 
 function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, lls::Matrix{Float64}; check_parity::Bool=false)
-   # Get the best parameters based on likelihood (lls)
-   best_θ, _, _ = get_best_fit(lls, chains)
-
-   # Get list of parameters for the lens model
-   param_ref = Dict(p.key => p.refer for p in model.parameters)
-   
-   # Replace free parameter values by best-fit values
-   pvals = param_dict(model, best_θ, param_ref)
-
    # Get best-fit model
-   best_model = build_lens(model, pvals)
+   best_model = get_best_model(model, chains, lls)
 
    # Get angular-diameter distance ratios
    adis = adis_current(model, pvals)
@@ -1005,17 +986,8 @@ function save_best_fit(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matr
                       save_potential::Bool = true, 
                       save_deflection::Bool = true, 
                       save_kappa::Bool = true, save_gamma::Bool = true)
-   # Get best fit parameters
-   best_fit, _, _ = get_best_fit(chi2, chains)
-   
-   # Get list of parameters for the lens model
-   param_ref = Dict(p.key => p.refer for p in model.parameters)
-   
-   # Replace free parameter values by best-fit values
-   pvals = param_dict(model, best_fit, param_ref)
-
    # Get best-fit model
-   best_model = build_lens(model, pvals)
+   best_model = get_best_model(model, chains, chi2)
 
    # Generate grid
    FOV = model.observation.FOV

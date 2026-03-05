@@ -82,12 +82,12 @@ Generate a meshgrid of coordinates on which various quantities can be evaluated.
 this function only generates square pixels. In future if the need arises, it can be extended 
 to generate rectangular pixels as well.
 
-- Input:
+# Arguments
    - `θx::RV`: Half-size of the grid in x-direction (in ``\\rm \\mathbf{arcseconds}``)
    - `θy::RV`: Half-size of the grid in y-direction (in ``\\rm \\mathbf{arcseconds}``)
    - `dθ::RV`: Pixel size (in ``\\rm \\mathbf{arcseconds}``)
 
-- Output:
+# Returns
    - `grid_x::Matrix{Float64}`: x-coordinates of the grid (in ``\\rm \\mathbf{arcseconds}``)
    - `grid_y::Matrix{Float64}`: y-coordinates of the grid (in ``\\rm \\mathbf{arcseconds}``)
 """
@@ -124,16 +124,18 @@ Calculate the critical surface density,
 Σ_{\\rm cr} = \\frac{c^2}{4 π {\\rm G}} \\frac{D_s}{D_d D_{ds}}.
 ``` 
 
-- Input:
+# Arguments
    - `D_d::Float64`: Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``)
    - `D_ds::Float64`: Angular diameter distance to the source (in ``\\rm \\mathbf{meters}``)
    - `D_s::Float64`: Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``)
-   - `unit::Symbol = :kg_m2`: Output units.
+
+   # Keyword Arguments
+   - `unit::Symbol = :kg_m2`: Output units of the critical surface density.
       - `:kg_m2` ``\\Rightarrow{\\rm \\mathbf{kg/m^2}}``
       - `:msun_pc2` ``\\Rightarrow{\\rm \\mathbf{M_⊙/pc^2}}``
       - `:msun_arcsec2` ``\\Rightarrow{\\rm \\mathbf{M_⊙/arcsec^2}}``
 
-- Output:
+# Returns
    - `Σ_cr::Float64`: Critical surface density in the requested unit
 """
 function get_critical_density(D_d::Float64, D_ds::Float64, D_s::Float64; unit::Symbol=:kg_m2)
@@ -184,12 +186,12 @@ Calculate lensing potential at the given angular coordinates for the given lens 
 ψ(\\pmb{θ}) = \\frac{4{\\rm G}}{\\rm c^2} \\frac{1}{D_d} \\int d^2 \\pmb{θ}' \\, Σ(\\pmb{θ}') \\, \\ln\\left(|\\pmb{θ} - \\pmb{θ'}|\\right).
 ```
 
-- Input:
+# Arguments
    - `lens::AbstractLens`: Lens model.
    - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
    - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 
-- Output:
+# Returns
    - `ψ`: Lensing potential at the given angular coordinate(s).
 """
 function get_potential(lens::AbstractLens, θx::T, θy::T) where T <: Union{ROA, Vector{Int64}}
@@ -253,12 +255,12 @@ Calculate (vector) deflection angle at the given angular coordinate(s) for a giv
 = \\frac{4{\\rm G}}{\\rm c^2} \\frac{1}{D_d} \\int d^2 \\pmb{θ}' \\, Σ(\\pmb{θ}') \\frac{\\pmb{θ} - \\pmb{θ}'}{|\\pmb{θ} - \\pmb{θ}'|^2}.
 ```
 
-- Input:
+# Arguments
    - `lens::AbstractLens`: Lens model.
    - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
    - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 
-- Output:
+# Returns
    - `αx`: x-component of the deflection angle (in ``\\rm \\mathbf{arcseconds}``).
    - `αy`: y-component of the deflection angle (in ``\\rm \\mathbf{arcseconds}``).
 """
@@ -333,12 +335,12 @@ Calculate jacobian (i.e., deformation tensor) of the lens mapping for a given le
 Since the jacobian is symmetric (for single lens plane), only three components are returned,
 i.e., ``(ψ_{xx}, ψ_{yy}, ψ_{xy})``.
 
-- Input:
+# Arguments
    - `lens::AbstractLens`: Lens model.
    - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
    - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 
-- Output:
+# Returns
    - `ψxx`: xx-component of the jacobian.
    - `ψyy`: yy-component of the jacobian.
    - `ψxy`: xy-component of the jacobian.
@@ -401,7 +403,7 @@ t_d(\\pmb{θ}; \\pmb{β}) = \\frac{1+z_l}{\\rm c} \\frac{D_d D_s}{D_{ds}} \\thet
 ```
 where ``\\theta_0`` is normalizing angular unit.
 
-- Input:
+# Arguments
    - `lens::AbstractLens`: Lens model.
    - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
    - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
@@ -410,7 +412,7 @@ where ``\\theta_0`` is normalizing angular unit.
    - `D_d::RV`: Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``).
    - `β::NTuple{2, RV}`: Source angular position (in ``\\rm \\mathbf{arcseconds}``).
 
-- Output:
+# Returns
    - `t_d`: Time delay at the given angular coordinate(s) (in ``\\rm \\mathbf{seconds}``).
 """
 function get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::RV, D_d::RV, β::NTuple{2, RV}) where T <: ROA
@@ -448,13 +450,13 @@ Calculate signed magnification at the given angular coordinate(s) for a given le
 ```
 where ``\\mathbb{I}`` is the identity matrix.
 
-- Input:
+# Arguments
    - `lens::AbstractLens`: Lens model.
    - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
    - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
    - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
 
-- Output:
+# Returns
    - `μ`: Magnification at the given angular coordinate(s).
 """
 function get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: ROA
@@ -477,14 +479,14 @@ Calculates the magnification map in source plane using inverse ray shooting (IRS
 model. The number of average rays per pixel can be specified using the `rays_per_pixel` keyword argument. 
 This function is not optimized for speed and is only intended to visualize the magnification map.
 
-- Input:
+# Arguments
    - `lens::AbstractLens`: Lens model.
    - `θx::Matrix{<:RV}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
    - `θy::Matrix{<:RV}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
    - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
    - `rays_per_pixel::Int64`: Average number of rays per pixel.
 
-- Output:
+# Returns
    - `μ_source::Matrix{<:RV}`: Magnification map in source plane.
 """
 function get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Float64; rays_per_pixel::Int64=1) where T <: Matrix{<:RV}
@@ -572,14 +574,14 @@ where ``\\pmb{β}`` is the source position, ``\\pmb{θ}`` is the image plane gri
 distance ratio (i.e., ``D_{ds}/D_s``), and ``\\pmb{α}(\\pmb{θ})`` is the deflection angle. To find 
 the intersection points inside the pixels, we use bi-linear interpolation.
 
-- Input:
+# Arguments
    - `lens::AbstractLens`: Lens model.
    - `θx::Matrix{<:RV}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
    - `θy::Matrix{<:RV}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
    - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
    - `β`: Source position (in ``\\rm \\mathbf{arcseconds}``).
 
-- Output:
+# Returns
    - `image_position`: Image positions (in ``\\rm \\mathbf{arcseconds}``).
 """
 function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::T) where T <: Matrix{<:RV}
@@ -625,13 +627,13 @@ end
 Calculate critical curves for a given lens model. This function essentially runs marching squares
 algorithm to find the zero eigenvalue contours.
 
-- Input:
+# Arguments
    - `lens::AbstractLens`: Lens model.
    - `θx::Matrix{<:RV}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
    - `θy::Matrix{<:RV}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
    - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
 
-- Output:
+# Returns
    - `critical_tan::Vector{Vector{Vector{Float64}}}`: Tangential critical curve(s) (in ``\\rm \\mathbf{arcseconds}``).
    - `critical_rad::Vector{Vector{Vector{Float64}}}`: Radial critical curve(s) (in ``\\rm \\mathbf{arcseconds}``).
 """
@@ -662,13 +664,13 @@ end
 Calculate caustics for a given lens model. The function first gets the critical curves and then maps
 them to the source plane using lens equation.
 
-- Input:
+# Arguments
    - `lens::AbstractLens`: Lens model.
    - `θx::Matrix{<:RV}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
    - `θy::Matrix{<:RV}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
    - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
 
-- Output:
+# Returns
    - `caustics_tan::Vector{Vector{Vector{Float64}}}`: Tangential caustic curve(s) (in ``\\rm \\mathbf{arcseconds}``).
    - `caustics_rad::Vector{Vector{Vector{Float64}}}`: Radial caustic curve(s) (in ``\\rm \\mathbf{arcseconds}``).
 """
@@ -702,13 +704,13 @@ end
 Calculate the total angular area enclosed by tangential critical curve(s). The function runs shoelace
 algorithm to calculate the area.
 
-- Input:
+# Arguments
    - `lens::AbstractLens`: Lens model.
    - `θx::Matrix{<:RV}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
    - `θy::Matrix{<:RV}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
    - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
 
-- Output:
+# Returns
    - `area::Float64`: Total angular area enclosed by tangential critical curve(s) (in ``\\rm \\mathbf{arcseconds^2}``).
 """
 function get_critical_area(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
@@ -732,13 +734,13 @@ Calculate the Einstein radius (i.e., ``θ_E``) for an arbitrary lens model, whic
 ```
 where ``A_{\\rm critical}`` is the total angular area enclosed by the tangential critical curve(s).
 
-- Input:
+# Arguments
    - `lens::AbstractLens`: Lens model.
    - `θx::Matrix{<:RV}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
    - `θy::Matrix{<:RV}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
    - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
 
-- Output:
+# Returns
    - `θ_E::Float64`: Einstein radius (i.e., ``θ_E``) (in ``\\rm \\mathbf{arcseconds}``).
 """
 function get_einstein_angle(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
@@ -757,11 +759,11 @@ Converts the Cartesian components of the shear (i.e., ``γ_1`` and ``γ_2``) to 
 \\end{align*}
 ```
 
-- Input:
+# Arguments
    - `γ1::T`: Cartesian component of the shear (i.e., ``γ_1``).
    - `γ2::T`: Cartesian component of the shear (i.e., ``γ_2``).
 
-- Output:
+# Returns
    - `γ::Float64`: Polar component of the shear (i.e., ``γ``).
    - `φ::Float64`: Polar component of the shear (i.e., ``φ`` in ``\\rm \\mathbf{degrees}``).
 """
@@ -781,11 +783,11 @@ Converts the polar components of the shear (i.e., ``γ`` and ``φ``) to Cartesia
 \\end{align*}
 ```
 
-- Input:
+# Arguments
    - `γ::T`: Polar component of the shear (i.e., ``γ``).
    - `φ::T`: Polar component of the shear (i.e., ``φ`` in ``\\rm \\mathbf{degrees}``).
 
-- Output:
+# Returns
    - `γ1::Float64`: Cartesian component of the shear (i.e., ``γ_1``).
    - `γ2::Float64`: Cartesian component of the shear (i.e., ``γ_2``).
 """
@@ -805,11 +807,11 @@ e &= \\sqrt{e_1^2 + e_2^2}, \\\\
 \\end{align*}
 ```
 
-- Input:
+# Arguments
    - `e1::T`: Cartesian component of the ellipticity (i.e., ``e_1``).
    - `e2::T`: Cartesian component of the ellipticity (i.e., ``e_2``).
 
-- Output:
+# Returns
    - `e::Float64`: Polar component of the ellipticity (i.e., ``e``).
    - `φ::Float64`: Polar component of the ellipticity (i.e., ``φ`` in ``\\rm \\mathbf{degrees}``).
 """
@@ -829,11 +831,11 @@ e_2 &= e \\sin(2φ).
 \\end{align*}
 ```
 
-- Input:
+# Arguments
    - `e::T`: Polar component of the ellipticity (i.e., ``e``).
    - `φ::T`: Polar component of the ellipticity (i.e., ``φ`` in ``\\rm \\mathbf{degrees}``).
 
-- Output:
+# Returns
    - `e1::Float64`: Cartesian component of the ellipticity (i.e., ``e_1``).
    - `e2::Float64`: Cartesian component of the ellipticity (i.e., ``e_2``).
 """
