@@ -5,9 +5,6 @@ module LensModelUtils
 # --------------------------------------------------------------------------------------------------
 using Random
 using StatsBase
-using FITSIO
-using JLD2
-using Dates
 
 
 # --------------------------------------------------------------------------------------------------
@@ -878,49 +875,6 @@ function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, lls::Ma
    println("-"^72)
    
    return nothing
-end
-
-
-# --------------------------------------------------------------------------------------------------
-# Write and save FITS files for the best-fit model
-# --------------------------------------------------------------------------------------------------
-function _write_fits_header!(header::ImageHDU, model::ModelConfig;
-                             date::Union{Nothing, Date} = nothing, time::Union{Nothing, Time} = nothing)
-   # Add coordinate projection type
-   write_key(header, "CTYPE1", "RA---TAN", "RA coordinate type")
-   write_key(header, "CTYPE2", "DEC--TAN", "DEC coordinate type")
-
-   # Add reference position
-   RA_REF = model.observation.reference[1]
-   DEC_REF = model.observation.reference[2]
-   if RA_REF == 0.0 && DEC_REF == 0.0
-      @warn "Reference position is (0.0, 0.0). Are you sure?"
-   end
-   write_key(header, "CRVAL1",  RA_REF, "RA reference value")
-   write_key(header, "CRVAL2", DEC_REF, "DEC reference value")
-   
-   # Add reference pixel
-   PIXEL_SCALE = model.observation.pixel_scale
-   CRPIX1 = 0.5 * model.observation.FOV[1] / PIXEL_SCALE + 1.0
-   CRPIX2 = 0.5 * model.observation.FOV[2] / PIXEL_SCALE + 1.0
-   write_key(header, "CRPIX1", CRPIX1, "Reference pixel in x-direction")
-   write_key(header, "CRPIX2", CRPIX2, "Reference pixel in y-direction")
-   
-   # Add pixel scale
-   write_key(header, "CDELT1", -PIXEL_SCALE / 3600.0, "Pixel scale in RA (degrees)")
-   write_key(header, "CDELT2", +PIXEL_SCALE / 3600.0, "Pixel scale in DEC (degrees)")
-   
-   # Comments
-   write_key(header, "MODELER", model.observation.modeler, "Modeler name")
-   write_key(header, "LENS", model.observation.lens, "Lens name")
-   write_key(header, "Z_D", model.observation.z_d, "Lens redshift")
-   if date !== nothing
-      write_key(header, "DATE", string(date), "Date of fit (UTC)")
-   end
-   if time !== nothing
-      write_key(header, "TIME", string(time), "Time of fit (UTC)")
-   end
-   
 end
 
 end

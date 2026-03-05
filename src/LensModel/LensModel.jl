@@ -4,6 +4,9 @@ module LensModel
 # --------------------------------------------------------------------------------------------------
 # Julia inbuilt functions to import
 # --------------------------------------------------------------------------------------------------
+using JLD2
+using Dates
+using FITSIO
 
 
 # --------------------------------------------------------------------------------------------------
@@ -75,7 +78,7 @@ function plot_best_model end
 # --------------------------------------------------------------------------------------------------
 """
     get_potential(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{ROA, Vector{Int64}}
-Calculate the lensing potential at the given coordinates (θx, θy) for the best-fit model based on 
+Calculate the lensing potential at the given coordinates `(θx, θy)` for the best-fit model based on 
 the MCMC results stored in `file_name`. The user can specify the unit of the input coordinates as 
 either RA/DEC or arcseconds.
 
@@ -127,7 +130,7 @@ end
 
 """
     get_deflection(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{ROA, Vector{Int64}}
-Calculate the lensing deflection at the given coordinates (θx, θy) for the best-fit model based on 
+Calculate the lensing deflection at the given coordinates `(θx, θy)` for the best-fit model based on 
 the MCMC results stored in `file_name`. The user can specify the unit of the input coordinates as 
 either RA/DEC or arcseconds.
 
@@ -181,7 +184,7 @@ end
 """
     get_jacobian(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{ROA, Vector{Int64}}
 Calculate the Jacobian (i.e., deformation tensor) of the lens mapping at the given coordinates 
-(θx, θy) for the best-fit model based on the MCMC results stored in `file_name`. The user can 
+`(θx, θy)` for the best-fit model based on the MCMC results stored in `file_name`. The user can 
 specify the unit of the input coordinates as either RA/DEC or arcseconds.
 
 # Arguments
@@ -235,6 +238,45 @@ end
 # --------------------------------------------------------------------------------------------------
 # Save best-fit lensing quantities to FITS files
 # --------------------------------------------------------------------------------------------------
+function _write_fits_header!(header::ImageHDU, model::ModelConfig;
+                             date::Union{Nothing, Date} = nothing, time::Union{Nothing, Time} = nothing)
+   # Add coordinate projection type
+   write_key(header, "CTYPE1", "RA---TAN", "RA coordinate type")
+   write_key(header, "CTYPE2", "DEC--TAN", "DEC coordinate type")
+
+   # Add reference position
+   RA_REF = model.observation.reference[1]
+   DEC_REF = model.observation.reference[2]
+   if RA_REF == 0.0 && DEC_REF == 0.0
+      @warn "Reference position is (0.0, 0.0). Are you sure?"
+   end
+   write_key(header, "CRVAL1",  RA_REF, "RA reference value")
+   write_key(header, "CRVAL2", DEC_REF, "DEC reference value")
+   
+   # Add reference pixel
+   PIXEL_SCALE = model.observation.pixel_scale
+   CRPIX1 = 0.5 * model.observation.FOV[1] / PIXEL_SCALE + 1.0
+   CRPIX2 = 0.5 * model.observation.FOV[2] / PIXEL_SCALE + 1.0
+   write_key(header, "CRPIX1", CRPIX1, "Reference pixel in x-direction")
+   write_key(header, "CRPIX2", CRPIX2, "Reference pixel in y-direction")
+   
+   # Add pixel scale
+   write_key(header, "CDELT1", -PIXEL_SCALE / 3600.0, "Pixel scale in RA (degrees)")
+   write_key(header, "CDELT2", +PIXEL_SCALE / 3600.0, "Pixel scale in DEC (degrees)")
+   
+   # Comments
+   write_key(header, "MODELER", model.observation.modeler, "Modeler name")
+   write_key(header, "LENS", model.observation.lens, "Lens name")
+   write_key(header, "Z_D", model.observation.z_d, "Lens redshift")
+   if date !== nothing
+      write_key(header, "DATE", string(date), "Date of fit (UTC)")
+   end
+   if time !== nothing
+      write_key(header, "TIME", string(time), "Time of fit (UTC)")
+   end
+   
+end
+
 """
     save_best_fit(file_name::String; save_potential::Bool=true, save_deflection::Bool=true, save_kappa::Bool=true, save_gamma::Bool=true)
 Save fits files for the best-fit model based on the MCMC results stored in `file_name`. The user can
