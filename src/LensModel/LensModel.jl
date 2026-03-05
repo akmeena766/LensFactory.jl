@@ -21,15 +21,6 @@ using ..LFUtils
 # --------------------------------------------------------------------------------------------------
 # Helper modules to use
 # --------------------------------------------------------------------------------------------------
-include("./NelderMead.jl")
-using .NelderMead
-
-include("./MH.jl")
-using .MH
-
-include("./AIES.jl")
-using .AIES
-
 include("./LensModelIO.jl")
 using .LensModelIO
 
@@ -52,16 +43,11 @@ using .Diagnostic
 export read_input
 export fit_model
 export free_parameter_names
-export calculate_gr
-export print_gr_report
-export time_series_diagnostics
-export acceptance_diagnostics
 export get_best_fit
 export get_best_fit_with_errors
 export check_parity
 export get_best_fit_rms
 export save_best_fit
-
 
 
 # --------------------------------------------------------------------------------------------------
@@ -79,6 +65,35 @@ function plot_best_model end
 # --------------------------------------------------------------------------------------------------
 # Get lensing quantities for the best-fit model
 # --------------------------------------------------------------------------------------------------
+"""
+   get_best_model(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64})
+Get the best-fit lens model based on the MCMC results stored in `chains` and `chi2`. The best-fit 
+parameters are determined by the minimum chi2 in `chi2`.
+
+# Arguments
+- `model::ModelConfig`: The lens model configuration used for the MCMC fit.
+- `chains::Array{Float64, 3}`: The MCMC chains containing the sampled parameter values. The 
+   dimensions should be (n_steps, n_chains, n_parameters).
+- `chi2::Matrix{Float64}`: The chi2 values corresponding to each sample in the MCMC chains. The 
+dimensions should be (n_steps, n_steps).
+
+# Returns
+- `best_model`: The best-fit lens model constructed using the best-fit parameters.
+"""
+function get_best_model(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64})
+   # Get the best parameters based on likelihood (lls)
+   best_θ, _, _ = LensModelUtils.get_best_parameters(chi2, chains)
+
+   # Get list of parameters for the lens model
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+   
+   # Replace free parameter values by best-fit values
+   pvals = LensModelUtils.param_dict(model, best_θ, param_ref)
+   
+   return LensModelUtils.build_lens(model, pvals)
+end
+
+
 """
     get_potential(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{ROA, Vector{Int64}}
 Calculate the lensing potential at the given coordinates `(θx, θy)` for the best-fit model based on 
@@ -391,5 +406,312 @@ function save_best_fit(file_name::String;
    end
    return nothing
 end
+
+
+# --------------------------------------------------------------------------------------------------
+# Check parity of the best-fit model against input parities
+# --------------------------------------------------------------------------------------------------
+"""
+    check_parity(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64})
+Check the parity of the best-fit model against the input parities for each knot image. This function 
+assumes that parity was enforced during the modelling (i.e., `model.source_config.use_parity = true`). 
+If parity was not enforced, an error is thrown. The function prints a table comparing the input 
+parity and the best-fit model parity for each knot image, along with a status indicating whether the
+parity matches or not.
+
+# Arguments
+- `model::ModelConfig`: The lens model configuration used for the MCMC fit.
+- `chains::Array{Float64, 3}`: The MCMC chains containing the sampled parameter values. The 
+   dimensions should be (n_steps, n_chains, n_parameters).
+- `chi2::Matrix{Float64}`: The chi2 values corresponding to each sample in the MCMC chains. The 
+   dimensions should be (n_steps, n_steps).
+
+# Returns
+- Nothing (prints a table to the console)
+"""
+function check_parity(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64})
+   # Check if parity was enforced during modelling
+   if model.source_config.use_parity === false
+      error("Parity was not enforced during modelling. Please set model.use_parity = true.")
+   end
+
+   # Get the best parameters based on chi2
+   best_θ, _, _ = get_best_parameters(chi2, chains)
+
+   # Get list of parameters for the lens model
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+   
+   # Replace free parameter values by best-fit values
+   pvals = LensModelUtils.param_dict(model, best_θ, param_ref)
+
+   # Get best-fit model
+   best_model = LensModelUtils.build_lens(model, pvals)
+
+   # Get angular-diameter distance ratios
+   adis = LensModelUtils.adis_current(model, pvals)
+
+   # Calculate deformation at all image positions
+   _, _, _, A_all = LensModelUtils.lens_quantities(model, best_model)
+   
+   # Print Table Header using string padding for alignment
+   header = string(
+      "| ", rpad("Source", 8), 
+      "| ", rpad("Knot", 6), 
+      "| ", rpad("Image", 6), 
+      "| ", rpad("Input Parity", 10), 
+      "| ", rpad("Best Parity", 10), 
+      "| ", "Status",
+      " |"
+   )
+
+   println("─"^length(header))
+   println(header)
+   println("─"^length(header))
+   
+   # Identity tuple
+   I4 = (1.0, 0.0, 0.0, 1.0)
+
+   # Calculate log-likelihood for each source
+   sid = 1
+   kid = 1
+   for src in model.source_config.sources
+      # Distance ratio for this source
+      adis_value = adis[sid]
+
+      # Generate source id
+      src_id = Symbol(:src, sid)
+   
+      for knot in src.knots
+         # Generate knot id
+         knot_id = Symbol(:knot, kid)
+
+         # Input knot image parities
+         parity_input = knot.parity
+
+         # Deformation tensor at the knot positions
+         A = @. adis_value * A_all[kid]
+         for i in eachindex(A)
+            @. A[i] = I4[i] - A[i]
+         end
+
+         # Model parity of knot images
+         parity_model = @. Int64(sign(A[1] * A[4] - A[2] * A[3]))
+
+         # Parity log-likelihood
+         for i in eachindex(parity_input)
+            # Check if parity is correct
+            status = (parity_input[i] == parity_model[i]) ? "✅" : "❌"
+
+            # Manually formatting the sign for the parities
+            input_str = parity_input[i] >= 0 ? "+$(parity_input[i])" : "$(parity_input[i])"
+            best_str  = parity_model[i] >= 0 ? "+$(parity_model[i])" : "$(parity_model[i])"
+
+            # Format the row using rpad (Right Pad)
+            row = string(
+               "| ", rpad(src_id, 8), 
+               "| ", rpad(knot_id, 6), 
+               "| ", rpad(i, 6), 
+               "| ", rpad(input_str, 12), 
+               "| ", rpad(best_str,  11), 
+               "| ", status,
+               "     |"
+            )
+            println(row)
+         end
+         kid = kid + 1
+         println("─"^length(header))
+      end
+      sid = sid + 1
+   end
+   return nothing
+end
+
+
+# --------------------------------------------------------------------------------------------------
+# Calculate RMS for the best-fit model
+# --------------------------------------------------------------------------------------------------
+"""
+    get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64}; check_parity::Bool=false)
+Calculate the RMS of the best-fit model based on the MCMC results stored in `chains` and `chi2`. The
+function prints a table showing the RMS for each knot image, as well as a global total RMS. If 
+`check_parity` is set to true, the function will also check the parity of each knot image and 
+print a warning if any parity does not match.
+
+# Arguments
+- `model::ModelConfig`: The lens model configuration used for the MCMC fit.
+- `chains::Array{Float64, 3}`: The MCMC chains containing the sampled parameter values. The 
+   dimensions should be (n_steps, n_chains, n_parameters).
+- `chi2::Matrix{Float64}`: The chi2 values corresponding to each sample in the MCMC chains. The 
+   dimensions should be (n_steps, n_steps).
+
+# Keyword Arguments
+- `check_parity::Bool=false`: Whether to check the parity of each knot image against the input parity.
+
+# Returns
+- Nothing (prints a table to the console)
+"""
+function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64}; check_parity::Bool=false)
+   # Get the best parameters based on likelihood (lls)
+   best_θ, _, _ = LensModelUtils.get_best_parameters(chi2, chains)
+
+   # Get list of parameters for the lens model
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+   
+   # Replace free parameter values by best-fit values
+   pvals = LensModelUtils.param_dict(model, best_θ, param_ref)
+
+   # Get best-fit model
+   best_model = LensModelUtils.build_lens(model, pvals)
+
+   # Get angular-diameter distance ratios
+   adis = LensModelUtils.adis_current(model, pvals)
+
+   # Generate grid
+   FOV = model.observation.FOV
+   pixel_scale = model.observation.pixel_scale
+   x_grid, y_grid = Lenses.get_meshgrid(0.5 * FOV[1], 0.5 * FOV[2], pixel_scale)
+
+   # Calculate deformation at all image positions
+   ψ_all, αx_all, αy_all, A_all = LensModelUtils.lens_quantities(model, best_model)
+
+   # Identity tuple
+   I4 = (1.0, 0.0, 0.0, 1.0)
+
+   # Global RMS and image count variables
+   global_sq_dist = 0.0
+   global_count = 0
+
+   # Helper for column padding
+   col(txt, width) = rpad(string(txt), width)
+
+   # Print Header
+   # Table Header
+   header_line = "-"^72
+   knot_sep  = "             " * "-"^59
+   println(header_line)
+   println("| ", col("Source", 10), 
+          " | ", col("Knot", 10), 
+          " | ", col("Img", 6), 
+          " | ", col("Image Dist (arcsec)", 20), 
+          " | ", col("Knot RMS", 10), 
+          " |")
+   println(header_line)
+
+   # Calculate RMS for each image
+   sid = 1
+   kid = 1
+   for src in model.source_config.sources
+      # Get angular-diameter distance ratio for this source
+      adis_value = adis[sid]
+         
+      # Generate source id
+      src_id = Symbol(:src, sid)
+      src_knot = 0
+      for knot in src.knots
+         # Generate knot id
+         knot_id = Symbol(:knot, kid)
+
+         # Update knot counter
+         src_knot = src_knot + 1
+
+         # Knot positions and measurement errors
+         x  = knot.x
+         y  = knot.y
+         σx = knot.σx
+         σy = knot.σy
+         σθ = knot.σθ
+         
+         # Number of images for this knot
+         n = length(x)
+
+         # Deflection vector at the knot positions
+         αx = @. adis_value * αx_all[kid]
+         αy = @. adis_value * αy_all[kid]
+
+         # Deformation tensor at the knot positions
+         A = @. adis_value * A_all[kid]
+         for i in eachindex(A)
+            @. A[i] = I4[i] - A[i]
+         end
+
+         # Individual source positions using broadcasting
+         βx_ind = @. x - αx
+         βy_ind = @. y - αy
+
+         # Get weighted source position (Section 4.1 in https://arxiv.org/pdf/astro-ph/0102340)
+         βx_model, βy_model, _ = Likelihood._weighted_position(βx_ind, βy_ind, A, σx, σy, σθ, n)
+
+         # Get image positions
+         predicted_image = Lenses.get_image(best_model, x_grid, y_grid, adis_value, (βx_model, βy_model))
+
+         # Convert predicted to mutable arrays for iterative removal
+         pred_x = Float64[p[1] for p in predicted_image]
+         pred_y = Float64[p[2] for p in predicted_image]
+
+         # Knot counters
+         knot_sq_dist = 0.0
+         knot_count = 0
+
+         # Store distances to print after matching is done for the whole knot
+         results = []
+         
+         # Matching observed images to predicted images
+         for i in 1:n
+            if isempty(pred_x)
+               push!(results, "MISSING")
+               continue
+            end
+
+            # Calculate distances to all remaining candidates
+            dx = @. pred_x .- x[i]
+            dy = @. pred_y .- y[i]
+            dist_sq = @. dx^2 + dy^2
+
+            # Find the closest predicted image index
+            best_idx = argmin(dist_sq)
+
+            d2 = dist_sq[best_idx]
+            dist = sqrt(d2)
+
+            # Update global and knot totals
+            global_sq_dist += d2
+            global_count += 1
+            knot_sq_dist += d2
+            knot_count += 1
+
+            push!(results, round(dist, digits=6))
+
+            # Remove this candidate so it can't be matched twice
+            deleteat!(pred_x, best_idx)
+            deleteat!(pred_y, best_idx)
+         end
+         
+         # Calculate RMS for this specific knot
+         k_rms = knot_count > 0 ? round(sqrt(knot_sq_dist / knot_count), digits=6) : "N/A"
+
+         # Print image-by-image breakdown
+         for (i, d_val) in enumerate(results)
+            k_display = (i == 1) ? string(k_rms) : ""
+            println("| ", col("src$sid", 10), 
+                   " | ", col("knot$src_knot", 10), 
+                   " | ", col(i, 6), 
+                   " | ", col(d_val, 20), 
+                   " | ", col(k_display, 10), 
+                   " |"
+            )
+         end
+         println("-"^72)
+         kid = kid + 1
+      end
+      sid = sid + 1
+   end
+
+   final_rms = global_count > 0 ? sqrt(global_sq_dist / global_count) : 0.0
+   println("| GLOBAL TOTAL RMS: ", col(round(final_rms, digits=6), 50), " |")
+   println("-"^72)
+   
+   return nothing
+end
+
 
 end

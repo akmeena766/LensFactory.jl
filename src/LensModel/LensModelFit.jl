@@ -12,17 +12,21 @@ using Dates
 # --------------------------------------------------------------------------------------------------
 # LensFactory modules to use
 # --------------------------------------------------------------------------------------------------
+include("./NelderMead.jl")
+using .NelderMead
+
+include("./MH.jl")
+using .MH
+
+include("./AIES.jl")
+using .AIES
+
 using ..Constants
 using ..Lenses
 
 using ..LensModelIO
 using ..LensModelUtils
 using ..Likelihood
-
-using ..NelderMead
-
-using ..MH
-using ..AIES
 
 
 # --------------------------------------------------------------------------------------------------
