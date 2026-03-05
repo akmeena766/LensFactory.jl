@@ -641,8 +641,18 @@ function check_parity(model::ModelConfig, chains::Array{Float64, 3}, lls::Matrix
    if model.source_config.use_parity === false
       error("Parity was not enforced during modelling. Please set model.use_parity = true.")
    end
+
+   # Get the best parameters based on likelihood (lls)
+   best_θ, _, _ = get_best_parameters(lls, chains)
+
+   # Get list of parameters for the lens model
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+   
+   # Replace free parameter values by best-fit values
+   pvals = param_dict(model, best_θ, param_ref)
+
    # Get best-fit model
-   best_model = get_best_model(model, chains, lls)
+   best_model = build_lens(model, pvals)
 
    # Get angular-diameter distance ratios
    adis = adis_current(model, pvals)
@@ -724,8 +734,17 @@ function check_parity(model::ModelConfig, chains::Array{Float64, 3}, lls::Matrix
 end
 
 function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, lls::Matrix{Float64}; check_parity::Bool=false)
+   # Get the best parameters based on likelihood (lls)
+   best_θ, _, _ = get_best_parameters(lls, chains)
+
+   # Get list of parameters for the lens model
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+   
+   # Replace free parameter values by best-fit values
+   pvals = param_dict(model, best_θ, param_ref)
+
    # Get best-fit model
-   best_model = get_best_model(model, chains, lls)
+   best_model = build_lens(model, pvals)
 
    # Get angular-diameter distance ratios
    adis = adis_current(model, pvals)

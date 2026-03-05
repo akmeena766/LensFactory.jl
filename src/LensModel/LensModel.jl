@@ -309,7 +309,7 @@ function save_best_fit(file_name::String;
    close(data)
 
    # Get best-fit model
-   best_model = get_best_model(model, chains, chi2)
+   best_model = LensModelUtils.get_best_model(model, chains, chi2)
 
    # Generate grid
    FOV = model.observation.FOV
