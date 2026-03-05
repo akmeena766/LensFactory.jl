@@ -75,7 +75,7 @@ parameters are determined by the minimum chi2 in `chi2`.
 - `chains::Array{Float64, 3}`: The MCMC chains containing the sampled parameter values. The 
    dimensions should be (n_steps, n_chains, n_parameters).
 - `chi2::Matrix{Float64}`: The chi2 values corresponding to each sample in the MCMC chains. The 
-dimensions should be (n_steps, n_steps).
+   dimensions should be (n_steps, n_steps).
 
 # Returns
 - `best_model`: The best-fit lens model constructed using the best-fit parameters.
