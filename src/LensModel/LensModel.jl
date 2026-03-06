@@ -476,7 +476,7 @@ function check_parity(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matri
    end
 
    # Get the best parameters based on chi2
-   best_θ, _, _ = get_best_parameters(chi2, chains)
+   best_θ, _, _ = LensModelUtils.get_best_parameters(chi2, chains)
 
    # Get list of parameters for the lens model
    param_ref = Dict(p.key => p.refer for p in model.parameters)
@@ -591,8 +591,8 @@ print a warning if any parity does not match.
 - Nothing (prints a table to the console)
 """
 function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64}; check_parity::Bool=false)
-   # Get the best parameters based on likelihood (lls)
-   best_θ, _, _ = LensModelUtils.get_best_parameters(chi2, chains)
+   # Get the best parameters based on minimum chi2
+   best_θ, _ = LensModelUtils.get_best_parameters(chi2, chains)
 
    # Get list of parameters for the lens model
    param_ref = Dict(p.key => p.refer for p in model.parameters)

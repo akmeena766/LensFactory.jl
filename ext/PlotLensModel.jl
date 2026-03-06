@@ -37,7 +37,7 @@ function LensFactory.LensModel.plot_corner(chains, lls; param_names=nothing, bur
    n_steps, n_chains, n_params = size(chains)
    
    # Get best-fit parameter and errors
-   best_θ, lower_err, upper_err, _, _ = LensFactory.LensModel.get_best_fit_with_errors(chains, lls; burn_in=burn_in, thinning=thinning)
+   best_θ, lower_err, upper_err, _ = LensFactory.LensModel.LensModelUtils.get_best_parameters_with_errors(chains, lls; burn_in=burn_in, thinning=thinning)
 
    # Remove Burn-in
    start_idx = Int(floor(n_steps * burn_in)) + 1

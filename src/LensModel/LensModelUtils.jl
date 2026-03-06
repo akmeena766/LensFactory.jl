@@ -27,8 +27,8 @@ export adis_current
 export build_lens
 export lens_quantities
 export free_parameter_names
-export get_best_fit
-export get_best_fit_with_errors
+export get_best_parameters
+export get_best_parameters_with_errors
 export check_parity
 export get_best_fit_rms
 export save_best_fit
@@ -325,6 +325,7 @@ end
 # Get best-fit parameters from the full optimization/MCMC results
 # --------------------------------------------------------------------------------------------------
 function get_best_parameters(results, chains=nothing)
+   # Initialize outputs
    best_θ = nothing
    best_chi2 = -Inf
 
@@ -345,8 +346,7 @@ function get_best_parameters(results, chains=nothing)
       best_chi2 = results[step, chain_num]
    else
       error("Please provide either Optimization results or both MCMC ll_history and chains.")
-    end
-
+   end
    return best_θ, best_chi2
 end
 
