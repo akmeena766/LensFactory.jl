@@ -13,13 +13,13 @@ export nmsmax
 
 # Adaption of the original *MATLAB* source by Nick Higham to *Julia*.
 
-# # Output arguments:
+# Output arguments:
 #       `x`    = vector yielding largest function value found,
 #       `fmax` = function value at `x`,
 #       `nf`   = number of function evaluations,
 #       `its`  = number of iterations required.
 
-# # Parameters:
+# Parameters:
 # The iteration is terminated when either
 #  - the relative size of the simplex is <= `tol`
 #    (default `1e-3`),
@@ -33,7 +33,7 @@ export nmsmax
 #  - `initial_simplex = 1`: right-angled simplex.
 # Progress of the iteration is not shown if `trace = true` (default `false`).
 
-# # References:
+# References:
 #  - N. J. Higham. The Matrix Computation Toolbox.
 #    http://www.ma.man.ac.uk/~higham/mctoolbox.
 #  - N. J. Higham, Optimization by direct search in matrix computations,
