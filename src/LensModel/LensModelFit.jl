@@ -32,7 +32,6 @@ using ..Likelihood
 # --------------------------------------------------------------------------------------------------
 # Functions to export
 # --------------------------------------------------------------------------------------------------
-export fit_model
 
 
 # --------------------------------------------------------------------------------------------------
@@ -301,20 +300,7 @@ end
 # --------------------------------------------------------------------------------------------------
 # Fit model
 # --------------------------------------------------------------------------------------------------
-"""
-    fit_model(model::ModelConfig; save::Bool=true, file_name::Union{String, Nothing}=nothing)
-Performs lens model fitting using the given `model`.
-# Arguments:
-- `model::ModelConfig`: The lens model configuration containing the observation, lens, source, and sampler details.
-- `save::Bool=true`: Whether to save the MCMC results to a JLD2 file (default: true)
-- `file_name::Union{String, Nothing}=nothing`: The name of the JLD2 file to save results to. If no 
-   name is provided then a name will be generated based on the lens name and current date (i.e., 
-   LensName_DDMMYYYY.jld2).
-# Returns:
-- `chains::Array{Float64, 3}`: The MCMC chains containing sampled parameter values
-- `chi2::Matrix{Float64}`: The chi-squared values corresponding to each sample in the chains
-"""
-function fit_model(model::ModelConfig; save::Bool=true, file_name::Union{String, Nothing}=nothing)
+function _fit_model(model::ModelConfig; save::Bool=true, file_name::Union{String, Nothing}=nothing)
    # Extract sampler
    sampler = model.sampler
    verbose = sampler.verbose
