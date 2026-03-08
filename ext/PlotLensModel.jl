@@ -66,7 +66,7 @@ function LensFactory.LensModel.plot_corner(chains, lls; param_names=nothing, bur
                   titlesize = 18,
                   xticklabelrotation = π/4)
          
-         set_plotKws!(ax)
+         LensFactory.Lenses.set_plotKws!(ax)
          
          if i == j
                # Diagonal: 1D Density

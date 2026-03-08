@@ -1,3 +1,25 @@
+function LensFactory.Lenses.set_plotKws!(ax)
+   ax.xtickalign = 1
+   ax.xticksmirrored = true
+   ax.ytickalign = 1
+   ax.yticksmirrored = true
+
+   ax.xminorticksvisible = true
+   ax.xminortickalign = 1
+   ax.xminorticksize = 6
+   ax.xminorgridwidth = 2
+   ax.yminorticksvisible = true
+   ax.yminortickalign = 1
+   ax.yminorticksize = 6
+   ax.yminorgridwidth = 2
+
+   ax.xticksize = 10
+   ax.xtickwidth = 2
+   ax.yticksize = 10
+   ax.ytickwidth = 2
+end
+
+
 """
     LensFactory.Lenses.plot_sky(θx::Matrix{<:RV}, θy::Matrix{<:RV})
 This function initializes a blank sky plot with specified axis labels and limits. The user can then 
@@ -24,7 +46,7 @@ function LensFactory.Lenses.plot_sky(θx::Matrix{<:RV}, θy::Matrix{<:RV}; figur
    ax = Axis(fig[1, 1])
 
    # Set plot keywords
-   set_plotKws!(ax)
+   LensFactory.Lenses.set_plotKws!(ax)
 
    # Set axis labels and limits
    ax.xlabel = L"\theta_1 \text{(in arcseconds)}"
@@ -111,7 +133,7 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Mat
 
    
       # Set plot keywords
-      set_plotKws!(ax1)
+      LensFactory.Lenses.set_plotKws!(ax1)
 
       # Set axis labels and limits
       ax1.xlabel = L"\theta_1~\text{(in arcseconds)}"
@@ -152,7 +174,7 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Mat
       end
 
       # Set plot keywords
-      set_plotKws!(ax2)
+      LensFactory.Lenses.set_plotKws!(ax2)
 
       # Set axis labels and limits
       ax2.xlabel = L"\theta_1~\text{(in arcseconds)}"
@@ -219,7 +241,7 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Mat
 
 
       # Set plot keywords
-      set_plotKws!(ax)
+      LensFactory.Lenses.set_plotKws!(ax)
 
       # Set axis labels and limits
       ax.xlabel = L"\theta_1~\text{(in arcseconds)}"
@@ -318,7 +340,7 @@ function LensFactory.Lenses.plot_surface_density(lens::Lenses.AbstractLens, θx:
    end
 
    # Set plot keywords
-   set_plotKws!(ax)
+   LensFactory.Lenses.set_plotKws!(ax)
 
    # Set axis labels and limits
    ax.xlabel = L"\theta_1 \text{(in arcseconds)}"
@@ -386,7 +408,7 @@ function LensFactory.Lenses.plot_magnification_map(lens::Lenses.AbstractLens, θ
    colgap!(fig.layout, 5)
 
    # Set plot keywords
-   set_plotKws!(ax)
+   LensFactory.Lenses.set_plotKws!(ax)
 
    # Set axis labels and limits
    ax.xlabel = L"\theta_1 \text{(in arcseconds)}"
@@ -466,7 +488,7 @@ function LensFactory.Lenses.plot_magnification_profile(lens::Lenses.AbstractLens
    lines!(ax, μ_bins, μ_area; plot_kws...)
 
    # Set plot keywords
-   set_plotKws!(ax)
+   LensFactory.Lenses.set_plotKws!(ax)
 
    # Set axis labels and limits
    ax.xlabel = L"|\mu|"

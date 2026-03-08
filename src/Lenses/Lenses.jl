@@ -64,12 +64,14 @@ export get_einstein_angle
 # Plotting functions (see ../../ext folder for functions)
 # --------------------------------------------------------------------------------------------------
 export plot_sky
+export set_plotKws!
 export plot_image_plane
 export plot_surface_density
 export plot_magnification_map
 export plot_magnification_profile
 
 function plot_sky end
+function set_plotKws! end
 function plot_image_plane end
 function plot_surface_density end
 function plot_magnification_map end

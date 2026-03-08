@@ -69,7 +69,7 @@ function LensFactory.MultiPlane.plot_image_plane(cosmology::Cosmology.AbstractCo
       end
 
       # Set plot keywords
-      set_plotKws!(ax1)
+      LensFactory.Lenses.set_plotKws!(ax1)
 
       # Set axis labels and limits
       ax1.xlabel = L"\theta_1~\text{(in arcseconds)}"
@@ -105,7 +105,7 @@ function LensFactory.MultiPlane.plot_image_plane(cosmology::Cosmology.AbstractCo
       end
 
       # Set plot keywords
-      set_plotKws!(ax2)
+      LensFactory.Lenses.set_plotKws!(ax2)
 
       # Set axis labels and limits
       ax2.xlabel = L"\theta_1~\text{(in arcseconds)}"
@@ -161,7 +161,7 @@ function LensFactory.MultiPlane.plot_image_plane(cosmology::Cosmology.AbstractCo
          end
       end
       # Set plot keywords
-      set_plotKws!(ax)
+      LensFactory.Lenses.set_plotKws!(ax)
 
       # Set axis labels and limits
       ax.xlabel = L"\theta_1~\text{(in arcseconds)}"
