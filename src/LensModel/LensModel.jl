@@ -122,7 +122,7 @@ parameters are determined by the minimum chi2 in `chi2`.
 """
 function get_best_model(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64})
    # Get the best parameters based on likelihood (lls)
-   best_θ, _, _ = LensModelUtils.get_best_parameters(chi2, chains)
+   best_θ, _ = LensModelUtils.get_best_parameters(chi2, chains)
 
    # Get list of parameters for the lens model
    param_ref = Dict(p.key => p.refer for p in model.parameters)
@@ -476,7 +476,7 @@ function check_parity(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matri
    end
 
    # Get the best parameters based on chi2
-   best_θ, _, _ = LensModelUtils.get_best_parameters(chi2, chains)
+   best_θ, _ = LensModelUtils.get_best_parameters(chi2, chains)
 
    # Get list of parameters for the lens model
    param_ref = Dict(p.key => p.refer for p in model.parameters)
