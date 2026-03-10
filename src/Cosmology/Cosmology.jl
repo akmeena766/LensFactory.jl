@@ -327,7 +327,7 @@ end
 
 """
     comoving_distance_transverse(cosmo::AbstractCosmology, z1::RV, z2::RV) --> RV
-Calculate the comoving radial distance ``(D_M)`` between, ``z_1`` and ``z_2`` in ``{\\rm \\mathbf{meters}}``,
+Calculate the comoving transverse distance ``(D_M)`` between, ``z_1`` and ``z_2`` in ``{\\rm \\mathbf{meters}}``,
 ```math
 D_M = \\begin{cases} 
 D_H \\frac{1}{\\sqrt{\\Omega_k}}   \\sinh \\left[ \\sqrt{\\Omega_k} \\:   D_C / D_H \\right], & \\text{if } \\Omega_k > 0, \\\\
