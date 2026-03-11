@@ -21,6 +21,7 @@ Lenses.get_potential
 Lenses.get_deflection
 Lenses.get_jacobian
 Lenses.get_time_delay
+Lenses.get_kappa_gamma
 Lenses.get_magnification_image
 Lenses.get_magnification_source
 Lenses.get_image

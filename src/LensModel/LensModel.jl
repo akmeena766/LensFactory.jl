@@ -121,7 +121,7 @@ parameters are determined by the minimum chi2 in `chi2`.
 - `best_model`: The best-fit lens model constructed using the best-fit parameters.
 """
 function get_best_model(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64})
-   # Get the best parameters based on likelihood (lls)
+   # Get the best parameters based on minimum chi2
    best_θ, _ = LensModelUtils.get_best_parameters(chi2, chains)
 
    # Get list of parameters for the lens model
@@ -511,7 +511,7 @@ function check_parity(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matri
    # Identity tuple
    I4 = (1.0, 0.0, 0.0, 1.0)
 
-   # Calculate log-likelihood for each source
+   # Calculate chi2 for each source
    sid = 1
    kid = 1
    for src in model.source_config.sources
@@ -537,7 +537,7 @@ function check_parity(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matri
          # Model parity of knot images
          parity_model = @. Int64(sign(A[1] * A[4] - A[2] * A[3]))
 
-         # Parity log-likelihood
+         # Parity chi2
          for i in eachindex(parity_input)
             # Check if parity is correct
             status = (parity_input[i] == parity_model[i]) ? "✅" : "❌"

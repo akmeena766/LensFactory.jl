@@ -79,7 +79,7 @@ function plot_magnification_profile end
 
 
 """
-    get_meshgrid(θx::RV, θy::RV, dθ::RV) --> Tuple{Matrix{Float64}, Matrix{Float64}}
+    get_meshgrid(θx::RV, θy::RV, dθ::RV)
 Generate a meshgrid of coordinates on which various quantities can be evaluated. At present,
 this function only generates square pixels. In future if the need arises, it can be extended 
 to generate rectangular pixels as well.
@@ -120,7 +120,7 @@ end
 
 
 """
-    get_critical_density(D_d::Float64, D_ds::Float64, D_s::Float64s; unit::Symbol=:kg_m2) --> Float64s
+    get_critical_density(D_d::Float64, D_ds::Float64, D_s::Float64; unit::Symbol=:kg_m2)
 Calculate the critical surface density,
 ```math
 Σ_{\\rm cr} = \\frac{c^2}{4 π {\\rm G}} \\frac{D_s}{D_d D_{ds}}.
@@ -158,7 +158,7 @@ end
 
 
 """
-    get_potential(lens::AbstractLens, θx::T, θy::T) where T <: RV --> RV
+    get_potential(lens::AbstractLens, θx::T, θy::T) where T <: RV
 """
 function get_potential(lens::AbstractLens, θx::T, θy::T) where T <: RV
    # Promote the input coordinates from Int64 to Float64
@@ -182,7 +182,7 @@ function get_potential(lens::AbstractLens, θx::T, θy::T) where T <: RV
 end
 
 """
-    get_potential(lens::AbstractLens, θx::T, θy::T) where T <: ROA --> ROA
+    get_potential(lens::AbstractLens, θx::T, θy::T) where T <: ROA
 Calculate lensing potential at the given angular coordinates for the given lens model,
 ```math
 ψ(\\pmb{θ}) = \\frac{4{\\rm G}}{\\rm c^2} \\frac{1}{D_d} \\int d^2 \\pmb{θ}' \\, Σ(\\pmb{θ}') \\, \\ln\\left(|\\pmb{θ} - \\pmb{θ'}|\\right).
@@ -224,7 +224,7 @@ end
 
 
 """
-    get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: RV --> Tuple{RV, RV}
+    get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: RV
 """
 function get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: RV
    # Promote the input coordinates from Int64 to Float64
@@ -250,7 +250,7 @@ function get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: RV
 end
 
 """
-    get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: ROA --> Tuple{ROA, ROA}
+    get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: ROA
 Calculate (vector) deflection angle at the given angular coordinate(s) for a given lens model,
 ```math
 \\pmb{α}(\\pmb{θ}) = \\pmb{∇} ψ(\\pmb{θ}) 
@@ -295,7 +295,7 @@ end
 
 
 """
-    get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: RV --> Tuple{RV, RV, RV}
+    get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: RV
 """
 function get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: RV
    # Promote the input coordinates from Int64 to Float64
@@ -324,7 +324,7 @@ function get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: RV
 end
 
 """
-    get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: ROA --> Tuple{ROA, ROA, ROA}
+    get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: ROA
 Calculate jacobian (i.e., deformation tensor) of the lens mapping for a given lens model,
 ```math
 \\mathcal{A}(\\pmb{θ}) = 
@@ -382,7 +382,7 @@ end
 
 
 """
-    get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::RV, D_d::RV, β::NTuple{2, RV}) where T <: RV --> RV
+    get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::RV, D_d::RV, β::NTuple{2, RV}) where T <: RV
 """
 function get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::RV, D_d::RV, β::NTuple{2, RV}) where T <: RV
    # Constant multiplicative factor
@@ -397,7 +397,7 @@ function get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::
 end
 
 """
-    get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::RV, D_d::RV, β::NTuple{2, RV}) where T <: ROA --> ROA
+    get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::RV, D_d::RV, β::NTuple{2, RV}) where T <: ROA
 Calculate time delay for a given lens model and source position. The corresponding expression is given as,
 ```math
 t_d(\\pmb{θ}; \\pmb{β}) = \\frac{1+z_l}{\\rm c} \\frac{D_d D_s}{D_{ds}} \\theta_0^2
@@ -427,9 +427,61 @@ function get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::
    return @. constant_factor * (0.5 * ((θx - β[1])^2 + (θy - β[2])^2) - adis * ϕ_potential)
 end
 
+"""
+    get_kappa_gamma(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: RV
+"""
+function get_kappa_gamma(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: RV
+   # Get the jacobian components
+   ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
+
+   # Scale the deformation tensor
+   ψxx = adis * ψxx
+   ψyy = adis * ψyy
+   ψxy = adis * ψxy
+
+   # Convergence and shear components
+   κ  = 0.5 * (ψxx + ψyy)
+   γ1 = 0.5 * (ψxx - ψyy)
+   γ2 = ψxy
+
+   return κ, γ1, γ2
+end
 
 """
-    get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: RV --> RV
+    get_kappa_gamma(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: ROA
+Calculate convergence and shear components at the given angular coordinate(s) for a given lens model.
+
+# Arguments
+   - `lens::AbstractLens`: Lens model.
+   - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+   - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+   - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
+
+# Returns
+   - `κ`: Convergence at the given angular coordinate(s).
+   - `γ1`: First component of shear at the given angular coordinate(s).
+   - `γ2`: Second component of shear at the given angular coordinate(s).
+"""
+function get_kappa_gamma(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: ROA
+   # Get the jacobian components
+   ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
+
+   # Scale the deformation tensor
+   @. ψxx = adis * ψxx
+   @. ψyy = adis * ψyy
+   @. ψxy = adis * ψxy
+
+   # Convergence and shear components
+   κ  = 0.5 .* (ψxx .+ ψyy)
+   γ1 = 0.5 .* (ψxx .- ψyy)
+   γ2 = ψxy
+
+   return κ, γ1, γ2
+end
+
+
+"""
+    get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: RV
 """
 function get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: RV
    # Get the jacobian components
@@ -444,8 +496,9 @@ function get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float
    return 1.0 / (1.0 + ψxx * ψyy - ψxx - ψyy - ψxy^2)
 end
 
+
 """
-    get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: ROA --> ROA
+    get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: ROA
 Calculate signed magnification at the given angular coordinate(s) for a given lens model,
 ```math
 \\mu(\\pmb{θ}) = \\frac{1}{det\\left[ \\mathbb{I} - a_{\\rm dis} \\, \\mathcal{A} \\right]},
@@ -476,7 +529,7 @@ end
 
 
 """
-    get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Float64; rays_per_pixel::Int64=1) where T <: Matrix{<:RV} --> Matrix{RV}
+    get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Float64; rays_per_pixel::Int64=1) where T <: Matrix{<:RV}
 Calculates the magnification map in source plane using inverse ray shooting (IRS) for a given lens 
 model. The number of average rays per pixel can be specified using the `rays_per_pixel` keyword argument. 
 This function is not optimized for speed and is only intended to visualize the magnification map.
@@ -539,7 +592,7 @@ end
 
 
 """
-    get_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64, β::NTuple{2, RV}) --> Vector{NTuple{2, RV}}
+    get_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64, β::NTuple{2, RV})
 """
 function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::NTuple{2, RV}) where T <: Matrix{<:RV}
    # Get the potential gradient
@@ -566,7 +619,7 @@ function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::NTuple
 end
 
 """
-    get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::T) where T <: Matrix{<:RV} --> Matrix{<:RV}
+    get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::T) where T <: Matrix{<:RV}
 Calculate image positions for a given lens model and source position. To get the image positions,
 this implementation finds the intersection points of contours corresponding to,
 ```math
@@ -625,7 +678,7 @@ function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::T) whe
 end
 
 """
-    get_critical_curve(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV} --> Tuple{Vector{Vector{Vector{Float64}}}, Vector{Vector{Vector{Float64}}}}
+    get_critical_curve(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
 Calculate critical curves for a given lens model. This function essentially runs marching squares
 algorithm to find the zero eigenvalue contours.
 
@@ -702,7 +755,7 @@ end
 
 
 """
-    get_critical_area(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV} --> Float64
+    get_critical_area(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
 Calculate the total angular area enclosed by tangential critical curve(s). The function runs shoelace
 algorithm to calculate the area.
 
@@ -729,7 +782,7 @@ end
 
 
 """
-    get_einstein_angle(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV} --> Float64
+    get_einstein_angle(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
 Calculate the Einstein radius (i.e., ``θ_E``) for an arbitrary lens model, which is defined as,
 ```math
 θ_E = \\sqrt{\\frac{A_{\\rm critical}}{π}},
@@ -751,7 +804,7 @@ end
 
 
 """
-    shear_cartesian2polar(γ1::T, γ2::T) where T <: RV --> Tuple{Float64, Float64}
+    shear_cartesian2polar(γ1::T, γ2::T) where T <: RV
 Converts the Cartesian components of the shear (i.e., ``γ_1`` and ``γ_2``) to polar components
 (i.e., ``γ`` and ``φ``) using the relations,
 ```math
@@ -775,7 +828,7 @@ end
 
 
 """
-    shear_polar2cartesian(γ::T, phi::T) where T <: RV --> Tuple{Float64, Float64}
+    shear_polar2cartesian(γ::T, phi::T) where T <: RV
 Converts the polar components of the shear (i.e., ``γ`` and ``φ``) to Cartesian components
 (i.e., ``γ_1`` and ``γ_2``) using the relations,
 ```math
@@ -799,7 +852,7 @@ end
 
 
 """
-    ellipticity_cartesian2polar(e1::T, e2::T) where T <: RV --> Tuple{Float64, Float64}
+    ellipticity_cartesian2polar(e1::T, e2::T) where T <: RV
 Converts the Cartesian components of the ellipticity (i.e., ``e_1`` and ``e_2``) to polar components
 (i.e., ``e`` and ``φ``) using the relations,
 ```math
@@ -823,7 +876,7 @@ end
 
 
 """
-    ellipticity_polar2cartesian(e::T, phi::T) where T <: RV --> Tuple{Float64, Float64}
+    ellipticity_polar2cartesian(e::T, phi::T) where T <: RV
 Converts the polar components of the ellipticity (i.e., ``e`` and ``φ``) to Cartesian components
 (i.e., ``e_1`` and ``e_2``) using the relations,
 ```math

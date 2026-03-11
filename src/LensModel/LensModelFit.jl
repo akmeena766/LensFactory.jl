@@ -12,8 +12,8 @@ using Dates
 # --------------------------------------------------------------------------------------------------
 # LensFactory modules to use
 # --------------------------------------------------------------------------------------------------
-include("./NelderMead.jl")
-using .NelderMead
+include("./NM.jl")
+using .NM
 
 include("./MH.jl")
 using .MH
@@ -51,15 +51,15 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
    ψ_all, αx_all, αy_all, A_all = LensModelUtils.lens_quantities(model, lens_model)
 
    # Calculate position likelihood
-   pos_ll = Likelihood.chi2_position(model, adis, αx_all, αy_all, A_all)
+   pos_chi2 = Likelihood.chi2_position(model, adis, αx_all, αy_all, A_all)
 
    # Calculate parity likelihood
-   par_ll = 0.0
+   par_chi2 = 0.0
    if model.source_config.use_parity
-      par_ll = Likelihood.chi2_parity(model, adis, A_all)
+      par_chi2 = Likelihood.chi2_parity(model, adis, A_all)
    end
-   tot_ll = pos_ll + par_ll
-   return tot_ll
+   tot_chi2 = pos_chi2 + par_chi2
+   return tot_chi2
 end
 
 
@@ -85,10 +85,10 @@ function log_posterior(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{
    end
 
    # Calculate log-likelihood
-   ll = log_likelihood(model, θ, param_ref)
+   chi2 = log_likelihood(model, θ, param_ref)
    
    # Return log-posterior
-   return lp + ll
+   return lp + chi2
 end
 
 
@@ -103,10 +103,10 @@ function objective(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tupl
    end
 
    # Calculate log-likelihood
-   ll = log_likelihood(model, θ, param_ref)
+   chi2 = log_likelihood(model, θ, param_ref)
    
    # Return negative log-posterior
-   return lp + ll
+   return lp + chi2
 end
 
 

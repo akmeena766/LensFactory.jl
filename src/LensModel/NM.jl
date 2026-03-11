@@ -1,4 +1,4 @@
-module NelderMead
+module NM
 
 
 export nmsmax

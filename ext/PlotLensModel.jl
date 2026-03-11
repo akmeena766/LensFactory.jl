@@ -17,12 +17,12 @@ PARAM_NAME = Dict(:lens1 => "L1", :lens2 => "L2", :lens3 => "L3", :lens4 => "L4"
 
 
 """
-    LensFactory.LensModel.plot_corner(chains, lls; param_names=nothing, burn_in=0.3, thinning=100)
-Generates a corner plot for the given MCMC chains and log-likelihoods.
+    LensFactory.LensModel.plot_corner(chains, chi2; param_names=nothing, burn_in=0.3, thinning=100)
+Generates a corner plot for the given MCMC chains and chi-squared values.
 
 # Arguments
 - `chains`: MCMC chains of shape (n_steps, n_chains, n_params).
-- `lls`: Log-likelihoods corresponding to the chains, of shape (n_steps, n_chains).
+- `chi2`: Chi-squared values corresponding to the chains, of shape (n_steps, n_chains).
 
 # Keyword arguments
 - `param_names=nothing`: Optional list of parameter names for labeling the axes.
@@ -32,12 +32,12 @@ Generates a corner plot for the given MCMC chains and log-likelihoods.
 # Returns
 - A Makie figure object containing the corner plot.
 """
-function LensFactory.LensModel.plot_corner(chains, lls; param_names=nothing, burn_in=0.3, thinning=100)
+function LensFactory.LensModel.plot_corner(chains, chi2; param_names=nothing, burn_in=0.3, thinning=100)
    # Get chain details 
    n_steps, n_chains, n_params = size(chains)
    
    # Get best-fit parameter and errors
-   best_θ, lower_err, upper_err, _ = LensFactory.LensModel.LensModelUtils.get_best_parameters_with_errors(chains, lls; burn_in=burn_in, thinning=thinning)
+   best_θ, lower_err, upper_err, _ = LensFactory.LensModel.LensModelUtils.get_best_parameters_with_errors(chains, chi2; burn_in=burn_in, thinning=thinning)
 
    # Remove Burn-in
    start_idx = Int(floor(n_steps * burn_in)) + 1
@@ -156,20 +156,28 @@ function LensFactory.LensModel.plot_trace(chains; param_names=nothing, burn_in=0
 end
 
 """
-    LensFactory.LensModel.plot_best_model(θx, θy, model, chains, lls)
+    LensFactory.LensModel.plot_best_model(θx, θy, model, chains, chi2)
 Generates a plot comparing the observed image positions with the predicted image positions from the best-fit lens model.
 
 # Arguments
 - `model`: The lens model configuration.
 - `chains`: MCMC chains of shape (n_steps, n_chains, n_params).
-- `lls`: Log-likelihoods corresponding to the chains, of shape (n_steps, n_chains).
+- `chi2`: Chi-squared values corresponding to the chains, of shape (n_steps, n_chains).
 
 # Returns
 - A Makie figure object containing the comparison plot.
 """
-function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig, chains::Array{Float64, 3}, lls::Matrix{Float64})
-   # Get best-fit model
-   best_model = LensModel.get_best_model(model, chains, lls)
+function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64})
+   # Get the best parameters based on minimum chi2
+   best_θ, _ = LensFactory.LensModel.LensModelUtils.get_best_parameters(chi2, chains)
+
+   # Get list of parameters for the lens model
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+   
+   # Replace free parameter values by best-fit values
+   pvals = LensFactory.LensModel.LensModelUtils.param_dict(model, best_θ, param_ref)
+   
+   best_model = LensFactory.LensModel.LensModelUtils.build_lens(model, pvals)
 
    # Generate grid
    FOV = model.observation.FOV
