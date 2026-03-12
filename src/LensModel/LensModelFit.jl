@@ -184,14 +184,14 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
          "| " * rpad("Total", 8) * 
          "| " * rpad("Convergence (%)", 12) * 
          "| " * rpad("Stability (%)", 12) * 
-         "| " * rpad("Best -χ²", w) * 
+         "| " * rpad("Best χ²", w) * 
          "|"
       
       val_r = 
          "| " * rpad(total_runs, 8) * 
          "| " * rpad("$(round(conv_rate, digits=1))%", 15) * 
          "| " * rpad("$(round(stability_rate, digits=1))%", 13) * 
-         "| " * rpad(round(best_val, digits=4), w) * 
+         "| " * rpad(round(-best_val, digits=4), w) * 
          "|"
    
       line = "-" ^ length(col_h)

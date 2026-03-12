@@ -28,11 +28,18 @@ Generates a corner plot for the given MCMC chains and chi-squared values.
 - `param_names=nothing`: Optional list of parameter names for labeling the axes.
 - `burn_in=0.3`: Fraction of the initial samples to discard as burn-in.
 - `thinning=100`: Interval for thinning the chains to reduce autocorrelation.
+- `save_plot=true`: Whether to save the plot as "corner.png".
+   - `plot_name="./corner.png"`: Filename for saving the plot.
+   - `resolution::Int=2`: Resolution for saving the plot.
 
 # Returns
 - A Makie figure object containing the corner plot.
 """
-function LensFactory.LensModel.plot_corner(chains, chi2; param_names=nothing, burn_in=0.3, thinning=100)
+function LensFactory.LensModel.plot_corner(chains, chi2; 
+                              param_names=nothing, 
+                              burn_in=0.3, 
+                              thinning=100, 
+                              save_plot=true, plot_name::String="./corner.png", resolution::Int=2)
    # Get chain details 
    n_steps, n_chains, n_params = size(chains)
    
@@ -94,7 +101,9 @@ function LensFactory.LensModel.plot_corner(chains, chi2; param_names=nothing, bu
       end
    end
    
-   save("./corner.png", fig)
+   if save_plot
+      save(plot_name, fig, px_per_unit=resolution)
+   end
    return fig
 end
 
