@@ -14,7 +14,7 @@ using ..LensModelIO
 # Functions to export
 # --------------------------------------------------------------------------------------------------
 export chi2_position
-export chi2_fluxratio
+export chi2_flux
 export chi2_timedelay
 export chi2_parity
 
@@ -170,7 +170,7 @@ function chi2_position(model::ModelConfig, adis::Vector{Float64}, αx_all::Vecto
       end
       sid = sid + 1
    end
-   return chi2   
+   return chi2
 end
 
 
@@ -218,8 +218,52 @@ function chi2_parity(model::ModelConfig, adis::Vector{Float64}, A_all::Vector{NT
 end
 
 
-function chi2_fluxratio()
-   return 0.0
+function chi2_flux(model::ModelConfig, adis::Vector{Float64}, A_all::Vector{NTuple{4, Vector{Float64}}})
+   # Initialize chi2 for parity
+   χ² = 0.0
+
+   # Identity tuple
+   I4 = (1.0, 0.0, 0.0, 1.0)
+
+   # Calculate chi2 for position
+   sid = 1
+   kid = 1
+   for src in model.source_config.sources
+      # Distance ratio for this source
+      adis_value = adis[sid]
+      
+      for knot in src.knots
+         # Knot positions and measurement errors
+         m  = knot.m
+         σm = knot.σm
+         n = length(m)
+
+         # Deformation tensor at the knot positions
+         A = @. adis_value * A_all[kid]
+         for i in eachindex(A)
+            @. A[i] = I4[i] - A[i]
+         end
+
+         # Magnification at the knot positions (with upper limit to avoid numerical issues)
+         μ = min.( @. abs(1.0 / (A[1] * A[4] - A[2] * A[3])), 1.0E3)
+
+         # Best-fit source magnitude using weighted average
+         m_src = 0.0
+         for i in 1:n
+            m_src = m_src + (m[i] + 2.5 * log10(μ[i])) / σm[i]^2
+         end
+         m_src = m_src / sum(1 / σm[i]^2 for i in 1:n)
+
+         # Calculate knot chi2 for absolute magnitude
+         for i in 1:n
+            χ² = χ² - (m[i] + 2.5 * log10(μ[i]) - m_src)^2 / σm[i]^2
+         end
+
+         kid = kid + 1
+      end
+      sid = sid + 1
+   end
+   return χ²
 end
 
 function chi2_timedelay()
