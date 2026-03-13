@@ -9,6 +9,7 @@ module Likelihood
 # LensFactory modules to use
 # --------------------------------------------------------------------------------------------------
 using ..LensModelIO
+using ..Lenses
 
 # --------------------------------------------------------------------------------------------------
 # Functions to export
@@ -131,9 +132,7 @@ function chi2_position(model::ModelConfig, adis::Vector{Float64}, αx_all::Vecto
          y  = knot.y
          σx = knot.σx
          σy = knot.σy
-         σθ = knot.σθ
-         
-         # Number of images for this knot
+         σθ = knot.σθ         
          n = length(x)
          
          # Deflection vector at the knot positions
@@ -233,7 +232,7 @@ function chi2_flux(model::ModelConfig, adis::Vector{Float64}, A_all::Vector{NTup
       adis_value = adis[sid]
       
       for knot in src.knots
-         # Knot positions and measurement errors
+         # Knot magnitude values and errors
          m  = knot.m
          σm = knot.σm
          n = length(m)
@@ -266,7 +265,51 @@ function chi2_flux(model::ModelConfig, adis::Vector{Float64}, A_all::Vector{NTup
    return χ²
 end
 
-function chi2_timedelay()
+function chi2_timedelay(model::ModelConfig, lens_model::AbstractLens, adis::Vector{Float64}, αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, A_all::Vector{NTuple{4, Vector{Float64}}})
+   # Initialize chi2 for parity
+   chi2 = 0.0
+
+   # Identity tuple
+   I4 = (1.0, 0.0, 0.0, 1.0)
+
+
+   # Calculate chi2 for position
+   sid = 1
+   kid = 1
+   for src in model.source_config.sources
+      # Distance ratio for this source
+      adis_value = adis[sid]
+   
+      for knot in src.knots
+         # Knot positions values and errors
+         x  = knot.x
+         y  = knot.y
+
+         # Knot time delay values and errors
+         Δt_obs  = knot.td
+         σ_Δt = knot.σ_td
+         n = length(Δt_obs)
+
+         # Deflection vector at the knot positions
+         αx = @. adis_value * αx_all[kid]
+         αy = @. adis_value * αy_all[kid]
+
+         # Deformation tensor at the knot positions
+         A = @. adis_value * A_all[kid]
+         for i in eachindex(A)
+            @. A[i] = I4[i] - A[i]
+         end
+
+         # Individual source positions using broadcasting
+         βx_ind = @. x - αx
+         βy_ind = @. y - αy
+
+         # Get weighted source position (Section 4.1 in https://arxiv.org/pdf/astro-ph/0102340)
+         βx_model, βy_model, _ = _weighted_position(βx_ind, βy_ind, A, σx, σy, σθ, n)
+
+
+      end
+   end
    return 0.0
 end
 
