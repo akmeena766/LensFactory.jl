@@ -54,11 +54,11 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
    pos_chi2 = Likelihood.chi2_position(model, adis, αx_all, αy_all, A_all)
 
    # Calculate parity likelihood
-   par_chi2 = 0.0
+   parity_chi2 = 0.0
    if model.source_config.use_parity
-      par_chi2 = Likelihood.chi2_parity(model, adis, A_all)
+      parity_chi2 = Likelihood.chi2_parity(model, adis, A_all)
    end
-   tot_chi2 = pos_chi2 + par_chi2
+   tot_chi2 = pos_chi2 + parity_chi2
    return tot_chi2
 end
 
