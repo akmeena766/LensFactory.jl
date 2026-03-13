@@ -265,7 +265,7 @@ function chi2_flux(model::ModelConfig, adis::Vector{Float64}, A_all::Vector{NTup
    return χ²
 end
 
-function chi2_timedelay(model::ModelConfig, lens_model::AbstractLens, adis::Vector{Float64}, αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, A_all::Vector{NTuple{4, Vector{Float64}}})
+function chi2_timedelay(model::ModelConfig, lens_model::Lenses.AbstractLens, adis::Vector{Float64}, αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, A_all::Vector{NTuple{4, Vector{Float64}}})
    # Initialize chi2 for parity
    chi2 = 0.0
 
