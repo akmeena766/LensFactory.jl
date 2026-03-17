@@ -12,7 +12,7 @@ and
     galaxy clusters), the Einstein angle is ~[0.1, 50] arcseconds, the default input coordinate 
     units are arcseconds. In addition, potential, deflection, and jacobian are calculate assuming
     that the source is at infinity, i.e., ``a_{\rm dis} = D_{ds} / D_s = 1``. Hence, various 
-    follow-up calculations require the use to provide ``a_{\rm dis}`` as an input.   
+    follow-up calculations require providing ``a_{\rm dis}`` as an input.   
 
 ```@docs
 Lenses.get_meshgrid

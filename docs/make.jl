@@ -38,7 +38,10 @@ makedocs(
                         "approximate NFW Lens"         => "aNFWLens.md",
                         "truncated NFW Lens"           => "tNFWLens.md",
                         "generalized NFW Lens"         => "gNFWLens.md",
-                        "Einasto Lens"                 => "EinastoLens.md"
+                        "Einasto Lens"                 => "EinastoLens.md",
+                        "Multi-Plummer Lens"           => "MultiPlummerLens.md",
+                        "Multi-Gaussian Lens"          => "MultiGaussianLens.md",
+                        "Multi-PJE Lens"               => "MultiPJELens.md"
                         ],
             "MultiPlane" => "MultiPlane.md",
             "Sources" => "Sources.md",

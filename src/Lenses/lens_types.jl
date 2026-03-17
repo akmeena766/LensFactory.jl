@@ -165,10 +165,15 @@ end
 """
     init_ExternalEffects(kappa::RV=NaN, gamma::RV=NaN, angle::RV=NaN)
 Initialize constant external effects with the given parameters.
+
+# Keyword Arguments
+- `kappa::RV = NaN`: Convergence (dimensionless).
+- `gamma1::RV= NaN`: Shear in the x-direction (dimensionless).
+- `gamma2::RV= NaN`: Shear in the y-direction (dimensionless).
 """
 @kwdef struct init_ExternalEffects <: AbstractLens
    _lens_::Symbol = :ExternalEffects
-   kappa::RV = NaN
+   kappa::RV  = NaN
    gamma1::RV = NaN
    gamma2::RV = NaN
 end
@@ -177,6 +182,14 @@ end
 """
     init_PIEPLens(x_c::RV=0.0, y_c::RV=0.0, v_d::RV=NaN, x_s::RV=NaN, eps::RV=NaN, pa::RV=NaN)
 Initialize pseudo isothermal elliptical potential (PIEP) lens with the given parameters.
+
+# Keyword Arguments
+- `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c::RV = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `v_d::RV = NaN`: Velocity dispersion (in ``\\rm \\mathbf{meters/second}``).
+- `x_s::RV = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
+- `eps::RV = NaN`: Ellipticity (dimensionless).
+- `pa::RV = NaN`: Position angle (in ``\\rm \\mathbf{radians}``).
 """
 @kwdef struct init_PIEPLens <: AbstractLens
    _lens_::Symbol = :PIEPLens
@@ -192,6 +205,14 @@ end
 """
     init_SIELens(x_c::RV=0.0, y_c::RV=0.0, v_d::RV=NaN, x_s::RV=NaN, eps::RV=NaN, pa::RV=NaN)
 Initialize singular isothermal ellipsoid (SIE) lens with the given parameters.
+
+# Keyword Arguments
+- `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c::RV = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `v_d::RV = NaN`: Velocity dispersion (in ``\\rm \\mathbf{meters/second}``).
+- `x_s::RV = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
+- `eps::RV = NaN`: Ellipticity (dimensionless).
+- `pa::RV = NaN`: Position angle (in ``\\rm \\mathbf{radians}``).
 """
 @kwdef struct init_SIELens <: AbstractLens
    _lens_::Symbol = :SIELens
@@ -207,6 +228,15 @@ end
 """
     init_PJEMDLens(x_c::RV=0.0, y_c::RV=0.0, v_d::RV=NaN, x_s::RV=NaN, x_t::RV=NaN, eps::RV=NaN, pa::RV=NaN)
 Initialize Pseudo-Jaffe Ellipsoid (PJE) lens with the given parameters.
+
+# Keyword Arguments
+- `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c::RV = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `v_d::RV = NaN`: Velocity dispersion (in ``\\rm \\mathbf{meters/second}``).
+- `x_s::RV = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
+- `x_t::RV = NaN`: Truncation radius (in ``\\rm \\mathbf{arcseconds}``).
+- `eps::RV = NaN`: Ellipticity (dimensionless).
+- `pa::RV = NaN`: Position angle (in ``\\rm \\mathbf{radians}``).
 """
 @kwdef struct init_PJELens <: AbstractLens
    _lens_::Symbol = :PJELens
@@ -223,6 +253,13 @@ end
 """
     init_HernquistLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN)
 Initialize a Hernquist lens with the given parameters.
+
+# Keyword Arguments
+- `D_d::RV = NaN`: ADD from observer to lens (in ``\\rm \\mathbf{meters}``).
+- `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c::RV = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass::RV= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s::RV = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
 """
 @kwdef struct init_HernquistLens <: AbstractLens
    _lens_::Symbol = :HernquistLens
@@ -233,65 +270,30 @@ Initialize a Hernquist lens with the given parameters.
    x_s::RV  = NaN
 end
 
+
 """
-    init_NFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, k_s::RV=NaN, x_s::RV=NaN)
-Initialize a Navarro-Frenk-White (NFW) lens with the given parameters
+    init_eHernquistMDLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN, eps::RV=NaN, pa::RV=NaN)
+Initialize an elliptical Hernquist mass distribution lens (eHernquistMDLens) with the given 
+parameters.
+
+# Keyword Arguments
+- `D_d::RV = NaN`: ADD from observer to lens (in ``\\rm \\mathbf{meters}``).
+- `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c::RV = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass::RV= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s::RV = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
+- `eps::RV = NaN`: Ellipticity.
+- `pa::RV = NaN`: Position angle (in ``\\rm \\mathbf{radians}``).
 """
-@kwdef struct init_NFWLens <: AbstractLens
-   _lens_::Symbol = :NFWLens
+@kwdef struct init_eHernquistMDLens <: AbstractLens
+   _lens_::Symbol = :eHernquistMDLens
    D_d::RV = NaN
    x_c::RV = 0.0
    y_c::RV = 0.0
-   k_s::RV = NaN
+   mass::RV= NaN
    x_s::RV = NaN
-end
-
-
-"""
-    init_tNFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, k_s::RV=NaN, x_s::RV=NaN, x_t::RV=NaN)
-Initialize a truncated Navarro-Frenk-White (tNFW) lens with the given parameters.
-"""
-@kwdef struct init_tNFWLens <: AbstractLens
-   _lens_::Symbol = :tNFWLens
-   D_d::RV = NaN
-   x_c::RV = 0.0
-   y_c::RV = 0.0
-   k_s::RV = NaN
-   x_s::RV = NaN
-   x_t::RV = NaN
-end
-
-
-"""
-    init_gNFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, k_s::RV=NaN, x_s::RV=NaN, n::RV=-2.0)
-Initialize a generalized Navarro-Frenk-White (gNFW) lens with the given parameters.
-"""
-@kwdef struct init_gNFWLens <: AbstractLens
-   _lens_::Symbol = :gNFWLens
-   D_d::RV = NaN
-   x_c::RV = 0.0
-   y_c::RV = 0.0
-   k_s::RV = NaN
-   x_s::RV = NaN
-   n::RV   = NaN
-end
-
-
-"""
-    init_EinastoLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, k_s::RV=NaN, x_s::RV=NaN, n::RV=-2.0)
-Initialize an Einasto lens with the given parameters. The lens model can be initialized with either
-the concentration `c` or the scale radius `x_s`. 
-**If both are provided, `c` will be used to calculate `x_s` and the input `x_s` will be overwritten.**
-The parameter `n` defines the slope of the density profile.
-"""
-@kwdef struct init_EinastoLens <: AbstractLens
-   _lens_::Symbol = :EinastoLens
-   D_d::RV = NaN
-   x_c::RV = 0.0
-   y_c::RV = 0.0
-   k_s::RV = NaN
-   x_s::RV = NaN
-   n::RV   = 0.2
+   eps::RV = NaN
+   pa::RV  = NaN
 end
 
 
@@ -299,6 +301,15 @@ end
     init_aHernquistLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN, eps::RV=NaN, pa::RV=NaN)
 Initialize an approximate Hernquist lens (aHernquistLens) with the given parameters based on 
 [Oguri (2021)](https://ui.adsabs.harvard.edu/abs/2021PASP..133g4504O/abstract).
+
+# Keyword Arguments
+- `D_d::RV = NaN`: ADD from observer to lens (in ``\\rm \\mathbf{meters}``).
+- `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c::RV = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass::RV= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s::RV = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
+- `eps::RV = NaN`: Ellipticity.
+- `pa::RV = NaN`: Position angle (in ``\\rm \\mathbf{radians}``).
 """
 @kwdef struct init_aHernquistLens <: AbstractLens
    _lens_::Symbol = :aHernquistLens
@@ -311,11 +322,47 @@ Initialize an approximate Hernquist lens (aHernquistLens) with the given paramet
    pa::RV   = NaN
 end
 
-"""
-    init_aNFWLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, k_s::RV=NaN, x_s::RV=NaN, eps::RV=NaN, pa::RV=NaN)
-Initialize an approximate Navarro-Frenk-White lens (aNFWLens) with the given parameters based on 
-[Oguri (2021)](https://ui.adsabs.harvard.edu/abs/2021PASP..133g4504O/abstract).
-"""
+
+@kwdef struct init_NFWLens <: AbstractLens
+   _lens_::Symbol = :NFWLens
+   D_d::RV = NaN
+   x_c::RV = 0.0
+   y_c::RV = 0.0
+   k_s::RV = NaN
+   x_s::RV = NaN
+end
+
+@kwdef struct init_tNFWLens <: AbstractLens
+   _lens_::Symbol = :tNFWLens
+   D_d::RV = NaN
+   x_c::RV = 0.0
+   y_c::RV = 0.0
+   k_s::RV = NaN
+   x_s::RV = NaN
+   x_t::RV = NaN
+end
+
+@kwdef struct init_gNFWLens <: AbstractLens
+   _lens_::Symbol = :gNFWLens
+   D_d::RV = NaN
+   x_c::RV = 0.0
+   y_c::RV = 0.0
+   k_s::RV = NaN
+   x_s::RV = NaN
+   n::RV   = NaN
+end
+
+@kwdef struct init_EinastoLens <: AbstractLens
+   _lens_::Symbol = :EinastoLens
+   D_d::RV = NaN
+   x_c::RV = 0.0
+   y_c::RV = 0.0
+   k_s::RV = NaN
+   x_s::RV = NaN
+   n::RV   = 0.2
+end
+
+
 @kwdef struct init_aNFWLens <: AbstractLens
    _lens_::Symbol = :aNFWLens
    D_d::RV = NaN
@@ -327,25 +374,7 @@ Initialize an approximate Navarro-Frenk-White lens (aNFWLens) with the given par
    pa::RV   = NaN
 end
 
-"""
-    init_eHernquistMDLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN, eps::RV=NaN, pa::RV=NaN)
-Initialize an elliptical Hernquist mass distribution lens (eHernquistMDLens) with the given parameters.
-"""
-@kwdef struct init_eHernquistMDLens <: AbstractLens
-   _lens_::Symbol = :eHernquistMDLens
-   D_d::RV = NaN
-   x_c::RV = 0.0
-   y_c::RV = 0.0
-   mass::RV = NaN
-   x_s::RV  = NaN
-   eps::RV  = NaN
-   pa::RV   = NaN
-end
 
-"""
-    init_eNFWMDLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, k_s::RV=NaN, x_s::RV=NaN, eps::RV=NaN, pa::RV=NaN)
-Initialize an elliptical Navarro-Frenk-White mass distribution lens (eNFWMDLens) with the given parameters.
-"""
 @kwdef struct init_eNFWMDLens <: AbstractLens
    _lens_::Symbol = :eNFWMDLens
    D_d::RV = NaN
@@ -357,6 +386,19 @@ Initialize an elliptical Navarro-Frenk-White mass distribution lens (eNFWMDLens)
    pa::RV   = NaN
 end
 
+
+"""
+    init_MultiPlummerLens(n::Int64=NaN, D_d::RV=NaN, x_c=Vector{<:RV}, y_c=Vector{<:RV}, mass=Vector{<:RV}, x_s=Vector{<:RV})
+Initialize a Multi-component Plummer lens with the given parameters.
+
+# Keyword Arguments
+- `n::Int64 = NaN`: Number of components.
+- `D_d::RV = NaN`: Angular diameter distance to the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `x_c = Vector{<:RV}()`: Vector of x-coordinates (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c = Vector{<:RV}()`: Vector of y-coordinates (in ``\\rm \\mathbf{arcseconds}``).
+- `mass= Vector{<:RV}()`: Vector of masses (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s = Vector{<:RV}()`: Vector of scale radii (in ``\\rm \\mathbf{arcseconds}``).
+"""
 @kwdef struct init_MultiPlummerLens <: AbstractLens
    _lens_::Symbol = :MultiPlummerLens
    D_d::RV  = NaN
@@ -368,27 +410,53 @@ end
 end
 
 
+"""
+    init_MultiGaussianLens(n::Int64=NaN, D_d::RV=NaN, x_c=Vector{<:RV}, y_c=Vector{<:RV}, mass=Vector{<:RV}, x_s=Vector{<:RV})
+Initialize a Multi-component Gaussian lens with the given parameters.
+
+# Keyword Arguments
+- `n::Int64 = NaN`: Number of components.
+- `D_d::RV = NaN`: Angular diameter distance to the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `x_c = Vector{<:RV}()`: Vector of x-coordinates (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c = Vector{<:RV}()`: Vector of y-coordinates (in ``\\rm \\mathbf{arcseconds}``).
+- `mass= Vector{<:RV}()`: Vector of masses (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s = Vector{<:RV}()`: Vector of scale radii (in ``\\rm \\mathbf{arcseconds}``).
+"""
 @kwdef struct init_MultiGaussianLens <: AbstractLens
    _lens_::Symbol = :MultiGaussianLens
    D_d::RV  = NaN
    n::Int64 = NaN
-   x_c  = Vector{Float64}()
-   y_c  = Vector{Float64}() 
-   mass = Vector{Float64}()
-   x_s  = Vector{Float64}()
+   x_c  = Vector{<:RV}()
+   y_c  = Vector{<:RV}() 
+   mass = Vector{<:RV}()
+   x_s  = Vector{<:RV}()
 end
 
 
+"""
+    init_MultiPJELens(n::Int64=NaN, x_c=Vector{<:RV}, y_c=Vector{<:RV}, v_d=Vector{<:RV}, x_s=Vector{<:RV}, x_t=Vector{<:RV}, eps=Vector{<:RV}, pa=Vector{<:RV})
+Initialize a Multi-component PJE lens with the given parameters.
+
+# Keyword Arguments
+- `n::Int64 = NaN`: Number of components.
+- `x_c = Vector{<:RV}()`: Vector of x-coordinates (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c = Vector{<:RV}()`: Vector of y-coordinates (in ``\\rm \\mathbf{arcseconds}``).
+- `v_d = Vector{<:RV}()`: Vector of velocity dispersions (in ``\\rm \\mathbf{km/s}``).
+- `x_s = Vector{<:RV}()`: Vector of scale radii (in ``\\rm \\mathbf{arcseconds}``).
+- `x_t = Vector{<:RV}()`: Vector of tidal radii (in ``\\rm \\mathbf{arcseconds}``).
+- `eps = Vector{<:RV}()`: Vector of ellipticities.
+- `pa = Vector{<:RV}()`: Vector of position angles (in ``\\rm \\mathbf{radians}``).
+"""
 @kwdef struct init_MultiPJELens <: AbstractLens
    _lens_::Symbol = :MultiPJELens
    n::Int64 = NaN
-   x_c  = Vector{Float64}()
-   y_c  = Vector{Float64}() 
-   v_d  = Vector{Float64}()
-   x_s  = Vector{Float64}()
-   x_t  = Vector{Float64}()
-   eps  = Vector{Float64}()
-   pa   = Vector{Float64}()
+   x_c  = Vector{<:RV}()
+   y_c  = Vector{<:RV}() 
+   v_d  = Vector{<:RV}()
+   x_s  = Vector{<:RV}()
+   x_t  = Vector{<:RV}()
+   eps  = Vector{<:RV}()
+   pa   = Vector{<:RV}()
 end
 
 
@@ -407,6 +475,23 @@ end
 
 
 #---------------------- Constructor for various lenses ---------------------------------------------
+"""
+    init_NFWLens(cosmology::AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN)
+Initialize a Navarro-Frenk-White (NFW) lens with the given parameters. The lens model can be 
+initialized with either the concentration `c` or the scale radius `x_s`. **If both are provided, 
+`c` will be used to calculate `x_s` and the input `x_s` will be overwritten.**
+
+# Arguments
+- `cosmology::AbstractCosmology`: Cosmology object.
+- `z_d::RV`: Redshift of the lens.
+
+# Keyword Arguments
+- `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c::RV = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass::RV= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s::RV = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
+- `c::RV = NaN`: Concentration of the lens.
+"""
 function init_NFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN)
    # Overdensity value
    Δ_z = 200.0
@@ -437,6 +522,127 @@ function init_NFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=0
    return init_NFWLens(x_c=x_c, y_c=y_c, D_d=D_d, k_s=k_s, x_s=x_s)
 end
 
+
+"""
+    init_eNFWMDLens(cosmology::AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, eps::RV=NaN, pa::RV=NaN)
+Initialize an elliptical Navarro-Frenk-White mass distribution lens (eNFWMDLens) with the given 
+parameters. The lens model can be initialized with either the concentration `c` or the scale radius 
+`x_s`. **If both are provided, `c` will be used to calculate `x_s` and the input `x_s` will be 
+overwritten.**
+
+# Arguments
+- `cosmology::AbstractCosmology`: Cosmology object.
+- `z_d::RV`: Redshift of the lens.
+
+# Keyword Arguments
+- `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c::RV = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass::RV= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s::RV = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
+- `c::RV = NaN`: Concentration of the lens.
+- `eps::RV = NaN`: Ellipticity.
+- `pa::RV = NaN`: Position angle (in ``\\rm \\mathbf{radians}``).
+"""
+function init_eNFWMDLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, eps::RV=NaN, pa::RV=NaN)
+   # Overdensity value
+   Δ_z = 200.0
+
+   # ADD to the lens
+   D_d = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
+   
+   # Critical density at the lens redshift (in kg/m^3)
+   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
+
+   # Virial radius of the lens (in ANGLE_ARCSEC)
+   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
+
+   # Check if concentration is given
+   if isfinite(c)
+      x_s = θ_vir / c
+   elseif isfinite(x_s)
+      c = θ_vir / x_s
+   else
+      throw(ArgumentError("Provide concentration (c) or scale radius (x_s) in **parameter_NFWLens**."))
+   end
+   # 3D characteristic density
+   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
+
+   # 2D (normalized) characteristic density
+   k_s = ρ_s * D_d * x_s * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+
+   return init_eNFWMDLens(x_c=x_c, y_c=y_c, D_d=D_d, k_s=k_s, x_s=x_s, eps=eps, pa=pa)
+end
+
+
+"""
+    init_aNFWLens(cosmology::AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, eps::RV=NaN, pa::RV=NaN)
+Initialize an approximate Navarro-Frenk-White lens (aNFWLens) with the given parameters based on 
+[Oguri (2021)](https://ui.adsabs.harvard.edu/abs/2021PASP..133g4504O/abstract). The lens model can 
+be initialized with either the concentration `c` or the scale radius `x_s`. **If both are provided, 
+`c` will be used to calculate `x_s` and the input `x_s` will be overwritten.**
+
+# Arguments
+- `cosmology::AbstractCosmology`: Cosmology object.
+- `z_d::RV`: Redshift of the lens.
+
+# Keyword Arguments
+- `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c::RV = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass::RV= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s::RV = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
+- `c::RV = NaN`: Concentration of the lens.
+- `eps::RV = NaN`: Ellipticity.
+- `pa::RV = NaN`: Position angle (in ``\\rm \\mathbf{radians}``).
+"""
+function init_aNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, eps::RV=NaN, pa::RV=NaN)
+   # Overdensity value
+   Δ_z = 200.0
+
+   # ADD to the lens
+   D_d = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
+   
+   # Critical density at the lens redshift (in kg/m^3)
+   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
+
+   # Virial radius of the lens (in ANGLE_ARCSEC)
+   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
+
+   # Check if concentration is given
+   if isfinite(c)
+      x_s = θ_vir / c
+   elseif isfinite(x_s)
+      c = θ_vir / x_s
+   else
+      throw(ArgumentError("Provide concentration (c) or scale radius (x_s) in **init_aNFWLens**."))
+   end
+   # 3D characteristic density
+   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
+
+   # 2D (normalized) characteristic density
+   k_s = ρ_s * D_d * x_s * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+
+   return init_aNFWLens(x_c=x_c, y_c=y_c, D_d=D_d, k_s=k_s, x_s=x_s, eps=eps, pa=pa)
+end
+
+
+"""
+    init_tNFWLens(cosmology::AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, x_t::RV=NaN)
+Initialize a truncated Navarro-Frenk-White (tNFW) lens with the given parameters. The lens model can
+be initialized with either the concentration `c` or the scale radius `x_s`. **If both are provided, 
+`c` will be used to calculate `x_s` and the input `x_s` will be overwritten.**
+
+# Arguments
+- `cosmology::AbstractCosmology`: Cosmology object.
+- `z_d::RV`: Redshift of the lens.
+
+# Keyword Arguments
+- `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c::RV = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass::RV= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s::RV = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
+- `c::RV = NaN`: Concentration of the lens.
+- `x_t::RV = NaN`: Truncation radius (in ``\\rm \\mathbf{arcseconds}``).
+"""
 function init_tNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, x_t::RV=NaN)
    # Overdensity value
    Δ_z = 200.0
@@ -467,6 +673,26 @@ function init_tNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=
    return init_tNFWLens(x_c=x_c, y_c=y_c, D_d=D_d, k_s=k_s, x_s=x_s, x_t=x_t)
 end
 
+
+"""
+    init_gNFWLens(cosmology::AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, n::RV=1.0)
+Initialize a generalized Navarro-Frenk-White (gNFW) lens with the given parameters. The lens model can
+be initialized with either the concentration `c` or the scale radius `x_s`. **If both are provided, 
+`c` will be used to calculate `x_s` and the input `x_s` will be overwritten.** The parameter `n` 
+defines the slope of the density profile.
+
+# Arguments
+- `cosmology::AbstractCosmology`: Cosmology object.
+- `z_d::RV`: Redshift of the lens.
+
+# Keyword Arguments
+- `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c::RV = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass::RV= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s::RV = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
+- `c::RV = NaN`: Concentration of the lens.
+- `n::RV = 1.0`: Slope parameter of the lens.
+"""
 function init_gNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, n::RV=1.0)
    # Check for valid slope parameter
    if !(0.0 < n < 2.0)
@@ -509,6 +735,26 @@ function init_gNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=
    return init_gNFWLens(x_c=x_c, y_c=y_c, D_d=D_d, k_s=k_s, x_s=x_s, n=n)
 end
 
+
+"""
+    init_EinastoLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, k_s::RV=NaN, x_s::RV=NaN, n::RV=0.2)
+Initialize an Einasto lens with the given parameters. The lens model can be initialized with either
+the concentration `c` or the scale radius `x_s`. **If both are provided, `c` will be used to 
+calculate `x_s` and the input `x_s` will be overwritten.** The parameter `n` defines the slope of 
+the density profile.
+
+# Arguments
+- `cosmology::AbstractCosmology`: Cosmology object.
+- `z_d::RV`: Redshift of the lens.
+
+# Keyword Arguments
+- `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c::RV = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass::RV= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s::RV = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
+- `c::RV = NaN`: Concentration of the lens.
+- `n::RV = 0.2`: Slope parameter of the lens.
+"""
 function init_EinastoLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, n::RV=0.2)
    # Overdensity value
    Δ_z = 200.0
@@ -540,66 +786,6 @@ function init_EinastoLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::
    k_s = ρ_s * D_d * x_s * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
 
    return init_EinastoLens(x_c=x_c, y_c=y_c, D_d=D_d, k_s=k_s, x_s=x_s, n=n)
-end
-
-function init_aNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, eps::RV=NaN, pa::RV=NaN)
-   # Overdensity value
-   Δ_z = 200.0
-
-   # ADD to the lens
-   D_d = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
-   
-   # Critical density at the lens redshift (in kg/m^3)
-   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
-
-   # Virial radius of the lens (in ANGLE_ARCSEC)
-   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
-
-   # Check if concentration is given
-   if isfinite(c)
-      x_s = θ_vir / c
-   elseif isfinite(x_s)
-      c = θ_vir / x_s
-   else
-      throw(ArgumentError("Provide concentration (c) or scale radius (x_s) in **parameter_NFWLens**."))
-   end
-   # 3D characteristic density
-   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
-
-   # 2D (normalized) characteristic density
-   k_s = ρ_s * D_d * x_s * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
-
-   return init_aNFWLens(x_c=x_c, y_c=y_c, D_d=D_d, k_s=k_s, x_s=x_s, eps=eps, pa=pa)
-end
-
-function init_eNFWMDLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, eps::RV=NaN, pa::RV=NaN)
-   # Overdensity value
-   Δ_z = 200.0
-
-   # ADD to the lens
-   D_d = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
-   
-   # Critical density at the lens redshift (in kg/m^3)
-   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
-
-   # Virial radius of the lens (in ANGLE_ARCSEC)
-   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
-
-   # Check if concentration is given
-   if isfinite(c)
-      x_s = θ_vir / c
-   elseif isfinite(x_s)
-      c = θ_vir / x_s
-   else
-      throw(ArgumentError("Provide concentration (c) or scale radius (x_s) in **parameter_NFWLens**."))
-   end
-   # 3D characteristic density
-   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
-
-   # 2D (normalized) characteristic density
-   k_s = ρ_s * D_d * x_s * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
-
-   return init_eNFWMDLens(x_c=x_c, y_c=y_c, D_d=D_d, k_s=k_s, x_s=x_s, eps=eps, pa=pa)
 end
 
 
