@@ -25,8 +25,13 @@ abstract type AbstractLens end
 
 """
     init_PointLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN)
-
 Initialize a point lens with the given parameters.
+
+# Keyword Arguments
+- `D_d::RV = NaN`: ADD from observer to lens (in ``\\rm \\mathbf{meters}``).
+- `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c::RV = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass::RV= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
 """
 @kwdef struct init_PointLens <: AbstractLens
    _lens_::Symbol = :PointLens
@@ -39,8 +44,14 @@ end
 
 """
     init_PlummerLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN)
-
 Initialize a Plummer lens with the given parameters.
+
+# Keyword Arguments
+- `D_d::RV = NaN`: ADD from observer to lens (in ``\\rm \\mathbf{meters}``).
+- `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c::RV = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass::RV= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s::RV = NaN`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
 """
 @kwdef struct init_PlummerLens <: AbstractLens
    _lens_::Symbol = :PlummerLens
@@ -54,8 +65,12 @@ end
 
 """
     init_SISLens(x_c::RV=0.0, y_c::RV=0.0, v_d::RV=NaN)
-
 Initialize a Singular Isothermal Sphere (SIS) lens with the given parameters.
+
+# Keyword Arguments
+- `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c::RV = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `v_d::RV = NaN`: Velocity dispersion (in ``\\rm \\mathbf{meters/second}``).
 """
 @kwdef struct init_SISLens <: AbstractLens
    _lens_::Symbol = :SISLens
@@ -67,8 +82,13 @@ end
 
 """
     init_NSISPLens(x_c::RV=0.0, y_c::RV=0.0, v_d::RV=NaN, x_s::RV=NaN)
-
 Initialize a Non-Singular Isothermal Sphere potential (NSISP) lens with the given parameters.
+
+# Keyword Arguments
+- `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c::RV = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `v_d::RV = NaN`: Velocity dispersion (in ``\\rm \\mathbf{meters/second}``).
+- `x_s::RV = NaN`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
 """
 @kwdef struct init_NSISPLens <: AbstractLens
    _lens_::Symbol = :NSISPLens
@@ -81,8 +101,13 @@ end
 
 """
     init_NSISMDLens(x_c::RV=0.0, y_c::RV=0.0, v_d::RV=NaN, x_s::RV=NaN)
-
 Initialize a Non-Singular Isothermal Sphere mass distribution (NSISMD) lens with the given parameters.
+
+# Keyword Arguments
+- `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c::RV = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `v_d::RV = NaN`: Velocity dispersion (in ``\\rm \\mathbf{meters/second}``).
+- `x_s::RV = NaN`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
 """
 @kwdef struct init_NSISMDLens <: AbstractLens
    _lens_::Symbol = :NSISMDLens
@@ -96,6 +121,13 @@ end
 """
     init_GaussianLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_s::RV=NaN)
 Initialize a Gaussian lens with the given parameters.
+
+# Keyword Arguments
+- `D_d::RV = NaN`: ADD from observer to lens (in ``\\rm \\mathbf{meters}``).
+- `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c::RV = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass::RV= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s::RV = NaN`: Scale radius, i.e., standard deviation of the Gaussian (in ``\\rm \\mathbf{arcseconds}``).
 """
 @kwdef struct init_GaussianLens <: AbstractLens
    _lens_::Symbol = :GaussianLens
@@ -110,6 +142,14 @@ end
 """
     init_SersicLens(D_d::RV=NaN, x_c::RV=0.0, y_c::RV=0.0, mass::RV=NaN, x_e::RV=NaN, n::RV=4)
 Initialize a Sersic lens with the given parameters.
+
+# Keyword Arguments
+- `D_d::RV = NaN`: ADD from observer to lens (in ``\\rm \\mathbf{meters}``).
+- `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c::RV = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass::RV= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_e::RV = NaN`: Half-mass radius (in ``\\rm \\mathbf{arcseconds}``).
+- `n::RV = 4.0`: Sersic index.
 """
 @kwdef struct init_SersicLens <: AbstractLens
    _lens_::Symbol = :SersicLens

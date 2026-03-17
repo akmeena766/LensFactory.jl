@@ -26,6 +26,17 @@ end
 
 """
     potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
+Calculate potential at given coordinates for a point mass lens and update the potential in place.
+
+# Arguments
+- `ψ`: Potential at given coordinates
+- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d::RV`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
+- `θxc::RV`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc::RV`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass::RV`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `θs::RV`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
 """
 function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
    θE2 = (2.0 * CONST_G * mass / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
@@ -63,6 +74,18 @@ end
 
 """
     deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
+Calculate deflection at given coordinates for a point mass lens and update the deflection in place.
+
+# Arguments
+- `ψx`: x-component of the deflection at given coordinates
+- `ψy`: y-component of the deflection at given coordinates
+- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d::RV`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
+- `θxc::RV`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc::RV`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass::RV`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `θs::RV`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
    θE2 = (4.0 * CONST_G * mass / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
@@ -102,6 +125,19 @@ end
 
 """
     jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
+Calculate jacobian at given coordinates for a point mass lens and update the jacobian in place.
+
+# Arguments
+- `ψxx`: x-component of the jacobian at given coordinates
+- `ψyy`: y-component of the jacobian at given coordinates
+- `ψxy`: xy-component of the jacobian at given coordinates
+- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d::RV`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
+- `θxc::RV`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc::RV`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass::RV`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `θs::RV`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
    θE2 = (4.0 * CONST_G * mass / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
@@ -124,6 +160,17 @@ end
 
 """
     einstein_angle(;D_d::Float64=NaN, D_ds::Float64=NaN, D_s::Float64=NaN, mass::Float64=NaN, x_s::Float64=NaN)
+Calculate the Einstein angle for a point mass lens.
+
+# Keyword Arguments
+- `D_d::Float64 = NaN`: ADD from observer to lens (in ``\\rm \\mathbf{meters}``).
+- `D_ds::Float64= NaN`: ADD from lens to source (in ``\\rm \\mathbf{meters}``).
+- `D_s::Float64 = NaN`: ADD from observer to source (in ``\\rm \\mathbf{meters}``).
+- `mass::Float64= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s::Float64 = NaN`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
+
+# Returns
+- `θE`: Einstein angle (in ``\\rm \\mathbf{arcseconds}``)
 """
 function einstein_angle(;D_d::Float64=NaN, D_ds::Float64=NaN, D_s::Float64=NaN, mass::Float64=NaN, x_s::Float64=NaN)
    return sqrt((4.0 * CONST_G * mass / CONST_C^2) * (D_ds / D_d / D_s) / ANGLE_ARCSEC^2 - x_s^2)

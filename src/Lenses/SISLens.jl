@@ -11,10 +11,10 @@ export einstein_angle
 
 
 """
-    potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: RV
+    potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: RV
 """
-function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: RV
-   θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: RV
+   θE = 4.0 * pi * (v_d / CONST_C)^2 / ANGLE_ARCSEC
    
    dx = θx - θxc
    dy = θy - θyc
@@ -24,10 +24,19 @@ function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <
 end
 
 """
-    potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
+    potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: ROA
+Calculate potential at given coordinates for a SIS lens and update the potential in place.
+
+# Arguments
+- `ψ`: Potential at given coordinates
+- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θxc`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `v_d`: Velocity dispersion (in ``\\rm \\mathbf{meters/second}``).
 """
-function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
-   θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: ROA
+   θE = 4.0 * pi * (v_d / CONST_C)^2 / ANGLE_ARCSEC
    
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -43,10 +52,10 @@ end
 
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: RV
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: RV
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: RV
-   θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: RV
+   θE = 4.0 * pi * (v_d / CONST_C)^2 / ANGLE_ARCSEC
 
    dx = θx - θxc
    dy = θy - θyc
@@ -58,10 +67,20 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV)
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: ROA
+Calculate deflection at given coordinates for a SIS lens and update the deflection in place.
+
+# Arguments
+- `ψx`: x-component of the deflection at given coordinates
+- `ψy`: y-component of the deflection at given coordinates
+- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θxc`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `v_d`: Velocity dispersion (in ``\\rm \\mathbf{meters/second}``).
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
-   θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: ROA
+   θE = 4.0 * pi * (v_d / CONST_C)^2 / ANGLE_ARCSEC
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -79,10 +98,10 @@ end
 
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: RV
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: RV
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: RV
-   θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: RV
+   θE = 4.0 * pi * (v_d / CONST_C)^2 / ANGLE_ARCSEC
    
    dx = θx - θxc
    dy = θy - θyc
@@ -96,10 +115,21 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
 end
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: ROA
+Calculate jacobian at given coordinates for a SIS lens and update the jacobian in place.
+
+# Arguments
+- `ψxx`: xx-component of the jacobian at given coordinates
+- `ψyy`: yy-component of the jacobian at given coordinates
+- `ψxy`: xy-component of the jacobian at given coordinates
+- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θxc`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `v_d`: Velocity dispersion (in ``\\rm \\mathbf{meters/second}``).
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV) where T <: ROA
-   θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: ROA
+   θE = 4.0 * pi * (v_d / CONST_C)^2 / ANGLE_ARCSEC
    
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -120,6 +150,15 @@ end
 
 """
     einstein_angle(;D_ds::Float64=NaN, D_s::Float64=NaN, v_d::RV=NaN)
+Calculate the Einstein angle for a SIS lens.
+
+# Keyword Arguments
+- `D_ds`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
+- `D_s`: ADD from the observer to the source (in ``\\rm \\mathbf{meters}``).
+- `v_d`: Velocity dispersion (in ``\\rm \\mathbf{meters/second}``).
+
+# Returns
+- `θE`: Einstein angle (in ``\\rm \\mathbf{arcseconds}``).
 """
 function einstein_angle(;D_ds::Float64=NaN, D_s::Float64=NaN, v_d::RV=NaN)
    return 4π * (v_d / CONST_C)^2 * (D_ds / D_s) / ANGLE_ARCSEC
