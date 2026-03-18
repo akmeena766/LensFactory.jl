@@ -160,7 +160,10 @@ end
 
 """
     einstein_angle(;D_d::Float64=NaN, D_ds::Float64=NaN, D_s::Float64=NaN, mass::Float64=NaN, x_s::Float64=NaN)
-Calculate the Einstein angle for a point mass lens.
+Calculate the Einstein angle for a point mass lens,
+```math
+\\theta_E = \\sqrt{\\frac{4 \\, \\rm{G} \\, M}{\\rm{c}^2} \\frac{D_{ds}}{D_d D_s} - x_s^2}.
+```
 
 # Keyword Arguments
 - `D_d::Float64 = NaN`: ADD from observer to lens (in ``\\rm \\mathbf{meters}``).

@@ -150,7 +150,10 @@ end
 
 """
     einstein_angle(;D_ds::Float64=NaN, D_s::Float64=NaN, v_d::RV=NaN)
-Calculate the Einstein angle for a SIS lens.
+Calculate the Einstein angle for a SIS lens,
+```math
+\\theta_E = 4 \\pi \\frac{D_{ds}}{D_s} \\left( \\frac{v_d}{{\\rm c}} \\right)^2.
+```
 
 # Keyword Arguments
 - `D_ds`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).

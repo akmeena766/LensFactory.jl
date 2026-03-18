@@ -82,7 +82,7 @@ end
 
 """
     init_NSISPLens(x_c::RV=0.0, y_c::RV=0.0, v_d::RV=NaN, x_s::RV=NaN)
-Initialize a Non-Singular Isothermal Sphere potential (NSISP) lens with the given parameters.
+Initialize a Non-Singular Isothermal Sphere Potential (NSISP) lens with the given parameters.
 
 # Keyword Arguments
 - `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
@@ -101,7 +101,7 @@ end
 
 """
     init_NSISMDLens(x_c::RV=0.0, y_c::RV=0.0, v_d::RV=NaN, x_s::RV=NaN)
-Initialize a Non-Singular Isothermal Sphere mass distribution (NSISMD) lens with the given parameters.
+Initialize a Non-Singular Isothermal Sphere Mass Distribution (NSISMD) lens with the given parameters.
 
 # Keyword Arguments
 - `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).

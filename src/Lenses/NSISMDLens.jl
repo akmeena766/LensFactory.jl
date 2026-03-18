@@ -27,6 +27,16 @@ end
 
 """
     potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
+Calculate potential at given coordinates for NSISMD lens and update the potential in place.
+
+# Arguments
+- `ψ`: Potential at given coordinates
+- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θxc`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `v_d`: Velocity dispersion (in ``\\rm \\mathbf{meters/second}``).
+- `θs`: Core radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
 """
 function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
@@ -64,6 +74,17 @@ end
 
 """
     deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
+Calculate deflection at given coordinates for NSISMD lens and update the deflection in place.
+
+# Arguments
+- `ψx`: x-component of the deflection at given coordinates
+- `ψy`: y-component of the deflection at given coordinates
+- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θxc`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `v_d`: Velocity dispersion (in ``\\rm \\mathbf{meters/second}``).
+- `θs`: Core radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
@@ -103,6 +124,18 @@ end
 
 """
     jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
+Calculate jacobian at given coordinates for NSISMD lens and update the jacobian in place.
+
+# Arguments
+- `ψxx`: xx-component of the jacobian at given coordinates
+- `ψyy`: yy-component of the jacobian at given coordinates
+- `ψxy`: xy-component of the jacobian at given coordinates
+- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θxc`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `v_d`: Velocity dispersion (in ``\\rm \\mathbf{meters/second}``).
+- `θs`: Core radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
    θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
@@ -127,6 +160,23 @@ end
 
 """
     einstein_angle(;D_ds::Float64=NaN, D_s::Float64=NaN, v_d::RV=NaN, x_s::Float64=NaN)
+Calculate the Einstein angle for NSISMD lens,
+```math
+\\theta_E = \\sqrt{\\theta_E^2 - 2 \\, x_s \\, \\theta_E},
+```
+where,
+```math
+\\theta_E = 4 \\pi \\frac{D_{ds}}{D_s} \\left( \\frac{v_d}{{\\rm c}} \\right)^2.
+```
+
+# Keyword Arguments
+- `D_ds = NaN`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
+- `D_s = NaN`: ADD from the observer to the source (in ``\\rm \\mathbf{meters}``).
+- `v_d = NaN`: Velocity dispersion (in ``\\rm \\mathbf{meters/second}``).
+- `x_s = NaN`: Core radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
+
+# Returns
+- `θE`: Einstein angle (in ``\\rm \\mathbf{arcseconds}``).
 """
 function einstein_angle(; D_ds::Float64=NaN, D_s::Float64=NaN, v_d::RV=NaN, x_s::Float64=NaN)
    θE = 4π * (D_ds / D_s) * (v_d / CONST_C)^2 / ANGLE_ARCSEC
