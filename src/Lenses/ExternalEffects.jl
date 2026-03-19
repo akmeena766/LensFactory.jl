@@ -23,6 +23,16 @@ end
 
 """
     potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: ROA
+Calculate potential at given coordinates for constant external convergence and shear and update the 
+potential in place.
+
+# Arguments
+- `ψ`: Potential at given coordinates
+- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `kappa::RV`: External convergence.
+- `gamma1::RV`: External shear component-1.
+- `gamma2::RV`: External shear component-2.
 """
 function potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: ROA
    f1 = 0.5 * (kappa + gamma1)
@@ -51,6 +61,17 @@ end
 
 """
     deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: ROA
+Calculate deflection at given coordinates for constant external convergence and shear and update 
+the deflection in place.
+
+# Arguments
+- `ψx`: x-component of deflection at given coordinates
+- `ψy`: y-component of deflection at given coordinates
+- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `kappa::RV`: External convergence.
+- `gamma1::RV`: External shear component-1.
+- `gamma2::RV`: External shear component-2.
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: ROA
    f1 = (kappa + gamma1)
@@ -81,6 +102,18 @@ end
 
 """
     jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: ROA
+Calculate Jacobian at given coordinates for constant external convergence and shear and update the 
+Jacobian in place.
+
+# Arguments
+- `ψxx`: xx-component of Jacobian at given coordinates
+- `ψyy`: yy-component of Jacobian at given coordinates
+- `ψxy`: xy-component of Jacobian at given coordinates
+- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `kappa::RV`: External convergence.
+- `gamma1::RV`: External shear component-1.
+- `gamma2::RV`: External shear component-2.
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: ROA
    f1 = (kappa + gamma1)

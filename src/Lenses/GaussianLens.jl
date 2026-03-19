@@ -28,6 +28,17 @@ end
 
 """
     potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
+Calculate potential at given coordinates for a Gaussian lens and update the potential in place.
+
+# Arguments
+- `ψ`: Potential at given coordinates
+- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d::RV`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
+- `θxc::RV`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc::RV`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass::RV`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `θs::RV`: Scale radius i.e., standard deviation of the Gaussian (in ``\\rm \\mathbf{arcseconds}``).
 """
 function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
    κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
@@ -64,6 +75,18 @@ end
 
 """
     deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
+Calculate deflection at given coordinates for a Gaussian lens and update the deflection in place.
+
+# Arguments
+- `ψx`: x-component of deflection at given coordinates
+- `ψy`: y-component of deflection at given coordinates
+- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d::RV`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
+- `θxc::RV`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc::RV`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass::RV`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `θs::RV`: Scale radius i.e., standard deviation of the Gaussian (in ``\\rm \\mathbf{arcseconds}``).
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
    κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
@@ -109,6 +132,19 @@ end
 
 """
     jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
+Calculate Jacobian of the deflection at given coordinates for a Gaussian lens and update the Jacobian in place.
+
+# Arguments
+- `ψxx`: x-component of Jacobian at given coordinates
+- `ψyy`: y-component of Jacobian at given coordinates
+- `ψxy`: xy-component of Jacobian at given coordinates
+- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d::RV`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
+- `θxc::RV`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc::RV`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass::RV`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `θs::RV`: Scale radius i.e., standard deviation of the Gaussian (in ``\\rm \\mathbf{arcseconds}``).
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
    κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
