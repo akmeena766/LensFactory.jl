@@ -9,10 +9,10 @@ export deflection!
 export jacobian!
 
 """
-    potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+    potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
 """
-function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
-   θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+   θE = 4.0 * pi * (v_d / CONST_C)^2 / ANGLE_ARCSEC
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Pre-compute angles
@@ -29,10 +29,22 @@ function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, 
 end
 
 """
-    potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+    potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+Calculate potential at given coordinates for PIEP lens and update the potential values in-place.
+
+# Arguments
+- `ψ`: Potential at given coordinates
+- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θxc::RV`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc::RV`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `v_d::RV`: Velocity dispersion of the lens (in ``\\rm \\mathbf{km/s}``).
+- `θs::RV`: Scale radius i.e., standard deviation of the Gaussian (in ``\\rm \\mathbf{arcseconds}``).
+- `ϵ::RV`: Ellipticity of the lens.
+- `pa::RV`: Position angle of the lens (in ``\\rm \\mathbf{degrees}``).
 """
-function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
-   θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+   θE = 4.0 * pi * (v_d / CONST_C)^2 / ANGLE_ARCSEC
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Pre-compute angles
@@ -53,10 +65,10 @@ end
 
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
-   θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+   θE = 4.0 * pi * (v_d / CONST_C)^2 / ANGLE_ARCSEC
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Pre-compute angles
@@ -81,10 +93,23 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV,
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+Calculate deflection at given coordinates for PIEP lens and update the deflection values in-place.
+
+# Arguments
+- `ψx`: x-component of deflection at given coordinates
+- `ψy`: y-component of deflection at given coordinates
+- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θxc::RV`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc::RV`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `v_d::RV`: Velocity dispersion of the lens (in ``\\rm \\mathbf{km/s}``).
+- `θs::RV`: Scale radius i.e., standard deviation of the Gaussian (in ``\\rm \\mathbf{arcseconds}``).
+- `ϵ::RV`: Ellipticity of the lens.
+- `pa::RV`: Position angle of the lens (in ``\\rm \\mathbf{degrees}``).
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
-   θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+   θE = 4.0 * pi * (v_d / CONST_C)^2 / ANGLE_ARCSEC
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Pre-compute angles
@@ -113,10 +138,10 @@ end
 
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
-   θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+   θE = 4.0 * pi * (v_d / CONST_C)^2 / ANGLE_ARCSEC
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Pre-compute angles
@@ -145,10 +170,24 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
 end
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+Calculate Jacobian at given coordinates for PIEP lens and update the Jacobian values in-place.
+
+# Arguments
+- `ψxx`: x-component of Jacobian at given coordinates
+- `ψyy`: y-component of Jacobian at given coordinates
+- `ψxy`: xy-component of Jacobian at given coordinates
+- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θxc::RV`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc::RV`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `v_d::RV`: Velocity dispersion of the lens (in ``\\rm \\mathbf{km/s}``).
+- `θs::RV`: Scale radius i.e., standard deviation of the Gaussian (in ``\\rm \\mathbf{arcseconds}``).
+- `ϵ::RV`: Ellipticity of the lens.
+- `pa::RV`: Position angle of the lens (in ``\\rm \\mathbf{degrees}``).
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
-   θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+   θE = 4.0 * pi * (v_d / CONST_C)^2 / ANGLE_ARCSEC
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Pre-compute angles
