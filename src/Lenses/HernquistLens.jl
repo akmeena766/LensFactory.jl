@@ -25,7 +25,7 @@ export jacobian!
 end
 
 """
-    potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV) where T <: RV
+    potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: RV
 """
 function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: RV
    κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
@@ -39,7 +39,18 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV
 end
 
 """
-    potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV) where T <: ROA
+    potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
+Calculate potential at given coordinates for Hernquist lens and update the potential values in-place.
+
+# Arguments
+- `ψ`: Potential at given coordinates
+- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d::RV`: Angular diameter distance to the lens (in ``\\rm \\mathbf{Mpc}``).
+- `θxc::RV`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc::RV`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass::RV`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `θs::RV`: Scale radius i.e., standard deviation of the Gaussian (in ``\\rm \\mathbf{arcseconds}``).
 """
 function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
    κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
@@ -57,7 +68,7 @@ end
 
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV) where T <: RV
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: RV
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: RV
    κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
@@ -74,7 +85,19 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV) where T <: ROA
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
+Calculate deflection at given coordinates for Hernquist lens and update the deflection values in-place.
+
+# Arguments
+- `ψx`: x-component of deflection at given coordinates
+- `ψy`: y-component of deflection at given coordinates
+- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d::RV`: Angular diameter distance to the lens (in ``\\rm \\mathbf{Mpc}``).
+- `θxc::RV`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc::RV`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass::RV`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `θs::RV`: Scale radius i.e., standard deviation of the Gaussian (in ``\\rm \\mathbf{arcseconds}``).
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
    κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
@@ -96,7 +119,7 @@ end
 
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV) where T <: RV
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: RV
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: RV
    κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
@@ -116,7 +139,20 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
 end
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV) where T <: ROA
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
+Calculate Jacobian at given coordinates for Hernquist lens and update the Jacobian values in-place.
+
+# Arguments
+- `ψxx`: xx-component of Jacobian at given coordinates
+- `ψyy`: yy-component of Jacobian at given coordinates
+- `ψxy`: xy-component of Jacobian at given coordinates
+- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d::RV`: Angular diameter distance to the lens (in ``\\rm \\mathbf{Mpc}``).
+- `θxc::RV`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc::RV`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass::RV`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `θs::RV`: Scale radius i.e., standard deviation of the Gaussian (in ``\\rm \\mathbf{arcseconds}``).
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
    κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
