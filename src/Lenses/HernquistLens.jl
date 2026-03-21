@@ -46,7 +46,7 @@ Calculate potential at given coordinates for Hernquist lens and update the poten
 - `ψ`: Potential at given coordinates
 - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `D_d::RV`: Angular diameter distance to the lens (in ``\\rm \\mathbf{Mpc}``).
+- `D_d::RV`: Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``).
 - `θxc::RV`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `θyc::RV`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `mass::RV`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
@@ -93,7 +93,7 @@ Calculate deflection at given coordinates for Hernquist lens and update the defl
 - `ψy`: y-component of deflection at given coordinates
 - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `D_d::RV`: Angular diameter distance to the lens (in ``\\rm \\mathbf{Mpc}``).
+- `D_d::RV`: Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``).
 - `θxc::RV`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `θyc::RV`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `mass::RV`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
@@ -148,7 +148,7 @@ Calculate Jacobian at given coordinates for Hernquist lens and update the Jacobi
 - `ψxy`: xy-component of Jacobian at given coordinates
 - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `D_d::RV`: Angular diameter distance to the lens (in ``\\rm \\mathbf{Mpc}``).
+- `D_d::RV`: Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``).
 - `θxc::RV`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `θyc::RV`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `mass::RV`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
