@@ -33,7 +33,8 @@ go through the examples here: [LensFactory_Examples](https://github.com/akmeena7
 ---
 ## Feedback
 I would be very happy to receive any suggestions, comments, or questions regarding `LensFactory`.
-Please feel free to drop an email to: [ashishmeena766@gmail.com](mailto:ashishmeena766@gmail.com) 
+Please feel free to drop an email to: [akm@iisc.ac.in](mailto:akm@iisc.ac.in) or
+[ashishmeena766@gmail.com](mailto:ashishmeena766@gmail.com).
 
 ---
 ## Citation
