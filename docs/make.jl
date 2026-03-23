@@ -53,6 +53,7 @@ makedocs(
                         "Multi-Plane" => "PlotExt_MultiPlane.md",
                         "Lens Modeling" => "PlotExt_LensModel.md"
                         ],
+            "Publications" => "Publications.md",
             "History" => "History.md",
         ]
 )
