@@ -52,7 +52,7 @@ end
 
 
 """ 
-    scale_factor(z::RV) --> RV
+    scale_factor(z::RV)
 
 Calculate scale factor ``(a)`` at redshift ``z``,
 ```math
@@ -71,7 +71,7 @@ end
 
 
 """
-    Ez(cosmology::AbstractCosmology, z::RV) --> RV
+    Ez(cosmology::AbstractCosmology, z::RV)
 Calculate dimensionless Hubble parameter ``(E)`` at redshift, ``z``,
 ```math
 E(z) = \\sqrt{ Ω_{m0} (1+z)^2 + Ω_{r0} (1+z)^4 + Ω_{k0} (1+z)^2 + Ω_{w0} (1+z)^{3(1+w)} }.
@@ -93,7 +93,7 @@ end
 
 
 """
-    hubble_parameter(cosmology::AbstractCosmology, z::RV) --> RV
+    hubble_parameter(cosmology::AbstractCosmology, z::RV)
 Calculate Hubble parameter ``(H)`` at redshift ``z`` in ``{\\rm \\mathbf{km/s/Mpc}}``,
 ```math
 H(z) = H_0 \\: E(z).
@@ -112,7 +112,7 @@ end
 
 
 """ 
-    hubble_time(H0::RV) --> RV
+    hubble_time(H0::RV)
 Calculate Hubble time ``(t_H)`` in ``{\\rm \\mathbf{Gyr}}``,
 ```math
 t_H = \\frac{1}{H_0}.
@@ -130,7 +130,7 @@ end
 
 
 """
-    age(cosmology::AbstractCosmology, z::RV) --> RV
+    age(cosmology::AbstractCosmology, z::RV)
 Calculate age ``(t_{\\rm age})`` of the Universe at redshift ``z`` in ``{\\rm \\mathbf{Gyr}}``,
 ```math 
 t_{\\rm age}(z) = \\int_z^\\infty \\frac{1}{(1+z')H(z')} dz'.
@@ -157,7 +157,7 @@ end
 
 
 """
-    lookback_time(cosmology::AbstractCosmology, z::RV) --> RV
+    lookback_time(cosmology::AbstractCosmology, z::RV)
 Calculate lookbak time ``(t_L)`` to a given redshift ``z`` in ``{\\rm \\mathbf{Gyr}}``,
 ```math
 t_L(z) = \\int_0^z \\frac{1}{(1+z')H(z')} dz'.
@@ -184,7 +184,7 @@ end
 
 
 """
-    rho_cz(cosmology::AbstractCosmology, z::RV) --> RV
+    rho_cz(cosmology::AbstractCosmology, z::RV)
 Calculate the critical density ``(\\rho_c)`` of the Universe at redshift ``z`` in ``{\\rm \\mathbf{kg/m^3}}``,
 ```math
 \\rho_c(z) = \\frac{3 H^2(z)}{8 π {\\rm G} }.
@@ -203,7 +203,7 @@ end
 
 
 """
-    Omega_mz(cosmology::AbstractCosmology, z::RV) --> RV
+    Omega_mz(cosmology::AbstractCosmology, z::RV)
 Calculate the dimensionless matter density parameter ``(\\Omega_{m})`` at redshift ``z``,
 ```math
 Ω_{m}(z) = Ω_{m}(0) \\: (1+z)^3 \\left( \\frac{H0}{H(z)} \\right)^2.
@@ -222,7 +222,7 @@ end
 
 
 """
-    Omega_rz(cosmology::AbstractCosmology, z::RV) --> RV
+    Omega_rz(cosmology::AbstractCosmology, z::RV)
 Calculate the dimensionless radiation density parameter ``(\\Omega_{r})`` at redshift ``z``,
 ```math
 Ω_{r}(z) = Ω_{r}(0) \\: (1+z)^4 \\left( \\frac{H_0}{H(z)} \\right)^2.
@@ -241,7 +241,7 @@ end
 
 
 """
-    Omega_wz(cosmology::AbstractCosmology, z::RV) --> RV
+    Omega_wz(cosmology::AbstractCosmology, z::RV)
 Calculate the dimensionless dark energy density parameter ``(\\Omega_{w})`` at redshift ``z``,
 ```math
 Ω_{w}(z) = Ω_{w0} (1+z)^{3(1+w)} \\left( \\frac{H_0}{H(z)} \\right)^2.
@@ -260,7 +260,7 @@ end
 
 
 """
-    Omega_kz(cosmology::AbstractCosmology, z::RV) --> RV
+    Omega_kz(cosmology::AbstractCosmology, z::RV)
 Calculate the dimensionless curvature density parameter ``(\\Omega_{k})`` at redshift ``z``,
 ```math 
 Ω_{k}(z) = Ω_{k0} (1+z)^2 \\left( \\frac{H_0}{H(z)} \\right)^2.
@@ -279,7 +279,7 @@ end
 
 
 """ 
-    hubble_distance(H0::RV) --> RV
+    hubble_distance(H0::RV)
 Calculate the Hubble distance (i.e., size of the observable Universe) ``(D_H)`` in ``{\\rm \\mathbf{meters}}``,
 ```math 
 D_H = \\frac{\\rm c}{\\rm H_0}.
@@ -297,7 +297,7 @@ end
 
 
 """
-    comoving_distance_radial(cosmo::AbstractCosmology, z1::RV, z2::RV) --> RV
+    comoving_distance_radial(cosmo::AbstractCosmology, z1::RV, z2::RV)
 Calculate the comoving radial distance ``(D_C)`` between ``z_1`` and ``z_2`` in ``{\\rm \\mathbf{meters}}``.
 The formula is,
 ```math
@@ -326,7 +326,7 @@ end
 
 
 """
-    comoving_distance_transverse(cosmo::AbstractCosmology, z1::RV, z2::RV) --> RV
+    comoving_distance_transverse(cosmo::AbstractCosmology, z1::RV, z2::RV)
 Calculate the comoving transverse distance ``(D_M)`` between, ``z_1`` and ``z_2`` in ``{\\rm \\mathbf{meters}}``,
 ```math
 D_M = \\begin{cases} 
@@ -368,7 +368,7 @@ end
 
 
 """
-    luminosity_distance(cosmology::AbstractCosmology, z::RV) --> RV
+    luminosity_distance(cosmology::AbstractCosmology, z::RV)
 Calculate the luminosity distance ``(D_L)`` to redshift ``z`` in ``{\\rm \\mathbf{meters}}``,
 ```math
 D_L(z) = (1+z) D_M(z).
@@ -387,7 +387,7 @@ end
 
 
 """
-    angular_diameter_distance(cosmology::AbstractCosmology, z1::RV, z2::RV) --> RV
+    angular_diameter_distance(cosmology::AbstractCosmology, z1::RV, z2::RV)
 Calculate the angular diameter distance ``(D_A)`` between redshifts ``z_1`` and ``z_2`` in ``{\\rm \\mathbf{meters}}``,
 ```math
 D_A(z_1, z_2) = \\frac{D_M(z_1, z_2)}{1+z_2}.
@@ -407,7 +407,7 @@ end
 
 
 """
-    distance_modulus(cosmo::AbstractCosmology, z::RV) --> RV
+    distance_modulus(cosmo::AbstractCosmology, z::RV)
 Calculate the distance modulus ``(\\mu)`` to a given redshift ``z``,
 ```math
 \\mu = 5 \\log\\left( \\frac{D_L}{\\rm pc} \\right) - 5.
@@ -426,7 +426,7 @@ end
 
 
 """
-    angular_scale(cosmology::AbstractCosmology, z::RV) --> RV
+    angular_scale(cosmology::AbstractCosmology, z::RV)
 Calculate the angular size in ``{\\rm \\mathbf{Kpc}}`` for ``1''`` on sky at redhsift, ``z``,
 ```math
 d = 1'' \\times \\left( \\frac{D_A}{\\rm{kpc}} \\right).
@@ -445,7 +445,7 @@ end
 
 
 """
-    comoving_volume_element(cosmology::AbstractCosmology, z::RV) --> RV
+    comoving_volume_element(cosmology::AbstractCosmology, z::RV)
 Calculate the comving volume element ``(dV_C)`` at redshift ``z`` in ``{\\rm \\mathbf{Gpc^3}}``,
 ```math
 dV_C = D_H \\frac{D_M^2(z)}{E(z)}.
@@ -473,7 +473,7 @@ end
 
 
 """
-    comoving_volume(cosmology::AbstractCosmology, z::RV) --> RV
+    comoving_volume(cosmology::AbstractCosmology, z::RV)
 Calculate the total comving volume up to redshift ``z`` in ``{\\rm \\mathbf{Gpc^3}}``,
 ```math
 V_C = \\begin{cases} 
@@ -518,7 +518,7 @@ end
 
 
 """
-    adis2zs(cosmology::AbstractCosmology, z_d::RV, adis::RV; max_iter::Int64=10000, tol::Float64=1e-6) --> RV
+    adis2zs(cosmology::AbstractCosmology, z_d::RV, adis::RV; max_iter::Int64=10000, tol::Float64=1e-6)
 Calculate the source redshift (``z_s``) from the distance ratio (``a_{\\rm dis}``), using Bi-section method.
 
 # Arguments

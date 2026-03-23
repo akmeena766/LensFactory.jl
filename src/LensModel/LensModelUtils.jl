@@ -29,9 +29,6 @@ export lens_quantities
 export free_parameter_names
 export get_best_parameters
 export get_best_parameters_with_errors
-export check_parity
-export get_best_fit_rms
-export save_best_fit
 
 
 # --------------------------------------------------------------------------------------------------

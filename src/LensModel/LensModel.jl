@@ -42,12 +42,16 @@ using .Diagnostic
 # --------------------------------------------------------------------------------------------------
 export read_input
 export fit_model
-export free_parameter_names
-export get_best_fit
-export get_best_fit_with_errors
+export get_best_model
+export get_potential
+export get_deflection
+export get_jacobian
+export save_best_fits
 export check_parity
 export get_best_fit_rms
-export save_best_fit
+export get_best_fit
+export get_best_fit_with_errors
+export free_parameter_names
 
 
 # --------------------------------------------------------------------------------------------------
@@ -90,7 +94,7 @@ Performs lens model fitting using the given `model`.
 # Arguments:
 - `model::ModelConfig`: The lens model configuration containing the observation, lens, source, and sampler details.
 - `save::Bool=true`: Whether to save the MCMC results to a JLD2 file (default: true)
-- `file_name::Union{String, Nothing}=nothing`: The name of the JLD2 file to save results to. If no 
+   - `file_name::Union{String, Nothing}=nothing`: The name of the JLD2 file to save results. If no 
    name is provided then a name will be generated based on the lens name and current date (i.e., 
    LensName_DDMMYYYY.jld2).
 # Returns:
@@ -106,7 +110,7 @@ end
 # Get lensing quantities for the best-fit model
 # --------------------------------------------------------------------------------------------------
 """
-   get_best_model(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64})
+    get_best_model(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64})
 Get the best-fit lens model based on the MCMC results stored in `chains` and `chi2`. The best-fit 
 parameters are determined by the minimum chi2 in `chi2`.
 
@@ -146,9 +150,9 @@ either RA/DEC or arcseconds.
 - `θy`: y-coordinates
 
 # Keyword Arguments
-- `unit::Symbol=:RA_DEC`: Unit of the input coordinates. Supported units are `:RA_DEC` and `:arcsec`. 
-   If `:RA_DEC` then (θx, θy) = (RA, DEC) is assumed and will be converted to arcseconds relative to 
-   the reference position in the model.
+- `unit::Symbol=:RA_DEC`: Unit of the input coordinates. 
+   - `:RA_DEC`: (θx, θy) are assumed to be in RA/DEC (in degrees).
+   - `:arcsec`: (θx, θy) are assumed to be in arcseconds.
 
 # Returns
 - `ψ`: Lensing potential at the input coordinates for the best-fit model.
@@ -198,9 +202,9 @@ either RA/DEC or arcseconds.
 - `θy`: y-coordinates
 
 # Keyword Arguments
-- `unit::Symbol=:RA_DEC`: Unit of the input coordinates. Supported units are `:RA_DEC` and `:arcsec`. 
-   If `:RA_DEC` then (θx, θy) = (RA, DEC) is assumed and will be converted to arcseconds relative to 
-   the reference position in the model.
+- `unit::Symbol=:RA_DEC`: Unit of the input coordinates. 
+   - `:RA_DEC`: (θx, θy) are assumed to be in RA/DEC (in degrees).
+   - `:arcsec`: (θx, θy) are assumed to be in arcseconds.
 
 # Returns
 - `αx`: x-component of the deflection angle (in arcseconds).
@@ -251,9 +255,9 @@ specify the unit of the input coordinates as either RA/DEC or arcseconds.
 - `θy`: y-coordinates
 
 # Keyword Arguments
-- `unit::Symbol=:RA_DEC`: Unit of the input coordinates. Supported units are `:RA_DEC` and `:arcsec`.
-   If `:RA_DEC` then (θx, θy) = (RA, DEC) is assumed and will be converted to arcseconds relative to 
-   the reference position in the model.
+- `unit::Symbol=:RA_DEC`: Unit of the input coordinates. 
+   - `:RA_DEC`: (θx, θy) are assumed to be in RA/DEC (in degrees).
+   - `:arcsec`: (θx, θy) are assumed to be in arcseconds.
 
 # Returns
 - `ψxx`: xx-component of the jacobian.
@@ -336,7 +340,7 @@ function _write_fits_header!(header::ImageHDU, model::ModelConfig;
 end
 
 """
-    save_best_fit(file_name::String; save_potential::Bool=true, save_deflection::Bool=true, save_kappa::Bool=true, save_gamma::Bool=true)
+    save_best_fits(file_name::String; save_potential::Bool=true, save_deflection::Bool=true, save_kappa::Bool=true, save_gamma::Bool=true)
 Save fits files for the best-fit model based on the MCMC results stored in `file_name`. The user can
 choose which lensing quantities to save by setting the corresponding boolean flags.
 
@@ -352,10 +356,10 @@ choose which lensing quantities to save by setting the corresponding boolean fla
 # Returns
 - Nothing (saves FITS files to disk)
 """
-function save_best_fit(file_name::String;
-                      save_potential::Bool = true,
-                      save_deflection::Bool = true,
-                      save_kappa::Bool = true, save_gamma::Bool = true)
+function save_best_fits(file_name::String;
+                      save_potential::Bool=true,
+                      save_deflection::Bool=true,
+                      save_kappa::Bool=true, save_gamma::Bool=true)
 
    # Load the chains and chi2 from the file
    data = jldopen(file_name, "r")
@@ -467,7 +471,7 @@ parity matches or not.
    dimensions should be (n_steps, n_steps).
 
 # Returns
-- Nothing (prints a table to the console)
+- `nothing`: Prints a table to the console with input and best-fit model parities for each knot image.
 """
 function check_parity(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64})
    # Check if parity was enforced during modelling
@@ -588,7 +592,7 @@ print a warning if any parity does not match.
 - `check_parity::Bool=false`: Whether to check the parity of each knot image against the input parity.
 
 # Returns
-- Nothing (prints a table to the console)
+- `nothing`: Prints a table to the console with the RMS for each knot image, as well as total RMS.
 """
 function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64}; check_parity::Bool=false)
    # Get the best parameters based on minimum chi2
