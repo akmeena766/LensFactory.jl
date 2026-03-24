@@ -165,7 +165,7 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
     
       # Calculate relative difference for the chi2 (objective value)
       rel_diff_f = abs(result.f - best_val) / (abs(best_val) + 1e-8)
-      # println(rel_diff_θ, " ", rel_diff_f)
+
       # Check if all parameters are within percentage tolerance (e.g., 0.1% = 0.001)
       if all(rel_diff_θ .< opt.tolerance) && (rel_diff_f < opt.tolerance)
          same_best_count += 1
@@ -335,6 +335,7 @@ function _fit_model(model::ModelConfig; save::Bool=true, file_name::Union{String
       jldsave(file_name; Date   = Dates.Date(date),
                          Time   = Dates.Time(date),
                          model  = model,
+                         optimizer = θ_start,
                          chains = chains,
                          chi2   = chi2)
    end

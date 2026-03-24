@@ -26,20 +26,20 @@ Generates a corner plot for the given MCMC chains and chi-squared values.
 
 # Keyword arguments
 - `param_names=nothing`: Optional list of parameter names for labeling the axes.
-- `burn_in=0.3`: Fraction of the initial samples to discard as burn-in.
-- `thinning=100`: Interval for thinning the chains to reduce autocorrelation.
-- `save_plot=true`: Whether to save the plot as "corner.png".
-   - `plot_name="./corner.png"`: Filename for saving the plot.
-   - `resolution::Int=2`: Resolution for saving the plot.
+- `burn_in::Float64 = 0.3`: Fraction of the initial samples to discard as burn-in.
+- `thinning::Int64  = 100`: Interval for thinning the chains to reduce autocorrelation.
+- `save_plot::Bool  = true`: Whether to save the plot as "corner.png".
+   - `plot_name::String = "./corner.png"`: Filename for saving the plot.
+   - `resolution::Int64 = 2`: Resolution for saving the plot.
 
 # Returns
 - A Makie figure object containing the corner plot.
 """
 function LensFactory.LensModel.plot_corner(chains, chi2; 
                               param_names=nothing, 
-                              burn_in=0.3, 
-                              thinning=100, 
-                              save_plot=true, plot_name::String="./corner.png", resolution::Int=2)
+                              burn_in::Float64=0.3, 
+                              thinning::Int64=100, 
+                              save_plot::Bool=true, plot_name::String="./corner.png", resolution::Int64=2)
    # Get chain details 
    n_steps, n_chains, n_params = size(chains)
    
@@ -76,23 +76,23 @@ function LensFactory.LensModel.plot_corner(chains, chi2;
          LensFactory.Lenses.set_plotKws!(ax)
          
          if i == j
-               # Diagonal: 1D Density
-               density!(ax, flat_chain[:, i], color=(:dodgerblue, 0.5), strokewidth=2)
+            # Diagonal: 1D Density
+            density!(ax, flat_chain[:, i], color=(:dodgerblue, 0.5), strokewidth=2)
                
-               # Sigma lines
-               vlines!(ax, [best_θ[i] - lower_err[i], best_θ[i], best_θ[i] + upper_err[i]], color=:black, linestyle=:dash)
+            # Sigma lines
+            vlines!(ax, [best_θ[i] - lower_err[i], best_θ[i], best_θ[i] + upper_err[i]], color=:black, linestyle=:dash)
 
-               ylims!(ax, 0, nothing)
+            ylims!(ax, 0, nothing)
          else
-               # 2D Corner: KDE Contours
-               # Note: j is x-axis (column), i is y-axis (row)
-               k = kde((flat_chain[:, j], flat_chain[:, i]))
-               levels = _get_levels(k.density)
+            # 2D Corner: KDE Contours
+            # Note: j is x-axis (column), i is y-axis (row)
+            k = kde((flat_chain[:, j], flat_chain[:, i]))
+            levels = _get_levels(k.density)
                
-               contour_levels = sort(unique([levels..., maximum(k.density) + 1e-10]))
-               contourf!(ax, k.x, k.y, k.density, levels = contour_levels, 
-                        colormap = [:white, (:dodgerblue, 0.3), (:dodgerblue, 0.6), (:dodgerblue, 0.9)], extendlow = :auto)
-               contour!(ax, k.x, k.y, k.density, levels = levels, color = :black, linewidth = 1.2)
+            contour_levels = sort(unique([levels..., maximum(k.density) + 1e-10]))
+            contourf!(ax, k.x, k.y, k.density, levels = contour_levels, 
+                     colormap = [:white, (:dodgerblue, 0.3), (:dodgerblue, 0.6), (:dodgerblue, 0.9)], extendlow = :auto)
+            contour!(ax, k.x, k.y, k.density, levels = levels, color = :black, linewidth = 1.2)
          end
 
          # Clean up decorations for inner plots
@@ -107,6 +107,100 @@ function LensFactory.LensModel.plot_corner(chains, chi2;
    return fig
 end
 
+
+"""
+    LensFactory.LensModel.plot_corner(results; param_names=nothing, save_plot=true, plot_name="./corner_optimizer.png", resolution=2)
+Generates a corner plot for the optimizer results.
+
+# Arguments
+- `results`: Vector of optimizer results, each containing `.θ` (parameter vector) and `.f` (chi-squared value).
+
+# Keyword arguments
+- `param_names = nothing`: List of parameter names for labeling the axes.
+- `save_plot::Bool = true`: Whether to save the plot as "corner_optimizer.png".
+   - `plot_name::String = "./corner_optimizer.png"`: Filename for saving the plot.
+   - `resolution::Int64 = 2`: Resolution for saving the plot.
+
+# Returns
+- A Makie figure object containing the corner plot.
+"""
+function LensFactory.LensModel.plot_corner(results;
+                                           param_names=nothing,
+                                           save_plot::Bool=true, plot_name::String="./corner_optimizer.png", resolution::Int64=2)
+
+   # Sort by chi2 (highest/best first)
+   # results should be a vector of structs/objects with .θ and .f (chi2)
+   sorted_res = sort(results, by = x -> x.f, rev = true)
+   best_θ = sorted_res[1].θ
+ 
+   n_params = length(sorted_res[1].θ)
+   # Create matrix from optimizer results
+   θ_matrix = hcat([res.θ for res in results]...)'
+
+   # Get result details
+   n_steps, n_params = size(θ_matrix)
+
+   # Calculate (asymmetric) errors as we are defining errors relative to the Best-Fit value
+   lower_err = zeros(n_params)
+   upper_err = zeros(n_params)
+
+   for i in 1:n_params
+      # Get 16th and 84th percentiles of the posterior
+      q16, q84 = StatsBase.quantile(θ_matrix[:, i], [0.16, 0.84])
+        
+      # Asymmetric error: distance from best-fit to the quantiles
+      lower_err[i] = best_θ[i] - q16
+      upper_err[i] = q84 - best_θ[i]
+   end
+
+   # Initialize figure
+   fig = Figure(size=(1200, 1200), figure_padding=15, fontsize=20, fonts=(; regular="Times New Roman"))
+
+   for i in 1:n_params
+      # Get parameter labels
+      p_name = PARAM_NAME[param_names[i][2]]
+
+      # Marginal Stats for Title
+      title_str = L"%$(p_name) = %$(round(best_θ[i], digits=2))^{+ %$(round(upper_err[i], digits=2))}_{-%$(round(lower_err[i], digits=2))}"
+      
+      for j in 1:i
+         p_name_i = L"%$(PARAM_NAME[param_names[i][1]]): %$(PARAM_NAME[param_names[i][2]])"
+         p_name_j = L"%$(PARAM_NAME[param_names[j][1]]): %$(PARAM_NAME[param_names[j][2]])"
+         ax = Axis(fig[i, j]; 
+                  title = (i == j) ? title_str : "",
+                  xlabel = (i == n_params) ? p_name_j : "",
+                  ylabel = (j == 1) ? p_name_i : "",
+                  titlesize = 18,
+                  xticklabelrotation = π/4)
+         
+         LensFactory.Lenses.set_plotKws!(ax)
+
+         if i == j
+            # Diagonal: 1D Density
+            density!(ax, θ_matrix[:, i], color=(:dodgerblue, 0.5), strokewidth=2)
+               
+            # Sigma lines
+            vlines!(ax, [best_θ[i] - lower_err[i], best_θ[i], best_θ[i] + upper_err[i]], color=:black, linestyle=:dash)
+
+            ylims!(ax, 0, nothing)
+         else
+            # Scatter plot
+            scatter!(ax, θ_matrix[:, j], θ_matrix[:, i], alpha=0.1, color=:black, markersize=20)
+         end
+
+         # Clean up decorations for inner plots
+         if i < n_params hidexdecorations!(ax, grid = false, ticks = false) end
+         if j > 1 hideydecorations!(ax, grid = false, ticks = false) end
+      end
+   end
+
+   if save_plot
+      save(plot_name, fig, px_per_unit=resolution)
+   end
+   return fig
+end
+
+
 """
     LensFactory.LensModel.plot_trace(chains; param_names=nothing, burn_in=0.0, thinning=1)
 Generates trace plots for the given MCMC chains.
@@ -115,14 +209,20 @@ Generates trace plots for the given MCMC chains.
 - `chains`: MCMC chains of shape (n_steps, n_chains, n_params).
 
 # Keyword arguments
-- `param_names=nothing`: Optional list of parameter names for labeling the axes.
-- `burn_in=0.0`: Fraction of the initial samples to discard as burn-in.
-- `thinning=1`: Interval for thinning the chains to reduce autocorrelation.
+- `param_names = nothing`: Optional list of parameter names for labeling the axes.
+- `burn_in::Float64 = 0.0`: Fraction of the initial samples to discard as burn-in.
+- `thinning::Int64 = 1`: Interval for thinning the chains to reduce autocorrelation.
+- `save_plot::Bool = true`: Whether to save the plot as "corner_optimizer.png".
+   - `plot_name::String = "./trace.png"`: Filename for saving the plot.
+   - `resolution::Int64 = 2`: Resolution for saving the plot.
 
 # Returns
 - A Makie figure object containing the trace plots.
 """
-function LensFactory.LensModel.plot_trace(chains; param_names=nothing, burn_in=0.0, thinning=1)
+function LensFactory.LensModel.plot_trace(chains; 
+                                          param_names=nothing, 
+                                          burn_in::Float64=0.0, thinning::Int64=1,
+                                          save_plot::Bool=true, plot_name::String="./trace.png", resolution::Int64=2)
    # Adapt to [n_params, n_chains, n_steps]
    n_steps, n_chains, n_params = size(chains)
     
@@ -159,8 +259,10 @@ function LensFactory.LensModel.plot_trace(chains; param_names=nothing, burn_in=0
          hidexdecorations!(ax, grid = false, ticks = false)
       end
    end
-
-   save("./trace.png", fig)
+   
+   if save_plot
+      save(plot_name, fig, px_per_unit=resolution)
+   end
    return fig
 end
 
