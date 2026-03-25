@@ -110,7 +110,9 @@ end
 
 """
     LensFactory.LensModel.plot_corner(results; param_names=nothing, save_plot=true, plot_name="./corner_optimizer.png", resolution=2)
-Generates a corner plot for the optimizer results.
+Generates a corner plot for the optimizer results. This plot is useful to check the convergence of
+the optimizer runs. For example, if the optimizer is run for 1000 times, the corner plot
+will show the distribution of the parameters in each of the converged runs.
 
 # Arguments
 - `results`: Vector of optimizer results, each containing `.θ` (parameter vector) and `.f` (chi-squared value).

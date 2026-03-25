@@ -1,6 +1,4 @@
-```@docs
-Sources
-```
+# Sources
 
 ```@docs
 Sources.disk
