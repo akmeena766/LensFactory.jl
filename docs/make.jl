@@ -27,6 +27,7 @@ makedocs(
                         "Gaussian Lens"                => "GaussianLens.md",
                         "Sersic Lens"                  => "SersicLens.md",
                         "External Effects"             => "ExternalEffects.md",
+                        "Third Order Perturbation"    => "ExternalEffects3.md",
                         "PIEP Lens"                    => "PIEPLens.md",
                         "SIE Lens"                     => "SIELens.md",
                         "PJE Lens"                     => "PJELens.md",

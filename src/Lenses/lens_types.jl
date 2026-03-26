@@ -6,6 +6,7 @@ export init_NSISMDLens
 export init_GaussianLens
 export init_SersicLens
 export init_ExternalEffects
+export init_ExternalEffects3
 export init_PIEPLens
 export init_SIELens
 export init_PJELens
@@ -168,14 +169,29 @@ Initialize constant external effects with the given parameters.
 
 # Keyword Arguments
 - `kappa::RV = NaN`: Convergence (dimensionless).
-- `gamma1::RV= NaN`: Shear in the x-direction (dimensionless).
-- `gamma2::RV= NaN`: Shear in the y-direction (dimensionless).
+- `gamma::RV = NaN`: Shear amplitude (dimensionless).
+- `angle::RV = NaN`: Shear angle (in ``\\rm \\mathbf{degrees}``).
 """
 @kwdef struct init_ExternalEffects <: AbstractLens
    _lens_::Symbol = :ExternalEffects
-   kappa::RV  = NaN
-   gamma1::RV = NaN
-   gamma2::RV = NaN
+   kappa::RV = NaN
+   gamma::RV = NaN
+   angle::RV = NaN
+end
+
+
+"""
+    init_ExternalEffects3(delta::RV=NaN, angle::RV=NaN)
+Initialize "restricted" third order perturbations with the given parameters.
+
+# Keyword Arguments
+- `delta::RV = NaN`: Amplitude of third order perturbations (dimensionless).
+- `angle::RV = NaN`: Direction of the perturbation (in ``\\rm \\mathbf{degrees}``).
+"""
+@kwdef struct init_ExternalEffects3 <: AbstractLens
+   _lens_::Symbol = :ExternalEffects3
+   delta::RV = NaN
+   angle::RV = NaN
 end
 
 
@@ -799,7 +815,7 @@ const lens_init_functions = Dict{Symbol, Function}(
    :NSISMDLens        => (comp -> init_NSISMDLens(x_c=comp.x_c, y_c=comp.y_c, v_d=comp.v_d, x_s=comp.x_s)),
    :GaussianLens      => (comp -> init_GaussianLens(D_d=comp.D_d, x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, x_s=comp.x_s)),
    :SersicLens        => (comp -> init_SersicLens(D_d=comp.D_d, x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, x_e=comp.x_e, n=comp.n)),
-   :ExternalEffects   => (comp -> init_ExternalEffects(kappa=comp.kappa, gamma1=comp.gamma1, gamma2=comp.gamma2)),
+   :ExternalEffects   => (comp -> init_ExternalEffects(kappa=comp.kappa, gamma=comp.gamma, angle=comp.angle)),
    :PIEPLens          => (comp -> init_PIEPLens(x_c=comp.x_c, y_c=comp.y_c, v_d=comp.v_d, x_s=comp.x_s, eps=comp.eps, pa=comp.pa)),
    :SIELens           => (comp -> init_SIELens(x_c=comp.x_c, y_c=comp.y_c, v_d=comp.v_d, x_s=comp.x_s, eps=comp.eps, pa=comp.pa)),
    :PJELens           => (comp -> init_PJELens(x_c=comp.x_c, y_c=comp.y_c, v_d=comp.v_d, x_s=comp.x_s, x_t=comp.x_t, eps=comp.eps, pa=comp.pa)),

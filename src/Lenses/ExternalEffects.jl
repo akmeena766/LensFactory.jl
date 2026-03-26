@@ -1,19 +1,33 @@
 module ExternalEffects
 
-# Inbuilt packages to use
 
-# LensFactory modules to import
+# --------------------------------------------------------------------------------------------------
+# Julia inbuilt functions to import
+# --------------------------------------------------------------------------------------------------
+
+
+# --------------------------------------------------------------------------------------------------
+# LensFactory modules to use
+# --------------------------------------------------------------------------------------------------
 using ..Constants
 
+
+# --------------------------------------------------------------------------------------------------
 # Functions to export
+# --------------------------------------------------------------------------------------------------
+
 export potential! 
 export deflection!
 export jacobian!
 
 """
-    potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: RV
+    potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: RV
 """
-function potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: RV
+function potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: RV
+   angle = deg2rad(angle)
+   gamma1 = gamma * cos(2.0 * angle)
+   gamma2 = gamma * sin(2.0 * angle)
+
    f1 = 0.5 * (kappa + gamma1)
    f2 = 0.5 * (kappa - gamma1)
 
@@ -22,7 +36,7 @@ function potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) wh
 end
 
 """
-    potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: ROA
+    potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: ROA
 Calculate potential at given coordinates for constant external convergence and shear and update the 
 potential in place.
 
@@ -31,10 +45,14 @@ potential in place.
 - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `kappa::RV`: External convergence.
-- `gamma1::RV`: External shear component-1.
-- `gamma2::RV`: External shear component-2.
+- `gamma::RV`: External shear value.
+- `angle::RV`: External Shear angle (in ``\\rm \\mathbf{degrees}``).
 """
-function potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: ROA
+function potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: ROA
+   angle = deg2rad(angle)
+   gamma1 = gamma * cos(2.0 * angle)
+   gamma2 = gamma * sin(2.0 * angle)
+
    f1 = 0.5 * (kappa + gamma1)
    f2 = 0.5 * (kappa - gamma1)
 
@@ -48,9 +66,13 @@ end
 
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: RV
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: RV
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: RV
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: RV
+   angle = deg2rad(angle)
+   gamma1 = gamma * cos(2.0 * angle)
+   gamma2 = gamma * sin(2.0 * angle)
+
    f1 = (kappa + gamma1)
    f2 = (kappa - gamma1)
 
@@ -60,7 +82,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamm
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: ROA
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: ROA
 Calculate deflection at given coordinates for constant external convergence and shear and update 
 the deflection in place.
 
@@ -70,10 +92,14 @@ the deflection in place.
 - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `kappa::RV`: External convergence.
-- `gamma1::RV`: External shear component-1.
-- `gamma2::RV`: External shear component-2.
+- `gamma::RV`: External shear value.
+- `angle::RV`: External Shear angle (in ``\\rm \\mathbf{degrees}``).
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: ROA
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: ROA
+   angle = deg2rad(angle)
+   gamma1 = gamma * cos(2.0 * angle)
+   gamma2 = gamma * sin(2.0 * angle)
+
    f1 = (kappa + gamma1)
    f2 = (kappa - gamma1)
 
@@ -88,9 +114,13 @@ end
 
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: RV
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: RV
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: RV
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: RV
+   angle = deg2rad(angle)
+   gamma1 = gamma * cos(2.0 * angle)
+   gamma2 = gamma * sin(2.0 * angle)
+
    f1 = (kappa + gamma1)
    f2 = (kappa - gamma1)
 
@@ -101,7 +131,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma1:
 end
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: ROA
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: ROA
 Calculate Jacobian at given coordinates for constant external convergence and shear and update the 
 Jacobian in place.
 
@@ -112,10 +142,14 @@ Jacobian in place.
 - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `kappa::RV`: External convergence.
-- `gamma1::RV`: External shear component-1.
-- `gamma2::RV`: External shear component-2.
+- `gamma::RV`: External shear value.
+- `angle::RV`: External Shear angle (in ``\\rm \\mathbf{degrees}``).
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma1::RV, gamma2::RV) where T <: ROA
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: ROA
+   angle = deg2rad(angle)
+   gamma1 = gamma * cos(2.0 * angle)
+   gamma2 = gamma * sin(2.0 * angle)
+   
    f1 = (kappa + gamma1)
    f2 = (kappa - gamma1)
 
