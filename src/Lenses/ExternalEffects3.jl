@@ -37,6 +37,7 @@ function potential!(ψ::T, θx::T, θy::T, δ::RV, ϕ::RV) where T <: RV
    sin_value = (θy * cos_phi - θx * sin_phi) / r
 
    ψ_up = ψ + δ * r^3 * cos_value * sin_value^2
+   return ψ_up
 end
 
 """
@@ -96,6 +97,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, δ::RV, ϕ::RV) where T <: 
    term2 = sin_value * (2.0 * cos_value^2 - sin_value^2)
    ψx_up = ψx + δ * r * (term1 * θx - term2 * θy)
    ψy_up = ψy + δ * r * (term1 * θy + term2 * θx)
+   return ψx_up, ψy_up
 end
 
 
@@ -144,7 +146,7 @@ end
     jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, δ::RV, ϕ::RV) where T <: RV
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, δ::RV, ϕ::RV) where T <: RV
-   
+
 end
 
 

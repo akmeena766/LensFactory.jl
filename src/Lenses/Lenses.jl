@@ -935,6 +935,10 @@ end
    return ExternalEffects.potential!(ψ, θx, θy, lens.kappa, lens.gamma, lens.angle)
 end
 
+@inline function potential_helper!(ψ::T, lens::init_ExternalEffects3, θx::T, θy::T) where T <: Union{RV, ROA}
+   return ExternalEffects3.potential!(ψ, θx, θy, lens.delta, lens.angle)
+end
+
 @inline function potential_helper!(ψ::T, lens::init_PIEPLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return PIEPLens.potential!(ψ, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.eps, lens.pa)
 end
@@ -1031,6 +1035,10 @@ end
    return ExternalEffects.deflection!(ψx, ψy, θx, θy, lens.kappa, lens.gamma, lens.angle)
 end
 
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_ExternalEffects3, θx::T, θy::T) where T <: Union{RV, ROA}
+   return ExternalEffects3.deflection!(ψx, ψy, θx, θy, lens.delta, lens.angle)
+end
+
 @inline function deflection_helper!(ψx::T, ψy::T, lens::init_PIEPLens, θx::T, θy::T) where T <: Union{RV, ROA}
    return PIEPLens.deflection!(ψx, ψy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.eps, lens.pa)
 end
@@ -1125,6 +1133,10 @@ end
 
 @inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_ExternalEffects, θx::T, θy::T) where T <: Union{RV, ROA}
    return ExternalEffects.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.kappa, lens.gamma, lens.angle)
+end
+
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_ExternalEffects3, θx::T, θy::T) where T <: Union{RV, ROA}
+   return ExternalEffects3.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.delta, lens.angle)
 end
 
 @inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PIEPLens, θx::T, θy::T) where T <: Union{RV, ROA}
