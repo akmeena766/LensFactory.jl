@@ -182,7 +182,7 @@ end
 
 """
     init_ExternalEffects3(delta::RV=NaN, angle::RV=NaN)
-Initialize "restricted" third order perturbations with the given parameters.
+Initialize "restricted" third order perturbations assuming SIS as our perturber.
 
 # Keyword Arguments
 - `delta::RV = NaN`: Amplitude of third order perturbations (dimensionless).

@@ -15,13 +15,12 @@ using ..Constants
 # --------------------------------------------------------------------------------------------------
 # Functions to export
 # --------------------------------------------------------------------------------------------------
-
 export potential! 
 export deflection!
 export jacobian!
 
 """
-    potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: RV
+    potential!(ψ::T, θx::T, θy::T, κ::RV, γ::RV, ϕ::RV) where T <: RV
 """
 function potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: RV
    angle = deg2rad(angle)
@@ -36,7 +35,7 @@ function potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) wher
 end
 
 """
-    potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: ROA
+    potential!(ψ::T, θx::T, θy::T, κ::RV, γ::RV, ϕ::RV) where T <: ROA
 Calculate potential at given coordinates for constant external convergence and shear and update the 
 potential in place.
 
@@ -44,9 +43,9 @@ potential in place.
 - `ψ`: Potential at given coordinates
 - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `kappa::RV`: External convergence.
-- `gamma::RV`: External shear value.
-- `angle::RV`: External Shear angle (in ``\\rm \\mathbf{degrees}``).
+- `κ::RV`: External convergence.
+- `γ::RV`: External shear value.
+- `ϕ::RV`: External Shear angle (in ``\\rm \\mathbf{degrees}``).
 """
 function potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: ROA
    angle = deg2rad(angle)
@@ -66,7 +65,7 @@ end
 
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: RV
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, κ::RV, γ::RV, ϕ::RV) where T <: RV
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: RV
    angle = deg2rad(angle)
@@ -82,7 +81,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: ROA
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, κ::RV, γ::RV, ϕ::RV) where T <: ROA
 Calculate deflection at given coordinates for constant external convergence and shear and update 
 the deflection in place.
 
@@ -91,9 +90,9 @@ the deflection in place.
 - `ψy`: y-component of deflection at given coordinates
 - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `kappa::RV`: External convergence.
-- `gamma::RV`: External shear value.
-- `angle::RV`: External Shear angle (in ``\\rm \\mathbf{degrees}``).
+- `κ::RV`: External convergence.
+- `γ::RV`: External shear value.
+- `ϕ::RV`: External Shear angle (in ``\\rm \\mathbf{degrees}``).
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: ROA
    angle = deg2rad(angle)
@@ -114,7 +113,7 @@ end
 
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: RV
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, κ::RV, γ::RV, ϕ::RV) where T <: RV
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: RV
    angle = deg2rad(angle)
@@ -131,7 +130,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma::
 end
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: ROA
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, κ::RV, γ::RV, ϕ::RV) where T <: ROA
 Calculate Jacobian at given coordinates for constant external convergence and shear and update the 
 Jacobian in place.
 
@@ -141,9 +140,9 @@ Jacobian in place.
 - `ψxy`: xy-component of Jacobian at given coordinates
 - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `kappa::RV`: External convergence.
-- `gamma::RV`: External shear value.
-- `angle::RV`: External Shear angle (in ``\\rm \\mathbf{degrees}``).
+- `κ::RV`: External convergence.
+- `γ::RV`: External shear value.
+- `ϕ::RV`: External Shear angle (in ``\\rm \\mathbf{degrees}``).
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: ROA
    angle = deg2rad(angle)
