@@ -283,9 +283,13 @@ Generates a plot comparing the observed image positions with the predicted image
 function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig, 
                                               chains::Array{Float64, 3}, 
                                               chi2::Matrix{Float64};
-                                              plot_critical::Bool=false,
-                                              plot_caustics::Bool=false,
-                                              z_s::Float64=NaN)
+                                              plot_critical::Bool=true,
+                                              plot_caustics::Bool=true,
+                                              z_s::RV=1.5,
+                                              caustic_tan_kws::NamedTuple = (color=:green, linewidth=2, linestyle=:solid),
+                                              caustic_rad_kws::NamedTuple = (color=:green, linewidth=2, linestyle=:dash),
+                                              critical_tan_kws::NamedTuple = (color=:red, linewidth=2, linestyle=:solid),
+                                              critical_rad_kws::NamedTuple = (color=:red, linewidth=2, linestyle=:dash))
    # Get the best parameters based on minimum chi2
    best_θ, _ = LensFactory.LensModel.LensModelUtils.get_best_parameters(chi2, chains)
 
@@ -314,6 +318,9 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
    # Initialize empty figure
    fig = Figure(size=(600, 600), figure_padding=15, fontsize=20, fonts=(; regular="Times New Roman"))
    ax = Axis(fig[1, 1])
+
+   # Set plot keywords
+   LensFactory.Lenses.set_plotKws!(ax)
    
    # Calculate RMS for each image
    sid = 1
@@ -336,7 +343,7 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
          σθ = knot.σθ
 
          # Plot observed positions of knots
-         scatter!(ax, x, y, markersize=20, marker=:circle, color=:transparent, strokecolor=:black, strokewidth=2)
+         scatter!(ax, x, y, markersize=20, marker=:circle, color=:transparent, strokecolor=:black, strokewidth=2, label="Observed")
 
          # Number of images for this knot
          n = length(x)
@@ -362,7 +369,12 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
          predicted_image = Lenses.get_image(best_model, x_grid, y_grid, adis_value, (βx_model, βy_model))
 
          # Plot predicted image positions
-         scatter!(ax, first.(predicted_image), last.(predicted_image), markersize=20, marker=:diamond, color=:transparent, strokecolor=:red, strokewidth=2)
+         scatter!(ax, first.(predicted_image), last.(predicted_image), markersize=20, 
+                                                                       marker=:diamond, 
+                                                                       color=:transparent, 
+                                                                       strokecolor=:red, 
+                                                                       strokewidth=2, 
+                                                                       label="Predicted")
          kid = kid + 1
       end
       sid = sid + 1
@@ -379,16 +391,16 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
 
       if plot_critical
          # Get critical curves
-         crit_tan, crit_rad = Lenses.get_critical_curve(best_model, x_grid, y_grid, adis_value)
+         critical_tan, critical_rad = Lenses.get_critical_curve(best_model, x_grid, y_grid, adis_value)
 
          # Plot tangential critical curve
          for curve in critical_tan
-            lines!(ax, first.(curve), last.(curve), color=:red, linewidth=2, linestyle=:solid)
+            lines!(ax, first.(curve), last.(curve); critical_tan_kws...)
          end
 
          # Plot radial critical curve
          for curve in critical_rad
-            lines!(ax, first.(curve), last.(curve), color=:red, linewidth=2, linestyle=:dash)
+            lines!(ax, first.(curve), last.(curve); critical_rad_kws...)
          end
       end
 
@@ -398,17 +410,25 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
 
          # Plot tangential caustic
          for curve in caustic_tan
-            lines!(ax, first.(curve), last.(curve), color=caustic_kws.color_tan, linewidth=caustic_kws.linewidth, linestyle=:solid)
+            lines!(ax, first.(curve), last.(curve); caustic_tan_kws...)
          end
 
          # Plot radial caustic
          for curve in caustic_rad
-            lines!(ax, first.(curve), last.(curve), color=caustic_kws.color_rad, linewidth=caustic_kws.linewidth, linestyle=:dash)
+            lines!(ax, first.(curve), last.(curve); caustic_rad_kws...)
          end
       end
    end
 
+   # Axis limits
    xlims!(ax, minimum(x_grid), maximum(x_grid))
    ylims!(ax, minimum(y_grid), maximum(y_grid))
+
+   # Set axis labels and limits
+   ax.xlabel = L"\theta_1~\text{(in arcseconds)}"
+   ax.ylabel = L"\theta_2~\text{(in arcseconds)}"
+   
+   # Legend
+   axislegend(ax)
    return fig
 end
