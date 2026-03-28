@@ -339,7 +339,7 @@ function _fit_model(model::ModelConfig; save::Bool=true, file_name::Union{String
                          chains = chains,
                          chi2   = chi2)
    end
-   return chains, chi2
+   return nothing
 end
 
 end
