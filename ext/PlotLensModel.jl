@@ -269,7 +269,7 @@ function LensFactory.LensModel.plot_trace(chains;
 end
 
 """
-    LensFactory.LensModel.plot_best_model(θx, θy, model, chains, chi2)
+    LensFactory.LensModel.plot_best_model(model, chains, chi2)
 Generates a plot comparing the observed image positions with the predicted image positions from the best-fit lens model.
 
 # Arguments
@@ -280,7 +280,12 @@ Generates a plot comparing the observed image positions with the predicted image
 # Returns
 - A Makie figure object containing the comparison plot.
 """
-function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64})
+function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig, 
+                                              chains::Array{Float64, 3}, 
+                                              chi2::Matrix{Float64};
+                                              plot_critical::Bool=false,
+                                              plot_caustics::Bool=false,
+                                              z_s::Float64=NaN)
    # Get the best parameters based on minimum chi2
    best_θ, _ = LensFactory.LensModel.LensModelUtils.get_best_parameters(chi2, chains)
 
@@ -361,6 +366,46 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig, cha
          kid = kid + 1
       end
       sid = sid + 1
+   end
+
+   if plot_critical || plot_caustics
+      # Get cosmology
+      cosmo = model.cosmology
+      
+      # ADDs
+      Dls = Cosmology.angular_diameter_distance(cosmo, model.observation.z_d, z_s)
+      Dos = Cosmology.angular_diameter_distance(cosmo, 0.0, z_s)
+      adis_value = Dls / Dos
+
+      if plot_critical
+         # Get critical curves
+         crit_tan, crit_rad = Lenses.get_critical_curve(best_model, x_grid, y_grid, adis_value)
+
+         # Plot tangential critical curve
+         for curve in critical_tan
+            lines!(ax, first.(curve), last.(curve), color=:red, linewidth=2, linestyle=:solid)
+         end
+
+         # Plot radial critical curve
+         for curve in critical_rad
+            lines!(ax, first.(curve), last.(curve), color=:red, linewidth=2, linestyle=:dash)
+         end
+      end
+
+      if plot_caustics
+         # Get caustics
+         caustic_tan, caustic_rad = Lenses.get_caustic(best_model, x_grid, y_grid, adis_value)
+
+         # Plot tangential caustic
+         for curve in caustic_tan
+            lines!(ax, first.(curve), last.(curve), color=caustic_kws.color_tan, linewidth=caustic_kws.linewidth, linestyle=:solid)
+         end
+
+         # Plot radial caustic
+         for curve in caustic_rad
+            lines!(ax, first.(curve), last.(curve), color=caustic_kws.color_rad, linewidth=caustic_kws.linewidth, linestyle=:dash)
+         end
+      end
    end
 
    xlims!(ax, minimum(x_grid), maximum(x_grid))
