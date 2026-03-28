@@ -277,19 +277,34 @@ Generates a plot comparing the observed image positions with the predicted image
 - `chains`: MCMC chains of shape (n_steps, n_chains, n_params).
 - `chi2`: Chi-squared values corresponding to the chains, of shape (n_steps, n_chains).
 
+# Keyword arguments
+- `z_s::RV = 1.5`: Source redshift.
+- `plot_critical::Bool = true`: Whether to plot the critical curves.
+   - `critical_tan_kws::NamedTuple = (color=:red, linewidth=2, linestyle=:solid)`: Keyword arguments for plotting the tangential critical curve.
+   - `critical_rad_kws::NamedTuple = (color=:red, linewidth=2, linestyle=:dash)`: Keyword arguments for plotting the radial critical curve.
+- `plot_caustics::Bool = true`: Whether to plot the caustics.
+   - `caustic_tan_kws::NamedTuple = (color=:green, linewidth=2, linestyle=:solid)`: Keyword arguments for plotting the tangential caustic.
+   - `caustic_rad_kws::NamedTuple = (color=:green, linewidth=2, linestyle=:dash)`: Keyword arguments for plotting the radial caustic.
+- `save_plot::Bool = true`: Whether to save the plot as "best_model.png".
+   - `plot_name::String = "./best_model.png"`: Filename for saving the plot.
+   - `resolution::Int64 = 2`: Resolution for saving the plot.
+
 # Returns
 - A Makie figure object containing the comparison plot.
 """
 function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig, 
                                               chains::Array{Float64, 3}, 
                                               chi2::Matrix{Float64};
-                                              plot_critical::Bool=true,
-                                              plot_caustics::Bool=true,
                                               z_s::RV=1.5,
-                                              caustic_tan_kws::NamedTuple = (color=:green, linewidth=2, linestyle=:solid),
-                                              caustic_rad_kws::NamedTuple = (color=:green, linewidth=2, linestyle=:dash),
-                                              critical_tan_kws::NamedTuple = (color=:red, linewidth=2, linestyle=:solid),
-                                              critical_rad_kws::NamedTuple = (color=:red, linewidth=2, linestyle=:dash))
+                                              plot_critical::Bool=true,
+                                              critical_tan_kws::NamedTuple=(color=:red, linewidth=2, linestyle=:solid),
+                                              critical_rad_kws::NamedTuple=(color=:red, linewidth=2, linestyle=:dash),
+                                              plot_caustics::Bool=true,
+                                              caustic_tan_kws::NamedTuple=(color=:green, linewidth=2, linestyle=:solid),
+                                              caustic_rad_kws::NamedTuple=(color=:green, linewidth=2, linestyle=:dash),
+                                              save_plot::Bool=true,
+                                              plot_name::String="./best_model.png",
+                                              resolution::Int64=2)
    # Get the best parameters based on minimum chi2
    best_θ, _ = LensFactory.LensModel.LensModelUtils.get_best_parameters(chi2, chains)
 
@@ -430,5 +445,9 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
    
    # Legend
    axislegend(ax)
+
+   if save_plot
+      save(plot_name, fig, px_per_unit=resolution)
+   end
    return fig
 end

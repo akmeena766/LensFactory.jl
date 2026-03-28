@@ -149,21 +149,13 @@ end
 # --------------------------------------------------------------------------------------------------
 # Abstract type: MCMC
 # --------------------------------------------------------------------------------------------------
-# Metropolis-Hastings
+# Metropolis-Hastings (MH) sampler
 @kwdef struct MHConfig <: AbstractMCMCConfig
    n_steps::Int = 10000
    n_adapt::Int = Int64(n_steps / 10)
 end
 
-# Hamiltonian Monte Carlo
-@kwdef struct HMCConfig <: AbstractMCMCConfig
-   n_steps::Int = 10000
-   step_size::Float64 = 0.1
-   leapfrog_steps::Int = 10
-   burn_in::Int = 100
-end
-
-# Affine-Invariant Ensemble Sampler
+# Affine-Invariant Ensemble Sampler (AIES)
 @kwdef struct AIESConfig <: AbstractMCMCConfig
    n_steps::Int = 10000
    a::Float64 = 2.0
