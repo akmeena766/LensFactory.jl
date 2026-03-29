@@ -10,10 +10,10 @@
 
 # Keyword arguments
 - `two_panel::Bool = false` -- Whether to create a two-panel plot with source plane on the left and image plane on the right
-- `plot_caustic::Bool = true`
-   - `caustic_kws::NamedTuple = (color = :green, linewidth = 2)`
 - `plot_critical::Bool =true`
-   - `critical_kws::NamedTuple = (color = :red, linewidth = 2)`
+   - `critical_kws::NamedTuple = (color=:red, linewidth=2, linestyle=:solid)`
+- `plot_caustic::Bool = true`
+   - `caustic_kws::NamedTuple = (color=:green, linewidth=2, linestyle=:solid)`
 - `source::Union{Nothing, NTuple{2, RV}, Matrix{<:RV}} = nothing`
    - `source_kws::NamedTuple = (color=:red, markersize=10, marker=:star5, heatmap=cgrad([:white, :blue]))`
    - `image_kws::NamedTuple = (color=:blue, markersize=10, marker=:star5, heatmap=cgrad([:white, :red]))`
@@ -27,17 +27,17 @@
 """
 function LensFactory.MultiPlane.plot_image_plane(cosmology::Cosmology.AbstractCosmology, 
                            lens::Lenses.AbstractLens, θx::Matrix{<:RV}, θy::Matrix{<:RV}, zs::RV;
-                           two_panel::Bool = false,
-                           plot_caustic::Bool = true,
-                           caustic_kws::NamedTuple = (color = :green, linewidth = 2),
-                           plot_critical::Bool =true,
-                           critical_kws::NamedTuple = (color = :red, linewidth = 2),
+                           two_panel::Bool=false,
+                           plot_critical::Bool=true,
+                           critical_kws::NamedTuple=(color=:red, linewidth=2, linestyle=:solid),
+                           plot_caustic::Bool=true,
+                           caustic_kws::NamedTuple=(color=:green, linewidth=2, linestyle=:solid),
                            source::Union{Nothing, NTuple{2, RV}, Matrix{<:RV}} = nothing,
-                           source_kws::NamedTuple = (color=:red, markersize=10, marker=:star5, heatmap=cgrad([:white, :blue])),
-                           image_kws::NamedTuple = (color=:blue, markersize=10, marker=:star5, heatmap=cgrad([:white, :red])),
-                           save_plot::Bool = false,
-                           plot_name::String = "image_plane.png",
-                           resolution::Int = 2)
+                           source_kws::NamedTuple=(color=:red, markersize=10, marker=:star5, heatmap=cgrad([:white, :blue])),
+                           image_kws::NamedTuple=(color=:blue, markersize=10, marker=:star5, heatmap=cgrad([:white, :red])),
+                           save_plot::Bool=false,
+                           plot_name::String="image_plane.png",
+                           resolution::Int64=2)
    
    if two_panel
       # Initialize empty figure
@@ -96,10 +96,10 @@ function LensFactory.MultiPlane.plot_image_plane(cosmology::Cosmology.AbstractCo
       # Get critical curves
       if plot_critical
          # Get critical curves
-         criical_curve = MultiPlane.get_critical_curve(cosmology, lens, θx, θy, zs)
+         critical_curve = MultiPlane.get_critical_curve(cosmology, lens, θx, θy, zs)
 
          # Plot tangential critical curve
-         for curve in criical_curve
+         for curve in critical_curve
             lines!(ax2, first.(curve), last.(curve); critical_kws...)
          end
       end
@@ -147,7 +147,7 @@ function LensFactory.MultiPlane.plot_image_plane(cosmology::Cosmology.AbstractCo
 
          # Plot tangential caustic
          for curve in caustic_curve
-            lines!(ax, first.(curve), last.(curve), color=caustic_kws.color, linewidth=caustic_kws.linewidth, linestyle=:solid)
+            lines!(ax, first.(curve), last.(curve); caustic_kws...)
          end
       end
 
@@ -157,7 +157,7 @@ function LensFactory.MultiPlane.plot_image_plane(cosmology::Cosmology.AbstractCo
 
          # Plot tangential critical curve
          for curve in critical_curve
-            lines!(ax, first.(curve), last.(curve), color=critical_kws.color, linewidth=critical_kws.linewidth, linestyle=:solid)
+            lines!(ax, first.(curve), last.(curve); critical_kws...)
          end
       end
       # Set plot keywords

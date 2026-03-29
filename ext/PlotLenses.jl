@@ -69,10 +69,12 @@ end
 
 # Keyword arguments
 - `two_panel::Bool = false` -- Whether to create a two-panel plot with source plane on the left and image plane on the right
+- `plot_critical::Bool = true`
+   - `critical_tan_kws::NamedTuple = (color=:red, linewidth=2, linestyle=:solid)`
+   - `critical_rad_kws::NamedTuple = (color=:red, linewidth=2, linestyle=:dash)`
 - `plot_caustic::Bool = true`
-   - `caustic_kws::NamedTuple = (color_tan = :green, color_rad = :green, linewidth = 2)`
-- `plot_critical::Bool =true`
-   - `critical_kws::NamedTuple = (color_tan = :red, color_rad = :red, linewidth = 2)`
+   - `caustic_tan_kws::NamedTuple = (color=:green, linewidth=2, linestyle=:solid)`
+   - `caustic_rad_kws::NamedTuple = (color=:green, linewidth=2, linestyle=:dash)`
 - `source::Union{Nothing, NTuple{2, RV}, Matrix{<:RV}} = nothing`
    - `source_kws::NamedTuple = (color=:red, markersize=10, marker=:star5, heatmap=cgrad([:white, :blue]))`
    - `image_kws::NamedTuple = (color=:blue, markersize=10, marker=:star5, heatmap=cgrad([:white, :red]))`
@@ -85,17 +87,19 @@ end
 - `ax`: The axis object of the plot for further customization.
 """
 function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Matrix{<:RV}, θy::Matrix{<:RV}, adis::Float64;
-                           two_panel::Bool = false,
-                           plot_caustic::Bool = true,
-                           caustic_kws::NamedTuple = (color_tan = :green, color_rad = :green, linewidth = 2),
-                           plot_critical::Bool =true,
-                           critical_kws::NamedTuple = (color_tan = :red, color_rad = :red, linewidth = 2),
+                           two_panel::Bool=false,
+                           plot_critical::Bool=true,
+                           critical_tan_kws::NamedTuple=(color=:red, linewidth=2, linestyle=:solid),
+                           critical_rad_kws::NamedTuple=(color=:red, linewidth=2, linestyle=:dash),
+                           plot_caustic::Bool=true,
+                           caustic_tan_kws::NamedTuple=(color=:green, linewidth=2, linestyle=:solid),
+                           caustic_rad_kws::NamedTuple=(color=:green, linewidth=2, linestyle=:dash),
                            source::Union{Nothing, NTuple{2, RV}, Matrix{<:RV}} = nothing,
-                           source_kws::NamedTuple = (color=:red, markersize=10, marker=:star5, heatmap=cgrad([:white, :blue])),
-                           image_kws::NamedTuple = (color=:blue, markersize=10, marker=:star5, heatmap=cgrad([:white, :red])),
-                           save_plot::Bool = false,
-                           plot_name::String = "image_plane.png",
-                           resolution::Int = 2)
+                           source_kws::NamedTuple=(color=:red, markersize=10, marker=:star5, heatmap=cgrad([:white, :blue])),
+                           image_kws::NamedTuple=(color=:blue, markersize=10, marker=:star5, heatmap=cgrad([:white, :red])),
+                           save_plot::Bool=false,
+                           plot_name::String="image_plane.png",
+                           resolution::Int64=2)
 
    if two_panel
       # Initialize empty figure
@@ -122,12 +126,12 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Mat
 
          # Plot tangential caustic
          for curve in caustic_tan
-            lines!(ax1, first.(curve), last.(curve), color=caustic_kws.color_tan, linewidth=caustic_kws.linewidth,linestyle=:solid)
+            lines!(ax1, first.(curve), last.(curve); caustic_tan_kws...)
          end
 
          # Plot radial caustic
          for curve in caustic_rad
-            lines!(ax1, first.(curve), last.(curve), color=caustic_kws.color_rad, linewidth=caustic_kws.linewidth, linestyle=:dash)
+            lines!(ax1, first.(curve), last.(curve); caustic_rad_kws...)
          end
       end
 
@@ -164,12 +168,12 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Mat
 
          # Plot tangential critical curve
          for curve in crit_tan
-            lines!(ax2, first.(curve), last.(curve), color=critical_kws.color_tan, linewidth=critical_kws.linewidth, linestyle=:solid)
+            lines!(ax2, first.(curve), last.(curve); critical_tan_kws...)
          end
 
          # Plot radial critical curve
          for curve in crit_rad
-            lines!(ax2, first.(curve), last.(curve), color=critical_kws.color_rad, linewidth=critical_kws.linewidth, linestyle=:dash)
+            lines!(ax2, first.(curve), last.(curve); critical_rad_kws...)
          end
       end
 
@@ -215,12 +219,12 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Mat
 
          # Plot tangential caustic
          for curve in caustic_tan
-            lines!(ax, first.(curve), last.(curve), color=caustic_kws.color_tan, linewidth=caustic_kws.linewidth, linestyle=:solid)
+            lines!(ax, first.(curve), last.(curve); caustic_tan_kws...)
          end
 
          # Plot radial caustic
          for curve in caustic_rad
-            lines!(ax, first.(curve), last.(curve), color=caustic_kws.color_rad, linewidth=caustic_kws.linewidth, linestyle=:dash)
+            lines!(ax, first.(curve), last.(curve); caustic_rad_kws...)
          end
       end
 
@@ -230,12 +234,12 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Mat
 
          # Plot tangential critical curve
          for curve in crit_tan
-            lines!(ax, first.(curve), last.(curve), color=critical_kws.color_tan, linewidth=critical_kws.linewidth, linestyle=:solid)
+            lines!(ax, first.(curve), last.(curve); critical_tan_kws...)
          end
 
          # Plot radial critical curve
          for curve in crit_rad
-            lines!(ax, first.(curve), last.(curve), color=critical_kws.color_rad, linewidth=critical_kws.linewidth, linestyle=:dash)
+            lines!(ax, first.(curve), last.(curve); critical_rad_kws...)
          end
       end
 

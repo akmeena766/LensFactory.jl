@@ -17,7 +17,7 @@ PARAM_NAME = Dict(:lens1 => "L1", :lens2 => "L2", :lens3 => "L3", :lens4 => "L4"
 
 
 """
-    LensFactory.LensModel.plot_corner(chains, chi2; param_names=nothing, burn_in=0.3, thinning=100)
+    LensFactory.LensModel.plot_corner(chains, chi2)
 Generates a corner plot for the given MCMC chains and chi-squared values.
 
 # Arguments
@@ -109,7 +109,7 @@ end
 
 
 """
-    LensFactory.LensModel.plot_corner(results; param_names=nothing, save_plot=true, plot_name="./corner_optimizer.png", resolution=2)
+    LensFactory.LensModel.plot_corner(results)
 Generates a corner plot for the optimizer results. This plot is useful to check the convergence of
 the optimizer runs. For example, if the optimizer is run for 1000 times, the corner plot
 will show the distribution of the parameters in each of the converged runs.
@@ -204,7 +204,7 @@ end
 
 
 """
-    LensFactory.LensModel.plot_trace(chains; param_names=nothing, burn_in=0.0, thinning=1)
+    LensFactory.LensModel.plot_trace(chains)
 Generates trace plots for the given MCMC chains.
 
 # Arguments
