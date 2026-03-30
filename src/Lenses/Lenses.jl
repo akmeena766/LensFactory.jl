@@ -404,7 +404,8 @@ Calculate time delay for a given lens model and source position. The correspondi
 t_d(\\pmb{θ}; \\pmb{β}) = \\frac{1+z_l}{\\rm c} \\frac{D_d D_s}{D_{ds}} \\theta_0^2
    \\left[ \\frac{(\\pmb{θ} - \\pmb{β})^2}{2} - \\frac{D_{ds}}{D_s} \\psi(\\pmb{θ}) \\right],
 ```
-where ``\\theta_0`` is normalizing angular unit.
+where ``\\theta_0`` is normalizing angular unit. Since all the angular coordinates are in arcseconds,
+for our case, ``\\mathbf{\\theta_0 = 1~\\rm \\mathbf{arcsecond}}``.
 
 # Arguments
    - `lens::AbstractLens`: Lens model.
