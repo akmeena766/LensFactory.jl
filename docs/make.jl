@@ -47,11 +47,12 @@ makedocs(
             "MultiPlane" => "MultiPlane.md",
             "Sources" => "Sources.md",
             "LensModel" => [
-                        "General" => "LensModel.md"
+                        "General"    => "LensModel.md",
+                        "Parametric" => "LensModel_Parametric.md"
                         ],
             "Plot Extension" => [
-                        "General" => "PlotExt_Lenses.md",
-                        "Multi-Plane" => "PlotExt_MultiPlane.md",
+                        "General"       => "PlotExt_Lenses.md",
+                        "Multi-Plane"   => "PlotExt_MultiPlane.md",
                         "Lens Modeling" => "PlotExt_LensModel.md"
                         ],
             "Publications" => "Publications.md",

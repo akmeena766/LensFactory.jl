@@ -1,5 +1,5 @@
 # Publications
-This page lists all publications that uses `LensFactory` in their analysis. We have divided the 
+This page lists all publications that uses `LensFactory` in their analysis. I have divided the 
 publications into multiple categories based on the use cases.
 
 !!! note
