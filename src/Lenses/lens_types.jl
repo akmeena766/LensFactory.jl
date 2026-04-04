@@ -71,7 +71,7 @@ Initialize a Singular Isothermal Sphere (SIS) lens with the given parameters.
 # Keyword Arguments
 - `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `y_c::RV = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `v_d::RV = NaN`: Velocity dispersion (in ``\\rm \\mathbf{meters/second}``).
+- `v_d::RV = NaN`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
 """
 @kwdef struct init_SISLens <: AbstractLens
    _lens_::Symbol = :SISLens
@@ -88,7 +88,7 @@ Initialize a Non-Singular Isothermal Sphere Potential (NSISP) lens with the give
 # Keyword Arguments
 - `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `y_c::RV = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `v_d::RV = NaN`: Velocity dispersion (in ``\\rm \\mathbf{meters/second}``).
+- `v_d::RV = NaN`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
 - `x_s::RV = NaN`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
 """
 @kwdef struct init_NSISPLens <: AbstractLens
@@ -107,7 +107,7 @@ Initialize a Non-Singular Isothermal Sphere Mass Distribution (NSISMD) lens with
 # Keyword Arguments
 - `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `y_c::RV = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `v_d::RV = NaN`: Velocity dispersion (in ``\\rm \\mathbf{meters/second}``).
+- `v_d::RV = NaN`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
 - `x_s::RV = NaN`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
 """
 @kwdef struct init_NSISMDLens <: AbstractLens
@@ -202,7 +202,7 @@ Initialize pseudo isothermal elliptical potential (PIEP) lens with the given par
 # Keyword Arguments
 - `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `y_c::RV = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `v_d::RV = NaN`: Velocity dispersion (in ``\\rm \\mathbf{meters/second}``).
+- `v_d::RV = NaN`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
 - `x_s::RV = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
 - `eps::RV = NaN`: Ellipticity (dimensionless).
 - `pa::RV = NaN`: Position angle (in ``\\rm \\mathbf{radians}``).
@@ -225,7 +225,7 @@ Initialize singular isothermal ellipsoid (SIE) lens with the given parameters.
 # Keyword Arguments
 - `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `y_c::RV = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `v_d::RV = NaN`: Velocity dispersion (in ``\\rm \\mathbf{meters/second}``).
+- `v_d::RV = NaN`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
 - `x_s::RV = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
 - `eps::RV = NaN`: Ellipticity (dimensionless).
 - `pa::RV = NaN`: Position angle (in ``\\rm \\mathbf{radians}``).
@@ -248,7 +248,7 @@ Initialize Pseudo-Jaffe Ellipsoid (PJE) lens with the given parameters.
 # Keyword Arguments
 - `x_c::RV = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `y_c::RV = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `v_d::RV = NaN`: Velocity dispersion (in ``\\rm \\mathbf{meters/second}``).
+- `v_d::RV = NaN`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
 - `x_s::RV = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
 - `x_t::RV = NaN`: Truncation radius (in ``\\rm \\mathbf{arcseconds}``).
 - `eps::RV = NaN`: Ellipticity (dimensionless).
