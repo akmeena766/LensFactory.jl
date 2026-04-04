@@ -831,7 +831,17 @@ const lens_init_functions = Dict{Symbol, Function}(
    :MultiGaussianLens => (comp -> init_MultiGaussianLens(D_d=comp.D_d, n=comp.n, x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, x_s=comp.x_s)),
    :MultiPJELens      => (comp -> init_MultiPJELens(n=comp.n, x_c=comp.x_c, y_c=comp.y_c, v_d=comp.v_d, x_s=comp.x_s, x_t=comp.x_t, eps=comp.eps, pa=comp.pa))
    )
-# Constructor for composite lens
+
+"""
+    init_CompositeLens(lens::Vector{<:NamedTuple})
+Initialize a composite lens from a vector of lens components.
+
+# Arguments
+- `lens::Vector{<:NamedTuple}`: Vector of lens components.
+
+# Returns
+- `CompositeLens`: Composite lens.
+"""
 function init_CompositeLens(lens::Vector{<:NamedTuple})
    # Define a compoent vector of known size
    lens_components = Vector{AbstractLens}(undef, length(lens))
@@ -875,7 +885,22 @@ end
 
 
 #---------------------- Parameter functions for various lenses -------------------------------------
-# Parameters for NFW lens
+"""
+    parameter_NFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d::RV=NaN, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN)
+Calculate parameters for NFW lens. The function would either need the concentration `c` or the 
+scale radius `x_s`. **If both are provided, `c` will be used to calculate `x_s` and the input `x_s` 
+will be overwritten.**
+
+# Arguments
+- `cosmology::AbstractCosmology = nothing`: Cosmology object.
+- `z_d::RV = NaN`: Redshift of the lens.
+- `mass::RV= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s::RV = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
+- `c::RV = NaN`: Concentration of the lens.
+
+# Returns
+- `NamedTuple`: Tuple of lens parameters.
+"""
 function parameter_NFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d::RV=NaN, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN)
    # Overdensity value
    Δ_z = 200.0
@@ -906,8 +931,25 @@ function parameter_NFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d
    return (mass=mass, rho_s=ρ_s, k_s=k_s, c=c, x_s=x_s)
 end
 
-# Parameters for generalized NFW lens
-function parameter_gNFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d::RV, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, n::RV=1.0)
+
+"""
+    parameter_gNFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d::RV, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, n::RV=1.0)
+Calculate parameters for gNFW lens. The function would either need the concentration `c` or the 
+scale radius `x_s`. **If both are provided, `c` will be used to calculate `x_s` and the input `x_s` 
+will be overwritten.**
+
+# Arguments
+- `cosmology::AbstractCosmology = nothing`: Cosmology object.
+- `z_d::RV = NaN`: Redshift of the lens.
+- `mass::RV= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s::RV = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
+- `c::RV = NaN`: Concentration of the lens.
+- `n::RV = 1.0`: Slope parameter of the lens.
+
+# Returns
+- `NamedTuple`: Tuple of lens parameters.
+"""
+function parameter_gNFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d::RV=NaN, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, n::RV=1.0)
    # Check for valid slope parameter
    if !(0.0 < n < 2.0)
       throw(ArgumentError("Slope parameter outside allowed range n ∈ (0, 2) in **parameter_gNFWLens**."))
@@ -948,8 +990,25 @@ function parameter_gNFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_
    return (mass=mass, rho_s=ρ_s, k_s=k_s, c=c, x_s=x_s, n=n)
 end
 
-# Parameters for Einasto lens
-function parameter_EinastoLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d::RV, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, n::RV=0.2)
+
+"""
+    parameter_EinastoLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d::RV, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, n::RV=0.2)
+Calculate parameters of an Einasto lens model. The function would either need the concentration `c` 
+or the scale radius `x_s`. **If both are provided, `c` will be used to calculate `x_s` and the input 
+`x_s` will be overwritten.**
+
+# Arguments
+- `cosmology::AbstractCosmology = nothing`: Cosmology object.
+- `z_d::RV = NaN`: Redshift of the lens.
+- `mass::RV= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s::RV = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
+- `c::RV = NaN`: Concentration of the lens.
+- `n::RV = 0.2`: Slope parameter of the lens.
+
+# Returns
+- `NamedTuple`: Tuple of lens parameters.
+"""
+function parameter_EinastoLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d::RV=NaN, mass::RV=NaN, x_s::RV=NaN, c::RV=NaN, n::RV=0.2)
    # Overdensity value
    Δ_z = 200.0
 

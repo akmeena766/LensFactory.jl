@@ -42,7 +42,8 @@ makedocs(
                         "Einasto Lens"                 => "EinastoLens.md",
                         "Multi-Plummer Lens"           => "MultiPlummerLens.md",
                         "Multi-Gaussian Lens"          => "MultiGaussianLens.md",
-                        "Multi-PJE Lens"               => "MultiPJELens.md"
+                        "Multi-PJE Lens"               => "MultiPJELens.md",
+                        "Composite Lens"               => "CompositeLens.md"
                         ],
             "MultiPlane" => "MultiPlane.md",
             "Sources" => "Sources.md",
