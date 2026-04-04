@@ -19,7 +19,7 @@
 
 @testset "Hernquist lens" begin
    x_s = 0.3
-   mass = 1E11 * MASS_SUN
+   mass = 1E11
    lens = Lenses.init_HernquistLens(D_d=Dol, mass=mass, x_s=x_s)
 
    pot1 = adis  * Lenses.get_potential(lens, xt1, yt1)

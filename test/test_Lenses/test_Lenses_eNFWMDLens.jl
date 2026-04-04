@@ -1,6 +1,6 @@
 #!!!!!!!!!!!!!! Testing/cross-checked AGAINST Glafic !!!!!!!!!!!!!!
 @testset "eNFWMD lens" begin
-   mass = 1E11 * MASS_SUN
+   mass = 1E11
    eps_old = 0.0
    eps_new = eps_old / (2.0 - eps_old)
    

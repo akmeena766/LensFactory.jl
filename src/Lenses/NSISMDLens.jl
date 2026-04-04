@@ -14,7 +14,7 @@ export einstein_angle
     potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: RV
 """
 function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: RV
-   θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+   θE = 4.0 * pi * (vd * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    θs2 = θs^2
 
    dx = θx - θxc
@@ -35,11 +35,11 @@ Calculate potential at given coordinates for NSISMD lens and update the potentia
 - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `θxc`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `v_d`: Velocity dispersion (in ``\\rm \\mathbf{meters/second}``).
+- `v_d`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
 - `θs`: Core radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
 """
 function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
-   θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+   θE = 4.0 * pi * (vd * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    θs2 = θs^2
    
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
@@ -60,7 +60,7 @@ end
     deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: RV
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: RV
-   θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+   θE = 4.0 * pi * (vd * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    θs2 = θs^2
 
    dx = θx - θxc
@@ -83,11 +83,11 @@ Calculate deflection at given coordinates for NSISMD lens and update the deflect
 - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `θxc`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `v_d`: Velocity dispersion (in ``\\rm \\mathbf{meters/second}``).
+- `v_d`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
 - `θs`: Core radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
-   θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+   θE = 4.0 * pi * (vd * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    θs2 = θs^2
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
@@ -108,7 +108,7 @@ end
     jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: RV
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: RV
-   θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+   θE = 4.0 * pi * (vd * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    θs2 = θs^2
 
    dx = θx - θxc
@@ -134,11 +134,11 @@ Calculate jacobian at given coordinates for NSISMD lens and update the jacobian 
 - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `θxc`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `v_d`: Velocity dispersion (in ``\\rm \\mathbf{meters/second}``).
+- `v_d`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
 - `θs`: Core radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
-   θE = 4.0 * pi * (vd / CONST_C)^2 / ANGLE_ARCSEC
+   θE = 4.0 * pi * (vd * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    θs2 = θs^2
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
@@ -172,14 +172,14 @@ where,
 # Keyword Arguments
 - `D_ds = NaN`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
 - `D_s = NaN`: ADD from the observer to the source (in ``\\rm \\mathbf{meters}``).
-- `v_d = NaN`: Velocity dispersion (in ``\\rm \\mathbf{meters/second}``).
+- `v_d = NaN`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
 - `x_s = NaN`: Core radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
 
 # Returns
 - `θE`: Einstein angle (in ``\\rm \\mathbf{arcseconds}``).
 """
 function einstein_angle(; D_ds::Float64=NaN, D_s::Float64=NaN, v_d::RV=NaN, x_s::Float64=NaN)
-   θE = 4π * (D_ds / D_s) * (v_d / CONST_C)^2 / ANGLE_ARCSEC
+   θE = 4π * (D_ds / D_s) * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    return sqrt(θE^2 - 2.0 * x_s * θE)
 end
 

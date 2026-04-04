@@ -17,7 +17,7 @@ function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV,
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Get b_sie(q)
-   bq = (4.0 * pi * (v_d / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
+   bq = (4.0 * pi * (v_d * 1.0E3 / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
 
    # Get s(q)
    sq = θs / sqrt(q)
@@ -61,7 +61,7 @@ function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV,
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Get b_sie(q)
-   bq = (4.0 * pi * (v_d / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
+   bq = (4.0 * pi * (v_d * 1.0E3 / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
 
    # Get s(q)
    sq = θs / sqrt(q)
@@ -97,7 +97,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Get b_sie(q)
-   bq = (4.0 * pi * (v_d / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
+   bq = (4.0 * pi * (v_d * 1.0E3 / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
 
    # Get s(q)
    sq = θs / sqrt(q)
@@ -144,7 +144,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Get b_sie(q)
-   bq = (4.0 * pi * (v_d / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
+   bq = (4.0 * pi * (v_d * 1.0E3 / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
 
    # Get s(q)
    sq = θs / sqrt(q)
@@ -182,7 +182,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Get b_sie(q)
-   bq = (4.0 * pi * (v_d / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
+   bq = (4.0 * pi * (v_d * 1.0E3 / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
 
    # Get s(q)
    sq = θs / sqrt(q)
@@ -237,7 +237,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Get b_sie(q)
-   bq = (4.0 * pi * (v_d / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
+   bq = (4.0 * pi * (v_d * 1.0E3 / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
 
    # Get s(q)
    sq = θs / sqrt(q)

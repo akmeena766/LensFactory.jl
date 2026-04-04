@@ -9,13 +9,13 @@
 
 @testset "SIS lens" begin
    # Einstein angle
-   D_d, D_ds, D_s, v_d = 1.0, 1.0, 1.0, 200E3
+   D_d, D_ds, D_s, v_d = 1.0, 1.0, 1.0, 200.0
    θE = Lenses.SISLens.einstein_angle(D_ds=D_ds, D_s=D_s, v_d=v_d)
    @test θE > 0.0
-   @test θE ≈ 4.0 * π * (v_d^2 / CONST_C^2) / ANGLE_ARCSEC atol=1e-15 rtol=1e-15
+   @test θE ≈ 4.0 * π * (v_d^2 * 1.0E6 / CONST_C^2) / ANGLE_ARCSEC atol=1e-15 rtol=1e-15
 
    # Create a SIS lens
-   lens = Lenses.init_SISLens(v_d=200E3)
+   lens = Lenses.init_SISLens(v_d=200.0)
 
    pot1 = adis  * Lenses.get_potential(lens, xt1, yt1)
    dex1 = adis .* Lenses.get_deflection(lens, xt1, yt1)

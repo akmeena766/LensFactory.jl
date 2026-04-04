@@ -1,7 +1,7 @@
 #!!!!!!!!!!!!!! Testing/cross-checked AGAINST Glafic !!!!!!!!!!!!!!
 #! Currently I am removing potential tests for gNFW lens model as it makes the run time slow.
 @testset "gNFW lens" begin
-   mass = 1E11 * MASS_SUN
+   mass = 1E11
 
    # Get NFW lens parameters
    param = Lenses.parameter_gNFWLens(cosmology=cosmo, z_d=zl, mass=mass, c=6, n=0.5)

@@ -1,10 +1,10 @@
 #!!!!!!!!!!!!!! Testing/cross-checked AGAINST Glafic !!!!!!!!!!!!!!
 @testset "tNFW lens" begin
-   mass = 1E11 * MASS_SUN
+   mass = 1E11
    
    ρ_cz = Cosmology.rho_cz(cosmo, zl)
    Δ_z = 200.0
-   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / Dol / ANGLE_ARCSEC
+   θ_vir = (3.0 * mass * MASS_SUN / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / Dol / ANGLE_ARCSEC
 
    lens = Lenses.init_tNFWLens(cosmo, zl; mass=mass, c=6, x_t=2.0*θ_vir)
 

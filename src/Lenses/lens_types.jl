@@ -419,10 +419,10 @@ Initialize a Multi-component Plummer lens with the given parameters.
    _lens_::Symbol = :MultiPlummerLens
    D_d::RV  = NaN
    n::Int64 = NaN
-   x_c  = Vector{<:RV}()
-   y_c  = Vector{<:RV}() 
-   mass = Vector{<:RV}()
-   x_s  = Vector{<:RV}()
+   x_c  = Vector{RV}()
+   y_c  = Vector{RV}() 
+   mass = Vector{RV}()
+   x_s  = Vector{RV}()
 end
 
 
@@ -442,10 +442,10 @@ Initialize a Multi-component Gaussian lens with the given parameters.
    _lens_::Symbol = :MultiGaussianLens
    D_d::RV  = NaN
    n::Int64 = NaN
-   x_c  = Vector{<:RV}()
-   y_c  = Vector{<:RV}() 
-   mass = Vector{<:RV}()
-   x_s  = Vector{<:RV}()
+   x_c  = Vector{RV}()
+   y_c  = Vector{RV}() 
+   mass = Vector{RV}()
+   x_s  = Vector{RV}()
 end
 
 
@@ -466,13 +466,13 @@ Initialize a Multi-component PJE lens with the given parameters.
 @kwdef struct init_MultiPJELens <: AbstractLens
    _lens_::Symbol = :MultiPJELens
    n::Int64 = NaN
-   x_c  = Vector{<:RV}()
-   y_c  = Vector{<:RV}() 
-   v_d  = Vector{<:RV}()
-   x_s  = Vector{<:RV}()
-   x_t  = Vector{<:RV}()
-   eps  = Vector{<:RV}()
-   pa   = Vector{<:RV}()
+   x_c  = Vector{RV}()
+   y_c  = Vector{RV}() 
+   v_d  = Vector{RV}()
+   x_s  = Vector{RV}()
+   x_t  = Vector{RV}()
+   eps  = Vector{RV}()
+   pa   = Vector{RV}()
 end
 
 
@@ -519,7 +519,7 @@ function init_NFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=0
    ρ_cz = Cosmology.rho_cz(cosmology, z_d)
 
    # Virial radius of the lens (in ANGLE_ARCSEC)
-   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
+   θ_vir = (3.0 * mass * MASS_SUN / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
 
    # Check if concentration is given
    if isfinite(c)
@@ -570,7 +570,7 @@ function init_eNFWMDLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::R
    ρ_cz = Cosmology.rho_cz(cosmology, z_d)
 
    # Virial radius of the lens (in ANGLE_ARCSEC)
-   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
+   θ_vir = (3.0 * mass * MASS_SUN / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
 
    # Check if concentration is given
    if isfinite(c)
@@ -621,7 +621,7 @@ function init_aNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=
    ρ_cz = Cosmology.rho_cz(cosmology, z_d)
 
    # Virial radius of the lens (in ANGLE_ARCSEC)
-   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
+   θ_vir = (3.0 * mass * MASS_SUN / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
 
    # Check if concentration is given
    if isfinite(c)
@@ -670,7 +670,7 @@ function init_tNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=
    ρ_cz = Cosmology.rho_cz(cosmology, z_d)
 
    # Virial radius of the lens (in ANGLE_ARCSEC)
-   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
+   θ_vir = (3.0 * mass * MASS_SUN / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
 
    # Check if concentration is given
    if isfinite(c)
@@ -730,7 +730,7 @@ function init_gNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::RV=
    ρ_cz = Cosmology.rho_cz(cosmology, z_d)
 
    # Virial radius of the lens (in ANGLE_ARCSEC)
-   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
+   θ_vir = (3.0 * mass * MASS_SUN / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
 
    # Check if concentration is given
    if isfinite(c)
@@ -782,7 +782,7 @@ function init_EinastoLens(cosmology::Cosmology.AbstractCosmology, z_d::RV; x_c::
    ρ_cz = Cosmology.rho_cz(cosmology, z_d)
 
    # Virial radius of the lens (in ANGLE_ARCSEC)
-   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
+   θ_vir = (3.0 * mass * MASS_SUN / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
 
    # Check if concentration is given
    if isfinite(c)
@@ -912,7 +912,7 @@ function parameter_NFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d
    ρ_cz = Cosmology.rho_cz(cosmology, z_d)
 
    # Virial radius of the lens (in ANGLE_ARCSEC)
-   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
+   θ_vir = (3.0 * mass * MASS_SUN / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
 
    # Check if concentration is given
    if isfinite(c)
@@ -970,7 +970,7 @@ function parameter_gNFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_
    ρ_cz = Cosmology.rho_cz(cosmology, z_d)
 
    # Virial radius of the lens (in ANGLE_ARCSEC)
-   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
+   θ_vir = (3.0 * mass * MASS_SUN / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
 
    # Check if concentration is given
    if isfinite(c)
@@ -1019,7 +1019,7 @@ function parameter_EinastoLens(; cosmology::Cosmology.AbstractCosmology=nothing,
    ρ_cz = Cosmology.rho_cz(cosmology, z_d)
 
    # Virial radius of the lens (in ANGLE_ARCSEC)
-   θ_vir = (3.0 * mass / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
+   θ_vir = (3.0 * mass * MASS_SUN / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
 
    # Check if concentration is given
    if isfinite(c)

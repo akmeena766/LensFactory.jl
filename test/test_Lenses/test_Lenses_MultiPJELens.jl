@@ -1,7 +1,7 @@
 #!!!!!!!!!!!!!! Testing AGAINST Composite lens !!!!!!!!!!!!!!
 @testset "Multi-PJE lens" begin
-   xc1=0.0; yc1=0.0; vd1=200E3; xs1=0.5; xt1=5.0; eps1=0.2; pa1=0.0
-   xc2=0.5; yc2=0.5; vd2=200E3; xs2=0.5; xt2=5.0; eps2=0.2; pa2=0.0
+   xc1=0.0; yc1=0.0; vd1=200.0; xs1=0.5; xt1=5.0; eps1=0.2; pa1=0.0
+   xc2=0.5; yc2=0.5; vd2=200.0; xs2=0.5; xt2=5.0; eps2=0.2; pa2=0.0
    
    lens1 = Lenses.init_CompositeLens([(lens=:PJELens, x_c=xc1, y_c=yc1, v_d=vd1, x_s=xs1, x_t=xt1, eps=eps1, pa=pa1),
                                    (lens=:PJELens, x_c=xc2, y_c=yc2, v_d=vd2, x_s=xs2, x_t=xt2, eps=eps2, pa=pa2)])

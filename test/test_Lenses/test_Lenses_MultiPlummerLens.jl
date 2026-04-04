@@ -1,7 +1,7 @@
 #!!!!!!!!!!!!!! Testing AGAINST Composite lens !!!!!!!!!!!!!!
 @testset "Multi-Plummer lens" begin
-   xc1 = 0.0; yc1 = 0.0; mass1 = 1.0E11 * MASS_SUN; xs1 = 0.5
-   xc2 = 0.5; yc2 = 0.5; mass2 = 1.0E11 * MASS_SUN; xs2 = 0.5
+   xc1 = 0.0; yc1 = 0.0; mass1 = 1.0E11; xs1 = 0.5
+   xc2 = 0.5; yc2 = 0.5; mass2 = 1.0E11; xs2 = 0.5
    
    lens1 = Lenses.init_CompositeLens([(lens=:PlummerLens, D_d=Dol, x_c=xc1, y_c=yc1, mass=mass1, x_s=xs1),
                                       (lens=:PlummerLens, D_d=Dol, x_c=xc2, y_c=yc2, mass=mass2, x_s=xs2)])

@@ -1,6 +1,6 @@
 #!!!!!!!!!!!!!! Testing/cross-checked AGAINST Glafic !!!!!!!!!!!!!!
 @testset "aNFW Lens" begin
-   mass = 1E11 * MASS_SUN
+   mass = 1E11
    
    # Get aNFW lens parameters
    eps_old = 0.0

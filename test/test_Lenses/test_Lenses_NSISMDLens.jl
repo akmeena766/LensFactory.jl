@@ -13,13 +13,13 @@
 
 @testset "NSISMD lens" begin
    # lens properties
-   v_d = 200E3
+   v_d = 200
    x_s = 0.3
 
    # Create an NSISMD lens
    lens = Lenses.init_NSISMDLens(v_d=v_d, x_s=x_s)
 
-   constant = 4π * (v_d/CONST_C)^2 * adis / ANGLE_ARCSEC
+   constant = 4π * (v_d * 1.0E3 / CONST_C)^2 * adis / ANGLE_ARCSEC
 
    # Test Einstein angle
    θE = Lenses.NSISMDLens.einstein_angle(D_ds=Dls, D_s=Dos, v_d=v_d, x_s=x_s)

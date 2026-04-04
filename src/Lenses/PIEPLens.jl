@@ -12,7 +12,7 @@ export jacobian!
     potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
 """
 function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
-   θE = 4.0 * pi * (v_d / CONST_C)^2 / ANGLE_ARCSEC
+   θE = 4.0 * pi * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Pre-compute angles
@@ -44,7 +44,7 @@ Calculate potential at given coordinates for PIEP lens and update the potential 
 - `pa::RV`: Position angle of the lens (in ``\\rm \\mathbf{degrees}``).
 """
 function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
-   θE = 4.0 * pi * (v_d / CONST_C)^2 / ANGLE_ARCSEC
+   θE = 4.0 * pi * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Pre-compute angles
@@ -68,7 +68,7 @@ end
     deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
-   θE = 4.0 * pi * (v_d / CONST_C)^2 / ANGLE_ARCSEC
+   θE = 4.0 * pi * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Pre-compute angles
@@ -109,7 +109,7 @@ Calculate deflection at given coordinates for PIEP lens and update the deflectio
 - `pa::RV`: Position angle of the lens (in ``\\rm \\mathbf{degrees}``).
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
-   θE = 4.0 * pi * (v_d / CONST_C)^2 / ANGLE_ARCSEC
+   θE = 4.0 * pi * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Pre-compute angles
@@ -141,7 +141,7 @@ end
     jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
-   θE = 4.0 * pi * (v_d / CONST_C)^2 / ANGLE_ARCSEC
+   θE = 4.0 * pi * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Pre-compute angles
@@ -187,7 +187,7 @@ Calculate Jacobian at given coordinates for PIEP lens and update the Jacobian va
 - `pa::RV`: Position angle of the lens (in ``\\rm \\mathbf{degrees}``).
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
-   θE = 4.0 * pi * (v_d / CONST_C)^2 / ANGLE_ARCSEC
+   θE = 4.0 * pi * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
    # Pre-compute angles

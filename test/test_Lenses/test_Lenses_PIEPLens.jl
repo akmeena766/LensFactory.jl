@@ -2,7 +2,7 @@
 #! Only for pa = 0°
 @testset "PIEP lens" begin
    # Einstein angle
-   v_d = 200E3
+   v_d = 200
    x_s = 0.1
    eps = 0.2
    q = (1.0 - eps) / (1.0 + eps)
@@ -10,7 +10,7 @@
    # Create lens
    lens = Lenses.init_PIEPLens(v_d=v_d, x_s=x_s, eps=eps, pa=0)
 
-   constant = 4π * (v_d/CONST_C)^2 * adis / ANGLE_ARCSEC
+   constant = 4π * (v_d * 1.0E3 / CONST_C)^2 * adis / ANGLE_ARCSEC
 
    # Test lensing quantities
    pot1 = adis  * Lenses.get_potential(lens, xt1, yt1)

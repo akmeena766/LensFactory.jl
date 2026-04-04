@@ -20,7 +20,7 @@
 @testset "Sersic lens" begin
    n = 4
    x_e = 1.0
-   mass = 1E11 * MASS_SUN
+   mass = 1E11
    lens = Lenses.init_SersicLens(D_d=Dol, mass=mass, x_e=x_e)
 
    pot1 = adis  * Lenses.get_potential(lens, xt1, yt1)

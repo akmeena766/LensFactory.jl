@@ -15,7 +15,7 @@ export jacobian!
 function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::S, θyc::S, mass::S, θs::S, nl::Int64) where {T <: RV, S <: Vector{<:RV}}
    ψ_up = ψ
    for k in 1:nl
-      κs = (2.0 * CONST_G * mass[k] / CONST_C^2) / (D_d * θs[k]^2 * ANGLE_ARCSEC^2)
+      κs = (2.0 * CONST_G * mass[k] * MASS_SUN / CONST_C^2) / (D_d * θs[k]^2 * ANGLE_ARCSEC^2)
       κs = κs * θs[k]^2
 
       dx = (θx - θxc[k]) / θs[k]
@@ -30,7 +30,7 @@ end
 function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::S, θyc::S, mass::S, θs::S, nl::Int64) where {T <: ROA, S <: Vector{<:RV}}
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    for k in 1:nl
-      κs = (2.0 * CONST_G * mass[k] / CONST_C^2) / (D_d * θs[k]^2 * ANGLE_ARCSEC^2)
+      κs = (2.0 * CONST_G * mass[k] * MASS_SUN / CONST_C^2) / (D_d * θs[k]^2 * ANGLE_ARCSEC^2)
       κs = κs * θs[k]^2
 
       @inbounds for j in ax2
@@ -50,7 +50,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::S, θyc::S, 
    ψx_up = ψx
    ψy_up = ψy
    for k in 1:nl
-      κs = (2.0 * CONST_G * mass[k] / CONST_C^2) / (D_d * θs[k]^2 * ANGLE_ARCSEC^2)
+      κs = (2.0 * CONST_G * mass[k] * MASS_SUN / CONST_C^2) / (D_d * θs[k]^2 * ANGLE_ARCSEC^2)
       κs = 2.0 * κs * θs[k]
 
       dx = (θx - θxc[k]) / θs[k]
@@ -66,7 +66,7 @@ end
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::S, θyc::S, mass::S, θs::S, nl::Int64) where {T <: ROA, S <: Vector{<:RV}}
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    for k in 1:nl
-      κs = (2.0 * CONST_G * mass[k] / CONST_C^2) / (D_d * θs[k]^2 * ANGLE_ARCSEC^2)
+      κs = (2.0 * CONST_G * mass[k] * MASS_SUN / CONST_C^2) / (D_d * θs[k]^2 * ANGLE_ARCSEC^2)
       κs = 2.0 * κs * θs[k]
 
       @inbounds for j in ax2
@@ -88,7 +88,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::S, 
    ψyy_up = ψyy
    ψxy_up = ψxy
    for k in 1:nl
-      κs = (2.0 * CONST_G * mass[k] / CONST_C^2) / (D_d * θs[k]^2 * ANGLE_ARCSEC^2)
+      κs = (2.0 * CONST_G * mass[k] * MASS_SUN / CONST_C^2) / (D_d * θs[k]^2 * ANGLE_ARCSEC^2)
       
       dx = (θx - θxc[k]) / θs[k]
       dy = (θy - θyc[k]) / θs[k]
@@ -105,10 +105,11 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::S, 
    return ψxx_up, ψyy_up, ψxy_up
 end
 
+
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::S, θyc::S, mass::S, θs::S, nl::Int64) where {T <: ROA, S <: Vector{<:RV}}
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    for k in 1:nl
-      κs = (2.0 * CONST_G * mass[k] / CONST_C^2) / (D_d * θs[k]^2 * ANGLE_ARCSEC^2)
+      κs = (2.0 * CONST_G * mass[k] * MASS_SUN / CONST_C^2) / (D_d * θs[k]^2 * ANGLE_ARCSEC^2)
       
       @inbounds for j in ax2
          @inbounds for i in ax1

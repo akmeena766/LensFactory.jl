@@ -80,7 +80,7 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: R
    θs_p = θs / sqrt(q)
 
    # Get normalization constant κs
-   κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
+   κs = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
    κs = κs * θs_p^2
 
    # Precompute trigonometric functions
@@ -114,7 +114,7 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass:: R
    θs_p = θs / sqrt(q)
 
    # Get normalization constant κs
-   κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
+   κs = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
    κs = κs * θs_p^2
 
    # Precompute trigonometric functions
@@ -152,7 +152,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
    θs_p = θs / sqrt(q)
 
    # Get normalization constant κs
-   κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
+   κs = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
    κs = κs * θs_p
 
    # Precompute trigonometric functions
@@ -192,7 +192,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
    θs_p = θs / sqrt(q)
 
    # Get normalization constant κs
-   κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
+   κs = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
    κs = κs * θs_p
 
    # Precompute trigonometric functions
@@ -236,7 +236,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
    θs_p = θs / sqrt(q)
 
    # Get normalization constant κs
-   κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
+   κs = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
 
    # Precompute trigonometric functions
    pa_rad = deg2rad(pa)
@@ -282,7 +282,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
    θs_p = θs / sqrt(q)
 
    # Get normalization constant κs
-   κs = (2.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
+   κs = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
 
    # Precompute trigonometric functions
    pa_rad = deg2rad(pa)

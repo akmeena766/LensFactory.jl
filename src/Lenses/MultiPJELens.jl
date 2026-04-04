@@ -16,7 +16,7 @@ function potential!(ψ::T, θx::T, θy::T, θxc::S, θyc::S, vd::S, θs::S, θt:
       q = (1.0 - ϵ[k]) / (1.0 + ϵ[k])
 
       # Get b_sie(q)
-      bq = (4.0 * pi * (vd[k] / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
+      bq = (4.0 * pi * (vd[k] * 1.0E3 / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
 
       # Get s(q) and a(q)
       sq = θs[k] / sqrt(q)
@@ -55,7 +55,7 @@ function potential!(ψ::T, θx::T, θy::T, θxc::S, θyc::S, vd::S, θs::S, θt:
       q = (1.0 - ϵ[k]) / (1.0 + ϵ[k])
 
       # Get b_sie(q)
-      bq = (4.0 * pi * (vd[k] / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
+      bq = (4.0 * pi * (vd[k] * 1.0E3 / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
 
       # Get s(q) and a(q)
       sq = θs[k] / sqrt(q)
@@ -99,7 +99,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::S, θyc::S, vd::S, θ
       q = (1.0 - ϵ[k]) / (1.0 + ϵ[k])
 
       # Get b_sie(q)
-      bq = (4.0 * pi * (vd[k] / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
+      bq = (4.0 * pi * (vd[k] * 1.0E3 / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
 
       # Get s(q) and a(q)
       sq = θs[k] / sqrt(q)
@@ -143,7 +143,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::S, θyc::S, vd::S, θ
       q = (1.0 - ϵ[k]) / (1.0 + ϵ[k])
 
       # Get b_sie(q)
-      bq = (4.0 * pi * (vd[k] / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
+      bq = (4.0 * pi * (vd[k] * 1.0E3 / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
 
       # Get s(q) and a(q)
       sq = θs[k] / sqrt(q)
@@ -192,7 +192,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::S, θyc::S, 
       q = (1.0 - ϵ[k]) / (1.0 + ϵ[k])
 
       # Get b_sie(q)
-      bq = (4.0 * pi * (vd[k] / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
+      bq = (4.0 * pi * (vd[k] * 1.0E3 / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
 
       # Get s(q) and a(q)
       sq = θs[k] / sqrt(q)
@@ -243,7 +243,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::S, θyc::S, 
       q = (1.0 - ϵ[k]) / (1.0 + ϵ[k])
 
       # Get b_sie(q)
-      bq = (4.0 * pi * (vd[k] / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
+      bq = (4.0 * pi * (vd[k] * 1.0E3 / CONST_C)^2) / sqrt(q) / ANGLE_ARCSEC
 
       # Get s(q) and a(q)
       sq = θs[k] / sqrt(q)

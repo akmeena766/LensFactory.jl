@@ -17,7 +17,7 @@
 # print("Magnfication at (x, y):", list(mag))
 
 @testset "NFW lens" begin
-   mass = 1E11 * MASS_SUN
+   mass = 1E11
    
    # Get NFW lens parameters
    param = Lenses.parameter_NFWLens(cosmology=cosmo, z_d=zl, mass=mass, c=6)

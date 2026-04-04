@@ -12,13 +12,13 @@
 # mag = 1 / lens.getInverseMagnification(D_s, D_ds, np.array([1.0 * cv.ANGLE_ARCSEC, 1.0 * cv.ANGLE_ARCSEC]))
 
 @testset "Plummer lens" begin
-   mass = 1.0E11 * MASS_SUN
+   mass = 1.0E11
    x_s = 0.1
 
    # Create a Plummer lens
-   lens = Lenses.init_PlummerLens(D_d=Dol, mass=1E11*MASS_SUN, x_s=x_s)
+   lens = Lenses.init_PlummerLens(D_d=Dol, mass=mass, x_s=x_s)
 
-   θE2 = (4.0 * CONST_G * mass / CONST_C^2) / Dol / ANGLE_ARCSEC^2
+   θE2 = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / Dol / ANGLE_ARCSEC^2
 
    # Test Einstein angle calculation
    θE = Lenses.PlummerLens.einstein_angle(D_d=Dol, D_ds=Dls, D_s=Dos, mass=mass, x_s=x_s)

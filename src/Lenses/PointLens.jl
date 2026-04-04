@@ -14,7 +14,7 @@ export einstein_angle
     potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV) where T <: RV
 """
 function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV) where T <: RV
-   θE2 = (2.0 * CONST_G * mass / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
+   θE2 = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
    
    dx = θx - θxc
    dy = θy - θyc
@@ -37,7 +37,7 @@ Calculate potential at given coordinates for a point mass lens and update the po
 - `mass::RV`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
 """
 function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
-   θE2 = (2.0 * CONST_G * mass / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
+   θE2 = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
    
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -55,7 +55,7 @@ end
     deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV) where T <: RV
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV) where T <: RV
-   θE2 = (4.0 * CONST_G * mass / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
+   θE2 = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
 
    dx = θx - θxc
    dy = θy - θyc
@@ -81,7 +81,7 @@ Calculate deflection at given coordinates for a point mass lens and update the d
 - `mass::RV`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
-   θE2 = (4.0 * CONST_G * mass / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
+   θE2 = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
    
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -102,7 +102,7 @@ end
     jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV) where T <: RV
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV) where T <: RV
-   θE2 = (4.0 * CONST_G * mass / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
+   θE2 = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
 
    dx = θx - θxc
    dy = θy - θyc
@@ -133,7 +133,7 @@ Calculate jacobian at given coordinates for a point mass lens and update the jac
 - `mass::RV`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
-   θE2 = (4.0 * CONST_G * mass / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
+   θE2 = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -170,7 +170,7 @@ Calculate the Einstein angle for a point mass lens,
 - `θE`: Einstein angle (in ``\\rm \\mathbf{arcseconds}``)
 """
 function einstein_angle(;D_d::Float64=NaN, D_ds::Float64=NaN, D_s::Float64=NaN, mass::Float64=NaN)
-  return  sqrt((4.0 * CONST_G * mass / CONST_C^2) * (D_ds / D_d / D_s)) / ANGLE_ARCSEC
+  return  sqrt((4.0 * CONST_G * mass * MASS_SUN / CONST_C^2) * (D_ds / D_d / D_s)) / ANGLE_ARCSEC
 end
 
 end

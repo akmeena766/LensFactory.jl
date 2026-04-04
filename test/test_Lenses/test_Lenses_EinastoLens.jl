@@ -1,7 +1,7 @@
 #!!!!!!!!!!!!!! Testing/cross-checked AGAINST Glafic !!!!!!!!!!!!!!
 #! Currently I am removing potential tests for Einasto lens model as it makes the run time slow.
 @testset "Einasto lens" begin
-   mass = 1E11 * MASS_SUN
+   mass = 1E11
 
    # Get NFW lens parameters
    param = Lenses.parameter_EinastoLens(cosmology=cosmo, z_d=zl, mass=mass, c=6)

@@ -2,7 +2,7 @@
 #! Keep in mind that coordinates are rotated by 90 degree in Glafic compared to LensFactory. Hence,
 #! 0° in LensFactory is equal to 90° in Glafic.
 @testset "SIE lens" begin
-   v_d = 200E3
+   v_d = 200
    x_s = 0.5
    eps_old = 0.2
    eps_new = eps_old / (2.0 - eps_old)

@@ -1,6 +1,6 @@
 #!!!!!!!!!!!!!! Testing/cross-checked AGAINST Glafic !!!!!!!!!!!!!!
 @testset "eHernquistMD lens" begin
-   mass = 1E11 * MASS_SUN
+   mass = 1E11
    x_s = 0.3
    eps_old = 0.0
    eps_new = eps_old / (2.0 - eps_old)

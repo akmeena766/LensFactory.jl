@@ -34,12 +34,9 @@ export get_best_parameters_with_errors
 # --------------------------------------------------------------------------------------------------
 # Parameter-space → Physical-space transformation
 # --------------------------------------------------------------------------------------------------
-const PARAM_TRANSFORM = Dict{Symbol,Function}(
-   # Velocity dispersion: km/s -> m/s
-   :v_d => x -> x * 1.0E3,
-   
+const PARAM_TRANSFORM = Dict{Symbol,Function}(   
    # Mass:Log10(M/M☉) -> kg
-   :mass => x -> 10^x * MASS_SUN,
+   :mass => x -> 10^x,
 )
 
 function transform_params!(pvals::Dict{Tuple{Symbol,Symbol}, Float64})

@@ -12,7 +12,7 @@ export jacobian!
 function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::S, θyc::S, mass::S, θs::S, nl::Int64) where {T <: RV, S <: Vector{<:RV}}
    ψ_up = ψ
    for k in 1:nl
-      θE2 = (2.0 * CONST_G * mass[k] / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
+      θE2 = (2.0 * CONST_G * mass[k] * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
       θs2 = θs[k]^2
 
       dx = (θx - θxc[k])
@@ -26,7 +26,7 @@ end
 function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::S, θyc::S, mass::S, θs::S, nl::Int64) where {T <: ROA, S <: Vector{<:RV}}
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    for k in 1:nl
-      θE2 = (2.0 * CONST_G * mass[k] / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
+      θE2 = (2.0 * CONST_G * mass[k] * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
       θs2 = θs[k]^2
 
       @inbounds for j in ax2
@@ -44,7 +44,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::S, θyc::S, 
    ψx_up = ψx
    ψy_up = ψy
    for k in 1:nl
-      θE2 = (4.0 * CONST_G * mass[k] / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
+      θE2 = (4.0 * CONST_G * mass[k] * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
       θs2 = θs[k]^2
 
       dx = θx - θxc[k]
@@ -60,7 +60,7 @@ end
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::S, θyc::S, mass::S, θs::S, nl::Int64) where {T <: ROA, S <: Vector{<:RV}}
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    for k in 1:nl
-      θE2 = (4.0 * CONST_G * mass[k] / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
+      θE2 = (4.0 * CONST_G * mass[k] * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
       θs2 = θs[k]^2
 
       @inbounds for j in ax2
@@ -81,7 +81,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::S, 
    ψyy_up = ψyy
    ψxy_up = ψxy
    for k in 1:nl
-      θE2 = (4.0 * CONST_G * mass[k] / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
+      θE2 = (4.0 * CONST_G * mass[k] * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
       θs2 = θs[k]^2
 
       dx = θx - θxc[k]
@@ -98,7 +98,7 @@ end
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::S, θyc::S, mass::S, θs::S, nl::Int64) where {T <: ROA, S <: Vector{<:RV}}
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    for k in 1:nl
-      θE2 = (4.0 * CONST_G * mass[k] / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
+      θE2 = (4.0 * CONST_G * mass[k] * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
       θs2 = θs[k]^2
 
       @inbounds for j in ax2

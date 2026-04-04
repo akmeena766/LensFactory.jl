@@ -29,7 +29,7 @@ end
 function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV, n::RV) where T <: RV
    bn = b_n(n)
    θs = θe / bn^n
-   κs = (4.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
+   κs = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
    κs = 0.5 * θs^2 * κs
 
    dx = (θx - θxc) / θs
@@ -58,7 +58,7 @@ Calculate potential at given coordinates for a Sersic lens and update the potent
 function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV, n::RV) where T <: ROA
    bn = b_n(n)
    θs = θe / bn^n
-   κs = (4.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
+   κs = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
    κs = κs * 0.5 * θs^2
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
@@ -78,7 +78,7 @@ end
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV, n::RV) where T <: RV
    bn = b_n(n)
    θs = θe / bn^n
-   κs = (4.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
+   κs = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
    κs = κs * θs * gamma(2*n+1)
 
    dx = (θx - θxc) / θs
@@ -110,7 +110,7 @@ Calculate deflection at given coordinates for a Sersic lens and update the defle
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV, n::RV) where T <: ROA
    bn = b_n(n)
    θs = θe / bn^n
-   κs = (4.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
+   κs = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
    κs = κs * θs * gamma(2*n+1)
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
@@ -133,7 +133,7 @@ end
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV, n::RV) where T <: RV
    bn = b_n(n)
    θs = θe / bn^n
-   κs = (4.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
+   κs = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
 
    dx = (θx - θxc) / θs
    dy = (θy - θyc) / θs
@@ -169,7 +169,7 @@ Calculate Jacobian of the deflection at given coordinates for a Sersic lens and 
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV, n::RV) where T <: ROA
    bn = b_n(n)
    θs = θe / bn^n
-   κs = (4.0 * CONST_G * mass / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
+   κs = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2

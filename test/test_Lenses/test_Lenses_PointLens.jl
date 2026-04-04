@@ -12,10 +12,10 @@
    D_d, D_ds, D_s, mass = 1.0, 1.0, 1.0, 1.0
    θE = Lenses.PointLens.einstein_angle(D_d=D_d, D_ds=D_ds, D_s=D_s, mass=mass)
    @test θE > 0.0
-   @test θE ≈ sqrt(4.0 *CONST_G * mass / CONST_C^2 * (D_ds / D_d / D_s) ) / ANGLE_ARCSEC atol=1e-15 rtol=1e-15
+   @test θE ≈ sqrt(4.0 *CONST_G * mass * MASS_SUN / CONST_C^2 * (D_ds / D_d / D_s) ) / ANGLE_ARCSEC atol=1e-15 rtol=1e-15
 
    # Create a point lens
-   lens = Lenses.init_PointLens(D_d=Dol, mass=1E11*MASS_SUN)
+   lens = Lenses.init_PointLens(D_d=Dol, mass=1E11)
 
    pot1 = adis  * Lenses.get_potential(lens, xt1, yt1)
    dex1 = adis .* Lenses.get_deflection(lens, xt1, yt1)

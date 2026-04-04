@@ -9,7 +9,7 @@
 
 @testset "Gaussian lens" begin
    # lens properties
-   mass = 1.0E11 * MASS_SUN
+   mass = 1.0E11
    x_s = 0.5
    lens = Lenses.init_GaussianLens(D_d=Dol, mass=mass, x_s=x_s)
 
