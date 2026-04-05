@@ -1,6 +1,7 @@
 # MultiPlane
 
 ```@docs
+MultiPlane.get_potential
 MultiPlane.get_deflection
 MultiPlane.get_jacobian
 MultiPlane.get_time_delay
