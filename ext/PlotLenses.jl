@@ -1,3 +1,6 @@
+# --------------------------------------------------------------------------------------------------
+# This function is an internal function to set plot keywords.
+# --------------------------------------------------------------------------------------------------
 function LensFactory.Lenses.set_plotKws!(ax)
    ax.xtickalign = 1
    ax.xticksmirrored = true
