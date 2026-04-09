@@ -1,5 +1,6 @@
 | Date       | Version  | Comments |
 | :-------   | :------: | :------- |
+| 09/04/2026 | 0.0.7    | Breaking. Changed default mass input from ``\mathbf{\rm{kg}}`` to ``\mathbf{\rm{M_\odot}}`` and velocity dispersion input from ``\mathbf{\rm{m/s}}`` to ``\mathbf{\rm{km/s}}`` in various lens models. |
 | 09/03/2026 | 0.0.6    | Bug fix. Fixed bugs in `init_CompositeLens`. Added basic support for lens modelling. |
 | 12/01/2026 | 0.0.5    | Bug fix. Fixed bugs in `init_CompositeLens`. Added new function `plot_sky` in `PlotExt`.|
 | 22/12/2025 | 0.0.4    | Breaking. |
