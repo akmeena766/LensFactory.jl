@@ -4,6 +4,7 @@ module LensModel
 # --------------------------------------------------------------------------------------------------
 # Julia inbuilt functions to import
 # --------------------------------------------------------------------------------------------------
+using Printf
 using JLD2
 using Dates
 using FITSIO
@@ -143,39 +144,13 @@ end
 
 
 """
-    get_potential(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{ROA, Vector{Int64}}
-Calculate the lensing potential at the given coordinates `(θx, θy)` for the best-fit model based on 
-the MCMC results stored in `file_name`. The user can specify the unit of the input coordinates as 
-either RA/DEC or arcseconds.
-
-# Arguments
-- `file_name::String`: Path to the JLD2 file containing the MCMC results
-- `θx`: x-coordinates
-- `θy`: y-coordinates
-
-# Keyword Arguments
-- `unit::Symbol=:RA_DEC`: Unit of the input coordinates. 
-   - `:RA_DEC`: (θx, θy) are assumed to be in RA/DEC (in degrees).
-   - `:arcsec`: (θx, θy) are assumed to be in arcseconds.
-
-# Returns
-- `ψ`: Lensing potential at the input coordinates for the best-fit model.
+    get_potential(best_model::Lenses.AbstractLens, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
 """
-function get_potential(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{ROA, Vector{Int64}}
+function get_potential(best_model::Lenses.AbstractLens, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
    end
-
-   # Load the model, chains and chi2 from the input file
-   data = jldopen(file_name, "r")
-   model  = data["model"]
-   chains = data["chains"]
-   chi2   = data["chi2"]
-   close(data)
-
-   # Get best-fit lens model
-   best_model = get_best_model(model, chains, chi2)
 
    # Convert input coordinates to arcseconds if they are in RA/DEC
    if unit == :RA_DEC
@@ -195,13 +170,78 @@ end
 
 
 """
-    get_deflection(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{ROA, Vector{Int64}}
-Calculate the lensing deflection at the given coordinates `(θx, θy)` for the best-fit model based on 
-the MCMC results stored in `file_name`. The user can specify the unit of the input coordinates as 
-either RA/DEC or arcseconds.
+    get_potential(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{ROA, Vector{Int64}}
+Calculate the lensing potential at the given coordinates `(θx, θy)` for the best-fit model. The user
+can specify the unit of the input coordinates as either RA/DEC or arcseconds.
 
 # Arguments
-- `file_name::String`: Path to the JLD2 file containing the MCMC results
+- `file_name::String` or `best_model::Lenses.AbstractLens`: Path to the JLD2 file containing the 
+   MCMC results or best-fit lens model.
+- `θx`: x-coordinates
+- `θy`: y-coordinates
+
+# Keyword Arguments
+- `unit::Symbol=:RA_DEC`: Unit of the input coordinates. 
+   - `:RA_DEC`: (θx, θy) are assumed to be in RA/DEC (in degrees).
+   - `:arcsec`: (θx, θy) are assumed to be in arcseconds.
+
+# Returns
+- `ψ`: Lensing potential at the input coordinates for the best-fit model.
+"""
+function get_potential(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
+   # Check if the input coordinates are of the same size
+   if size(θx) != size(θy)
+      throw(ArgumentError("Input coordinates must be of the same size."))
+   end
+
+   # Load the model, chains and chi2 from the input file
+   data = jldopen(file_name, "r")
+   model  = data["model"]
+   chains = data["chains"]
+   chi2   = data["chi2"]
+   close(data)
+
+   # Get best-fit lens model
+   best_model = get_best_model(model, chains, chi2)
+
+   return get_potential(best_model, θx, θy::T; unit=unit)
+end
+
+
+"""
+    get_deflection(best_model::Lenses.AbstractLens, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
+"""
+function get_deflection(best_model::Lenses.AbstractLens, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
+   # Check if the input coordinates are of the same size
+   if size(θx) != size(θy)
+      throw(ArgumentError("Input coordinates must be of the same size."))
+   end
+
+   # Convert input coordinates to arcseconds if they are in RA/DEC
+   if unit == :RA_DEC
+      # Get reference position and pixel scale from the model
+      RA_REF = model.observation.reference[1]
+      DEC_REF = model.observation.reference[2]
+
+      # Convert RA/DEC to arcseconds relative to the reference position
+      θx_arcsec, θy_arcsec = AstrometricOps.gnomonic_offsets_arcsec(RA_REF, DEC_REF, θx, θy)
+      return Lenses.get_deflection(best_model, θx_arcsec, θy_arcsec)
+   elseif unit == :arcsec
+      return Lenses.get_deflection(best_model, θx, θy)
+   else
+      throw(ArgumentError("Invalid unit. Supported units are :RA_DEC and :arcsec."))
+   end
+end
+
+
+"""
+    get_deflection(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
+Calculate the lensing deflection at the given coordinates `(θx, θy)` for the best-fit model. The
+user can specify the unit of the input coordinates as either RA/DEC or arcseconds.
+
+# Arguments
+- `file_name::String` or `best_model::Lenses.AbstractLens`: Path to the JLD2 file containing the 
+   MCMC results or best-fit lens model.
 - `θx`: x-coordinates
 - `θy`: y-coordinates
 
@@ -230,59 +270,17 @@ function get_deflection(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC)
    # Get best-fit lens model
    best_model = get_best_model(model, chains, chi2)
 
-   # Convert input coordinates to arcseconds if they are in RA/DEC
-   if unit == :RA_DEC
-      # Get reference position and pixel scale from the model
-      RA_REF = model.observation.reference[1]
-      DEC_REF = model.observation.reference[2]
-
-      # Convert RA/DEC to arcseconds relative to the reference position
-      θx_arcsec, θy_arcsec = AstrometricOps.gnomonic_offsets_arcsec(RA_REF, DEC_REF, θx, θy)
-      return Lenses.get_deflection(best_model, θx_arcsec, θy_arcsec)
-   elseif unit == :arcsec
-      return Lenses.get_deflection(best_model, θx, θy)
-   else
-      throw(ArgumentError("Invalid unit. Supported units are :RA_DEC and :arcsec."))
-   end
+   return get_deflection(best_model, θx::T, θy::T; unit=unit)
 end
 
-
 """
-    get_jacobian(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{ROA, Vector{Int64}}
-Calculate the Jacobian (i.e., deformation tensor) of the lens mapping at the given coordinates 
-`(θx, θy)` for the best-fit model based on the MCMC results stored in `file_name`. The user can 
-specify the unit of the input coordinates as either RA/DEC or arcseconds.
-
-# Arguments
-- `file_name::String`: Path to the JLD2 file containing the MCMC results
-- `θx`: x-coordinates
-- `θy`: y-coordinates
-
-# Keyword Arguments
-- `unit::Symbol=:RA_DEC`: Unit of the input coordinates. 
-   - `:RA_DEC`: (θx, θy) are assumed to be in RA/DEC (in degrees).
-   - `:arcsec`: (θx, θy) are assumed to be in arcseconds.
-
-# Returns
-- `ψxx`: xx-component of the jacobian.
-- `ψyy`: yy-component of the jacobian.
-- `ψxy`: xy-component of the jacobian.
+    get_jacobian(best_model::Lenses.AbstractLens, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
 """
-function get_jacobian(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{ROA, Vector{Int64}}
+function get_jacobian(best_model::Lenses.AbstractLens, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
    end
-
-   # Load the model, chains and chi2 from the input file
-   data = jldopen(file_name, "r")
-   model  = data["model"]
-   chains = data["chains"]
-   chi2   = data["chi2"]
-   close(data)
-
-   # Get best-fit lens model
-   best_model = get_best_model(model, chains, chi2)
 
    # Convert input coordinates to arcseconds if they are in RA/DEC
    if unit == :RA_DEC
@@ -298,6 +296,131 @@ function get_jacobian(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC) w
    else
       throw(ArgumentError("Invalid unit. Supported units are :RA_DEC and :arcsec."))
    end
+end
+
+
+"""
+    get_jacobian(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
+Calculate the Jacobian (i.e., deformation tensor) at the given coordinates `(θx, θy)` for the 
+best-fit model. The user can specify the unit of the input coordinates as either RA/DEC or arcseconds.
+
+# Arguments
+- `file_name::String` or `best_model::Lenses.AbstractLens`: Path to the JLD2 file containing the 
+   MCMC results or best-fit lens model.
+- `θx`: x-coordinates
+- `θy`: y-coordinates
+
+# Keyword Arguments
+- `unit::Symbol=:RA_DEC`: Unit of the input coordinates. 
+   - `:RA_DEC`: (θx, θy) are assumed to be in RA/DEC (in degrees).
+   - `:arcsec`: (θx, θy) are assumed to be in arcseconds.
+
+# Returns
+- `ψxx`: xx-component of the jacobian.
+- `ψyy`: yy-component of the jacobian.
+- `ψxy`: xy-component of the jacobian.
+"""
+function get_jacobian(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
+   # Check if the input coordinates are of the same size
+   if size(θx) != size(θy)
+      throw(ArgumentError("Input coordinates must be of the same size."))
+   end
+
+   # Load the model, chains and chi2 from the input file
+   data = jldopen(file_name, "r")
+   model  = data["model"]
+   chains = data["chains"]
+   chi2   = data["chi2"]
+   close(data)
+
+   # Get best-fit lens model
+   best_model = get_best_model(model, chains, chi2)
+
+   return get_jacobian(best_model, θx::T, θy::T; unit=unit)
+end
+
+
+function predict_image(file_name::String, θx::T, θy::T, z_s::Float64; unit::Symbol=:RA_DEC, verbose::Bool=True) where T <: Union{RV, Vector{Float64}}
+   # Check if the input coordinates are of the same size
+   if size(θx) != size(θy)
+      throw(ArgumentError("Input coordinates must be of the same size."))
+   end
+
+   # Load the model, chains and chi2 from the input file
+   data = jldopen(file_name, "r")
+   model  = data["model"]
+   chains = data["chains"]
+   chi2   = data["chi2"]
+   close(data)
+
+   # Get best-fit lens model
+   best_model = get_best_model(model, chains, chi2)
+
+   # Construct grid
+   FOV = model.observation.FOV
+   pixel_scale = model.observation.pixel_scale
+   x_grid, y_grid = Lenses.get_meshgrid(0.5 * FOV[1], 0.5 * FOV[2], pixel_scale)
+
+      # Get cosmology
+   cosmo = model.cosmology
+      
+   # ADDs
+   z_d = model.observation.z_d
+   Dol = Cosmology.angular_diameter_distance(cosmo, 0.0, z_d)
+   Dls = Cosmology.angular_diameter_distance(cosmo, z_d, z_s)
+   Dos = Cosmology.angular_diameter_distance(cosmo, 0.0, z_s)
+   adis = Dls / Dos
+
+   # Convert input coordinates to arcseconds if they are in RA/DEC
+   if unit == :RA_DEC
+      # Get reference position and pixel scale from the model
+      RA_REF = model.observation.reference[1]
+      DEC_REF = model.observation.reference[2]
+
+      # Convert RA/DEC to arcseconds relative to the reference position
+      θx_arcsec, θy_arcsec = AstrometricOps.gnomonic_offsets_arcsec(RA_REF, DEC_REF, θx, θy)
+      return Lenses.predict_image(best_model, θx_arcsec, θy_arcsec)
+   elseif unit == :arcsec
+      return Lenses.predict_image(best_model, θx, θy)
+   else
+      throw(ArgumentError("Invalid unit. Supported units are :RA_DEC and :arcsec."))
+   end
+
+   # 
+   if size(θx, 1) > 1
+
+   else
+      αx, αy = Lenses.get_deflection(best_model, θx, θy)
+      βx_model = θx - adis * αx
+      βy_model = θy - adis * αy
+   end
+
+   # Get predicted image positions
+   pred_image = Lenses.get_image(best_model, x_grid, y_grid, adis_value, (βx_model, βy_model))
+
+   # Convert predicted image positions in (RA, DEC) if input is in (RA, DEC)
+   if unit == :RA_DEC
+      pred_image_RADEC = AstrometricOps.gnomonic_offsets_radec(RA_REF, DEC_REF, first.(pred_image), last.(pred_image))
+   end
+
+   # Calculate magnification at the image positions
+   if verbose
+      # Get magnification at image positions
+      mu = Lenses.get_magnification_image(best_model, first.(pred_image), last.(pred_image), adis)
+
+      # Get time delay for image positions (in days)
+      td = Lenses.get_time_delay(best_model, first.(pred_image), last.(pred_image), adis, z_d, Dol, (βx_model, βy_model))
+      td .= td .- minimum(td)
+
+      # Define Table Header
+      header = @sprintf("%-5s | %-12s | %-12s | %-10s | %-10s", "Img", "RA", "Dec", "mu (μ)", "Delay (d)")
+      println("\n" * header)
+      println("-"^length(header))
+
+   end
+
+
+   return nothing
 end
 
 
@@ -358,7 +481,7 @@ choose which lensing quantities to save by setting the corresponding boolean fla
 - `save_gamma::Bool=true`: Whether to save the shear maps as **gamma1.fits** and **gamma2.fits**
 
 # Returns
-- Nothing (saves FITS files to disk)
+- `nothing`: Saves FITS files to disk
 """
 function save_best_fits(file_name::String;
                       save_potential::Bool=true,
