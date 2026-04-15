@@ -382,7 +382,7 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
          # Plot observed positions of knots
          scatter!(ax, x, y, markersize=20, marker=:circle, color=:transparent, strokecolor=:black, strokewidth=2, label="Observed")
          if plot_error
-            for i in size(x, 1)
+            for i in 1:size(x, 1)
                e_x, e_y = _ellipse(σx[i], σy[i], σθ[i]; x0=x[i], y0=y[i])
                lines!(ax, e_x, e_y, color=:black, linewidth=2)
             end
