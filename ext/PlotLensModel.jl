@@ -300,6 +300,7 @@ Generates a plot comparing the observed image positions with the predicted image
 
 # Keyword arguments
 - `z_s::RV = 1.5`: Source redshift.
+- `plot_error::Bool = true`: Whether to plot the error ellipses for the observed image positions.
 - `plot_critical::Bool = true`: Whether to plot the critical curves.
    - `critical_tan_kws::NamedTuple = (color=:red, linewidth=2, linestyle=:solid)`: Keyword arguments for plotting the tangential critical curve.
    - `critical_rad_kws::NamedTuple = (color=:red, linewidth=2, linestyle=:dash)`: Keyword arguments for plotting the radial critical curve.
