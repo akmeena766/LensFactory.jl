@@ -268,6 +268,27 @@ function LensFactory.LensModel.plot_trace(chains;
    return fig
 end
 
+
+function _ellipse(ex::RV, ey::RV, eθ::RV; x0::RV=0.0, y0::RV=0.0, n::Int64=100)
+   # Numer of points
+   t = range(0, 2π, length=n)
+
+   # Generate points
+   x = ex .* cos.(t)
+   y = ey .* sin.(t)
+
+   # Rotate
+   θ_rad = deg2rad(eθ)
+   x_rot = x .* cos(θ_rad) - y .* sin(θ_rad)
+   y_rot = x .* sin(θ_rad) + y .* cos(θ_rad)
+
+   # Translate
+   x_rot .+= x0
+   y_rot .+= y0
+
+   return x_rot, y_rot
+end
+
 """
     LensFactory.LensModel.plot_best_model(model, chains, chi2)
 Generates a plot comparing the observed image positions with the predicted image positions from the best-fit lens model.
@@ -296,6 +317,7 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
                                               chains::Array{Float64, 3}, 
                                               chi2::Matrix{Float64};
                                               z_s::RV=1.5,
+                                              plot_error::Bool=true,
                                               plot_critical::Bool=true,
                                               critical_tan_kws::NamedTuple=(color=:red, linewidth=2, linestyle=:solid),
                                               critical_rad_kws::NamedTuple=(color=:red, linewidth=2, linestyle=:dash),
@@ -359,6 +381,12 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
 
          # Plot observed positions of knots
          scatter!(ax, x, y, markersize=20, marker=:circle, color=:transparent, strokecolor=:black, strokewidth=2, label="Observed")
+         if plot_error
+            for i in size(x, 1)
+               e_x, e_y = _ellipse(σx[i], σy[i], σθ[i]; x0=x[i], y0=y[i])
+               lines!(ax, e_x, e_y, color=:black, linewidth=2)
+            end
+         end
 
          # Number of images for this knot
          n = length(x)
