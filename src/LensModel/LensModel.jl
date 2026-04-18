@@ -47,6 +47,7 @@ export get_best_model
 export get_potential
 export get_deflection
 export get_jacobian
+export predict_image
 export save_best_fits
 export check_parity
 export get_best_fit_rms
@@ -340,7 +341,30 @@ function get_jacobian(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC) w
 end
 
 
-function predict_image(file_name::String, θx::T, θy::T, z_s::Float64; unit::Symbol=:RA_DEC, verbose::Bool=True) where T <: Union{RV, Vector{Float64}}
+"""
+    predict_image(file_name::String, θx::T, θy::T, z_s::Float64; unit::Symbol=:RA_DEC) where T <: Union{RV, Vector{Float64}}
+Predict counter-image positions, magnifications and time delays based on the best-fit lens model.
+The function can take either a single observed image or multiple observed images of the same system.
+If multiple images are provided then the function will calculate the barycentric source position and
+then predict the counter-image positions, magnifications and time delays.
+
+# Arguments
+- `file_name::String`: Path to the JLD2 file containing the MCMC results or best-fit lens model.
+- `θx`: x-coordinate(s) of the observed image position(s).
+- `θy`: y-coordinate(s) of the observed image position(s).
+- `z_s::Float64`: Source redshift.
+
+# Keyword Arguments
+- `unit::Symbol=:RA_DEC`: Unit of the input coordinates. 
+   - `:RA_DEC`: (θx, θy) are assumed to be in RA/DEC (in degrees).
+   - `:arcsec`: (θx, θy) are assumed to be in arcseconds.
+
+# Returns
+- `nothing`: Prints the counter-image positions, magnifications and time delays in a table format.
+   The table is sorted based on the time delay and at the end also contains the best-fit model 
+   predicted source position.
+"""
+function predict_image(file_name::String, θx::T, θy::T, z_s::Float64; unit::Symbol=:RA_DEC) where T <: Union{RV, Vector{Float64}}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
@@ -371,54 +395,88 @@ function predict_image(file_name::String, θx::T, θy::T, z_s::Float64; unit::Sy
    Dos = Cosmology.angular_diameter_distance(cosmo, 0.0, z_s)
    adis = Dls / Dos
 
+   # Get reference position and pixel scale from the model
+   RA_REF = model.observation.reference[1]
+   DEC_REF = model.observation.reference[2]
+
    # Convert input coordinates to arcseconds if they are in RA/DEC
    if unit == :RA_DEC
-      # Get reference position and pixel scale from the model
-      RA_REF = model.observation.reference[1]
-      DEC_REF = model.observation.reference[2]
-
       # Convert RA/DEC to arcseconds relative to the reference position
       θx_arcsec, θy_arcsec = AstrometricOps.gnomonic_offsets_arcsec(RA_REF, DEC_REF, θx, θy)
-      return Lenses.predict_image(best_model, θx_arcsec, θy_arcsec)
    elseif unit == :arcsec
-      return Lenses.predict_image(best_model, θx, θy)
+      θx_arcsec, θy_arcsec = θx, θy
    else
       throw(ArgumentError("Invalid unit. Supported units are :RA_DEC and :arcsec."))
    end
 
    # 
    if size(θx, 1) > 1
+      # Get deflection at the image positions
+      αx, αy = Lenses.get_deflection(best_model, θx_arcsec, θy_arcsec)
+      
+      # Get magnification at the image positions
+      μ_obs = Lenses.get_magnification_image(best_model, θx_arcsec, θy_arcsec, adis)
+      
+      # Calculate individual image source positions
+      βx_indi = θx_arcsec - adis * αx
+      βy_indi = θy_arcsec - adis * αy
 
+      # Calculate barycenter source position
+      βx_model = sum(βx_indi .* μ_obs.^2) / sum(μ_obs.^2)
+      βy_model = sum(βy_indi .* μ_obs.^2) / sum(μ_obs.^2)
    else
-      αx, αy = Lenses.get_deflection(best_model, θx, θy)
-      βx_model = θx - adis * αx
-      βy_model = θy - adis * αy
+      αx, αy = Lenses.get_deflection(best_model, θx_arcsec, θy_arcsec)
+      βx_model = θx_arcsec - adis * αx
+      βy_model = θy_arcsec - adis * αy
    end
 
    # Get predicted image positions
-   pred_image = Lenses.get_image(best_model, x_grid, y_grid, adis_value, (βx_model, βy_model))
+   pred_image = Lenses.get_image(best_model, x_grid, y_grid, adis, (βx_model, βy_model))
 
    # Convert predicted image positions in (RA, DEC) if input is in (RA, DEC)
    if unit == :RA_DEC
       pred_image_RADEC = AstrometricOps.gnomonic_offsets_radec(RA_REF, DEC_REF, first.(pred_image), last.(pred_image))
    end
 
-   # Calculate magnification at the image positions
-   if verbose
-      # Get magnification at image positions
-      mu = Lenses.get_magnification_image(best_model, first.(pred_image), last.(pred_image), adis)
+   # Get magnification at image positions
+   mu = Lenses.get_magnification_image(best_model, first.(pred_image), last.(pred_image), adis)
 
-      # Get time delay for image positions (in days)
-      td = Lenses.get_time_delay(best_model, first.(pred_image), last.(pred_image), adis, z_d, Dol, (βx_model, βy_model))
-      td .= td .- minimum(td)
+   # Get time delay for image positions (in days)
+   td = Lenses.get_time_delay(best_model, first.(pred_image), last.(pred_image), adis, z_d, Dol, (βx_model, βy_model))
+   td .= (td .- minimum(td)) ./ DAY2SECOND
 
-      # Define Table Header
-      header = @sprintf("%-5s | %-12s | %-12s | %-10s | %-10s", "Img", "RA", "Dec", "mu (μ)", "Delay (d)")
-      println("\n" * header)
-      println("-"^length(header))
-
+   # Stack image position, mu and time delay and sort based on time delay
+   if unit == :RA_DEC
+      sorted_images = sortslices([first.(pred_image_RADEC) last.(pred_image_RADEC) mu td], dims=1, by=x->x[4])
+   elseif unit == :arcsec
+      sorted_images = sortslices([first.(pred_image) last.(pred_image) mu td], dims=1, by=x->x[4])
    end
 
+   # Define and print table Header
+   if unit == :RA_DEC
+      header = @sprintf("| %-5s | %-12s | %-12s | %-10s | %-10s", "Img", "RA", "Dec", "mu (μ)", "Time delay (days) |")
+   elseif unit == :arcsec
+      header = @sprintf("| %-5s | %-12s | %-12s | %-10s | %-10s", "Img", "x", "y", "mu (μ)", "Time delay (days) |")
+   end
+   println("-"^length(header))
+   println(header)
+   println("-"^length(header))
+
+   # Print images and their details
+   for i in 1:length(pred_image)
+      @printf("| %-5d | %-12.6f | %-12.6f | %-10.4f | %-17.4f |\n", 
+              i, sorted_images[i, 1], sorted_images[i, 2], sorted_images[i, 3], sorted_images[i, 4])
+   end
+   
+   # Print model predicted source position
+   if unit == :RA_DEC
+      # Convert RA/DEC to arcseconds relative to the reference position
+      βx_model, βy_model = AstrometricOps.gnomonic_offsets_arcsec(RA_REF, DEC_REF, βx_model, βy_model)
+   end
+   println("-"^length(header))
+   content = @sprintf("(βx_model, βy_model) = (%3.6f, %3.6f)", βx_model, βy_model)
+   @printf("| %-68s |\n", content)
+   println("-"^length(header))
 
    return nothing
 end

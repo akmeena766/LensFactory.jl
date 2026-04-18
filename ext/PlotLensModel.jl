@@ -413,12 +413,8 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
          predicted_image = Lenses.get_image(best_model, x_grid, y_grid, adis_value, (βx_model, βy_model))
 
          # Plot predicted image positions
-         scatter!(ax, first.(predicted_image), last.(predicted_image), markersize=20, 
-                                                                       marker=:diamond, 
-                                                                       color=:transparent, 
-                                                                       strokecolor=:red, 
-                                                                       strokewidth=2, 
-                                                                       label="Predicted")
+         scatter!(ax, first.(predicted_image), last.(predicted_image); markersize=20, 
+                     marker=:diamond, color=:transparent, strokecolor=:red, strokewidth=2, label="Predicted")
          kid = kid + 1
       end
       sid = sid + 1
