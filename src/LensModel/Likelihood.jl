@@ -9,6 +9,7 @@ module Likelihood
 # LensFactory modules to use
 # --------------------------------------------------------------------------------------------------
 using ..LensModelIO
+using ..Constants
 using ..Lenses
 
 # --------------------------------------------------------------------------------------------------
@@ -173,6 +174,122 @@ function chi2_position(model::ModelConfig, adis::Vector{Float64}, αx_all::Vecto
 end
 
 
+function chi2_flux(model::ModelConfig, adis::Vector{Float64}, A_all::Vector{NTuple{4, Vector{Float64}}})
+   # Initialize chi2 for parity
+   χ² = 0.0
+
+   # Identity tuple
+   I4 = (1.0, 0.0, 0.0, 1.0)
+
+   # Calculate chi2 for position
+   sid = 1
+   kid = 1
+   for src in model.source_config.sources
+      # Distance ratio for this source
+      adis_value = adis[sid]
+      
+      for knot in src.knots
+         # Knot magnitude values and errors
+         m  = knot.m
+         σm = knot.σm
+         n = length(m)
+
+         # Deformation tensor at the knot positions
+         A = @. adis_value * A_all[kid]
+         for i in eachindex(A)
+            @. A[i] = I4[i] - A[i]
+         end
+
+         # Magnification at the knot positions (with upper limit to avoid numerical issues)
+         μ = min.( @. abs(1.0 / (A[1] * A[4] - A[2] * A[3])), 1.0E3)
+
+         # Best-fit source magnitude using weighted average
+         m_src = 0.0
+         for i in 1:n
+            m_src = m_src + (m[i] + 2.5 * log10(μ[i])) / σm[i]^2
+         end
+         m_src = m_src / sum(1.0 / σm[i]^2 for i in 1:n)
+
+         # Calculate knot chi2 for absolute magnitude
+         for i in 1:n
+            χ² = χ² - (m[i] + 2.5 * log10(μ[i]) - m_src)^2 / σm[i]^2
+         end
+
+         kid = kid + 1
+      end
+      sid = sid + 1
+   end
+   return χ²
+end
+
+function chi2_timedelay(model::ModelConfig, lens_model::Lenses.AbstractLens, adis::Vector{Float64}, z_d::Float64, D_d::Float64, αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, A_all::Vector{NTuple{4, Vector{Float64}}})
+   # Initialize chi2 for parity
+   chi2 = 0.0
+
+   # Multipicative constant
+   constant_factor = (1.0 + z_d) * D_d / CONST_C
+
+   # Identity tuple
+   I4 = (1.0, 0.0, 0.0, 1.0)
+
+   # Calculate chi2 for position
+   sid = 1
+   kid = 1
+   for src in model.source_config.sources
+      # Distance ratio for this source
+      adis_value = adis[sid]
+   
+      for knot in src.knots
+         # Knot positions values
+         x  = knot.x
+         y  = knot.y
+
+         # Knot time delay values and errors
+         Δt_obs  = knot.td
+         σ_Δt = knot.σ_td
+         n = length(Δt_obs)
+
+         # Deflection vector at the knot positions
+         αx = @. adis_value * αx_all[kid]
+         αy = @. adis_value * αy_all[kid]
+
+         # Deformation tensor at the knot positions
+         A = @. adis_value * A_all[kid]
+         for i in eachindex(A)
+            @. A[i] = I4[i] - A[i]
+         end
+
+         # Individual source positions using broadcasting
+         βx_ind = @. x - αx
+         βy_ind = @. y - αy
+
+         # Get weighted source position (Section 4.1 in https://arxiv.org/pdf/astro-ph/0102340)
+         βx_model, βy_model, _ = _weighted_position(βx_ind, βy_ind, A, σx, σy, σθ, n)
+
+         # Get time delay (in days) for observed image position with best-fit source position
+         td_fit = Lenses.get_time_delay(lens_model, x, y, adis_value, z_d, D_d, (βx_model, βy_model))
+
+         # Best-fit time delay value
+         Δt_0 = 0.0
+         for i in 1:n
+            dot_product = (βx_ind[i] - x[i]) * (βx_model - βx_ind[i]) + (βy_ind[i] - y[i]) * (βy_model - βy_ind[i])
+            td_fit_i = td_fit[i] + (constant_factor / adis_value / DAY2SECOND) * dot_product
+            Δt_0 = Δt_0 + (Δt_obs[i] - td_fit_i) / σ_Δt[i]^2
+         end
+         Δt_0 = Δt_0 / sum(1.0 / σm[i]^2 for i in 1:n)
+
+         # Calculate knot chi2 for absolute time delay
+         for i in 1:n
+            χ² = χ² - (Δt_obs[i] - td_fit[i] - Δt_0)^2 / σ_Δt[i]^2
+         end
+         kid = kid + 1
+      end
+      sid = sid + 1
+   end
+   return χ²
+end
+
+
 function chi2_parity(model::ModelConfig, adis::Vector{Float64}, A_all::Vector{NTuple{4, Vector{Float64}}})
    # Initialize chi2 for parity
    chi2 = 0.0
@@ -214,103 +331,6 @@ function chi2_parity(model::ModelConfig, adis::Vector{Float64}, A_all::Vector{NT
       sid = sid + 1
    end
    return chi2
-end
-
-
-function chi2_flux(model::ModelConfig, adis::Vector{Float64}, A_all::Vector{NTuple{4, Vector{Float64}}})
-   # Initialize chi2 for parity
-   χ² = 0.0
-
-   # Identity tuple
-   I4 = (1.0, 0.0, 0.0, 1.0)
-
-   # Calculate chi2 for position
-   sid = 1
-   kid = 1
-   for src in model.source_config.sources
-      # Distance ratio for this source
-      adis_value = adis[sid]
-      
-      for knot in src.knots
-         # Knot magnitude values and errors
-         m  = knot.m
-         σm = knot.σm
-         n = length(m)
-
-         # Deformation tensor at the knot positions
-         A = @. adis_value * A_all[kid]
-         for i in eachindex(A)
-            @. A[i] = I4[i] - A[i]
-         end
-
-         # Magnification at the knot positions (with upper limit to avoid numerical issues)
-         μ = min.( @. abs(1.0 / (A[1] * A[4] - A[2] * A[3])), 1.0E3)
-
-         # Best-fit source magnitude using weighted average
-         m_src = 0.0
-         for i in 1:n
-            m_src = m_src + (m[i] + 2.5 * log10(μ[i])) / σm[i]^2
-         end
-         m_src = m_src / sum(1 / σm[i]^2 for i in 1:n)
-
-         # Calculate knot chi2 for absolute magnitude
-         for i in 1:n
-            χ² = χ² - (m[i] + 2.5 * log10(μ[i]) - m_src)^2 / σm[i]^2
-         end
-
-         kid = kid + 1
-      end
-      sid = sid + 1
-   end
-   return χ²
-end
-
-function chi2_timedelay(model::ModelConfig, lens_model::Lenses.AbstractLens, adis::Vector{Float64}, αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, A_all::Vector{NTuple{4, Vector{Float64}}})
-   # Initialize chi2 for parity
-   chi2 = 0.0
-
-   # Identity tuple
-   I4 = (1.0, 0.0, 0.0, 1.0)
-
-
-   # Calculate chi2 for position
-   sid = 1
-   kid = 1
-   for src in model.source_config.sources
-      # Distance ratio for this source
-      adis_value = adis[sid]
-   
-      for knot in src.knots
-         # Knot positions values and errors
-         x  = knot.x
-         y  = knot.y
-
-         # Knot time delay values and errors
-         Δt_obs  = knot.td
-         σ_Δt = knot.σ_td
-         n = length(Δt_obs)
-
-         # Deflection vector at the knot positions
-         αx = @. adis_value * αx_all[kid]
-         αy = @. adis_value * αy_all[kid]
-
-         # Deformation tensor at the knot positions
-         A = @. adis_value * A_all[kid]
-         for i in eachindex(A)
-            @. A[i] = I4[i] - A[i]
-         end
-
-         # Individual source positions using broadcasting
-         βx_ind = @. x - αx
-         βy_ind = @. y - αy
-
-         # Get weighted source position (Section 4.1 in https://arxiv.org/pdf/astro-ph/0102340)
-         βx_model, βy_model, _ = _weighted_position(βx_ind, βy_ind, A, σx, σy, σθ, n)
-
-
-      end
-   end
-   return 0.0
 end
 
 end
