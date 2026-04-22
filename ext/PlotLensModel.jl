@@ -25,7 +25,7 @@ Generates a corner plot for the given MCMC chains and chi-squared values.
 - `chi2`: Chi-squared values corresponding to the chains, of shape (n_steps, n_chains).
 
 # Keyword arguments
-- `param_names=nothing`: Optional list of parameter names for labeling the axes.
+- `free_parameter_names=nothing`: Optional list of parameter names for labeling the axes.
 - `burn_in::Float64 = 0.3`: Fraction of the initial samples to discard as burn-in.
 - `thinning::Int64  = 100`: Interval for thinning the chains to reduce autocorrelation.
 - `save_plot::Bool  = true`: Whether to save the plot as "corner.png".
@@ -36,19 +36,19 @@ Generates a corner plot for the given MCMC chains and chi-squared values.
 - A Makie figure object containing the corner plot.
 """
 function LensFactory.LensModel.plot_corner(chains, chi2; 
-                              param_names=nothing, 
-                              burn_in::Float64=0.3, 
-                              thinning::Int64=100, 
+                              free_parameter_names=nothing, 
+                              burn_in::Float64=0.2, 
+                              thin::Int64=100, 
                               save_plot::Bool=true, plot_name::String="./corner.png", resolution::Int64=2)
    # Get chain details 
    n_steps, n_chains, n_params = size(chains)
    
    # Get best-fit parameter and errors
-   best_θ, lower_err, upper_err, _ = LensFactory.LensModel.LensModelUtils.get_best_parameters_with_errors(chains, chi2; burn_in=burn_in, thinning=thinning)
+   best_θ, _, lower_err, upper_err = LensFactory.LensModel.get_best_fit_parameters(chi2; chains=chains, with_errors=true, burn_in=burn_in, thin=thin)
 
    # Remove Burn-in
    start_idx = Int(floor(n_steps * burn_in)) + 1
-   thinned_chain = chains[start_idx:thinning:end, :, :]
+   thinned_chain = chains[start_idx:thin:end, :, :]
 
    # Reshape the thinned chain into a flat array
    flat_chain = reshape(thinned_chain, :, n_params)
@@ -58,14 +58,14 @@ function LensFactory.LensModel.plot_corner(chains, chi2;
 
    for i in 1:n_params
       # Get parameter labels
-      p_name = PARAM_NAME[param_names[i][2]]
+      p_name = PARAM_NAME[free_parameter_names[i][2]]
 
       # Marginal Stats for Title
       title_str = L"%$(p_name) = %$(round(best_θ[i], digits=2))^{+ %$(round(upper_err[i], digits=2))}_{-%$(round(lower_err[i], digits=2))}"
       
       for j in 1:i
-         p_name_i = L"%$(PARAM_NAME[param_names[i][1]]): %$(PARAM_NAME[param_names[i][2]])"
-         p_name_j = L"%$(PARAM_NAME[param_names[j][1]]): %$(PARAM_NAME[param_names[j][2]])"
+         p_name_i = L"%$(PARAM_NAME[free_parameter_names[i][1]]): %$(PARAM_NAME[free_parameter_names[i][2]])"
+         p_name_j = L"%$(PARAM_NAME[free_parameter_names[j][1]]): %$(PARAM_NAME[free_parameter_names[j][2]])"
          ax = Axis(fig[i, j]; 
                   title = (i == j) ? title_str : "",
                   xlabel = (i == n_params) ? p_name_j : "",
@@ -118,7 +118,7 @@ will show the distribution of the parameters in each of the converged runs.
 - `results`: Vector of optimizer results, each containing `.θ` (parameter vector) and `.f` (chi-squared value).
 
 # Keyword arguments
-- `param_names = nothing`: List of parameter names for labeling the axes.
+- `free_parameter_names = nothing`: List of parameter names for labeling the axes.
 - `save_plot::Bool = true`: Whether to save the plot as "corner_optimizer.png".
    - `plot_name::String = "./corner_optimizer.png"`: Filename for saving the plot.
    - `resolution::Int64 = 2`: Resolution for saving the plot.
@@ -127,7 +127,7 @@ will show the distribution of the parameters in each of the converged runs.
 - A Makie figure object containing the corner plot.
 """
 function LensFactory.LensModel.plot_corner(results;
-                                           param_names=nothing,
+                                           free_parameter_names=nothing,
                                            save_plot::Bool=true, plot_name::String="./corner_optimizer.png", resolution::Int64=2)
 
    # Sort by chi2 (highest/best first)
@@ -160,14 +160,14 @@ function LensFactory.LensModel.plot_corner(results;
 
    for i in 1:n_params
       # Get parameter labels
-      p_name = PARAM_NAME[param_names[i][2]]
+      p_name = PARAM_NAME[free_parameter_names[i][2]]
 
       # Marginal Stats for Title
       title_str = L"%$(p_name) = %$(round(best_θ[i], digits=2))^{+ %$(round(upper_err[i], digits=2))}_{-%$(round(lower_err[i], digits=2))}"
       
       for j in 1:i
-         p_name_i = L"%$(PARAM_NAME[param_names[i][1]]): %$(PARAM_NAME[param_names[i][2]])"
-         p_name_j = L"%$(PARAM_NAME[param_names[j][1]]): %$(PARAM_NAME[param_names[j][2]])"
+         p_name_i = L"%$(PARAM_NAME[free_parameter_names[i][1]]): %$(PARAM_NAME[free_parameter_names[i][2]])"
+         p_name_j = L"%$(PARAM_NAME[free_parameter_names[j][1]]): %$(PARAM_NAME[free_parameter_names[j][2]])"
          ax = Axis(fig[i, j]; 
                   title = (i == j) ? title_str : "",
                   xlabel = (i == n_params) ? p_name_j : "",
@@ -211,7 +211,7 @@ Generates trace plots for the given MCMC chains.
 - `chains`: MCMC chains of shape (n_steps, n_chains, n_params).
 
 # Keyword arguments
-- `param_names = nothing`: Optional list of parameter names for labeling the axes.
+- `free_parameter_names = nothing`: Optional list of parameter names for labeling the axes.
 - `burn_in::Float64 = 0.0`: Fraction of the initial samples to discard as burn-in.
 - `thinning::Int64 = 1`: Interval for thinning the chains to reduce autocorrelation.
 - `save_plot::Bool = true`: Whether to save the plot as "corner_optimizer.png".
@@ -222,7 +222,7 @@ Generates trace plots for the given MCMC chains.
 - A Makie figure object containing the trace plots.
 """
 function LensFactory.LensModel.plot_trace(chains; 
-                                          param_names=nothing, 
+                                          free_parameter_names=nothing, 
                                           burn_in::Float64=0.0, thinning::Int64=1,
                                           save_plot::Bool=true, plot_name::String="./trace.png", resolution::Int64=2)
    # Adapt to [n_params, n_chains, n_steps]
@@ -237,7 +237,7 @@ function LensFactory.LensModel.plot_trace(chains;
 
    for i in 1:n_params
       # Extract the parameter name
-      p_name = param_names !== nothing ? string(param_names[i][2]) : "theta_$i"
+      p_name = free_parameter_names !== nothing ? string(free_parameter_names[i][2]) : "theta_$i"
 
       # Create Axis
       ax = Axis(fig[i, 1], 
@@ -329,7 +329,7 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
                                               plot_name::String="./best_model.png",
                                               resolution::Int64=2)
    # Get the best parameters based on minimum chi2
-   best_θ, _ = LensFactory.LensModel.LensModelUtils.get_best_parameters(chi2, chains)
+   best_θ, _ = LensFactory.LensModel.get_best_fit_parameters(chi2; chains=chains)
 
    # Get list of parameters for the lens model
    param_ref = Dict(p.key => p.refer for p in model.parameters)

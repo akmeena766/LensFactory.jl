@@ -26,9 +26,6 @@ export param_dict
 export adis_current
 export build_lens
 export lens_quantities
-export free_parameter_names
-export get_best_parameters
-export get_best_parameters_with_errors
 
 
 # --------------------------------------------------------------------------------------------------
@@ -50,7 +47,7 @@ end
 
 
 # --------------------------------------------------------------------------------------------------
-# Get free parameters
+# Get view on free parameters
 # --------------------------------------------------------------------------------------------------
 function free_parameters(model::ModelConfig)
    return @view model.parameters[model.free_param_idxs]
@@ -155,15 +152,6 @@ end
 # --------------------------------------------------------------------------------------------------
 # Angular-diameter distance (pvals -> adis)
 # --------------------------------------------------------------------------------------------------
-# @inline function _get_adis(pvals, adis_ref, key)
-#    return get(pvals, key, adis_ref)
-# end
-
-# @inline function adis_current(model::ModelConfig, pvals)
-#    return (_get_adis(pvals, model.adis_ref[i], model.parameters[i].key) for i in eachindex(model.adis_ref))
-# end
-
-
 function adis_current(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol},Float64})
    nsrc = length(model.source_config.sources)
    adis = Vector{Float64}(undef, nsrc)
@@ -304,81 +292,6 @@ function lens_quantities(model::ModelConfig, lens::Lenses.AbstractLens)
       end
    end
    return ψ_all, αx_all, αy_all, A_all
-end
-
-
-# --------------------------------------------------------------------------------------------------
-# Free parameter names
-# --------------------------------------------------------------------------------------------------
-function free_parameter_names(model::ModelConfig)
-   return [(p.owner, p.name) for p in model.parameters[model.free_param_idxs]]
-end
-
-
-# --------------------------------------------------------------------------------------------------
-# Get best-fit parameters from the full optimization/MCMC results
-# --------------------------------------------------------------------------------------------------
-function get_best_parameters(results, chains=nothing)
-   # Initialize outputs
-   best_θ = nothing
-   best_chi2 = -Inf
-
-   # Case A: Input is from the Parallel Optimizer (Vector of NamedTuples)
-   if results isa Vector && eltype(results) <: NamedTuple
-      # We already sorted the results in descending order of logL, so results[1] is the best fit
-      best_run = results[1]
-      best_θ = best_run.θ
-      best_chi2 = best_run.f
-
-   # Case B: Input is from MCMC (ll_history matrix)
-   elseif results isa Matrix{Float64} && chains !== nothing
-      # Get (step, chain) of the best logL by finding the index of the maximum value in the logL matrix
-      best_idx = argmax(results) 
-      step, chain_num = best_idx[1], best_idx[2]
-      
-      best_θ = chains[step, chain_num, :]
-      best_chi2 = results[step, chain_num]
-   else
-      error("Please provide either Optimization results or both MCMC ll_history and chains.")
-   end
-   return best_θ, best_chi2
-end
-
-
-function get_best_parameters_with_errors(chains::Array{Float64, 3}, chi2::Matrix{Float64}; burn_in=0.2, thinning=100)
-   # Get chain details 
-   n_steps, n_chains, n_params = size(chains)
-    
-   # Extract Best-Fit (Maximum Likelihood Estimate)
-   best_idx = argmax(chi2) 
-   step_bf, chain_bf = best_idx[1], best_idx[2]
-   
-   # Best parameter and LogL values
-   best_θ = chains[step_bf, chain_bf, :]
-   best_chi2 = chi2[step_bf, chain_bf]
-
-   # Remove Burn-in
-   start_idx = Int(floor(n_steps * burn_in)) + 1
-   thinned_chain = chains[start_idx:thinning:end, :, :]
-
-   # Reshape the thinned chain into a flat array
-   flat_chain = reshape(thinned_chain, :, n_params)
-    
-   # Calculate (asymmetric) errors as we are defining errors relative to the Best-Fit value
-   lower_err = zeros(n_params)
-   upper_err = zeros(n_params)
-
-   for i in 1:n_params
-      # Get 16th and 84th percentiles of the posterior
-      q16, q84 = StatsBase.quantile(flat_chain[:, i], [0.16, 0.84])
-        
-      # Asymmetric error: distance from best-fit to the quantiles
-      lower_err[i] = best_θ[i] - q16
-      upper_err[i] = q84 - best_θ[i]
-   end
-
-   # Return as a NamedTuple for easy access
-   return best_θ, lower_err, upper_err, best_chi2
 end
 
 end

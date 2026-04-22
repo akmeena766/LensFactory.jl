@@ -5,6 +5,7 @@ module LensModel
 # Julia inbuilt functions to import
 # --------------------------------------------------------------------------------------------------
 using Printf
+using StatsBase
 using JLD2
 using Dates
 using FITSIO
@@ -43,17 +44,16 @@ using .Diagnostic
 # --------------------------------------------------------------------------------------------------
 export read_input
 export fit_model
+export free_parameter_names
+export get_best_fit_parameters
+export get_best_fit_rms
 export get_best_model
 export get_potential
 export get_deflection
 export get_jacobian
 export predict_image
-export save_best_fits
 export check_parity
-export get_best_fit_rms
-export get_best_fit
-export get_best_fit_with_errors
-export free_parameter_names
+export save_best_fits
 
 
 # --------------------------------------------------------------------------------------------------
@@ -113,6 +113,328 @@ end
 
 
 # --------------------------------------------------------------------------------------------------
+# Get free parameter names
+# --------------------------------------------------------------------------------------------------
+"""
+    free_parameter_names(model::ModelConfig)
+Get a vector of tuples containing the owner and name of each free parameter in the model.
+
+# Arguments
+- `model::ModelConfig`: The lens model configuration containing the observation, lens, source, and sampler details.
+
+# Returns
+- `Vector{Tuple{Symbol, Symbol}}`: A vector of tuples containing the owner and name of each free parameter.
+"""
+function free_parameter_names(model::ModelConfig)
+   return [(p.owner, p.name) for p in model.parameters[model.free_param_idxs]]
+end
+
+
+# --------------------------------------------------------------------------------------------------
+# Get best-fit parameters from the full optimization/MCMC results
+# --------------------------------------------------------------------------------------------------
+"""
+    get_best_fit_parameters(results; chains=nothing, burn_in::Float64=0.2, with_errors::Bool=false, thin::Int64=1, print_table::Bool=false)
+Get the best-fit parameters from the optimization or MCMC results.
+
+# Arguments
+- `results::Union{Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, Matrix{Float64}}`: The optimization or MCMC results.
+   - If `results::Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}`: It is assumed to be from the 
+      optimizer results, where each element is a named tuple containing the parameter vector (`θ`) 
+      and the χ² values (`f`).
+   - If `results::Matrix{Float64}`:: It is assumed to be the χ² matrix corresponding to MCMC chains.
+
+# Keyword Arguments
+- `chains::Union{Array{Float64, 3}, Nothing}=nothing`: MCMC chains. The dimensions should be 
+   `(n_steps, n_chains, n_parameters)`. This is only required when `results` is a `Matrix{Float64}`.
+- `burn_in::Float64=0.2`: The fraction of MCMC chains to discard as burn-in (default: 0.2).
+- `with_errors::Bool=false`: If `true`, then also return 1-sigma uncertainties for best-fit parameters.
+   But it will only work if `chains` are provided.
+- `thin::Int64=1`: The thinning factor to apply to the MCMC chains while calculating parameter 
+   uncertainties.
+- `print_table::Bool=false`: If `true`, then print the best-fit parameters along with [-1σ, +1σ] and
+   [-2σ, +2σ] ranges in a table format. This option is only available when `with_errors=true`.
+
+# Returns
+- `best_θ::Vector{Float64}`: Best-fit parameter values.
+- `best_chi2::Float64`: χ² value corresponding to the best-fit parameters.
+- `lower_err::Vector{Float64}`: Lower 1-sigma uncertainties (only if `with_errors=true`).
+- `upper_err::Vector{Float64}`: Upper 1-sigma uncertainties (only if `with_errors=true`).
+"""
+function get_best_fit_parameters(results::Union{Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, Matrix{Float64}}; 
+                             chains::Union{Array{Float64, 3}, Nothing}=nothing, 
+                             burn_in::Float64=0.2,
+                             with_errors::Bool=false,
+                             thin::Int64=1,
+                             print_table::Bool=false,
+                             free_parameter_names=nothing)
+   # Initialize outputs
+   best_θ = nothing
+   best_chi2 = -Inf
+
+   # Case A: Input is from the Parallel Optimizer (Vector of NamedTuples)
+   if results isa Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}
+      # We already sorted the results in descending order of logL, so results[1] is the best fit
+      best_run = results[1]
+      best_θ = best_run.θ
+      best_chi2 = best_run.f
+
+   # Case B: Input is from MCMC (χ² matrix)
+   elseif results isa Matrix{Float64} && chains !== nothing
+      # Get chain details 
+      n_steps, n_chains, n_params = size(chains)
+
+      # Remove Burn-in
+      start_idx = Int(floor(n_steps * burn_in)) + 1
+      thinned_chains = chains[start_idx:thin:end, :, :]
+      thinned_chi2 = results[start_idx:thin:end, :]
+
+      # Get (step, chain) of the best logL by finding the index of the maximum value in the logL matrix
+      best_idx = argmax(thinned_chi2) 
+      step, chain_num = best_idx[1], best_idx[2]
+      
+      best_θ = thinned_chains[step, chain_num, :]
+      best_chi2 = results[step, chain_num]
+
+      if with_errors
+         # Reshape the thinned chain into a flat array
+         flat_chain = reshape(thinned_chains, :, n_params)
+
+         # Calculate (asymmetric) errors as we are defining errors relative to the Best-Fit value
+         lower_err = zeros(n_params)
+         upper_err = zeros(n_params)
+         lower_err2 = zeros(n_params)
+         upper_err2 = zeros(n_params)
+         for i in 1:n_params
+            # Get 16th and 84th percentiles of the posterior
+            q16, q84 = StatsBase.quantile(flat_chain[:, i], [0.16, 0.84])
+            q2p30, q97p7 = StatsBase.quantile(flat_chain[:, i], [0.023, 0.977])
+        
+            # Asymmetric error: distance from best-fit to the quantiles
+            lower_err[i] = q16 - best_θ[i]
+            upper_err[i] = q84 - best_θ[i]
+
+            lower_err2[i] = q2p30 - best_θ[i]
+            upper_err2[i] = q97p7 - best_θ[i]
+         end
+
+         if print_table
+            # Define header
+            header = @sprintf("| %-8s | %-10s | %-12s |   %-18s |   %-18s |", "Owner", "parameter", "Best-fit", "[-1σ, +1σ]", "[-2σ, +2σ]")
+            
+            # Print header
+            println("-"^length(header))
+            println(header)
+            println("-"^length(header))
+
+            # Run over parameters
+            for i in 1:n_params
+               owner = string(free_parameter_names[i][1])
+               child = string(free_parameter_names[i][2])
+               
+               @printf("| %-8s | %-10s | %-12.4f | [%+6.3f, %+6.3f]%-4s | [%+6.3f, %+6.3f]%-4s |\n", 
+                     owner, child, best_θ[i], lower_err[i], upper_err[i], "", lower_err2[i], upper_err2[i],"")
+            end
+            println("-"^length(header))
+         end
+         return best_θ, best_chi2, lower_err, upper_err
+      end
+   else
+      error("Please provide either Optimization results or both MCMC χ² and chains.")
+   end
+   return best_θ, best_chi2
+end
+
+
+# --------------------------------------------------------------------------------------------------
+# Calculate RMS for the best-fit model
+# --------------------------------------------------------------------------------------------------
+"""
+    get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64}; check_parity::Bool=false, burn_in::Float64=0.2)
+Calculate the RMS of the best-fit model based on the MCMC results stored in `chains` and `chi2`. The
+function prints a table showing the RMS for each knot image, as well as a global total RMS. If 
+`check_parity` is set to true, the function will also check the parity of each knot image and 
+print a warning if any parity does not match.
+
+# Arguments
+- `model::ModelConfig`: The lens model configuration used for the MCMC fit.
+- `chains::Array{Float64, 3}`: The MCMC chains containing the sampled parameter values. The 
+   dimensions should be (n_steps, n_chains, n_parameters).
+- `chi2::Matrix{Float64}`: The chi2 values corresponding to each sample in the MCMC chains. The 
+   dimensions should be (n_steps, n_steps).
+
+# Keyword Arguments
+- `check_parity::Bool=false`: Whether to check the parity of each knot image against the input parity.
+- `burn_in::Float64=0.2`: The fraction of MCMC chains to discard as burn-in while determining 
+   best-fit lens model.
+
+# Returns
+- `nothing`: Prints a table to the console with the RMS for each knot image, as well as total RMS.
+"""
+function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64}; check_parity::Bool=false, burn_in::Float64=0.2)
+   # Get the best parameters based on minimum chi2
+   best_θ, _ = get_best_fit_parameters(chi2; chains=chains, burn_in=burn_in)
+
+   # Get list of parameters for the lens model
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+   
+   # Replace free parameter values by best-fit values
+   pvals = LensModelUtils.param_dict(model, best_θ, param_ref)
+
+   # Get best-fit model
+   best_model = LensModelUtils.build_lens(model, pvals)
+
+   # Get angular-diameter distance ratios
+   adis = LensModelUtils.adis_current(model, pvals)
+
+   # Generate grid
+   FOV = model.observation.FOV
+   pixel_scale = model.observation.pixel_scale
+   x_grid, y_grid = Lenses.get_meshgrid(0.5 * FOV[1], 0.5 * FOV[2], pixel_scale)
+
+   # Calculate deformation at all image positions
+   ψ_all, αx_all, αy_all, A_all = LensModelUtils.lens_quantities(model, best_model)
+
+   # Identity tuple
+   I4 = (1.0, 0.0, 0.0, 1.0)
+
+   # Global RMS and image count variables
+   global_sq_dist = 0.0
+   global_count = 0
+
+   # Helper for column padding
+   col(txt, width) = rpad(string(txt), width)
+
+   # Print Header
+   # Table Header
+   header_line = "-"^72
+   knot_sep  = "             " * "-"^59
+   println(header_line)
+   println("| ", col("Source", 10), 
+          " | ", col("Knot", 10), 
+          " | ", col("Img", 6), 
+          " | ", col("Image Dist (arcsec)", 20), 
+          " | ", col("Knot RMS", 10), 
+          " |")
+   println(header_line)
+
+   # Calculate RMS for each image
+   sid = 1
+   kid = 1
+   for src in model.source_config.sources
+      # Get angular-diameter distance ratio for this source
+      adis_value = adis[sid]
+         
+      # Generate source id
+      src_id = Symbol(:src, sid)
+      src_knot = 0
+      for knot in src.knots
+         # Generate knot id
+         knot_id = Symbol(:knot, kid)
+
+         # Update knot counter
+         src_knot = src_knot + 1
+
+         # Knot positions and measurement errors
+         x  = knot.x
+         y  = knot.y
+         σx = knot.σx
+         σy = knot.σy
+         σθ = knot.σθ
+         
+         # Number of images for this knot
+         n = length(x)
+
+         # Deflection vector at the knot positions
+         αx = @. adis_value * αx_all[kid]
+         αy = @. adis_value * αy_all[kid]
+
+         # Deformation tensor at the knot positions
+         A = @. adis_value * A_all[kid]
+         for i in eachindex(A)
+            @. A[i] = I4[i] - A[i]
+         end
+
+         # Individual source positions using broadcasting
+         βx_ind = @. x - αx
+         βy_ind = @. y - αy
+
+         # Get weighted source position (Section 4.1 in https://arxiv.org/pdf/astro-ph/0102340)
+         βx_model, βy_model, _ = Likelihood._weighted_position(βx_ind, βy_ind, A, σx, σy, σθ, n)
+
+         # Get image positions
+         predicted_image = Lenses.get_image(best_model, x_grid, y_grid, adis_value, (βx_model, βy_model))
+
+         # Convert predicted to mutable arrays for iterative removal
+         pred_x = Float64[p[1] for p in predicted_image]
+         pred_y = Float64[p[2] for p in predicted_image]
+
+         # Knot counters
+         knot_sq_dist = 0.0
+         knot_count = 0
+
+         # Store distances to print after matching is done for the whole knot
+         results = []
+         
+         # Matching observed images to predicted images
+         for i in 1:n
+            if isempty(pred_x)
+               push!(results, "MISSING")
+               continue
+            end
+
+            # Calculate distances to all remaining candidates
+            dx = @. pred_x .- x[i]
+            dy = @. pred_y .- y[i]
+            dist_sq = @. dx^2 + dy^2
+
+            # Find the closest predicted image index
+            best_idx = argmin(dist_sq)
+
+            d2 = dist_sq[best_idx]
+            dist = sqrt(d2)
+
+            # Update global and knot totals
+            global_sq_dist += d2
+            global_count += 1
+            knot_sq_dist += d2
+            knot_count += 1
+
+            push!(results, round(dist, digits=6))
+
+            # Remove this candidate so it can't be matched twice
+            deleteat!(pred_x, best_idx)
+            deleteat!(pred_y, best_idx)
+         end
+         
+         # Calculate RMS for this specific knot
+         k_rms = knot_count > 0 ? round(sqrt(knot_sq_dist / knot_count), digits=6) : "N/A"
+
+         # Print image-by-image breakdown
+         for (i, d_val) in enumerate(results)
+            k_display = (i == 1) ? string(k_rms) : ""
+            println("| ", col("src$sid", 10), 
+                   " | ", col("knot$src_knot", 10), 
+                   " | ", col(i, 6), 
+                   " | ", col(d_val, 20), 
+                   " | ", col(k_display, 10), 
+                   " |"
+            )
+         end
+         println("-"^72)
+         kid = kid + 1
+      end
+      sid = sid + 1
+   end
+
+   final_rms = global_count > 0 ? sqrt(global_sq_dist / global_count) : 0.0
+   println("| GLOBAL TOTAL RMS: ", col(round(final_rms, digits=6), 50), " |")
+   println("-"^72)
+   
+   return nothing
+end
+
+# --------------------------------------------------------------------------------------------------
 # Get lensing quantities for the best-fit model
 # --------------------------------------------------------------------------------------------------
 """
@@ -128,11 +450,21 @@ parameters are determined by the minimum chi2 in `chi2`.
    dimensions should be (n_steps, n_steps).
 
 # Returns
-- `best_model`: The best-fit lens model constructed using the best-fit parameters.
+- `best_model`: Best-fit lens model constructed using the best-fit parameters.
+- `best_chi2`: Chi2 correspodning to best-fit lens model.
 """
-function get_best_model(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64})
+function get_best_model(model::ModelConfig; optim_result::Union{Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, Nothing}=nothing, 
+                                            mcmc_chains::Union{Array{Float64, 3}, Nothing}=nothing, 
+                                            mcmc_chi2::Union{Matrix{Float64}, Nothing}=nothing, 
+                                            burn_in::Float64=0.2)
    # Get the best parameters based on minimum chi2
-   best_θ, _ = LensModelUtils.get_best_parameters(chi2, chains)
+   if optim_result !== nothing
+      best_θ, best_chi2 = get_best_fit_parameters(optim_result)
+   elseif mcmc_chains !== nothing && mcmc_chi2 !== nothing
+      best_θ, best_chi2 = get_best_fit_parameters(mcmc_chi2; chains=mcmc_chains, burn_in=burn_in)
+   else
+      error("Either optim_result or (mcmc_chains and mcmc_chi2) must be provided.")
+   end
 
    # Get list of parameters for the lens model
    param_ref = Dict(p.key => p.refer for p in model.parameters)
@@ -140,7 +472,7 @@ function get_best_model(model::ModelConfig, chains::Array{Float64, 3}, chi2::Mat
    # Replace free parameter values by best-fit values
    pvals = LensModelUtils.param_dict(model, best_θ, param_ref)
    
-   return LensModelUtils.build_lens(model, pvals)
+   return LensModelUtils.build_lens(model, pvals), best_chi2
 end
 
 
@@ -203,7 +535,7 @@ function get_potential(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC) 
    close(data)
 
    # Get best-fit lens model
-   best_model = get_best_model(model, chains, chi2)
+   best_model = get_best_model(model; mcmc_chains=chains, mcmc_chi2=chi2)
 
    return get_potential(best_model, θx, θy::T; unit=unit)
 end
@@ -269,7 +601,7 @@ function get_deflection(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC)
    close(data)
 
    # Get best-fit lens model
-   best_model = get_best_model(model, chains, chi2)
+   best_model = get_best_model(model; mcmc_chains=chains, mcmc_chi2=chi2)
 
    return get_deflection(best_model, θx::T, θy::T; unit=unit)
 end
@@ -335,7 +667,7 @@ function get_jacobian(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC) w
    close(data)
 
    # Get best-fit lens model
-   best_model = get_best_model(model, chains, chi2)
+   best_model = get_best_model(model; mcmc_chains=chains, mcmc_chi2=chi2)
 
    return get_jacobian(best_model, θx::T, θy::T; unit=unit)
 end
@@ -378,7 +710,7 @@ function predict_image(file_name::String, θx::T, θy::T, z_s::Float64; unit::Sy
    close(data)
 
    # Get best-fit lens model
-   best_model = get_best_model(model, chains, chi2)
+   best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_chi2=chi2)
 
    # Construct grid
    FOV = model.observation.FOV
@@ -556,7 +888,7 @@ function save_best_fits(file_name::String;
    close(data)
 
    # Get best-fit model
-   best_model = LensModelUtils.get_best_model(model, chains, chi2)
+   best_model = get_best_model(model; mcmc_chains=chains, mcmc_chi2=chi2)
 
    # Generate grid
    FOV = model.observation.FOV
@@ -665,7 +997,7 @@ function check_parity(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matri
    end
 
    # Get the best parameters based on chi2
-   best_θ, _ = LensModelUtils.get_best_parameters(chi2, chains)
+   best_θ, _ = get_best_fit_parameters(chi2, chains)
 
    # Get list of parameters for the lens model
    param_ref = Dict(p.key => p.refer for p in model.parameters)
@@ -752,193 +1084,6 @@ function check_parity(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matri
       end
       sid = sid + 1
    end
-   return nothing
-end
-
-
-# --------------------------------------------------------------------------------------------------
-# Calculate RMS for the best-fit model
-# --------------------------------------------------------------------------------------------------
-"""
-    get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64}; check_parity::Bool=false)
-Calculate the RMS of the best-fit model based on the MCMC results stored in `chains` and `chi2`. The
-function prints a table showing the RMS for each knot image, as well as a global total RMS. If 
-`check_parity` is set to true, the function will also check the parity of each knot image and 
-print a warning if any parity does not match.
-
-# Arguments
-- `model::ModelConfig`: The lens model configuration used for the MCMC fit.
-- `chains::Array{Float64, 3}`: The MCMC chains containing the sampled parameter values. The 
-   dimensions should be (n_steps, n_chains, n_parameters).
-- `chi2::Matrix{Float64}`: The chi2 values corresponding to each sample in the MCMC chains. The 
-   dimensions should be (n_steps, n_steps).
-
-# Keyword Arguments
-- `check_parity::Bool=false`: Whether to check the parity of each knot image against the input parity.
-
-# Returns
-- `nothing`: Prints a table to the console with the RMS for each knot image, as well as total RMS.
-"""
-function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64}; check_parity::Bool=false)
-   # Get the best parameters based on minimum chi2
-   best_θ, _ = LensModelUtils.get_best_parameters(chi2, chains)
-
-   # Get list of parameters for the lens model
-   param_ref = Dict(p.key => p.refer for p in model.parameters)
-   
-   # Replace free parameter values by best-fit values
-   pvals = LensModelUtils.param_dict(model, best_θ, param_ref)
-
-   # Get best-fit model
-   best_model = LensModelUtils.build_lens(model, pvals)
-
-   # Get angular-diameter distance ratios
-   adis = LensModelUtils.adis_current(model, pvals)
-
-   # Generate grid
-   FOV = model.observation.FOV
-   pixel_scale = model.observation.pixel_scale
-   x_grid, y_grid = Lenses.get_meshgrid(0.5 * FOV[1], 0.5 * FOV[2], pixel_scale)
-
-   # Calculate deformation at all image positions
-   ψ_all, αx_all, αy_all, A_all = LensModelUtils.lens_quantities(model, best_model)
-
-   # Identity tuple
-   I4 = (1.0, 0.0, 0.0, 1.0)
-
-   # Global RMS and image count variables
-   global_sq_dist = 0.0
-   global_count = 0
-
-   # Helper for column padding
-   col(txt, width) = rpad(string(txt), width)
-
-   # Print Header
-   # Table Header
-   header_line = "-"^72
-   knot_sep  = "             " * "-"^59
-   println(header_line)
-   println("| ", col("Source", 10), 
-          " | ", col("Knot", 10), 
-          " | ", col("Img", 6), 
-          " | ", col("Image Dist (arcsec)", 20), 
-          " | ", col("Knot RMS", 10), 
-          " |")
-   println(header_line)
-
-   # Calculate RMS for each image
-   sid = 1
-   kid = 1
-   for src in model.source_config.sources
-      # Get angular-diameter distance ratio for this source
-      adis_value = adis[sid]
-         
-      # Generate source id
-      src_id = Symbol(:src, sid)
-      src_knot = 0
-      for knot in src.knots
-         # Generate knot id
-         knot_id = Symbol(:knot, kid)
-
-         # Update knot counter
-         src_knot = src_knot + 1
-
-         # Knot positions and measurement errors
-         x  = knot.x
-         y  = knot.y
-         σx = knot.σx
-         σy = knot.σy
-         σθ = knot.σθ
-         
-         # Number of images for this knot
-         n = length(x)
-
-         # Deflection vector at the knot positions
-         αx = @. adis_value * αx_all[kid]
-         αy = @. adis_value * αy_all[kid]
-
-         # Deformation tensor at the knot positions
-         A = @. adis_value * A_all[kid]
-         for i in eachindex(A)
-            @. A[i] = I4[i] - A[i]
-         end
-
-         # Individual source positions using broadcasting
-         βx_ind = @. x - αx
-         βy_ind = @. y - αy
-
-         # Get weighted source position (Section 4.1 in https://arxiv.org/pdf/astro-ph/0102340)
-         βx_model, βy_model, _ = Likelihood._weighted_position(βx_ind, βy_ind, A, σx, σy, σθ, n)
-
-         # Get image positions
-         predicted_image = Lenses.get_image(best_model, x_grid, y_grid, adis_value, (βx_model, βy_model))
-
-         # Convert predicted to mutable arrays for iterative removal
-         pred_x = Float64[p[1] for p in predicted_image]
-         pred_y = Float64[p[2] for p in predicted_image]
-
-         # Knot counters
-         knot_sq_dist = 0.0
-         knot_count = 0
-
-         # Store distances to print after matching is done for the whole knot
-         results = []
-         
-         # Matching observed images to predicted images
-         for i in 1:n
-            if isempty(pred_x)
-               push!(results, "MISSING")
-               continue
-            end
-
-            # Calculate distances to all remaining candidates
-            dx = @. pred_x .- x[i]
-            dy = @. pred_y .- y[i]
-            dist_sq = @. dx^2 + dy^2
-
-            # Find the closest predicted image index
-            best_idx = argmin(dist_sq)
-
-            d2 = dist_sq[best_idx]
-            dist = sqrt(d2)
-
-            # Update global and knot totals
-            global_sq_dist += d2
-            global_count += 1
-            knot_sq_dist += d2
-            knot_count += 1
-
-            push!(results, round(dist, digits=6))
-
-            # Remove this candidate so it can't be matched twice
-            deleteat!(pred_x, best_idx)
-            deleteat!(pred_y, best_idx)
-         end
-         
-         # Calculate RMS for this specific knot
-         k_rms = knot_count > 0 ? round(sqrt(knot_sq_dist / knot_count), digits=6) : "N/A"
-
-         # Print image-by-image breakdown
-         for (i, d_val) in enumerate(results)
-            k_display = (i == 1) ? string(k_rms) : ""
-            println("| ", col("src$sid", 10), 
-                   " | ", col("knot$src_knot", 10), 
-                   " | ", col(i, 6), 
-                   " | ", col(d_val, 20), 
-                   " | ", col(k_display, 10), 
-                   " |"
-            )
-         end
-         println("-"^72)
-         kid = kid + 1
-      end
-      sid = sid + 1
-   end
-
-   final_rms = global_count > 0 ? sqrt(global_sq_dist / global_count) : 0.0
-   println("| GLOBAL TOTAL RMS: ", col(round(final_rms, digits=6), 50), " |")
-   println("-"^72)
-   
    return nothing
 end
 
