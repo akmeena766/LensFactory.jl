@@ -30,6 +30,14 @@
    @test dex1_ == (0.0, 0.0)
    @test jac1_ == (0.0, 0.0, 0.0)
 
+   # Test on origin
+   pot1_ = Lenses.get_potential(lens,  [0.0, 0.0], [0.0, 0.0])
+   dex1_ = Lenses.get_deflection(lens, [0.0, 0.0], [0.0, 0.0])
+   jac1_ = Lenses.get_jacobian(lens,   [0.0, 0.0], [0.0, 0.0])
+   @test pot1_ == [0.0, 0.0]
+   @test dex1_ == ([0.0, 0.0], [0.0, 0.0])
+   @test jac1_ == ([0.0, 0.0], [0.0, 0.0], [0.0, 0.0])
+
    # Second point
    pot2 = Lenses.get_potential(lens,  xt2, yt2)
    dex2 = Lenses.get_deflection(lens, xt2, yt2)
