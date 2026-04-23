@@ -1,7 +1,7 @@
 #!!!!!!!!!!!!!! Testing AGAINST Glafic !!!!!!!!!!!!!!
 #! Keep in mind that coordinates are rotated by 90 degree in Glafic compared to LensFactory. Hence,
 #! 0° in LensFactory is equal to 90° in Glafic.
-@testset "ExternalEffects3 lens" begin
+@testset "ExternalEffects3" begin
    delta = 0.2
    angle = 90.0
    lens = Lenses.init_ExternalEffects3(delta=delta, angle=angle)

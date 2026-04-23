@@ -20,9 +20,9 @@ export deflection!
 export jacobian!
 
 """
-    potential!(ψ::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64, n::Float64) where T <: RV
+    potential!(ψ::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64, n::RV) where T <: RV
 """
-function potential!(ψ::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64, n::Float64) where T <: RV
+function potential!(ψ::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64, n::RV) where T <: RV
    # Get radial coordiate
    dr = sqrt(θx^2 + θy^2)
 
@@ -42,9 +42,9 @@ function potential!(ψ::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64,
 end
 
 """
-    potential!(ψ::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64, n::Float64) where T <: ROA
+    potential!(ψ::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64, n::RV) where T <: ROA
 """
-function potential!(ψ::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64, n::Float64) where T <: ROA
+function potential!(ψ::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64, n::RV) where T <: ROA
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
@@ -70,9 +70,9 @@ function potential!(ψ::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64,
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64, n::Float64) where T <: RV
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64, n::RV) where T <: RV
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64, n::Float64) where T <: RV
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64, n::RV) where T <: RV
    # Get radial coordiate
    dr = sqrt(θx^2 + θy^2)
 
@@ -94,9 +94,9 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64,
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64, n::Float64) where T <: ROA
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64, n::RV) where T <: ROA
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64, n::Float64) where T <: ROA
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64, n::RV) where T <: ROA
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
@@ -128,9 +128,9 @@ end
 
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64, n::Float64) where T <: RV
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64, n::RV) where T <: RV
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64, n::Float64) where T <: RV
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64, n::RV) where T <: RV
    # Get radial coordiate
    dr = sqrt(θx^2 + θy^2)
 
@@ -159,9 +159,9 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, ϵ::Float64, θϵ:
 end
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64, n::Float64) where T <: ROA
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64, n::RV) where T <: ROA
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64, n::Float64) where T <: ROA
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, ϵ::Float64, θϵ::Float64, m::Int64, n::RV) where T <: ROA
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
@@ -171,8 +171,9 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, ϵ::Float64, θϵ:
 
          # Handle origin
          if dr == 0.0
-            ψx[i, j] = ψx[i, j] + 0.0
-            ψy[i, j] = ψy[i, j] + 0.0
+            ψxx[i, j] = ψxx[i, j] + 0.0
+            ψyy[i, j] = ψyy[i, j] + 0.0
+            ψxy[i, j] = ψxy[i, j] + 0.0
             continue
          end
 

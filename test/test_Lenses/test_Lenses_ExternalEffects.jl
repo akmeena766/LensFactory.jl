@@ -1,5 +1,5 @@
 #!!!!!!!!!!!!!! Testing AGAINST formulae !!!!!!!!!!!!!!
-@testset "ExternalEffects lens" begin
+@testset "ExternalEffects" begin
    kappa = 0.0
    gamma = 0.1
    angle = 45.0
