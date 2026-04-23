@@ -196,6 +196,30 @@ end
 
 
 """
+    init_Multipole(delta::RV=NaN, angle::RV=NaN, m::Int64=2, n::RV=2.0)
+Initialize multipole perturbations of order ``m''.
+
+# Keyword Arguments
+- `delta::RV = NaN`: Amplitude of multipole perturbations (dimensionless).
+- `angle::RV = NaN`: Direction of the perturbation (in ``\\rm \\mathbf{degrees}``).
+- `m::Int64 = 2`: Order of the multipole.
+   - `m = 1` → dipole (i.e., constant deflection everywhere)
+   - `m = 2` → quadrupole (i.e., external shear)
+   - `m = 3` → octupole (i.e., triangular assymmetry)
+   - `m = 4` → hexadecapole (i.e., boxiness)
+
+- `n::RV = 2.0`: Controls perturbation scaling with radius.
+"""
+@kwdef struct init_Multipole <: AbstractLens
+   _lens_::Symbol = :Multipole
+   delta::RV = NaN
+   angle::RV = NaN
+   m::Int64 = 2
+   n::RV = 2.0
+end
+
+
+"""
     init_PIEPLens(x_c::RV=0.0, y_c::RV=0.0, v_d::RV=NaN, x_s::RV=NaN, eps::RV=NaN, pa::RV=NaN)
 Initialize pseudo isothermal elliptical potential (PIEP) lens with the given parameters.
 
