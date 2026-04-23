@@ -142,7 +142,7 @@ Get the best-fit parameters from the optimization or MCMC results.
    - If `results::Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}`: It is assumed to be from the 
       optimizer results, where each element is a named tuple containing the parameter vector (`θ`) 
       and the χ² values (`f`).
-   - If `results::Matrix{Float64}`:: It is assumed to be the χ² matrix corresponding to MCMC chains.
+   - If `results::Matrix{Float64}`: It is assumed to be the χ² matrix corresponding to MCMC chains.
 
 # Keyword Arguments
 - `chains::Union{Array{Float64, 3}, Nothing}=nothing`: MCMC chains. The dimensions should be 

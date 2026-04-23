@@ -61,7 +61,7 @@ function LensFactory.LensModel.plot_corner(chains, chi2;
       p_name = PARAM_NAME[free_parameter_names[i][2]]
 
       # Marginal Stats for Title
-      title_str = L"%$(p_name) = %$(round(best_θ[i], digits=2))^{+ %$(round(upper_err[i], digits=2))}_{-%$(round(lower_err[i], digits=2))}"
+      title_str = L"%$(p_name) = %$(round(best_θ[i], digits=2))^{+ %$(round(upper_err[i], digits=2))}_{%$(round(lower_err[i], digits=2))}"
       
       for j in 1:i
          p_name_i = L"%$(PARAM_NAME[free_parameter_names[i][1]]): %$(PARAM_NAME[free_parameter_names[i][2]])"
@@ -80,7 +80,7 @@ function LensFactory.LensModel.plot_corner(chains, chi2;
             density!(ax, flat_chain[:, i], color=(:dodgerblue, 0.5), strokewidth=2)
                
             # Sigma lines
-            vlines!(ax, [best_θ[i] - lower_err[i], best_θ[i], best_θ[i] + upper_err[i]], color=:black, linestyle=:dash)
+            vlines!(ax, [best_θ[i] + lower_err[i], best_θ[i], best_θ[i] + upper_err[i]], color=:black, linestyle=:dash)
 
             ylims!(ax, 0, nothing)
          else
@@ -127,15 +127,13 @@ will show the distribution of the parameters in each of the converged runs.
 - A Makie figure object containing the corner plot.
 """
 function LensFactory.LensModel.plot_corner(results;
-                                           free_parameter_names=nothing,
-                                           save_plot::Bool=true, plot_name::String="./corner_optimizer.png", resolution::Int64=2)
+                              free_parameter_names=nothing,
+                              save_plot::Bool=true, plot_name::String="./corner_optimizer.png", resolution::Int64=2)
 
-   # Sort by chi2 (highest/best first)
-   # results should be a vector of structs/objects with .θ and .f (chi2)
-   sorted_res = sort(results, by = x -> x.f, rev = true)
-   best_θ = sorted_res[1].θ
+   # Get the best-fit parameter vector. Results are lready sorted based on chi2
+   best_θ = results[1].θ
  
-   n_params = length(sorted_res[1].θ)
+   n_params = length(best_θ)
    # Create matrix from optimizer results
    θ_matrix = hcat([res.θ for res in results]...)'
 
@@ -151,7 +149,7 @@ function LensFactory.LensModel.plot_corner(results;
       q16, q84 = StatsBase.quantile(θ_matrix[:, i], [0.16, 0.84])
         
       # Asymmetric error: distance from best-fit to the quantiles
-      lower_err[i] = best_θ[i] - q16
+      lower_err[i] = q16 - best_θ[i]
       upper_err[i] = q84 - best_θ[i]
    end
 
@@ -163,7 +161,7 @@ function LensFactory.LensModel.plot_corner(results;
       p_name = PARAM_NAME[free_parameter_names[i][2]]
 
       # Marginal Stats for Title
-      title_str = L"%$(p_name) = %$(round(best_θ[i], digits=2))^{+ %$(round(upper_err[i], digits=2))}_{-%$(round(lower_err[i], digits=2))}"
+      title_str = L"%$(p_name) = %$(round(best_θ[i], digits=2))^{+ %$(round(upper_err[i], digits=2))}_{%$(round(lower_err[i], digits=2))}"
       
       for j in 1:i
          p_name_i = L"%$(PARAM_NAME[free_parameter_names[i][1]]): %$(PARAM_NAME[free_parameter_names[i][2]])"
@@ -182,7 +180,7 @@ function LensFactory.LensModel.plot_corner(results;
             density!(ax, θ_matrix[:, i], color=(:dodgerblue, 0.5), strokewidth=2)
                
             # Sigma lines
-            vlines!(ax, [best_θ[i] - lower_err[i], best_θ[i], best_θ[i] + upper_err[i]], color=:black, linestyle=:dash)
+            vlines!(ax, [best_θ[i] + lower_err[i], best_θ[i], best_θ[i] + upper_err[i]], color=:black, linestyle=:dash)
 
             ylims!(ax, 0, nothing)
          else
@@ -222,15 +220,15 @@ Generates trace plots for the given MCMC chains.
 - A Makie figure object containing the trace plots.
 """
 function LensFactory.LensModel.plot_trace(chains; 
-                                          free_parameter_names=nothing, 
-                                          burn_in::Float64=0.0, thinning::Int64=1,
-                                          save_plot::Bool=true, plot_name::String="./trace.png", resolution::Int64=2)
+                              free_parameter_names=nothing, 
+                              burn_in::Float64=0.0, thin::Int64=1,
+                              save_plot::Bool=true, plot_name::String="./trace.png", resolution::Int64=2)
    # Adapt to [n_params, n_chains, n_steps]
    n_steps, n_chains, n_params = size(chains)
     
    # Calculate start index based on burn-in (slicing the 3rd dimension)
    start_idx = max(1, Int(floor(n_steps * burn_in)) + 1)
-   steps_range = start_idx:thinning:n_steps
+   steps_range = start_idx:thin:n_steps
     
    # Create the figure
    fig = Figure(size=(1000, 200 * n_params))
