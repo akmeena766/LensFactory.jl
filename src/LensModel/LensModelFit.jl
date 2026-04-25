@@ -23,7 +23,6 @@ using .AIES
 
 using ..Constants
 using ..Lenses
-
 using ..LensModelIO
 using ..LensModelUtils
 using ..Likelihood
@@ -124,7 +123,7 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
    results = Vector{Union{Nothing, NamedTuple{(:θ, :f), Tuple{Vector{Float64}, Float64}}}}(nothing, n_runs)
 
    # Progress bar setup
-   p = Progress(n_runs; dt=0.1, desc="Running Nelder-Mead Optimizer... ", barlen=50)
+   p = Progress(n_runs; dt=0.1, desc="Running Nelder-Mead Optimizer... ")
    
    @threads for i in 1:n_runs
       # Copying input ensures thread isolation
@@ -317,6 +316,8 @@ function _fit_model(model::ModelConfig; save::Bool=true, file_name::Union{String
    end
 
    # MCMC
+   chains = nothing
+   chi2 = nothing
    if sampler.mcmc !== nothing
       chains, chi2 = run_mcmc(model, param_ref, θ_start, verbose)
    end

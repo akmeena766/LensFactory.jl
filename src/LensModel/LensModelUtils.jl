@@ -32,7 +32,7 @@ export lens_quantities
 # Parameter-space → Physical-space transformation
 # --------------------------------------------------------------------------------------------------
 const PARAM_TRANSFORM = Dict{Symbol,Function}(   
-   # Mass:Log10(M/M☉) -> kg
+   # Mass:Log10[M / M☉] -> [M / M☉]
    :mass => x -> 10^x,
 )
 
@@ -243,7 +243,7 @@ function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, Float6
          l_lstar = @. 10.0^(-0.4 * (obs_mag - ref_mag))
 
          # Velocity dispersion (vector)
-         lens_params[:v_d] = @. updated_scaling.ref_sigma * 1.0E3 * l_lstar^updated_scaling.slope_sigma
+         lens_params[:v_d] = @. updated_scaling.ref_sigma * l_lstar^updated_scaling.slope_sigma
          
          # Core radius (vector)
          lens_params[:x_s] = @. updated_scaling.ref_core * l_lstar^updated_scaling.slope_core

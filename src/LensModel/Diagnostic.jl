@@ -22,6 +22,56 @@ export acceptance_diagnostics
 
 
 # --------------------------------------------------------------------------------------------------
+# Optimizer convergence
+# --------------------------------------------------------------------------------------------------
+function optimizer_convergence(optimizer::Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}; tolerance::Float64=0.01, verbose::Bool=true)
+   # Best parameter vector and chi2
+   best_θ = converged_results[1].θ
+   best_val = converged_results[1].f
+
+   for result in converged_results
+      # Calculate relative difference for parameters (avoiding division by zero)
+      # Using 1e-8 as a floor to handle parameters that are exactly 0.0
+      rel_diff_θ = abs.(result.θ .- best_θ) ./ (max.(abs.(best_θ), abs.(result.θ)) .+ 1e-8)
+    
+      # Calculate relative difference for the chi2 (objective value)
+      rel_diff_f = abs(result.f - best_val) / (abs(best_val) + 1e-8)
+
+      # Check if all parameters are within percentage tolerance (e.g., 0.1% = 0.001)
+      if all(rel_diff_θ .< opt.tolerance) && (rel_diff_f < opt.tolerance)
+         same_best_count += 1
+      end
+   end
+
+   # Calculate the percentage
+   conv_rate = (total_converged / total_runs) * 100
+   stability_rate = (same_best_count / total_converged) * 100
+
+   # Print statistics
+   if verbose
+      w = 12
+      # Expanded table to include the stability percentage
+      col_h = 
+         "| " * rpad("Total", 8) * 
+         "| " * rpad("Convergence (%)", 12) * 
+         "| " * rpad("Stability (%)", 12) * 
+         "| " * rpad("Best χ²", w) * 
+         "|"
+      
+      val_r = 
+         "| " * rpad(total_runs, 8) * 
+         "| " * rpad("$(round(conv_rate, digits=1))%", 15) * 
+         "| " * rpad("$(round(stability_rate, digits=1))%", 13) * 
+         "| " * rpad(round(-best_val, digits=4), w) * 
+         "|"
+   
+      line = "-" ^ length(col_h)
+      println(line); println(col_h); println(line); println(val_r); println(line)
+   end
+end
+
+
+# --------------------------------------------------------------------------------------------------
 # Gelman-Rubin diagnostic
 # --------------------------------------------------------------------------------------------------
 function calculate_gr(chains::Array{Float64, 3}; burn_in::Float64=0.2)

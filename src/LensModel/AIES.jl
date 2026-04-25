@@ -26,7 +26,7 @@ function aies_runner(log_posterior::Function, seeds::Vector{Vector{Float64}}, n_
    end
 
    if n_chains < 2 * n_params
-      throw(ArgumentError("n_chains ($n_chains) < 2 * n_params ($n_params)."))
+      throw(ArgumentError("n_chains ($n_chains) < 2 x n_params ($(2*n_params))."))
    end
    # --------------------------------
    
@@ -35,7 +35,7 @@ function aies_runner(log_posterior::Function, seeds::Vector{Vector{Float64}}, n_
    llhood_history = Array{Float64}(undef, n_steps, n_chains)
 
    # Progress bar setup
-   p = Progress(n_steps * n_chains; dt=0.1, desc="Sampling Posterior... ", barlen=50)
+   p = Progress(n_steps * n_chains; dt=0.1, desc="Sampling Posterior... ")
 
    # Matrix size: (n_params x n_chains)
    x = hcat(seeds...)

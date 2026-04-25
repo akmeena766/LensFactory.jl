@@ -100,8 +100,8 @@ Performs lens model fitting using the given `model`.
 - `model::ModelConfig`: The lens model configuration containing the observation, lens, source, and sampler details.
 - `save::Bool=true`: Whether to save the MCMC results to a JLD2 file (default: true)
    - `file_name::Union{String, Nothing}=nothing`: The name of the JLD2 file to save results. If no 
-   name is provided then a name will be generated based on the lens name and current date (i.e., 
-   LensName_DDMMYYYY.jld2).
+      name is provided then a name will be generated based on the lens name and current date (i.e., 
+      LensName_DDMMYYYY.jld2).
 
 # Returns
 - `chains::Array{Float64, 3}`: The MCMC chains containing sampled parameter values

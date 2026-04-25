@@ -12,7 +12,7 @@ PARAM_NAME = Dict(:lens1 => "L1", :lens2 => "L2", :lens3 => "L3", :lens4 => "L4"
                   :scaling => "S", 
                   :x_c => "x_c", :y_c => "y_c", :eps => "\\epsilon", :pa => "\\phi", :x_s => "x_s",
                   :v_d => "v_d", :mass => "\\log[M]", :c => "c",
-                  :gamma1 => "\\gamma_1", :gamma2 => "\\gamma_2",
+                  :gamma => "\\gamma", :angle => "\\gamma_\\theta",
                   :ref_sigma => "\\sigma_{\\star}", :ref_core => "\\theta_{c,\\star}", :ref_cut => "\\theta_{t,\\star}")
 
 
@@ -161,7 +161,8 @@ function LensFactory.LensModel.plot_corner(results;
       p_name = PARAM_NAME[free_parameter_names[i][2]]
 
       # Marginal Stats for Title
-      title_str = L"%$(p_name) = %$(round(best_θ[i], digits=2))^{+ %$(round(upper_err[i], digits=2))}_{%$(round(lower_err[i], digits=2))}"
+      title_str = L"%$(p_name) = %$(round(best_θ[i], digits=2))"
+      # title_str = L"%$(p_name) = %$(round(best_θ[i], digits=2))^{+ %$(round(upper_err[i], digits=2))}_{%$(round(lower_err[i], digits=2))}"
       
       for j in 1:i
          p_name_i = L"%$(PARAM_NAME[free_parameter_names[i][1]]): %$(PARAM_NAME[free_parameter_names[i][2]])"
@@ -180,7 +181,8 @@ function LensFactory.LensModel.plot_corner(results;
             density!(ax, θ_matrix[:, i], color=(:dodgerblue, 0.5), strokewidth=2)
                
             # Sigma lines
-            vlines!(ax, [best_θ[i] + lower_err[i], best_θ[i], best_θ[i] + upper_err[i]], color=:black, linestyle=:dash)
+            vlines!(ax, [best_θ[i]], color=:black, linestyle=:dash)
+            # vlines!(ax, [best_θ[i] + lower_err[i], best_θ[i], best_θ[i] + upper_err[i]], color=:black, linestyle=:dash)
 
             ylims!(ax, 0, nothing)
          else
