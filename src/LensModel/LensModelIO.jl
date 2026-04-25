@@ -339,7 +339,7 @@ end
 # --------------------------------------------------------------------------------------------------
 # ---------------- Read Lens Model -----------------------------------------------------------------
 # --------------------------------------------------------------------------------------------------
-NO_POSITION = Set([:ExternalEffects])
+NO_POSITION = Set([:ExternalEffects, :ExternalEffects3, :Multipole])
 REQUIRE_ADD = Set([:PointLens, :PlummerLens, :GaussianLens, :SersicLens, :HernquistLens, :NFWLens,
                    :tNFWLens, :gNFWLens, :EinastoLens, :aHernquistLens, :aNFWLens, :eHernquistMDLens,
                    :eNFWMDLens, :MultiPlummerLens, :MultiGaussianLens])
