@@ -72,20 +72,20 @@ function plot_best_model end
 # Read input file and return model configuration
 # --------------------------------------------------------------------------------------------------
 """
-    read_input(filename::AbstractString)
+    read_input(input_filename::AbstractString)
 Reads the input YAML file and constructs a `ModelConfig` struct containing all the necessary 
 information for lens modeling and sampling. For details on the expected structure of the input YAML 
 file, please refer to [Example - 2](https://github.com/akmeena766/LensFactory_Examples/blob/).
 
 # Arguments
-- `filename::AbstractString`: Path to the input YAML file.
+- `input_filename::AbstractString`: Path to the input YAML file.
 
 # Returns
 - `ModelConfig::ModelConfig`: A struct containing the observation details, cosmology, lens 
    configuration, source configuration, parameter definitions, and sampling configuration.
 """
-function read_input(file_name::String)
-   return LensModelIO._read_input(file_name)
+function read_input(input_filename::String)
+   return LensModelIO._read_input(input_filename)
 end
 
 
@@ -503,13 +503,13 @@ end
 
 
 """
-    get_potential(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{ROA, Vector{Int64}}
+    get_potential(jld2_file::JLD2.JLDFile, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{ROA, Vector{Int64}}
 Calculate the lensing potential at the given coordinates `(θx, θy)` for the best-fit model. The user
 can specify the unit of the input coordinates as either RA/DEC or arcseconds.
 
 # Arguments
-- `file_name::String` or `best_model::Lenses.AbstractLens`: Path to the JLD2 file containing the 
-   MCMC results or best-fit lens model.
+- `jld2_file::JLD2.JLDFile` or `best_model::Lenses.AbstractLens`: JLD2 data file containing the fit
+   results or the best-fit lens model.
 - `θx`: x-coordinates
 - `θy`: y-coordinates
 
@@ -521,22 +521,20 @@ can specify the unit of the input coordinates as either RA/DEC or arcseconds.
 # Returns
 - `ψ`: Lensing potential at the input coordinates for the best-fit model.
 """
-function get_potential(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
+function get_potential(data_jld2::JLD2.JLDFile, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
    end
 
    # Load the model, chains and chi2 from the input file
-   data = jldopen(file_name, "r")
-   model  = data["model"]
-   chains = data["chains"]
-   chi2   = data["chi2"]
-   close(data)
+   model  = data_jld2["model"]
+   chains = data_jld2["chains"]
+   chi2   = data_jld2["chi2"]
 
    # Get best-fit lens model
-   best_model = get_best_model(model; mcmc_chains=chains, mcmc_chi2=chi2)
-
+   best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_chi2=chi2)
+   
    return get_potential(best_model, θx, θy::T; unit=unit)
 end
 
@@ -568,13 +566,13 @@ end
 
 
 """
-    get_deflection(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
+    get_deflection(jld2_file::JLD2.JLDFile, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
 Calculate the lensing deflection at the given coordinates `(θx, θy)` for the best-fit model. The
 user can specify the unit of the input coordinates as either RA/DEC or arcseconds.
 
 # Arguments
-- `file_name::String` or `best_model::Lenses.AbstractLens`: Path to the JLD2 file containing the 
-   MCMC results or best-fit lens model.
+- `jld2_file::JLD2.JLDFile` or `best_model::Lenses.AbstractLens`: JLD2 data file containing the fit
+   results or the best-fit lens model.
 - `θx`: x-coordinates
 - `θy`: y-coordinates
 
@@ -587,21 +585,19 @@ user can specify the unit of the input coordinates as either RA/DEC or arcsecond
 - `αx`: x-component of the deflection angle (in arcseconds).
 - `αy`: y-component of the deflection angle (in arcseconds).
 """
-function get_deflection(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{ROA, Vector{Int64}}
+function get_deflection(data_jld2::JLD2.JLDFile, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{ROA, Vector{Int64}}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
    end
 
    # Load the model, chains and chi2 from the input file
-   data = jldopen(file_name, "r")
-   model  = data["model"]
-   chains = data["chains"]
-   chi2   = data["chi2"]
-   close(data)
+   model  = data_jld2["model"]
+   chains = data_jld2["chains"]
+   chi2   = data_jld2["chi2"]
 
    # Get best-fit lens model
-   best_model = get_best_model(model; mcmc_chains=chains, mcmc_chi2=chi2)
+   best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_chi2=chi2)
 
    return get_deflection(best_model, θx::T, θy::T; unit=unit)
 end
@@ -633,13 +629,13 @@ end
 
 
 """
-    get_jacobian(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
+    get_jacobian(jld2_file::JLD2.JLDFile, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
 Calculate the Jacobian (i.e., deformation tensor) at the given coordinates `(θx, θy)` for the 
 best-fit model. The user can specify the unit of the input coordinates as either RA/DEC or arcseconds.
 
 # Arguments
-- `file_name::String` or `best_model::Lenses.AbstractLens`: Path to the JLD2 file containing the 
-   MCMC results or best-fit lens model.
+- `jld2_file::JLD2.JLDFile` or `best_model::Lenses.AbstractLens`: JLD2 data file containing the fit
+   results or the best-fit lens model.
 - `θx`: x-coordinates
 - `θy`: y-coordinates
 
@@ -653,35 +649,33 @@ best-fit model. The user can specify the unit of the input coordinates as either
 - `ψyy`: yy-component of the jacobian.
 - `ψxy`: xy-component of the jacobian.
 """
-function get_jacobian(file_name::String, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
+function get_jacobian(data_jld2::JLD2.JLDFile, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
    end
 
    # Load the model, chains and chi2 from the input file
-   data = jldopen(file_name, "r")
-   model  = data["model"]
-   chains = data["chains"]
-   chi2   = data["chi2"]
-   close(data)
+   model  = data_jld2["model"]
+   chains = data_jld2["chains"]
+   chi2   = data_jld2["chi2"]
 
    # Get best-fit lens model
-   best_model = get_best_model(model; mcmc_chains=chains, mcmc_chi2=chi2)
+   best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_chi2=chi2)
 
    return get_jacobian(best_model, θx::T, θy::T; unit=unit)
 end
 
 
 """
-    predict_image(file_name::String, θx::T, θy::T, z_s::Float64; unit::Symbol=:RA_DEC) where T <: Union{RV, Vector{Float64}}
+    predict_image(jld2_file::JLD2.JLDFile, θx::T, θy::T, z_s::Float64; unit::Symbol=:RA_DEC) where T <: Union{RV, Vector{Float64}}
 Predict counter-image positions, magnifications and time delays based on the best-fit lens model.
 The function can take either a single observed image or multiple observed images of the same system.
 If multiple images are provided then the function will calculate the barycentric source position and
 then predict the counter-image positions, magnifications and time delays.
 
 # Arguments
-- `file_name::String`: Path to the JLD2 file containing the MCMC results or best-fit lens model.
+- `data_jld2::JLD2.JLDFile`: JLD2 data file containing the fit results.
 - `θx`: x-coordinate(s) of the observed image position(s).
 - `θy`: y-coordinate(s) of the observed image position(s).
 - `z_s::Float64`: Source redshift.
@@ -696,18 +690,16 @@ then predict the counter-image positions, magnifications and time delays.
    The table is sorted based on the time delay and at the end also contains the best-fit model 
    predicted source position.
 """
-function predict_image(file_name::String, θx::T, θy::T, z_s::Float64; unit::Symbol=:RA_DEC) where T <: Union{RV, Vector{Float64}}
+function predict_image(data_jld2::JLD2.JLDFile, θx::T, θy::T, z_s::Float64; unit::Symbol=:RA_DEC) where T <: Union{RV, Vector{Float64}}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
    end
 
    # Load the model, chains and chi2 from the input file
-   data = jldopen(file_name, "r")
-   model  = data["model"]
-   chains = data["chains"]
-   chi2   = data["chi2"]
-   close(data)
+   model  = data_jld2["model"]
+   chains = data_jld2["chains"]
+   chi2   = data_jld2["chi2"]
 
    # Get best-fit lens model
    best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_chi2=chi2)
@@ -873,22 +865,18 @@ choose which lensing quantities to save by setting the corresponding boolean fla
 # Returns
 - `nothing`: Saves FITS files to disk
 """
-function save_best_fits(file_name::String;
-                      save_potential::Bool=true,
-                      save_deflection::Bool=true,
-                      save_kappa::Bool=true, save_gamma::Bool=true)
+function save_best_fits(data_jld2::JLD2.JLDFile; save_potential::Bool=true,
+                      save_deflection::Bool=true, save_kappa::Bool=true, save_gamma::Bool=true)
 
    # Load the chains and chi2 from the file
-   data = jldopen(file_name, "r")
-   model  = data["model"]
-   chains = data["chains"]
-   chi2   = data["chi2"]
-   date   = data["Date"]
-   time   = data["Time"]
-   close(data)
+   model  = data_jld2["model"]
+   chains = data_jld2["chains"]
+   chi2   = data_jld2["chi2"]
+   date   = data_jld2["Date"]
+   time   = data_jld2["Time"]
 
    # Get best-fit model
-   best_model = get_best_model(model; mcmc_chains=chains, mcmc_chi2=chi2)
+   best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_chi2=chi2)
 
    # Generate grid
    FOV = model.observation.FOV
@@ -981,20 +969,21 @@ parity and the best-fit model parity for each knot image, along with a status in
 parity matches or not.
 
 # Arguments
-- `model::ModelConfig`: The lens model configuration used for the MCMC fit.
-- `chains::Array{Float64, 3}`: The MCMC chains containing the sampled parameter values. The 
-   dimensions should be (n_steps, n_chains, n_parameters).
-- `chi2::Matrix{Float64}`: The chi2 values corresponding to each sample in the MCMC chains. The 
-   dimensions should be (n_steps, n_steps).
+- `data_jld2::JLD2.JLDFile`: JLD2 data file containing the fit results. 
 
 # Returns
 - `nothing`: Prints a table to the console with input and best-fit model parities for each knot image.
 """
-function check_parity(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64})
+function check_parity(data_jld2::JLD2.JLDFile)
    # Check if parity was enforced during modelling
    if model.source_config.use_parity === false
       error("Parity was not enforced during modelling. Please set model.use_parity = true.")
    end
+
+   # Load the chains and chi2 from the file
+   model  = data_jld2["model"]
+   chains = data_jld2["chains"]
+   chi2   = data_jld2["chi2"]
 
    # Get the best parameters based on chi2
    best_θ, _ = get_best_fit_parameters(chi2, chains)

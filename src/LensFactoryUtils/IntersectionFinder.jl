@@ -1,13 +1,28 @@
 module IntersectionFinder
 
-# Based on: https://www.mathworks.com/matlabcentral/fileexchange/11837-fast-and-robust-curve-intersections
-# Python implementation: https://github.com/sukhbinder/intersection/tree/master/intersect
 
-# Functions to export
+# --------------------------------------------------------------------------------------------------
+# Julia inbuilt functions to import
+# --------------------------------------------------------------------------------------------------
+using LinearAlgebra
+
+
+# --------------------------------------------------------------------------------------------------
+# LensFactory modules to use
+# --------------------------------------------------------------------------------------------------
+
+
+# --------------------------------------------------------------------------------------------------
+# Various function to export
+# --------------------------------------------------------------------------------------------------
 export get_intersection
 
-function get_intersection(x1::AbstractVector{<:Real}, y1::AbstractVector{<:Real}, 
-                          x2::AbstractVector{<:Real}, y2::AbstractVector{<:Real})::Vector{NTuple{2,Real}}
+
+function get_intersection(x1::AbstractVector{<:Real}, y1::AbstractVector{<:Real}, x2::AbstractVector{<:Real}, y2::AbstractVector{<:Real})::Vector{NTuple{2,Real}}
+    """
+    # Based on: https://www.mathworks.com/matlabcentral/fileexchange/11837-fast-and-robust-curve-intersections
+    # Python implementation: https://github.com/sukhbinder/intersection/tree/master/intersect
+    """
     # Check if curve-1 is consistent
     if !(length(x1) > 1) || !(length(y1) > 1) || length(x1) == length(y1) || 
         throw(ArgumentError("Incompatible input axes for input vectors."))

@@ -52,6 +52,7 @@ makedocs(
                         "General"    => "LensModel.md",
                         "Parametric" => "LensModel_Parametric.md"
                         ],
+            "LensFactory Utilities" => "LensFactoryUtils.md",
             "Plot Extension" => [
                         "General"       => "PlotExt_Lenses.md",
                         "Multi-Plane"   => "PlotExt_MultiPlane.md",
