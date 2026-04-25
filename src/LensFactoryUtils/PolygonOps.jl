@@ -98,9 +98,9 @@ https://doi.org/10.3390/sym10100477
 
 # Returns
 - `Int`: 
-   -1: on the edge
-   -0: outside
-   -1: inside
+   - +1: inside
+   - 0: outside
+   - -1: on the edge
 """
 function hao_sun(point::Vector{Float64}, polygon::Vector{Vector{Float64}})::Int
    k = 0
