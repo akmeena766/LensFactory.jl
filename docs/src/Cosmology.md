@@ -2,7 +2,7 @@
 The `Cosmology` module controls the cosmological parameters and various derived quantities. We can 
 initialize a cosmology using [init_cosmology](#LensFactory.Cosmology.init_cosmology). For examples 
 on how to use this module and various functions within it, see 
-[Example - 1](https://github.com/akmeena766/LensFactory_Examples/blob/main/Example-1%3A%20Constants%20and%20Cosmology.ipynb).
+[Example - 1](https://github.com/akmeena766/LensFactory-Examples/blob/main/Basic/Example-1%3A%20Constants%20and%20Cosmology.ipynb).
 
 ## Initialization
 ```@docs
