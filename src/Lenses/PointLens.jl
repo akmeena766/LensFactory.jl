@@ -25,7 +25,7 @@ end
 
 """
     potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
-Calculate potential at given coordinates for a point mass lens and update the potential (`ψ`) in place.
+Calculate potential at given coordinates for a point mass lens and update the potential (ψ) in place.
 The lensing potential is given as,
 ```math
 \\psi(θ_x, θ_y) = \\frac{4 \\, \\rm{G} \\, M}{\\rm{c}^2} \\frac{1}{D_d} \\ln |\\pmb{θ} - \\pmb{θ}_c|.
