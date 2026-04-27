@@ -15,7 +15,8 @@ using ..Lenses
 # --------------------------------------------------------------------------------------------------
 # Functions to export
 # --------------------------------------------------------------------------------------------------
-export chi2_position
+export chi2_sourceplane
+export chi2_imageplane_fast
 export chi2_flux
 export chi2_timedelay
 export chi2_parity
@@ -62,6 +63,7 @@ end
 
    # Individual weight matrices
    W_all = Vector{NTuple{4,Float64}}(undef, n)
+   iS_all = Vector{NTuple{4,Float64}}(undef, n)
 
    # Position vector: b = Σᵢ μᵢᵀ * Sᵢ⁻¹ * μᵢ * βᵢ
    b1 = 0.0
@@ -77,6 +79,7 @@ end
 
       # Inverse covariance matrix
       iS11, iS12, iS21, iS22 = _inverse_covariance(σx[i], σy[i], θ[i])
+      iS_all[i] = (iS11, iS12, iS21, iS22)
 
       # T = S⁻¹ * μ
       T11 = iS11 * μ11 + iS12 * μ21
@@ -109,11 +112,11 @@ end
    βx_model = iW11 * b1 + iW12 * b2
    βy_model = iW21 * b1 + iW22 * b2
    
-   return βx_model, βy_model, W_all
+   return βx_model, βy_model, W_all, iS_all
 end
 
 
-function chi2_position(model::ModelConfig, adis::Vector{Float64}, αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, A_all::Vector{NTuple{4, Vector{Float64}}})
+function chi2_sourceplane(model::ModelConfig, adis::Vector{Float64}, αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, A_all::Vector{NTuple{4, Vector{Float64}}})
    # Initialize chi2 for position
    chi2 = 0.0
 
@@ -134,7 +137,7 @@ function chi2_position(model::ModelConfig, adis::Vector{Float64}, αx_all::Vecto
          σx = knot.σx
          σy = knot.σy
          σθ = knot.σθ         
-         n = length(x)
+         n  = length(x)
          
          # Deflection vector at the knot positions
          αx = @. adis_value * αx_all[kid]
@@ -151,25 +154,92 @@ function chi2_position(model::ModelConfig, adis::Vector{Float64}, αx_all::Vecto
          βy_ind = @. y - αy
 
          # Get weighted source position (Section 4.1 in https://arxiv.org/pdf/astro-ph/0102340)
-         βx_model, βy_model, W_all = _weighted_position(βx_ind, βy_ind, A, σx, σy, σθ, n)
+         βx_model, βy_model, W_all, _ = _weighted_position(βx_ind, βy_ind, A, σx, σy, σθ, n)
 
-         # Calculate knot log-likelihood
-         χ² = 0.0
+         # Calculate knot χ2
+         χ2_knot = 0.0
          for i in 1:n
             δβx = βx_ind[i] - βx_model
             δβy = βy_ind[i] - βy_model
             
+            # Read weight matrix components
             w11, w12, w21, w22 = W_all[i]
 
             # χ² = δβᵀ * W * δβ
-            χ² = χ² + δβx * (w11 * δβx + w12 * δβy) + δβy * (w21 * δβx + w22 * δβy)
+            χ2_knot = χ2_knot + δβx * (w11 * δβx + w12 * δβy) + δβy * (w21 * δβx + w22 * δβy)
          end
-         chi2 = chi2 - χ²
+         chi2 = chi2 - χ2_knot
          
          kid = kid + 1
       end
       sid = sid + 1
    end
+   return chi2
+end
+
+
+function chi2_imageplane_fast(model::ModelConfig, adis::Vector{Float64}, αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, A_all::Vector{NTuple{4, Vector{Float64}}})
+   # Initialize chi2 for parity
+   χ2_total = 0.0
+
+   # Identity tuple
+   I4 = (1.0, 0.0, 0.0, 1.0)
+
+   # Calculate chi2 for position
+   sid = 1
+   kid = 1
+   for src in model.source_config.sources
+      # Distance ratio for this source
+      adis_value = adis[sid]
+      
+      for knot in src.knots
+         # Knot positions and measurement errors
+         x  = knot.x
+         y  = knot.y
+         σx = knot.σx
+         σy = knot.σy
+         σθ = knot.σθ         
+         n  = length(x)
+         
+         # Deflection vector at the knot positions
+         αx = @. adis_value * αx_all[kid]
+         αy = @. adis_value * αy_all[kid]
+
+         # Deformation tensor at the knot positions
+         A = @. adis_value * A_all[kid]
+         for i in eachindex(A)
+            @. A[i] = I4[i] - A[i]
+         end
+
+         # Individual source positions using broadcasting
+         βx_ind = @. x - αx
+         βy_ind = @. y - αy
+
+         # Get weighted source position (Section 4.1 in https://arxiv.org/pdf/astro-ph/0102340)
+         βx_model, βy_model, _, iS_all = _weighted_position(βx_ind, βy_ind, A, σx, σy, σθ, n)
+         
+         # Predict image positions
+         # TODO: Calculate chi2 for position
+         
+         # Calculate knot χ2
+         χ2_knot = 0.0
+         for i in 1:n
+            δθx = x[i] - θx_model[i]
+            δθy = y[i] - θy_model[i]
+            
+            # Read inverse covariance matrix components
+            iS11, iS12, iS21, iS22 = iS_all[i]
+
+            # χ² = δθᵀ * S⁻¹ * δθ
+            χ2_knot = χ2_knot + δθx * (iS11 * δθx + iS12 * δθy) + δθy * (iS21 * δθx + iS22 * δθy)
+         end
+         χ2_total = χ2_total - χ2_knot
+         
+         kid = kid + 1
+      end
+      sid = sid + 1
+   end
+
    return chi2
 end
 

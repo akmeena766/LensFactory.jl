@@ -46,11 +46,22 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
    # Get angular-diameter distance ratios
    adis = LensModelUtils.adis_current(model, pvals)
 
-   # Calculate deflection at image positions
-   _, αx_all, αy_all, A_all = LensModelUtils.lens_quantities(model, lens_model)
+   if model.sampler.scheme == :SourcePlane
+      # Calculate deflection at image positions
+      _, αx_all, αy_all, A_all = LensModelUtils.lens_quantities(model, lens_model)
 
-   # Calculate position likelihood
-   pos_chi2 = Likelihood.chi2_position(model, adis, αx_all, αy_all, A_all)
+      # Calculate position likelihood
+      pos_chi2 = Likelihood.chi2_sourceplane(model, adis, αx_all, αy_all, A_all)
+   elseif model.sampler.scheme == :ImagePlane_Fast
+      error("Image plane sampling is not implemented yet.")
+      
+      # Calculate deflection at image positions
+      _, αx_all, αy_all, A_all = LensModelUtils.lens_quantities(model, lens_model)
+      
+   else
+      error("Unsupported sampling scheme: $(model.sampler.scheme)")
+   end
+   
 
    # Calculate parity likelihood
    parity_chi2 = 0.0

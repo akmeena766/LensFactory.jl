@@ -900,12 +900,19 @@ function _mcmc!(sampling_dict::Dict)
 end
 
 # Internal function: Process Lens Model section
+const SAMPLING_SCHEMES = Set([:SourcePlane, :ImagePlane_Fast])
 function _sampling!(dict::Dict)
    sampling_dict = dict[:sampling]
 
    # Get sampler details
    _require(sampling_dict, :scheme)
-
+   scheme = Symbol(sampling_dict[:scheme])
+   
+   # Validate sampler scheme
+   if !(scheme in SAMPLING_SCHEMES)
+      error("Unsupported sampling scheme: $(scheme). Supported schemes: $(SAMPLING_SCHEMES)")
+   end
+   
    # Get verbose flag
    _optional!(sampling_dict, :verbose, true)
 
