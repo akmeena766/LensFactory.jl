@@ -41,7 +41,7 @@ The lensing potential is given as,
 - `mass::RV`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
 
 # Returns
-- `nothing`: Updates the potential (`ψ`) in place.
+- `nothing`: Updates the potential (ψ) in place.
 """
 function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV) where T <: ROA
    θE2 = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2

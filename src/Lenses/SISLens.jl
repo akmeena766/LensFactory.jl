@@ -25,7 +25,11 @@ end
 
 """
     potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: ROA
-Calculate potential at given coordinates for a SIS lens and update the potential in place.
+Calculate potential at given coordinates for a SIS lens and update the potential (ψ) in place. The
+lensing potential is given as,
+```math
+ψ(θ_x, θ_y) = 4 π \\left( \\frac{v_d}{{\\rm c}} \\right)^2 |\\pmb{θ} - \\pmb{θ}_c|.
+```
 
 # Arguments
 - `ψ`: Potential at given coordinates
@@ -34,6 +38,9 @@ Calculate potential at given coordinates for a SIS lens and update the potential
 - `θxc`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `v_d`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
+
+# Returns
+- `nothing`: Updates the potential (ψ) in place.
 """
 function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: ROA
    θE = 4.0 * pi * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
@@ -68,7 +75,15 @@ end
 
 """
     deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: ROA
-Calculate deflection at given coordinates for a SIS lens and update the deflection in place.
+Calculate deflection at given coordinates for a SIS lens and update the deflection components 
+(ψx, ψy) in place. The deflection components are given as,
+
+```math
+\\begin{align*} 
+ψ_x(θ_x, θ_y) &= 4 π \\left( \\frac{v_d}{{\\rm c}} \\right)^2 \\frac{θ_x - θ_{x,c}}{|\\pmb{θ} - \\pmb{θ}_c|}, \\\\
+ψ_y(θ_x, θ_y) &= 4 π \\left( \\frac{v_d}{{\\rm c}} \\right)^2 \\frac{θ_y - θ_{y,c}}{|\\pmb{θ} - \\pmb{θ}_c|}.
+\\end{align*}
+```
 
 # Arguments
 - `ψx`: x-component of the deflection at given coordinates
@@ -78,6 +93,9 @@ Calculate deflection at given coordinates for a SIS lens and update the deflecti
 - `θxc`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `v_d`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
+
+# Returns
+- `nothing`: Updates the deflection (ψx, ψy) in place.
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: ROA
    θE = 4.0 * pi * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
@@ -116,7 +134,16 @@ end
 
 """
     jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: ROA
-Calculate jacobian at given coordinates for a SIS lens and update the jacobian in place.
+Calculate jacobian at given coordinates for a SIS lens and update the jacobian components 
+(ψxx, ψyy, ψxy) in place. The jacobian components are given as,
+
+```math
+\\begin{align*}
+ψ_{xx} &= 4 π \\left( \\frac{v_d}{{\\rm c}} \\right)^2 \\frac{(θ_y - θ_{y,c})^2}{|\\pmb{θ} - \\pmb{θ}_c|^3}, \\\\
+ψ_{yy} &= 4 π \\left( \\frac{v_d}{{\\rm c}} \\right)^2 \\frac{(θ_x - θ_{x,c})^2}{|\\pmb{θ} - \\pmb{θ}_c|^3}, \\\\
+ψ_{xy} &= 4 π \\left( \\frac{v_d}{{\\rm c}} \\right)^2 \\frac{- (θ_x - θ_{x,c}) (θ_y - θ_{y,c})}{|\\pmb{θ} - \\pmb{θ}_c|^3}.
+\\end{align*}
+```
 
 # Arguments
 - `ψxx`: xx-component of the jacobian at given coordinates
@@ -127,6 +154,9 @@ Calculate jacobian at given coordinates for a SIS lens and update the jacobian i
 - `θxc`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `v_d`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
+
+# Returns
+- `nothing`: Updates the jacobian (ψxx, ψyy, ψxy) in place.
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: ROA
    θE = 4.0 * pi * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
