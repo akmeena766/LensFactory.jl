@@ -5,6 +5,7 @@ module Lenses
 # Julia inbuilt functions to import
 # --------------------------------------------------------------------------------------------------
 using QuadGK
+using StatsBase
 using SpecialFunctions
 
 
@@ -154,7 +155,7 @@ function get_critical_density(D_d::Float64, D_ds::Float64, D_s::Float64; unit::S
    elseif unit == :msun_arcsec2
       return Σ_cr * ( D_d^2 * ANGLE_ARCSEC^2 / MASS_SUN )
    else
-      throw(ArgumentError("Invalid unit: $unit. Must be 'kg_m2' or 'msun_pc2' or 'msun_arcsec2'."))
+      throw(ArgumentError("Invalid unit: $unit. Must be ':kg_m2' or ':msun_pc2' or ':msun_arcsec2'."))
    end
 end
 
@@ -803,6 +804,112 @@ where ``A_{\\rm critical}`` is the total angular area enclosed by the tangential
 """
 function get_einstein_angle(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
    return sqrt(get_critical_area(lens, θx, θy, adis) / π)
+end
+
+
+"""
+    get_radial_profile(kappa::T, θx::T, θy::T; origin::Union{Tuple{Float64, Float64}, Nothing}=nothing, 
+                                               n_bin::Int64=50, 
+                                               bin_type::Symbol=:log)
+Calculate the radial profile of the convergence map. 
+
+# Arguments
+   - `kappa::Matrix{<:RV}`: Convergence map.
+   - `θx::Matrix{<:RV}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
+   - `θy::Matrix{<:RV}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
+   
+# Keyword Arguments
+   - `origin::Union{Tuple{Float64, Float64}, Nothing}=nothing`: Center of the radial profile (in ``\\rm \\mathbf{arcseconds}``).
+   - `n_bin::Int64=50`: Number of radial bins.
+   - `bin_type::Symbol=:log`: Type of radial binning (i.e., ``:log`` or ``:linear``).
+
+# Returns
+   - `centers::Vector{Float64}`: Radial centers (in ``\\rm \\mathbf{arcseconds}``).
+   - `profile::Vector{Float64}`: Radial profile (in ``\\rm \\mathbf{arcseconds}``).
+   - `edges::Vector{Float64}`: Radial bin edges (in ``\\rm \\mathbf{arcseconds}``).
+"""
+function get_radial_profile(kappa::T, θx::T, θy::T; origin::Union{Tuple{Float64, Float64}, Nothing}=nothing, 
+                                                   n_bin::Int64=50, 
+                                                   bin_type::Symbol=:log) where T <: Matrix{<:RV}
+   # Get the radial 1D grid based the input 2D grid and origin. If origin is not provided, then the 
+   # largest value pixel will be chosen as the center.
+   if origin === nothing
+      px, py = argmax(kappa).I
+      x0, y0 = θx[px, py], θy[px, py]
+   else
+      x0, y0 = origin
+   end
+
+   # Get the maximum possible radial length
+   θ = @. sqrt((θx - x0)^2 + (θy - y0)^2)
+   θ_min = abs(θx[2, 1] - θx[1, 1])
+   θ_max = maximum(θ)
+
+   # Create radial grid
+   if bin_type == :log
+      # Bin edges
+      edges = 10.0 .^ range(start=log10(θ_min), stop=log10(θ_max), length=n_bin)
+      
+      # Geometric mean as bin center for log binning
+      centers = sqrt.(edges[1:end-1] .* edges[2:end])
+   else
+      # Bin edges
+      edges = collect(range(start=θ_min, stop=θ_max, length=n_bin))
+      
+      # Arithmetic mean of bin edges
+      centers = (edges[1:end-1] .+ edges[2:end]) ./ 2.0
+   end
+
+   # Efficient binning with StatsBase
+   kappa_clean = replace(kappa, NaN => 0.0)
+   h_sum = fit(Histogram, vec(θ), weights(vec(kappa_clean)), edges)
+   h_count = fit(Histogram, vec(θ), edges)
+   profile = [count > 0 ? s / count : 0.0 for (s, count) in zip(h_sum.weights, h_count.weights)]
+   return centers, profile, edges
+end
+
+
+"""
+    get_mass_profile(kappa::T, θx::T, θy::T; origin::Union{Tuple{Float64, Float64}, Nothing}=nothing, 
+                                             n_bin::Int64=50, 
+                                             bin_type::Symbol=:log) where T <: Matrix{<:RV}
+Calculate the cumulative mass enclosed within a given radius ``θ`` for a given lens model. The 
+output mass is in units of ``\\Sigma_{\\rm cr}`` (in units of ``\\rm \\mathbf{M_⊙/arcsec^2}``). 
+To convert it into physicsal units, multiply it by the critical density.
+
+# Arguments
+- `kappa::Matrix{<:RV}`: Convergence map.
+- `θx::Matrix{<:RV}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `θy::Matrix{<:RV}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
+
+# Keyword Arguments
+- `D_d::Float64 = NaN`: Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``).
+- `D_ds::Float64 = NaN`: Angular diameter distance to the source (in ``\\rm \\mathbf{meters}``).
+- `D_s::Float64 = NaN`: Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``).
+- `origin::Union{Tuple{Float64, Float64}, Nothing}=nothing`: Center of the radial profile (in ``\\rm \\mathbf{arcseconds}``).
+   - If ``\\rm \\mathbf{nothing}``, then the center is set to be the location of the maximum value 
+      of the convergence map.
+- `n_bin::Int64=50`: Number of radial bins.
+- `bin_type::Symbol=:log`: Type of radial binning (i.e., `:log` or `:linear`).
+
+# Returns
+   - `centers::Vector{Float64}`: Radial centers (in ``\\rm \\mathbf{arcseconds}``).
+   - `mass::Vector{Float64}`: Cumulative mass (in ``\\rm \\mathbf{M_\\odot}``).
+"""
+function get_mass_profile(kappa::T, θx::T, θy::T; origin::Union{Tuple{Float64, Float64}, Nothing}=nothing, 
+                                                  n_bin::Int64=50, 
+                                                  bin_type::Symbol=:log) where T <: Matrix{<:RV}
+   # Calculate radial profile
+   centers, profile, edges = get_radial_profile(kappa, θx, θy; origin=origin, n_bin=n_bin, bin_type=bin_type)
+
+   # Calcualte bin areas
+   θ_in  = edges[1:end-1]
+   θ_out = edges[2:end]
+   bin_areas = @. π * (θ_out^2 - θ_in^2)
+
+   # Cumulative mass sum
+   mass = cumsum(profile .* bin_areas)
+   return centers, mass
 end
 
 

@@ -1,4 +1,4 @@
-# LensFactoryUtils
+# LFUtils
 
 This module contains various utility functions used in LensFactory.
 

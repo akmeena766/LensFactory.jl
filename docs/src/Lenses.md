@@ -29,6 +29,8 @@ Lenses.get_critical_curve
 Lenses.get_caustic
 Lenses.get_critical_area
 Lenses.get_einstein_angle
+Lenses.get_radial_profile
+Lenses.get_mass_profile
 Lenses.shear_cartesian2polar
 Lenses.shear_polar2cartesian
 Lenses.ellipticity_cartesian2polar

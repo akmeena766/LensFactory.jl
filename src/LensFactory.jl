@@ -11,7 +11,7 @@ export Constants
 # --------------------------------------------------------------------------------------------------
 # Module for other utilities
 # --------------------------------------------------------------------------------------------------
-include("./LensFactoryUtils/LFUtils.jl")
+include("./LFUtils/LFUtils.jl")
 export LFUtils
 
 
