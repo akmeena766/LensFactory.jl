@@ -11,13 +11,18 @@ PARAM_NAME = Dict(:lens1 => "L1", :lens2 => "L2", :lens3 => "L3", :lens4 => "L4"
                   :lens6 => "L6", :lens7 => "L7", :lens8 => "L8", :lens9 => "L9", :lens10 => "L10",
                   :scaling => "S", 
                   :x_c => "x_c", :y_c => "y_c", :eps => "\\epsilon", :pa => "\\phi", :x_s => "x_s",
-                  :v_d => "v_d", :mass => "\\log[M]", :c => "c",
+                  :v_d => "v_d", :mass => "\\log~M", :c => "c",
                   :gamma => "\\gamma", :angle => "\\gamma_\\theta",
                   :ref_sigma => "\\sigma_{\\star}", :ref_core => "\\theta_{c,\\star}", :ref_cut => "\\theta_{t,\\star}")
 
 
 """
-    LensFactory.LensModel.plot_corner(chains, chi2)
+    LensFactory.LensModel.plot_corner(chains, chi2; free_parameter_names=nothing,
+                                                    burn_in::Float64 = 0.3,
+                                                    thinning::Int64  = 100,
+                                                    save_plot::Bool  = true,
+                                                    plot_name::String = "./corner.png",
+                                                    resolution::Int64 = 2)
 Generates a corner plot for the given MCMC chains and chi-squared values.
 
 # Arguments
@@ -35,11 +40,12 @@ Generates a corner plot for the given MCMC chains and chi-squared values.
 # Returns
 - A Makie figure object containing the corner plot.
 """
-function LensFactory.LensModel.plot_corner(chains, chi2; 
-                              free_parameter_names=nothing, 
-                              burn_in::Float64=0.2, 
-                              thin::Int64=100, 
-                              save_plot::Bool=true, plot_name::String="./corner.png", resolution::Int64=2)
+function LensFactory.LensModel.plot_corner(chains, chi2; free_parameter_names=nothing, 
+                                                         burn_in::Float64=0.2, 
+                                                         thin::Int64=100, 
+                                                         save_plot::Bool=true, 
+                                                         plot_name::String="./corner.png", 
+                                                         resolution::Int64=2)
    # Get chain details 
    n_steps, n_chains, n_params = size(chains)
    
@@ -53,27 +59,43 @@ function LensFactory.LensModel.plot_corner(chains, chi2;
    # Reshape the thinned chain into a flat array
    flat_chain = reshape(thinned_chain, :, n_params)
     
-   # Initialize figure
-   fig = Figure(size=(1200, 1200), figure_padding=15, fontsize=20, fonts=(; regular="Times New Roman"))
-
+   # Dynamic figure sampling
+   N = n_params
+   base_size = max(1000, N * 90) 
+   font_size = max(6, 20 - (N / 3))
+   tick_size = max(5, 15 - (N / 3))
+   
+   # Create figure and pad in all directions
+   fig = Figure(size = (base_size, base_size), 
+               rowgap = 0, colgap = 0, 
+               figure_padding = 25,
+               fontsize = font_size, 
+               fonts=(; regular="Times New Roman"))
+   
    for i in 1:n_params
       # Get parameter labels
       p_name = PARAM_NAME[free_parameter_names[i][2]]
 
       # Marginal Stats for Title
-      title_str = L"%$(p_name) = %$(round(best_θ[i], digits=2))^{+ %$(round(upper_err[i], digits=2))}_{%$(round(lower_err[i], digits=2))}"
+      title_str = L"%$(round(best_θ[i], digits=2))^{+ %$(round(upper_err[i], digits=2))}_{%$(round(lower_err[i], digits=2))}"
       
       for j in 1:i
          p_name_i = L"%$(PARAM_NAME[free_parameter_names[i][1]]): %$(PARAM_NAME[free_parameter_names[i][2]])"
          p_name_j = L"%$(PARAM_NAME[free_parameter_names[j][1]]): %$(PARAM_NAME[free_parameter_names[j][2]])"
-         ax = Axis(fig[i, j]; 
-                  title = (i == j) ? title_str : "",
+         ax = Axis(fig[i, j];
+                  xtickalign = 1, ytickalign = 1,
+                  xticksize = 2, yticksize = 2,
+                  xticklabelsize = tick_size, 
+                  yticklabelsize = tick_size,
+                  xgridvisible = false, ygridvisible = false,
+                  titlevisible = false,
+                  xticks = LinearTicks(3),
+                  yticks = LinearTicks(3),
                   xlabel = (i == n_params) ? p_name_j : "",
                   ylabel = (j == 1) ? p_name_i : "",
-                  titlesize = 18,
                   xticklabelrotation = π/4)
          
-         LensFactory.Lenses.set_plotKws!(ax)
+         tightlimits!(ax)
          
          if i == j
             # Diagonal: 1D Density
@@ -81,9 +103,16 @@ function LensFactory.LensModel.plot_corner(chains, chi2;
                
             # Sigma lines
             vlines!(ax, [best_θ[i] + lower_err[i], best_θ[i], best_θ[i] + upper_err[i]], color=:black, linestyle=:dash)
-
-            ylims!(ax, 0, nothing)
+            
+            # Manual label creation and placing it above the diagonal plots
+            Label(fig[i, j, Top()], title_str;
+                    tellheight = false,
+                    padding = (0, 0, 23, 0),
+                    fontsize = font_size,
+                    font = :bold,
+                    halign = :center)
          else
+            # Off-diagonal
             # 2D Corner: KDE Contours
             # Note: j is x-axis (column), i is y-axis (row)
             k = kde((flat_chain[:, j], flat_chain[:, i]))
@@ -96,11 +125,20 @@ function LensFactory.LensModel.plot_corner(chains, chi2;
          end
 
          # Clean up decorations for inner plots
-         if i < n_params hidexdecorations!(ax, grid = false, ticks = false) end
-         if j > 1 hideydecorations!(ax, grid = false, ticks = false) end
+         if i < n_params 
+            hidexdecorations!(ax, grid = false, ticks = false)
+         end
+         
+         if j > 1 
+            hideydecorations!(ax, grid = false, ticks = false)
+         end
       end
    end
-   
+
+   # Reset gaps to zero
+   rowgap!(fig.layout, 0)
+   colgap!(fig.layout, 0)
+
    if save_plot
       save(plot_name, fig, px_per_unit=resolution)
    end
@@ -109,7 +147,10 @@ end
 
 
 """
-    LensFactory.LensModel.plot_corner(results)
+    LensFactory.LensModel.plot_corner(results; free_parameter_names=nothing,
+                                               save_plot::Bool=true,
+                                               plot_name::String="./corner_optimizer.png",
+                                               resolution::Int64=2)
 Generates a corner plot for the optimizer results. This plot is useful to check the convergence of
 the optimizer runs. For example, if the optimizer is run for 1000 times, the corner plot
 will show the distribution of the parameters in each of the converged runs.
@@ -126,14 +167,15 @@ will show the distribution of the parameters in each of the converged runs.
 # Returns
 - A Makie figure object containing the corner plot.
 """
-function LensFactory.LensModel.plot_corner(results;
-                              free_parameter_names=nothing,
-                              save_plot::Bool=true, plot_name::String="./corner_optimizer.png", resolution::Int64=2)
+function LensFactory.LensModel.plot_corner(results; free_parameter_names=nothing,
+                                                    save_plot::Bool=true, 
+                                                    plot_name::String="./corner_optimizer.png", 
+                                                    resolution::Int64=2)
 
    # Get the best-fit parameter vector. Results are lready sorted based on chi2
    best_θ = results[1].θ
- 
    n_params = length(best_θ)
+
    # Create matrix from optimizer results
    θ_matrix = hcat([res.θ for res in results]...)'
 
@@ -153,8 +195,18 @@ function LensFactory.LensModel.plot_corner(results;
       upper_err[i] = q84 - best_θ[i]
    end
 
-   # Initialize figure
-   fig = Figure(size=(1200, 1200), figure_padding=15, fontsize=20, fonts=(; regular="Times New Roman"))
+   # Dynamic figure sampling
+   N = n_params
+   base_size = max(1000, N * 90) 
+   font_size = max(6, 20 - (N / 3))
+   tick_size = max(5, 15 - (N / 3))
+   
+   # Create figure and pad in all directions
+   fig = Figure(size = (base_size, base_size), 
+               rowgap = 0, colgap = 0, 
+               figure_padding = 25,
+               fontsize = font_size, 
+               fonts=(; regular="Times New Roman"))
 
    for i in 1:n_params
       # Get parameter labels
@@ -162,19 +214,24 @@ function LensFactory.LensModel.plot_corner(results;
 
       # Marginal Stats for Title
       title_str = L"%$(p_name) = %$(round(best_θ[i], digits=2))"
-      # title_str = L"%$(p_name) = %$(round(best_θ[i], digits=2))^{+ %$(round(upper_err[i], digits=2))}_{%$(round(lower_err[i], digits=2))}"
       
       for j in 1:i
          p_name_i = L"%$(PARAM_NAME[free_parameter_names[i][1]]): %$(PARAM_NAME[free_parameter_names[i][2]])"
          p_name_j = L"%$(PARAM_NAME[free_parameter_names[j][1]]): %$(PARAM_NAME[free_parameter_names[j][2]])"
-         ax = Axis(fig[i, j]; 
-                  title = (i == j) ? title_str : "",
+         ax = Axis(fig[i, j];
+                  xtickalign = 1, ytickalign = 1,
+                  xticksize = 2, yticksize = 2,
+                  xticklabelsize = tick_size, 
+                  yticklabelsize = tick_size,
+                  xgridvisible = false, ygridvisible = false,
+                  titlevisible = false,
+                  xticks = LinearTicks(3),
+                  yticks = LinearTicks(3),
                   xlabel = (i == n_params) ? p_name_j : "",
                   ylabel = (j == 1) ? p_name_i : "",
-                  titlesize = 18,
                   xticklabelrotation = π/4)
          
-         LensFactory.Lenses.set_plotKws!(ax)
+         tightlimits!(ax)  
 
          if i == j
             # Diagonal: 1D Density
@@ -184,18 +241,33 @@ function LensFactory.LensModel.plot_corner(results;
             vlines!(ax, [best_θ[i]], color=:black, linestyle=:dash)
             # vlines!(ax, [best_θ[i] + lower_err[i], best_θ[i], best_θ[i] + upper_err[i]], color=:black, linestyle=:dash)
 
-            ylims!(ax, 0, nothing)
+            # Manual label creation and placing it above the diagonal plots
+            Label(fig[i, j, Top()], title_str;
+                    tellheight = false,
+                    padding = (0, 0, 23, 0),
+                    fontsize = font_size,
+                    font = :bold,
+                    halign = :center)
          else
             # Scatter plot
             scatter!(ax, θ_matrix[:, j], θ_matrix[:, i], alpha=0.1, color=:black, markersize=20)
          end
 
          # Clean up decorations for inner plots
-         if i < n_params hidexdecorations!(ax, grid = false, ticks = false) end
-         if j > 1 hideydecorations!(ax, grid = false, ticks = false) end
+         if i < n_params 
+            hidexdecorations!(ax, grid = false, ticks = false)
+         end
+         
+         if j > 1 
+            hideydecorations!(ax, grid = false, ticks = false)
+         end
       end
    end
 
+   # Reset gaps to zero
+   rowgap!(fig.layout, 0)
+   colgap!(fig.layout, 0)
+   
    if save_plot
       save(plot_name, fig, px_per_unit=resolution)
    end
