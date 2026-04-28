@@ -1,6 +1,6 @@
 name = "LensFactory"
 uuid = "e2630f5e-de23-4bea-bc0a-959d40375e7e"
-version = "0.0.7"
+version = "0.0.8"
 authors = ["Ashish K Meena <ashishmeena766@gmail.com>"]
 
 [deps]
