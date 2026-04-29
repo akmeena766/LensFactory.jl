@@ -26,7 +26,14 @@ end
 
 """
     potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV) where T <: ROA
-Calculate potential at given coordinates for NSIS lens and update the potential in place.
+Calculate potential at given coordinates for NSIS lens and update the potential (ψ) in place.
+The lensing potential is given as,
+
+```math
+\\begin{align*} 
+ψ(θ_x, θ_y) = 4 π \\left(\\frac{v_d}{{\\rm c}} \\right)^2 \\sqrt{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2}. 
+\\end{align*}
+```
 
 # Arguments
 - `ψ`: Potential at given coordinates
@@ -71,7 +78,14 @@ end
 
 """
     deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV) where T <: ROA
-Calculate deflection at given coordinates for NSIS lens and update the deflection in place.
+Calculate deflection at given coordinates for NSIS lens and update the deflection components
+(ψx, ψy) in place. The deflection angle components are given as,
+```math
+\\begin{align*} 
+ψ_x(θ_x, θ_y) &= 4 π \\left(\\frac{v_d}{{\\rm c}} \\right)^2 \\frac{θ_x - θ_{x,c}}{\\sqrt{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2}}, \\\\
+ψ_y(θ_x, θ_y) &= 4 π \\left(\\frac{v_d}{{\\rm c}} \\right)^2 \\frac{θ_y - θ_{y,c}}{\\sqrt{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2}}.
+\\end{align*}
+```
 
 # Arguments
 - `ψx`: x-component of the deflection at given coordinates
@@ -122,7 +136,15 @@ end
 
 """
     jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV) where T <: ROA
-Calculate jacobian at given coordinates for NSIS lens and update the jacobian in place.
+Calculate jacobian at given coordinates for NSIS lens and and update the jacobian components 
+(ψxx, ψyy, ψxy) in place. The jacobian components are given as,
+```math
+\\begin{align*}
+ψ_{xx} &= 4 π \\left(\\frac{v_d}{{\\rm c}} \\right)^2 \\frac{θ_s^2 + (θ_y - θ_{y,c})^2}{\\left[θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2\\right]^{3/2}}, \\\\
+ψ_{yy} &= 4 π \\left(\\frac{v_d}{{\\rm c}} \\right)^2 \\frac{θ_s^2 + (θ_x - θ_{x,c})^2}{\\left[θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2\\right]^{3/2}}, \\\\
+ψ_{xy} &= 4 π \\left(\\frac{v_d}{{\\rm c}} \\right)^2 \\frac{-(θ_x - θ_{x,c})(θ_y - θ_{y,c})}{\\left[θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2\\right]^{3/2}}.
+\\end{align*}
+```
 
 # Arguments
 - `ψxx`: xx-component of the jacobian at given coordinates
@@ -160,11 +182,7 @@ end
     einstein_angle(;D_ds::Float64=NaN, D_s::Float64=NaN, v_d::RV=NaN, x_s::Float64=NaN)
 Calculate the Einstein angle for NSIS lens,
 ```math
-\\theta_E = \\sqrt{\\theta_E^2 - x_s^2}.
-```
-where,
-```math
-\\theta_E = 4 \\pi \\frac{D_{ds}}{D_s} \\left( \\frac{v_d}{{\\rm c}} \\right)^2.
+\\theta_E = \\sqrt{\\left[4 \\pi \\frac{D_{ds}}{D_s} \\left( \\frac{v_d}{{\\rm c}} \\right)^2 \\right]^2 - x_s^2}.
 ```
 
 # Keyword Arguments

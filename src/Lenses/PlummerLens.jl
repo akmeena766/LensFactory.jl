@@ -142,13 +142,13 @@ end
 
 """
     jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
-Calculate jacobian at given coordinates for a point mass lens and update the jacobian components 
+Calculate jacobian at given coordinates for a Plummer lens and update the jacobian components 
 (ψxx, ψyy, ψxy) in place. The jacobian components are given as,
 ```math
 \\begin{align*}
-\\psi_{xx} &= \\frac{4 \\, \\rm{G} \\, M}{\\rm{c}^2} \\frac{1}{D_d} \\frac{θ_s^2 - (θ_x - θ_{x,c})^2 + (θ_y - θ_{y,c})^2}{(θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2)^2}, \\\\
-\\psi_{yy} &= \\frac{4 \\, \\rm{G} \\, M}{\\rm{c}^2} \\frac{1}{D_d} \\frac{θ_s^2 + (θ_x - θ_{x,c})^2 - (θ_y - θ_{y,c})^2}{(θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2)^2}, \\\\
-\\psi_{xy} &= \\frac{4 \\, \\rm{G} \\, M}{\\rm{c}^2} \\frac{1}{D_d} \\frac{-2 \\, (θ_x - θ_{x,c}) (θ_y - θ_{y,c})}{(θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2)^2}.
+\\psi_{xx} &= \\frac{4 \\, \\rm{G} \\, M}{\\rm{c}^2} \\frac{1}{D_d} \\frac{θ_s^2 - (θ_x - θ_{x,c})^2 + (θ_y - θ_{y,c})^2}{\\left[ θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2 \\right]^2}, \\\\
+\\psi_{yy} &= \\frac{4 \\, \\rm{G} \\, M}{\\rm{c}^2} \\frac{1}{D_d} \\frac{θ_s^2 + (θ_x - θ_{x,c})^2 - (θ_y - θ_{y,c})^2}{\\left[ θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2 \\right]^2}, \\\\
+\\psi_{xy} &= \\frac{4 \\, \\rm{G} \\, M}{\\rm{c}^2} \\frac{1}{D_d} \\frac{-2 \\, (θ_x - θ_{x,c}) (θ_y - θ_{y,c})}{\\left[ θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2 \\right]^2}.
 \\end{align*}
 ```
 
