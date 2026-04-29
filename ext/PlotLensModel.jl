@@ -12,7 +12,7 @@ PARAM_NAME = Dict(:lens1 => "L1", :lens2 => "L2", :lens3 => "L3", :lens4 => "L4"
                   :scaling => "S", 
                   :x_c => "x_c", :y_c => "y_c", :eps => "\\epsilon", :pa => "\\phi", :x_s => "x_s",
                   :v_d => "v_d", :mass => "\\log~M", :c => "c",
-                  :gamma => "\\gamma", :angle => "\\gamma_\\theta",
+                  :gamma => "\\gamma", :angle => "\\theta", :delta => "\\delta",
                   :ref_sigma => "\\sigma_{\\star}", :ref_core => "\\theta_{c,\\star}", :ref_cut => "\\theta_{t,\\star}")
 
 
@@ -390,7 +390,7 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
                                               chains::Array{Float64, 3}, 
                                               chi2::Matrix{Float64};
                                               z_s::RV=1.5,
-                                              plot_error::Bool=true,
+                                              plot_errors::Bool=true,
                                               plot_critical::Bool=true,
                                               critical_tan_kws::NamedTuple=(color=:red, linewidth=2, linestyle=:solid),
                                               critical_rad_kws::NamedTuple=(color=:red, linewidth=2, linestyle=:dash),
@@ -433,6 +433,7 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
    LensFactory.Lenses.set_plotKws!(ax)
    
    # Calculate RMS for each image
+   first_plot = true
    sid = 1
    kid = 1
    for src in model.source_config.sources
@@ -453,8 +454,8 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
          σθ = knot.σθ
 
          # Plot observed positions of knots
-         scatter!(ax, x, y, markersize=20, marker=:circle, color=:transparent, strokecolor=:black, strokewidth=2, label="Observed")
-         if plot_error
+         scatter!(ax, x, y, markersize=20, marker=:circle, color=:transparent, strokecolor=:black, strokewidth=2, label = first_plot ? "Observed" : nothing)
+         if plot_errors
             for i in 1:size(x, 1)
                e_x, e_y = _ellipse(σx[i], σy[i], σθ[i]; x0=x[i], y0=y[i])
                lines!(ax, e_x, e_y, color=:black, linewidth=2)
@@ -486,7 +487,11 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
 
          # Plot predicted image positions
          scatter!(ax, first.(predicted_image), last.(predicted_image); markersize=20, 
-                     marker=:diamond, color=:transparent, strokecolor=:red, strokewidth=2, label="Predicted")
+                     marker=:diamond, color=:transparent, strokecolor=:red, strokewidth=2, label = first_plot ? "Predicted" : nothing)
+         
+         # Update the label to false
+         first_plot = false
+         
          kid = kid + 1
       end
       sid = sid + 1
