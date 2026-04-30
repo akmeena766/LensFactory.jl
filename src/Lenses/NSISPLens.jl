@@ -26,7 +26,7 @@ end
 
 """
     potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV) where T <: ROA
-Calculate potential at given coordinates for NSIS lens and update the potential (ψ) in place.
+Calculate potential at given coordinates for NSISP lens and update the potential (ψ) in place.
 The lensing potential is given as,
 
 ```math
@@ -78,7 +78,7 @@ end
 
 """
     deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV) where T <: ROA
-Calculate deflection at given coordinates for NSIS lens and update the deflection components
+Calculate deflection at given coordinates for NSISP lens and update the deflection components
 (ψx, ψy) in place. The deflection angle components are given as,
 ```math
 \\begin{align*} 
@@ -136,7 +136,7 @@ end
 
 """
     jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV) where T <: ROA
-Calculate jacobian at given coordinates for NSIS lens and and update the jacobian components 
+Calculate jacobian at given coordinates for NSISP lens and and update the jacobian components 
 (ψxx, ψyy, ψxy) in place. The jacobian components are given as,
 ```math
 \\begin{align*}

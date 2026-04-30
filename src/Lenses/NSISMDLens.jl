@@ -27,7 +27,16 @@ end
 
 """
     potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
-Calculate potential at given coordinates for NSISMD lens and update the potential in place.
+Calculate potential at given coordinates for NSISMD lens and update the potential (ψ) in place.
+The lensing potential is given as,
+
+```math
+\\begin{align*} 
+ψ(θ_x, θ_y) = 4 π \\left(\\frac{v_d}{{\\rm c}} \\right)^2 
+   \\left[ \\sqrt{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2} - 
+   θ_s \\, \\ln \\left(θ_s + \\sqrt{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2} \\right) \\right]. 
+\\end{align*}
+```
 
 # Arguments
 - `ψ`: Potential at given coordinates
@@ -74,7 +83,14 @@ end
 
 """
     deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
-Calculate deflection at given coordinates for NSISMD lens and update the deflection in place.
+Calculate deflection at given coordinates for NSISMD lens and update the deflection components
+(ψx, ψy) in place. The deflection angle components are given as,
+```math
+\\begin{align*} 
+ψ_x(θ_x, θ_y) &= 4 π \\left(\\frac{v_d}{{\\rm c}} \\right)^2 \\frac{θ_x - θ_{x,c}}{θ_s + \\sqrt{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2}}, \\\\
+ψ_y(θ_x, θ_y) &= 4 π \\left(\\frac{v_d}{{\\rm c}} \\right)^2 \\frac{θ_y - θ_{y,c}}{θ_s + \\sqrt{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2}}.
+\\end{align*}
+```
 
 # Arguments
 - `ψx`: x-component of the deflection at given coordinates
@@ -124,7 +140,19 @@ end
 
 """
     jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
-Calculate jacobian at given coordinates for NSISMD lens and update the jacobian in place.
+Calculate jacobian at given coordinates for NSISMD lens and update the jacobian components 
+(ψxx, ψyy, ψxy) in place. The jacobian components are given as,
+```math
+\\begin{align*}
+ψ_{xx} &= 4 π \\left(\\frac{v_d}{{\\rm c}} \\right)^2 \\left[ \\frac{1}{θ_s + Θ} - \\frac{(θ_x - θ_{x,c})^2}{Θ \\, (θ_s + Θ)^2} \\right], \\\\
+ψ_{yy} &= 4 π \\left(\\frac{v_d}{{\\rm c}} \\right)^2 \\left[ \\frac{1}{θ_s + Θ} - \\frac{(θ_y - θ_{y,c})^2}{Θ \\, (θ_s + Θ)^2} \\right], \\\\
+ψ_{xy} &= 4 π \\left(\\frac{v_d}{{\\rm c}} \\right)^2 \\frac{- (θ_x - θ_{x,c}) (θ_y - θ_{y,c})}{Θ \\, (θ_s + Θ)^2},
+\\end{align*}
+```
+where
+```math
+Θ = \\sqrt{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2}.
+```
 
 # Arguments
 - `ψxx`: xx-component of the jacobian at given coordinates
