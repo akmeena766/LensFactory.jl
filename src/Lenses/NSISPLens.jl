@@ -43,6 +43,9 @@ The lensing potential is given as,
 - `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `v_d`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
 - `θs`: Core radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
+
+# Returns
+- `nothing`: Updates the potential (ψ) in place.
 """
 function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV) where T <: ROA
    θE = 4.0 * pi * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
@@ -96,6 +99,9 @@ Calculate deflection at given coordinates for NSISP lens and update the deflecti
 - `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `v_d`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
 - `θs`: Core radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
+
+# Returns
+- `nothing`: Updates the deflection (ψx, ψy) in place.
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV) where T <: ROA
    θE = 4.0 * pi * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
@@ -156,6 +162,9 @@ Calculate jacobian at given coordinates for NSISP lens and and update the jacobi
 - `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `v_d`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
 - `θs`: Core radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
+
+# Returns
+- `nothing`: Updates the jacobian (ψxx, ψyy, ψxy) in place.
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV) where T <: ROA
    θE = 4.0 * pi * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC

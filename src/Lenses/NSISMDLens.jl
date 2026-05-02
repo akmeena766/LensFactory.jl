@@ -31,11 +31,9 @@ Calculate potential at given coordinates for NSISMD lens and update the potentia
 The lensing potential is given as,
 
 ```math
-\\begin{align*} 
 ψ(θ_x, θ_y) = 4 π \\left(\\frac{v_d}{{\\rm c}} \\right)^2 
    \\left[ \\sqrt{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2} - 
    θ_s \\, \\ln \\left(θ_s + \\sqrt{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2} \\right) \\right]. 
-\\end{align*}
 ```
 
 # Arguments
@@ -46,6 +44,9 @@ The lensing potential is given as,
 - `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `v_d`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
 - `θs`: Core radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
+
+# Returns
+- `nothing`: Updates the potential (ψ) in place.
 """
 function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
    θE = 4.0 * pi * (vd * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
@@ -101,6 +102,9 @@ Calculate deflection at given coordinates for NSISMD lens and update the deflect
 - `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `v_d`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
 - `θs`: Core radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
+
+# Returns
+- `nothing`: Updates the deflection (ψx, ψy) in place.
 """
 function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
    θE = 4.0 * pi * (vd * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
@@ -164,6 +168,9 @@ where
 - `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `v_d`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
 - `θs`: Core radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
+
+# Returns
+- `nothing`: Updates the jacobian (ψxx, ψyy, ψxy) in place.
 """
 function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, vd::RV, θs::RV) where T <: ROA
    θE = 4.0 * pi * (vd * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
