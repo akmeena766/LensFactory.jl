@@ -5,6 +5,7 @@ module AIES
 # Julia inbuilt functions to import
 # --------------------------------------------------------------------------------------------------
 using Random
+using Printf
 using ProgressMeter
 using Base.Threads
 
@@ -18,7 +19,6 @@ export acceptance_rate
 
 # """
 #     aies_runner(log_posterior, seeds, n_steps, a, rng) -> (chain, llhood)
- 
 # Affine-Invariant Ensemble Sampler (Goodman & Weare 2010).
  
 # # Arguments
@@ -181,6 +181,48 @@ function aies_runner(log_posterior::Function,
 end
 
 
+# """
+#     autocorrelation(chains; param_names, burn_in)
+# Compute and print the Integrated Autocorrelation Time (IAT / τ) and Effective
+# Sample Size (ESS) for each free parameter across all walkers.
+ 
+# # Arguments
+# - `chains::Array{Float64, 3}`: MCMC chain array of shape `(n_steps, n_walkers, n_params)`,
+#    as returned by `aies_runner`.
+ 
+# # Keyword Arguments
+# - `param_names::Union{Vector{Tuple{Symbol, Symbol}}, Nothing} = nothing`: optional vector
+#   of `(owner, param)` tuples identifying each parameter column. If `nothing`, labels default to
+#   `"Lens"` / `"theta_i"`.
+# - `burn_in::Float64 = 0.2`: fraction of steps to discard as burn-in before computing statistics. 
+#    `start_idx = floor(n_steps * burn_in) + 1`.
+ 
+# # Returns
+# - `nothing`: Prints a formatted table with one row per parameter and the following columns:
+
+# ```
+# | Owner | Parameter | Tau (τ) | ESS | ESS % |
+# ```
+ 
+# - `Owner`     : First element of the `param_names` tuple (e.g. `:SIE`, `:src`).
+# - `Parameter` : Second element of the `param_names` tuple (e.g. `:b`, `:x`).
+# - `Tau (τ)`   : Average IAT across walkers. Values >> 1 indicate strong autocorrelation;
+#                 τ ≈ 1 means nearly independent samples.
+# - `ESS`       : Effective Sample Size = total post-burn-in samples / τ.
+# - `ESS %`     : ESS as a percentage of total post-burn-in samples.
+ 
+# # Notes
+# - IAT is estimated per walker and averaged, avoiding artificial decorrelation
+#   from flattening walkers into a single chain.
+# - Autocorrelation is truncated at the first negative lag (Sokal windowing,
+#   simplified). This is conservative — a full automated-windowing estimator
+#   can be substituted later for very long chains.
+# - Lags are capped at `min(N ÷ 5, 2000)` where `N` is the post-burn-in length
+#   per walker — the standard recommendation beyond which lag estimates become
+#   noise-dominated.
+# - A healthy ESS% is typically > 1–2%. Very low values (< 0.5%) suggest the
+#   chain needs more steps or the sampler is poorly mixed.
+# """
 function autocorrelation(chains::Array{Float64, 3}; 
                          param_names :: Union{Vector{Tuple{Symbol, Symbol}}, Nothing} = nothing, 
                          burn_in     :: Float64                                       = 0.2)
@@ -235,6 +277,40 @@ function autocorrelation(chains::Array{Float64, 3};
 end
 
 
+# """
+#     acceptance_rate(chains; burn_in)
+# Compute and print the acceptance rate for each walker, along with an ensemble
+# sparkline and sampler health guidance.
+ 
+# # Arguments
+# - `chains::Array{Float64, 3}` : MCMC chain array of shape `(n_steps, n_walkers, n_params)`,
+#   as returned by `aies_runner`.
+ 
+# # Keyword Arguments
+# - `burn_in::Float64 = 0.2` : fraction of steps to discard before computing rates.
+#   `start_idx = floor(n_steps * burn_in) + 1`.
+ 
+# # Returns
+# `nothing`: Prints a diagnostic panel with the following sections:
+ 
+# - `Overall Average Rate` : mean acceptance rate across all walkers (%).
+# - `Lowest Walker Rate`   : minimum acceptance rate across walkers (%).
+# - `Highest Walker Rate`  : maximum acceptance rate across walkers (%).
+# - `Ensemble Spread`      : sparkline (`▁` to `█`) showing per-walker acceptance
+#                            visually. Each block maps 12.5% of acceptance rate.
+#                            `▁` indicates near-zero acceptance; `█` indicates ~100%.
+# - `Status`               : health guidance based on the average rate:
+#     - `< 15%`  → LOW  — chain is stiff, consider decreasing stretch parameter `a`.
+#     - `> 50%`  → HIGH — steps are too small, consider increasing `a`.
+#     - `15–50%` → HEALTHY — sampler is mixing well.
+ 
+# # Notes
+# - Acceptance is detected by checking whether any parameter changed between
+#   consecutive steps. A rejected proposal is an exact bitwise copy of the
+#   previous row, so `any(chains[s, w, :] .!= chains[s-1, w, :])` is unambiguous.
+# - Healthy AIES acceptance rates typically fall in the range `[20%, 40%]` for
+#   well-conditioned posteriors.
+# """
 function acceptance_rate(chains::Array{Float64, 3}; burn_in::Float64=0.2)
    # Dimension
    n_steps, n_walkers, _ = size(chains)
