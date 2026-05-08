@@ -6,6 +6,7 @@ module AIES
 # --------------------------------------------------------------------------------------------------
 using Random
 using Printf
+using StatsBase
 using ProgressMeter
 using Base.Threads
 
@@ -98,8 +99,7 @@ function aies_runner(log_posterior::Function,
    last_llhoods = Array{Float64}(undef, n_walkers)
    @threads for w in 1:n_walkers
       last_llhoods[w] = log_posterior(x[:, w])
-      next!(p)
-   end    
+   end
 
    # Store initial state in first row
    for w in 1:n_walkers
@@ -112,9 +112,9 @@ function aies_runner(log_posterior::Function,
    # Batch setup: walkers are split into two complementary sets.
    # Each step, one set generates proposals stretched against the other.
    # -----------------------------------------------------------------------------------------------
-   half      = div(n_chains, 2)
+   half      = div(n_walkers, 2)
    batch1    = 1:half
-   batch2    = (half + 1):n_chains
+   batch2    = (half + 1):n_walkers
    divisions = [(batch1, batch2), (batch2, batch1)]
 
    # Pre-allocate per-batch workspace once (avoids repeated allocation in the hot loop).
@@ -151,7 +151,7 @@ function aies_runner(log_posterior::Function,
             j = rand(rngs[tid], inactive)
 
             # Proposal: Y = X_j + Z(X_i - X_j)
-            @views new_positions[:, k] .= x[:, j] + z * (x[:, chain_idx] - x[:, j])
+            @views new_positions[:, k] .= x[:, j] + z * (x[:, walker] - x[:, j])
             new_ll[k] = log_posterior(new_positions[:, k])
          end
 
@@ -231,8 +231,7 @@ function autocorrelation(chains::Array{Float64, 3};
 
    # Calculate burn-in offset
    start_idx     = max(1, Int(floor(n_steps * burn_in)) + 1)
-   n_steps_post  = n_steps - start_idx + 1
-   total_samples = n_steps_post * n_walkers
+   total_samples = (n_steps - start_idx + 1) * n_walkers
 
    # -- Printing the UI ----------------------------------------------------------------------------
    println("\n" * "-"^77)
@@ -256,7 +255,7 @@ function autocorrelation(chains::Array{Float64, 3};
          # Note: for very noisy chains this may truncate early; a full
          # automated-windowing estimator (Sokal 1989) can be added later.
          idx     = findfirst(val -> val <= 0.0, ac)
-         stop_at = isnothing(idx) ? length(ac) : idx
+         stop_at = isnothing(idx) ? length(ac) : idx - 1
          
          # Tau formula: 1 + 2 * sum(autocorrelations)
          tau_total += 1.0 + 2.0 * sum(@view ac[2:stop_at])
@@ -325,7 +324,7 @@ function acceptance_rate(chains::Array{Float64, 3}; burn_in::Float64=0.2)
    for w in 1:n_walkers
       accepted = 0
       for s in (start_idx + 1):n_steps
-         @views if any(chains[s, w, :] .!= chains[s-1, w, :])
+         if @views any(chains[s, w, :] .!= chains[s-1, w, :])
                accepted += 1
          end
       end
@@ -350,7 +349,7 @@ function acceptance_rate(chains::Array{Float64, 3}; burn_in::Float64=0.2)
    # Visual Sparkline
    print(" Ensemble Spread: [")
    blocks = [" ", "▂", "▃", "▄", "▅", "▆", "▇", "█"]
-   for rate in chain_rates
+   for rate in walker_rates
       # Map rate 0-100% to block index 1-8
       b_idx = clamp(Int(ceil(rate / 12.5)), 1, 8)
       print(blocks[b_idx])
