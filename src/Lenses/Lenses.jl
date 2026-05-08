@@ -811,7 +811,9 @@ end
     get_radial_profile(kappa::T, θx::T, θy::T; origin::Union{Tuple{Float64, Float64}, Nothing}=nothing, 
                                                n_bin::Int64=50, 
                                                bin_type::Symbol=:log)
-Calculate the radial profile of the convergence map. 
+Calculate the radial convergence profile. To convert it into physicsal units, multiply it by the 
+critical density ``Σ_{\\rm cr}``.
+
 
 # Arguments
    - `kappa::Matrix{<:RV}`: Convergence map.
@@ -819,12 +821,12 @@ Calculate the radial profile of the convergence map.
    - `θy::Matrix{<:RV}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
    
 # Keyword Arguments
-   - `origin::Union{Tuple{Float64, Float64}, Nothing}=nothing`: Center of the radial profile (in ``\\rm \\mathbf{arcseconds}``).
+   - `origin::Union{Tuple{Float64, Float64}, Nothing}=nothing`: Center (in ``\\rm \\mathbf{arcseconds}``).
    - `n_bin::Int64=50`: Number of radial bins.
    - `bin_type::Symbol=:log`: Type of radial binning (i.e., ``:log`` or ``:linear``).
 
 # Returns
-   - `centers::Vector{Float64}`: Radial centers (in ``\\rm \\mathbf{arcseconds}``).
+   - `centers::Vector{Float64}`: Radial bin centers (in ``\\rm \\mathbf{arcseconds}``).
    - `profile::Vector{Float64}`: Radial profile (in ``\\rm \\mathbf{arcseconds}``).
    - `edges::Vector{Float64}`: Radial bin edges (in ``\\rm \\mathbf{arcseconds}``).
 """
@@ -870,23 +872,23 @@ end
 
 
 """
-    get_mass_profile(kappa::T, θx::T, θy::T; origin::Union{Tuple{Float64, Float64}, Nothing}=nothing, 
+    get_mass_profile(kappa::T, θx::T, θy::T, D_d; 
+                                             origin::Union{Tuple{Float64, Float64}, Nothing}=nothing, 
                                              n_bin::Int64=50, 
                                              bin_type::Symbol=:log) where T <: Matrix{<:RV}
-Calculate the cumulative mass enclosed within a given radius ``θ`` for a given lens model. The 
-output mass is in units of ``\\Sigma_{\\rm cr}`` (in units of ``\\rm \\mathbf{M_⊙/arcsec^2}``). 
-To convert it into physicsal units, multiply it by the critical density.
+Calculate the cumulative mass enclosed within a given radius ``θ`` for a given lens model. While 
+converting the input convergence map into the physical units, it is assumed that source is at infinity 
+(i.e., ``a_{\\rm dis} = 1``). Hence, if the input convergence is for a finite redshift source, then
+divide the output mass values by ``a_{\\rm dis}``.
 
 # Arguments
 - `kappa::Matrix{<:RV}`: Convergence map.
 - `θx::Matrix{<:RV}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
 - `θy::Matrix{<:RV}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d::Float64`: Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``).
 
 # Keyword Arguments
-- `D_d::Float64 = NaN`: Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``).
-- `D_ds::Float64 = NaN`: Angular diameter distance to the source (in ``\\rm \\mathbf{meters}``).
-- `D_s::Float64 = NaN`: Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``).
-- `origin::Union{Tuple{Float64, Float64}, Nothing}=nothing`: Center of the radial profile (in ``\\rm \\mathbf{arcseconds}``).
+- `origin::Union{Tuple{Float64, Float64}, Nothing}=nothing`: Center (in ``\\rm \\mathbf{arcseconds}``).
    - If ``\\rm \\mathbf{nothing}``, then the center is set to be the location of the maximum value 
       of the convergence map.
 - `n_bin::Int64=50`: Number of radial bins.
@@ -896,11 +898,18 @@ To convert it into physicsal units, multiply it by the critical density.
    - `centers::Vector{Float64}`: Radial centers (in ``\\rm \\mathbf{arcseconds}``).
    - `mass::Vector{Float64}`: Cumulative mass (in ``\\rm \\mathbf{M_\\odot}``).
 """
-function get_mass_profile(kappa::T, θx::T, θy::T; origin::Union{Tuple{Float64, Float64}, Nothing}=nothing, 
+function get_mass_profile(kappa::T, θx::T, θy::T, D_d::Float64; 
+                                                  origin::Union{Tuple{Float64, Float64}, Nothing}=nothing, 
                                                   n_bin::Int64=50, 
                                                   bin_type::Symbol=:log) where T <: Matrix{<:RV}
-   # Calculate radial profile
+   # Calculate convergence radial profile (in units of Σ_cr)
    centers, profile, edges = get_radial_profile(kappa, θx, θy; origin=origin, n_bin=n_bin, bin_type=bin_type)
+
+   # Get critical density for a source at z = ∞
+   Σ_cr = get_critical_density(D_d, 1.0, 1.0; unit=:msun_arcsec2)
+
+   # Mass profile unit conversion (Σ_cr --> M⊙/arcsec^2)
+   profile .= profile .* Σ_cr
 
    # Calcualte bin areas
    θ_in  = edges[1:end-1]
