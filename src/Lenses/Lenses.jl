@@ -878,7 +878,7 @@ end
                                              bin_type::Symbol=:log) where T <: Matrix{<:RV}
 Calculate the cumulative mass enclosed within a given radius ``θ`` for a given lens model. While 
 converting the input convergence map into the physical units, it is assumed that source is at infinity 
-(i.e., ``a_{\\rm dis} = 1``). Hence, if the input convergence is for a finite redshift source, then
+(i.e., ``a_{\\rm dis} = 1``). Hence, if the input convergence is for any finite source redshift, then
 divide the output mass values by ``a_{\\rm dis}``.
 
 # Arguments
