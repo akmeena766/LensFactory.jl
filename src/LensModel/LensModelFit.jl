@@ -46,12 +46,14 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
    # Get angular-diameter distance ratios
    adis = LensModelUtils.adis_current(model, pvals)
 
+   # Calculate position likelihood
+   logL_position = 0.0
    if model.sampler.scheme == :SourcePlane
       # Calculate deflection at image positions
       _, αx_all, αy_all, A_all = LensModelUtils.lens_quantities(model, lens_model)
 
       # Calculate position likelihood
-      logL_pos = Likelihood.loglike_sourceplane(model, adis, αx_all, αy_all, A_all)
+      logL_position = Likelihood.loglike_sourceplane(model, adis, αx_all, αy_all, A_all)
    elseif model.sampler.scheme == :ImagePlane_Fast
       error("Image plane sampling is not implemented yet.")
       
@@ -63,12 +65,13 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
    end
    
    # Calculate parity likelihood
+   logL_parity = 0.0
    if model.source_config.use_parity
       logL_parity = Likelihood.loglike_parity(model, adis, A_all)
    end
    
    # Total log-likelihood
-   logL = logL_pos + logL_parity
+   logL = logL_position + logL_parity
    return logL
 end
 

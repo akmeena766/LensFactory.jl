@@ -187,7 +187,7 @@ function get_best_fit_parameters(results::Union{Vector{@NamedTuple{θ::Vector{Fl
       # Remove Burn-in
       start_idx      = Int(floor(n_steps * burn_in)) + 1
       thinned_chains = chains[start_idx:thin:end, :, :]
-      thinned_logL   = logL[start_idx:thin:end, :]
+      thinned_logL   = results[start_idx:thin:end, :]
 
       # Get (step, chain) of the best logL by finding the index of the maximum value in the logL matrix
       best_idx        = argmax(thinned_logL)
