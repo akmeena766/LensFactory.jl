@@ -105,7 +105,7 @@ Performs lens model fitting using the given `model`.
 
 # Returns
 - `chains::Array{Float64, 3}`: The MCMC chains containing sampled parameter values
-- `chi2::Matrix{Float64}`: The chi-squared values corresponding to each sample in the chains
+- `log_posterior::Matrix{Float64}`: The log-posterior values corresponding to each sample in the chains
 """
 function fit_model(model::ModelConfig; save::Bool=true, file_name::Union{String, Nothing}=nothing)
    return LensModelFit._fit_model(model, save=save, file_name=file_name)
@@ -157,7 +157,7 @@ Get the best-fit parameters from the optimization or MCMC results.
 
 # Returns
 - `best_θ::Vector{Float64}`: Best-fit parameter values.
-- `best_chi2::Float64`: χ² value corresponding to the best-fit parameters.
+- `log_posterior::Float64`: Log-posterior value corresponding to the best-fit parameters.
 - `lower_err::Vector{Float64}`: Lower 1-sigma uncertainties (only if `with_errors=true`).
 - `upper_err::Vector{Float64}`: Upper 1-sigma uncertainties (only if `with_errors=true`).
 """
@@ -169,15 +169,15 @@ function get_best_fit_parameters(results::Union{Vector{@NamedTuple{θ::Vector{Fl
                              print_table::Bool=false,
                              free_parameter_names=nothing)
    # Initialize outputs
-   best_θ = nothing
-   best_chi2 = -Inf
+   best_θ    = nothing
+   best_logL = -Inf
 
    # Case A: Input is from the Parallel Optimizer (Vector of NamedTuples)
    if results isa Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}
       # We already sorted the results in descending order of logL, so results[1] is the best fit
-      best_run = results[1]
-      best_θ = best_run.θ
-      best_chi2 = best_run.f
+      best_run  = results[1]
+      best_θ    = best_run.θ
+      best_logL = best_run.f
 
    # Case B: Input is from MCMC (χ² matrix)
    elseif results isa Matrix{Float64} && chains !== nothing
@@ -185,24 +185,24 @@ function get_best_fit_parameters(results::Union{Vector{@NamedTuple{θ::Vector{Fl
       n_steps, n_chains, n_params = size(chains)
 
       # Remove Burn-in
-      start_idx = Int(floor(n_steps * burn_in)) + 1
+      start_idx      = Int(floor(n_steps * burn_in)) + 1
       thinned_chains = chains[start_idx:thin:end, :, :]
-      thinned_chi2 = results[start_idx:thin:end, :]
+      thinned_logL   = logL[start_idx:thin:end, :]
 
       # Get (step, chain) of the best logL by finding the index of the maximum value in the logL matrix
-      best_idx = argmax(thinned_chi2) 
+      best_idx        = argmax(thinned_logL)
       step, chain_num = best_idx[1], best_idx[2]
       
-      best_θ = thinned_chains[step, chain_num, :]
-      best_chi2 = results[step, chain_num]
+      best_θ    = thinned_chains[step, chain_num, :]
+      best_logL = thinned_logL[step, chain_num]
 
       if with_errors
          # Reshape the thinned chain into a flat array
          flat_chain = reshape(thinned_chains, :, n_params)
 
          # Calculate (asymmetric) errors as we are defining errors relative to the Best-Fit value
-         lower_err = zeros(n_params)
-         upper_err = zeros(n_params)
+         lower_err  = zeros(n_params)
+         upper_err  = zeros(n_params)
          lower_err2 = zeros(n_params)
          upper_err2 = zeros(n_params)
          for i in 1:n_params
@@ -237,12 +237,11 @@ function get_best_fit_parameters(results::Union{Vector{@NamedTuple{θ::Vector{Fl
             end
             println("-"^length(header))
          end
-         return best_θ, best_chi2, lower_err, upper_err
+         return best_θ, best_logL, lower_err, upper_err
       end
    else
-      error("Please provide either Optimization results or both MCMC χ² and chains.")
+      error("Please provide either Optimization results or both MCMC logL and chains.")
    end
-   return best_θ, best_chi2
 end
 
 
@@ -250,8 +249,8 @@ end
 # Calculate RMS for the best-fit model
 # --------------------------------------------------------------------------------------------------
 """
-    get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64}; check_parity::Bool=false, burn_in::Float64=0.2)
-Calculate the RMS of the best-fit model based on the MCMC results stored in `chains` and `chi2`. The
+    get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64}; check_parity::Bool=false, burn_in::Float64=0.2)
+Calculate the RMS of the best-fit model based on the MCMC results stored in `chains` and `logL`. The
 function prints a table showing the RMS for each knot image, as well as a global total RMS. If 
 `check_parity` is set to true, the function will also check the parity of each knot image and 
 print a warning if any parity does not match.
@@ -260,7 +259,7 @@ print a warning if any parity does not match.
 - `model::ModelConfig`: The lens model configuration used for the MCMC fit.
 - `chains::Array{Float64, 3}`: The MCMC chains containing the sampled parameter values. The 
    dimensions should be (n_steps, n_chains, n_parameters).
-- `chi2::Matrix{Float64}`: The chi2 values corresponding to each sample in the MCMC chains. The 
+- `logL::Matrix{Float64}`: The logL values corresponding to each sample in the MCMC chains. The 
    dimensions should be (n_steps, n_steps).
 
 # Keyword Arguments
@@ -271,9 +270,9 @@ print a warning if any parity does not match.
 # Returns
 - `nothing`: Prints a table to the console with the RMS for each knot image, as well as total RMS.
 """
-function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64}; check_parity::Bool=false, burn_in::Float64=0.2)
-   # Get the best parameters based on minimum chi2
-   best_θ, _ = get_best_fit_parameters(chi2; chains=chains, burn_in=burn_in)
+function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64}; check_parity::Bool=false, burn_in::Float64=0.2)
+   # Get the best parameters based on minimum logL
+   best_θ, _ = get_best_fit_parameters(logL; chains=chains, burn_in=burn_in)
 
    # Get list of parameters for the lens model
    param_ref = Dict(p.key => p.refer for p in model.parameters)
@@ -438,32 +437,33 @@ end
 # Get lensing quantities for the best-fit model
 # --------------------------------------------------------------------------------------------------
 """
-    get_best_model(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64})
-Get the best-fit lens model based on the MCMC results stored in `chains` and `chi2`. The best-fit 
-parameters are determined by the minimum chi2 in `chi2`.
+    get_best_model(model::ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64})
+Get the best-fit lens model based on the MCMC results stored in `chains` and `logL`. The best-fit 
+parameters are determined by the minimum log-likelihood in `logL`.
 
 # Arguments
 - `model::ModelConfig`: The lens model configuration used for the MCMC fit.
 - `chains::Array{Float64, 3}`: The MCMC chains containing the sampled parameter values. The 
    dimensions should be (n_steps, n_chains, n_parameters).
-- `chi2::Matrix{Float64}`: The chi2 values corresponding to each sample in the MCMC chains. The 
-   dimensions should be (n_steps, n_steps).
+- `logL::Matrix{Float64}`: The log-likelihood values corresponding to each sample in the MCMC chains.
+   The dimensions should be (n_steps, n_steps).
 
 # Returns
 - `best_model`: Best-fit lens model constructed using the best-fit parameters.
-- `best_chi2`: Chi2 correspodning to best-fit lens model.
+- `logL`: Log-likelihoohood correspodning to best-fit lens model.
 """
-function get_best_model(model::ModelConfig; optim_result::Union{Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, Nothing}=nothing, 
-                                            mcmc_chains::Union{Array{Float64, 3}, Nothing}=nothing, 
-                                            mcmc_chi2::Union{Matrix{Float64}, Nothing}=nothing, 
-                                            burn_in::Float64=0.2)
-   # Get the best parameters based on minimum chi2
+function get_best_model(model::ModelConfig; 
+                        optim_result::Union{Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, Nothing}=nothing, 
+                        mcmc_chains::Union{Array{Float64, 3}, Nothing}=nothing, 
+                        mcmc_logL::Union{Matrix{Float64}, Nothing}=nothing, 
+                        burn_in::Float64=0.2)
+   # Get the best parameters based on minimum log-likelihood
    if optim_result !== nothing
-      best_θ, best_chi2 = get_best_fit_parameters(optim_result)
-   elseif mcmc_chains !== nothing && mcmc_chi2 !== nothing
-      best_θ, best_chi2 = get_best_fit_parameters(mcmc_chi2; chains=mcmc_chains, burn_in=burn_in)
+      best_θ, best_logL = get_best_fit_parameters(optim_result)
+   elseif mcmc_chains !== nothing && mcmc_logL !== nothing
+      best_θ, best_logL = get_best_fit_parameters(mcmc_logL; chains=mcmc_chains, burn_in=burn_in)
    else
-      error("Either optim_result or (mcmc_chains and mcmc_chi2) must be provided.")
+      error("Either optim_result or (mcmc_chains and mcmc_logL) must be provided.")
    end
 
    # Get list of parameters for the lens model
@@ -472,7 +472,7 @@ function get_best_model(model::ModelConfig; optim_result::Union{Vector{@NamedTup
    # Replace free parameter values by best-fit values
    pvals = LensModelUtils.param_dict(model, best_θ, param_ref)
    
-   return LensModelUtils.build_lens(model, pvals), best_chi2
+   return LensModelUtils.build_lens(model, pvals), best_logL
 end
 
 
@@ -527,13 +527,13 @@ function get_potential(data_jld2::JLD2.JLDFile, θx::T, θy::T; unit::Symbol=:RA
       throw(ArgumentError("Input coordinates must be of the same size."))
    end
 
-   # Load the model, chains and chi2 from the input file
+   # Load the model, chains and logL from the input file
    model  = data_jld2["model"]
    chains = data_jld2["chains"]
-   chi2   = data_jld2["chi2"]
+   logL   = data_jld2["logL"]
 
    # Get best-fit lens model
-   best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_chi2=chi2)
+   best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_logL=logL)
    
    return get_potential(best_model, θx, θy::T; unit=unit)
 end
@@ -591,13 +591,13 @@ function get_deflection(data_jld2::JLD2.JLDFile, θx::T, θy::T; unit::Symbol=:R
       throw(ArgumentError("Input coordinates must be of the same size."))
    end
 
-   # Load the model, chains and chi2 from the input file
+   # Load the model, chains and logL from the input file
    model  = data_jld2["model"]
    chains = data_jld2["chains"]
-   chi2   = data_jld2["chi2"]
+   logL   = data_jld2["logL"]
 
    # Get best-fit lens model
-   best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_chi2=chi2)
+   best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_logL=logL)
 
    return get_deflection(best_model, θx::T, θy::T; unit=unit)
 end
@@ -655,13 +655,13 @@ function get_jacobian(data_jld2::JLD2.JLDFile, θx::T, θy::T; unit::Symbol=:RA_
       throw(ArgumentError("Input coordinates must be of the same size."))
    end
 
-   # Load the model, chains and chi2 from the input file
+   # Load the model, chains and logL from the input file
    model  = data_jld2["model"]
    chains = data_jld2["chains"]
-   chi2   = data_jld2["chi2"]
+   logL   = data_jld2["logL"]
 
    # Get best-fit lens model
-   best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_chi2=chi2)
+   best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_logL=logL)
 
    return get_jacobian(best_model, θx::T, θy::T; unit=unit)
 end
@@ -696,13 +696,13 @@ function predict_image(data_jld2::JLD2.JLDFile, θx::T, θy::T, z_s::Float64; un
       throw(ArgumentError("Input coordinates must be of the same size."))
    end
 
-   # Load the model, chains and chi2 from the input file
+   # Load the model, chains and logL from the input file
    model  = data_jld2["model"]
    chains = data_jld2["chains"]
-   chi2   = data_jld2["chi2"]
+   logL   = data_jld2["logL"]
 
    # Get best-fit lens model
-   best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_chi2=chi2)
+   best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_logL=logL)
 
    # Construct grid
    FOV = model.observation.FOV
@@ -865,18 +865,21 @@ choose which lensing quantities to save by setting the corresponding boolean fla
 # Returns
 - `nothing`: Saves FITS files to disk
 """
-function save_best_fits(data_jld2::JLD2.JLDFile; save_potential::Bool=true,
-                      save_deflection::Bool=true, save_kappa::Bool=true, save_gamma::Bool=true)
+function save_best_fits(data_jld2::JLD2.JLDFile;
+                        save_potential::Bool  = true,
+                        save_deflection::Bool = true, 
+                        save_kappa::Bool      = true, 
+                        save_gamma::Bool      = true)
 
-   # Load the chains and chi2 from the file
+   # Load the chains and logL from the file
    model  = data_jld2["model"]
    chains = data_jld2["chains"]
-   chi2   = data_jld2["chi2"]
+   logL   = data_jld2["logL"]
    date   = data_jld2["Date"]
    time   = data_jld2["Time"]
 
    # Get best-fit model
-   best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_chi2=chi2)
+   best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_logL=logL)
 
    # Generate grid
    FOV = model.observation.FOV
@@ -961,7 +964,7 @@ end
 # Check parity of the best-fit model against input parities
 # --------------------------------------------------------------------------------------------------
 """
-    check_parity(model::ModelConfig, chains::Array{Float64, 3}, chi2::Matrix{Float64})
+    check_parity(model::ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64})
 Check the parity of the best-fit model against the input parities for each knot image. This function 
 assumes that parity was enforced during the modelling (i.e., `model.source_config.use_parity = true`). 
 If parity was not enforced, an error is thrown. The function prints a table comparing the input 
@@ -980,13 +983,13 @@ function check_parity(data_jld2::JLD2.JLDFile)
       error("Parity was not enforced during modelling. Please set model.use_parity = true.")
    end
 
-   # Load the chains and chi2 from the file
+   # Load the chains and log-likelihood from the file
    model  = data_jld2["model"]
    chains = data_jld2["chains"]
-   chi2   = data_jld2["chi2"]
+   logL   = data_jld2["logL"]
 
-   # Get the best parameters based on chi2
-   best_θ, _ = get_best_fit_parameters(chi2, chains)
+   # Get the best parameters based on log-likelihood
+   best_θ, _ = get_best_fit_parameters(logL, chains)
 
    # Get list of parameters for the lens model
    param_ref = Dict(p.key => p.refer for p in model.parameters)
@@ -1021,7 +1024,7 @@ function check_parity(data_jld2::JLD2.JLDFile)
    # Identity tuple
    I4 = (1.0, 0.0, 0.0, 1.0)
 
-   # Calculate chi2 for each source
+   # Compare parity for each source
    sid = 1
    kid = 1
    for src in model.source_config.sources
@@ -1047,7 +1050,7 @@ function check_parity(data_jld2::JLD2.JLDFile)
          # Model parity of knot images
          parity_model = @. Int64(sign(A[1] * A[4] - A[2] * A[3]))
 
-         # Parity chi2
+         # Parity logL
          for i in eachindex(parity_input)
             # Check if parity is correct
             status = (parity_input[i] == parity_model[i]) ? "✅" : "❌"

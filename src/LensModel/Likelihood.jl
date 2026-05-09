@@ -15,11 +15,11 @@ using ..Lenses
 # --------------------------------------------------------------------------------------------------
 # Functions to export
 # --------------------------------------------------------------------------------------------------
-export chi2_sourceplane
-export chi2_imageplane_fast
-export chi2_flux
-export chi2_timedelay
-export chi2_parity
+export loglike_sourceplane
+export loglike_imageplane
+export loglike_flux
+export loglike_timedelay
+export loglike_parity
 
 # --------------------------------------------------------------------------------------------------
 # Functions
@@ -54,7 +54,11 @@ end
    return _inverse(S11, S12, S21, S22)
 end
 
-@inline function _weighted_position(βx::Vector{Float64}, βy::Vector{Float64}, A::NTuple{4, Vector{Float64}}, σx::Vector{Float64}, σy::Vector{Float64}, θ::Vector{Float64}, n::Int64)
+@inline function _weighted_position(βx::Vector{Float64}, βy::Vector{Float64}, 
+                                    A::NTuple{4, Vector{Float64}}, 
+                                    σx::Vector{Float64}, σy::Vector{Float64}, 
+                                    θ::Vector{Float64}, 
+                                    n::Int64)
    # Weight matrix: W = Σᵢ μᵢᵀ * Sᵢ⁻¹ * μᵢ
    sumW11 = 0.0
    sumW12 = 0.0
@@ -116,9 +120,11 @@ end
 end
 
 
-function chi2_sourceplane(model::ModelConfig, adis::Vector{Float64}, αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, A_all::Vector{NTuple{4, Vector{Float64}}})
+function loglike_sourceplane(model::ModelConfig, adis::Vector{Float64}, 
+                             αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, 
+                             A_all::Vector{NTuple{4, Vector{Float64}}})
    # Initialize chi2 for position
-   chi2 = 0.0
+   χ2_total = 0.0
 
    # Identity tuple
    I4 = (1.0, 0.0, 0.0, 1.0)
@@ -168,17 +174,17 @@ function chi2_sourceplane(model::ModelConfig, adis::Vector{Float64}, αx_all::Ve
             # χ² = δβᵀ * W * δβ
             χ2_knot = χ2_knot + δβx * (w11 * δβx + w12 * δβy) + δβy * (w21 * δβx + w22 * δβy)
          end
-         chi2 = chi2 - χ2_knot
+         χ2_total = χ2_total + χ2_knot
          
          kid = kid + 1
       end
       sid = sid + 1
    end
-   return chi2
+   return -0.5 * χ2_total
 end
 
 
-function chi2_imageplane_fast(model::ModelConfig, adis::Vector{Float64}, αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, A_all::Vector{NTuple{4, Vector{Float64}}})
+function loglike_imageplane_fast(model::ModelConfig, adis::Vector{Float64}, αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, A_all::Vector{NTuple{4, Vector{Float64}}})
    # Initialize chi2 for parity
    χ2_total = 0.0
 
@@ -233,20 +239,20 @@ function chi2_imageplane_fast(model::ModelConfig, adis::Vector{Float64}, αx_all
             # χ² = δθᵀ * S⁻¹ * δθ
             χ2_knot = χ2_knot + δθx * (iS11 * δθx + iS12 * δθy) + δθy * (iS21 * δθx + iS22 * δθy)
          end
-         χ2_total = χ2_total - χ2_knot
+         χ2_total = χ2_total + χ2_knot
          
          kid = kid + 1
       end
       sid = sid + 1
    end
 
-   return chi2
+   return -0.5 * χ2_total
 end
 
 
-function chi2_flux(model::ModelConfig, adis::Vector{Float64}, A_all::Vector{NTuple{4, Vector{Float64}}})
+function loglike_flux(model::ModelConfig, adis::Vector{Float64}, A_all::Vector{NTuple{4, Vector{Float64}}})
    # Initialize chi2 for parity
-   χ² = 0.0
+   χ2_total = 0.0
 
    # Identity tuple
    I4 = (1.0, 0.0, 0.0, 1.0)
@@ -281,20 +287,27 @@ function chi2_flux(model::ModelConfig, adis::Vector{Float64}, A_all::Vector{NTup
          m_src = m_src / sum(1.0 / σm[i]^2 for i in 1:n)
 
          # Calculate knot chi2 for absolute magnitude
+         χ2_knot = 0.0
          for i in 1:n
-            χ² = χ² - (m[i] + 2.5 * log10(μ[i]) - m_src)^2 / σm[i]^2
+            χ2_knot = χ2_knot + (m[i] + 2.5 * log10(μ[i]) - m_src)^2 / σm[i]^2
          end
-
+         χ2_total = χ2_total + χ2_knot
+         
          kid = kid + 1
       end
       sid = sid + 1
    end
-   return χ²
+   return -0.5 * χ2_total
 end
 
-function chi2_timedelay(model::ModelConfig, lens_model::Lenses.AbstractLens, adis::Vector{Float64}, z_d::Float64, D_d::Float64, αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, A_all::Vector{NTuple{4, Vector{Float64}}})
+function loglike_timedelay(model::ModelConfig, lens_model::Lenses.AbstractLens, 
+                        adis::Vector{Float64}, 
+                        z_d::Float64, 
+                        D_d::Float64, 
+                        αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, 
+                        A_all::Vector{NTuple{4, Vector{Float64}}})
    # Initialize chi2 for parity
-   chi2 = 0.0
+   χ2_total = 0.0
 
    # Multipicative constant
    constant_factor = (1.0 + z_d) * D_d / CONST_C
@@ -341,28 +354,34 @@ function chi2_timedelay(model::ModelConfig, lens_model::Lenses.AbstractLens, adi
 
          # Best-fit time delay value
          Δt_0 = 0.0
+         td_fit_approx = Vector{Float64}(undef, n)
          for i in 1:n
-            dot_product = (βx_ind[i] - x[i]) * (βx_model - βx_ind[i]) + (βy_ind[i] - y[i]) * (βy_model - βy_ind[i])
-            td_fit_i = td_fit[i] + (constant_factor / adis_value / DAY2SECOND) * dot_product
-            Δt_0 = Δt_0 + (Δt_obs[i] - td_fit_i) / σ_Δt[i]^2
+            dot_product = (βx_ind[i] - x[i]) * (βx_model - βx_ind[i]) + 
+                          (βy_ind[i] - y[i]) * (βy_model - βy_ind[i])
+            
+            td_fit_approx[i] = td_fit[i] + (constant_factor / adis_value / DAY2SECOND) * dot_product
+            Δt_0 = Δt_0 + (Δt_obs[i] - td_fit_approx[i]) / σ_Δt[i]^2
          end
-         Δt_0 = Δt_0 / sum(1.0 / σm[i]^2 for i in 1:n)
+         Δt_0 = Δt_0 / sum(1.0 / σ_Δt[i]^2 for i in 1:n)
 
          # Calculate knot chi2 for absolute time delay
+         χ2_knot = 0.0
          for i in 1:n
-            χ² = χ² - (Δt_obs[i] - td_fit[i] - Δt_0)^2 / σ_Δt[i]^2
+            χ2_knot = χ2_knot + (Δt_obs[i] - td_fit_approx[i] - Δt_0)^2 / σ_Δt[i]^2
          end
+         χ2_total = χ2_total + χ2_knot
+
          kid = kid + 1
       end
       sid = sid + 1
    end
-   return χ²
+   return -0.5 * χ2_total
 end
 
 
-function chi2_parity(model::ModelConfig, adis::Vector{Float64}, A_all::Vector{NTuple{4, Vector{Float64}}})
+function loglike_parity(model::ModelConfig, adis::Vector{Float64}, A_all::Vector{NTuple{4, Vector{Float64}}})
    # Initialize chi2 for parity
-   chi2 = 0.0
+   χ2_total = 0.0
    
    # Penalty for wrong parity
    penalty = model.source_config.parity_force
@@ -393,14 +412,14 @@ function chi2_parity(model::ModelConfig, adis::Vector{Float64}, A_all::Vector{NT
          # Parity log-likelihood
          for i in eachindex(parity_input)
             if parity_input[i] != parity_model[i]
-               chi2 = chi2 - penalty
+               χ2_total = χ2_total + penalty
             end
          end   
          kid = kid + 1
       end      
       sid = sid + 1
    end
-   return chi2
+   return -0.5 * χ2_total
 end
 
 end

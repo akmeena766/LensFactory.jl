@@ -51,7 +51,7 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
       _, αx_all, αy_all, A_all = LensModelUtils.lens_quantities(model, lens_model)
 
       # Calculate position likelihood
-      pos_chi2 = Likelihood.chi2_sourceplane(model, adis, αx_all, αy_all, A_all)
+      logL_pos = Likelihood.loglike_sourceplane(model, adis, αx_all, αy_all, A_all)
    elseif model.sampler.scheme == :ImagePlane_Fast
       error("Image plane sampling is not implemented yet.")
       
@@ -62,14 +62,14 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
       error("Unsupported sampling scheme: $(model.sampler.scheme)")
    end
    
-
    # Calculate parity likelihood
-   parity_chi2 = 0.0
    if model.source_config.use_parity
-      parity_chi2 = Likelihood.chi2_parity(model, adis, A_all)
+      logL_parity = Likelihood.loglike_parity(model, adis, A_all)
    end
-   tot_chi2 = pos_chi2 + parity_chi2
-   return tot_chi2
+   
+   # Total log-likelihood
+   logL = logL_pos + logL_parity
+   return logL
 end
 
 
@@ -95,10 +95,10 @@ function log_posterior(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{
    end
 
    # Calculate log-likelihood
-   chi2 = log_likelihood(model, θ, param_ref)
+   logL = log_likelihood(model, θ, param_ref)
    
    # Return log-posterior
-   return lp + chi2
+   return lp + logL
 end
 
 
@@ -113,10 +113,10 @@ function objective(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tupl
    end
 
    # Calculate log-likelihood
-   chi2 = log_likelihood(model, θ, param_ref)
+   logL = log_likelihood(model, θ, param_ref)
    
    # Return negative log-posterior
-   return lp + chi2
+   return lp + logL
 end
 
 
@@ -158,7 +158,7 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
       error("No optimization runs converged.")
    end
 
-   # Sort results (Best chi2 first)
+   # Sort results (Best log-posterior first)
    sort!(converged_results, by = x -> x.f, rev = true)
    best_θ = converged_results[1].θ
    best_val = converged_results[1].f
@@ -173,7 +173,7 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
       # Using 1e-8 as a floor to handle parameters that are exactly 0.0
       rel_diff_θ = abs.(result.θ .- best_θ) ./ (max.(abs.(best_θ), abs.(result.θ)) .+ 1e-8)
     
-      # Calculate relative difference for the chi2 (objective value)
+      # Calculate relative difference for the log-posterior (objective value)
       rel_diff_f = abs(result.f - best_val) / (abs(best_val) + 1e-8)
 
       # Check if all parameters are within percentage tolerance (e.g., 0.1% = 0.001)
@@ -227,8 +227,8 @@ end
 # Run MCMC
 # --------------------------------------------------------------------------------------------------
 function get_unique_seeds(results::Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, n_chains::Int64, tol::Float64=1E-2)
-   # Sort by chi2 (highest/best first)
-   # results should be a vector of structs/objects with .θ and .f (chi2)
+   # Sort by log-posterior (highest/best first)
+   # results should be a vector of structs/objects with .θ and .f (log-posterior)
    sorted_res = sort(results, by = x -> x.f, rev = true)
 
    # Start with the absolute best
@@ -263,8 +263,8 @@ function get_unique_seeds(results::Vector{@NamedTuple{θ::Vector{Float64}, f::Fl
 end
 
 function get_best_seeds(results::Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, n_chains::Int64; jitter::Float64=0.001)
-   # Sort by chi2 (highest/best first)
-   # results should be a vector of structs/objects with .θ and .f (chi2)
+   # Sort by log-posterior (highest/best first)
+   # results should be a vector of structs/objects with .θ and .f (log-posterior)
    sorted_res = sort(results, by = x -> x.f, rev = true)
  
    n_params = length(sorted_res[1].θ)
@@ -328,9 +328,9 @@ function _fit_model(model::ModelConfig; save::Bool=true, file_name::Union{String
 
    # MCMC
    chains = nothing
-   chi2 = nothing
+   logL = nothing
    if sampler.mcmc !== nothing
-      chains, chi2 = run_mcmc(model, param_ref, θ_start, verbose)
+      chains, logL = run_mcmc(model, param_ref, θ_start, verbose)
    end
 
    # Nothing to do
@@ -344,12 +344,12 @@ function _fit_model(model::ModelConfig; save::Bool=true, file_name::Union{String
          file_name = "$(model.observation.lens)_$(Dates.today()).jld2"
       end
       date = Dates.now(UTC)
-      jldsave(file_name; Date   = Dates.Date(date),
-                         Time   = Dates.Time(date),
-                         model  = model,
+      jldsave(file_name; Date      = Dates.Date(date),
+                         Time      = Dates.Time(date),
+                         model     = model,
                          optimizer = θ_start,
-                         chains = chains,
-                         chi2   = chi2)
+                         chains    = chains,
+                         logL      = logL)
    end
    return nothing
 end
