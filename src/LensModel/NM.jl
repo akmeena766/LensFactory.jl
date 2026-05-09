@@ -1,7 +1,16 @@
 module NM
 
+# --------------------------------------------------------------------------------------------------
+# Julia inbuilt functions to import
+# --------------------------------------------------------------------------------------------------
+using Printf
 
+
+# --------------------------------------------------------------------------------------------------
+# Functions to export
+# --------------------------------------------------------------------------------------------------
 export nmsmax
+
 
 # """
 #     nmsmax(fun, x[, trace = true, initial_simplex = 0, target_f = Inf, max_its = Inf, max_evals = Inf, tol = 1e-3])
@@ -41,158 +50,178 @@ export nmsmax
 #  - C. T. Kelley, Iterative Methods for Optimization, Society for Industrial
 #    and Applied Mathematics, Philadelphia, PA, 1999.
 # """
-function nmsmax(fun, x; trace=false, initial_simplex=0, target_f=Inf, max_its=Inf, max_evals=Inf, tol=1e-3)
-   x0 = x[:];  # Work with column vector internally.
-   n = length(x0);
+function nmsmax(fun, x; 
+                tol::Float64            = 1e-3,
+                target_f::Float64       = Inf,
+                max_its::Real           = Inf,
+                max_evals::Real         = Inf,
+                initial_simplex::Symbol = :regular,
+                trace::Bool             = false)
+   # flatten to 1-D; x itself is never mutated or written back
+   x0 = x[:]
+   n  = length(x0)
 
-   # Zero column + Identity matrix
-   V = zeros(n, n + 1)
-   for i in 1:n
-      V[i, i + 1] = 1.0
-   end
+   # -- Allocate simplex (columns = vertices) and their function values ----------------------------
+   simplex = zeros(n, n + 1)
+   fvals   = zeros(n + 1)
 
-   f = zeros(n+1,1);
-   V[:,1] = x0; f[1] = fun(x);
-   fmax_old = f[1];
-   fmax     = -Inf; # Some initial value
+   simplex[:, 1] = x0
+   fvals[1]      = fun(x0)
+   n_evals       = 1
 
-   if trace
-      println("f(x0) = ", round(f[1], sigdigits=5))
-   end
+   trace && @printf("f(x0) = %.5g\n", fvals[1])
 
-   k = 0; m = 0;
+   # -- Build initial simplex ----------------------------------------------------------------------
+   scale = max(maximum(abs.(x0)), 1.0)
 
-   # Set up initial simplex.
-   scale = max(maximum(abs.(x0)), 1);
-   if initial_simplex == 0
-      # Regular simplex - all edges have same length.
+   if initial_simplex == :regular
+      # All edges have same length.
       # Generated from construction given in reference [18, pp. 80-81] of [1].
-      alpha = scale / (n*sqrt(2)) * [ sqrt(n+1)-1+n  sqrt(n+1)-1 ];
-      V[:,2:n+1] = (x0 + alpha[2]*ones(n,1)) * ones(1,n);
-      for j=2:n+1
-         V[j-1,j] = x0[j-1] + alpha[1];
-         x[:] = V[:,j]; f[j] = fun(x);
+      c     = scale / (n * sqrt(2))
+      long  = c * (sqrt(n + 1) - 1 + n)  # Longer coordiate shift
+      short = c * (sqrt(n + 1) - 1)      # Shorter coordiate shift
+
+      for j in 2:n+1
+         v        = x0 .+ short         # Base: shift every coordinate by `short`
+         v[j - 1] = x0[j - 1] + long    # Override one axis with `long`
+         
+         simplex[:, j] = v
+         fvals[j]      = fun(v)
+      end
+   elseif initial_simplex == :right_angle
+      # Vertices along coordinate axes at distance `scale` from x0.
+      for j in 2:n+1
+         v         = copy(x0)
+         v[j - 1] += scale
+         
+         simplex[:, j] = v
+         fvals[j]      = fun(v)
       end
    else
-      # Right-angled simplex based on co-ordinate axes.
-      alpha = scale*ones(n+1,1);
-      for j=2:n+1
-         V[:,j] = x0 + alpha[j]*V[:,j];
-         x[:] = V[:,j]; f[j] = fun(x);
-      end
+      throw(ArgumentError("Initial_simplex must be :regular or :right_angle"))
    end
-   nf = n+1;
-   how = "initial  ";
+   n_evals = n_evals + n
 
-   j = sortperm(f[:]);
-   temp = f[j];
-   j = j[n+1:-1:1];
-   f = f[j]; V = V[:,j];
+   # -- sort simplex columns by descending function value ------------------------------------------
+   order   = sortperm(fvals, rev=true)
+   fvals   = fvals[order]
+   simplex = simplex[:, order]
 
-   alpha = 1;  beta = 1/2;  gamma = 2;
-
-   msg = ""
-
+   # -- Nelder-Mead coefficients -------------------------------------------------------------------
+   α = 1.0   # Reflection
+   β = 0.5   # Contraction
+   γ = 2.0   # Expansion
+   
+   # -- Main loop ----------------------------------------------------------------------------------
    converged = false
-   while true    ###### Outer (and only) loop.
-   k = k+1;
+   fmax_prev = fvals[1]
+   step_name = "initial "
+   msg       = ""
+   n_iters   = 0
 
-      fmax = f[1];
-      if fmax > fmax_old
-         if trace
-            # Calculation for the percentage change
-            pct_change = 100 * (fmax - fmax_old) / (abs(fmax_old) + eps(fmax_old))
+   while true
+      n_iters = n_iters + 1
 
-            # The combined println statement
-            println("Iter. ", Int64(k), ",  how = ", how, " nf = ", Int64(nf), ",  f = ", round(fmax, sigdigits=5), "  (", round(pct_change, digits=1), "%)")
-         end
+      fmax = fvals[1]
+      
+      if trace && fmax > fmax_prev
+         pct = 100 * (fmax - fmax_prev) / (abs(fmax_prev) + eps(fmax_prev))
+         @printf("Iter %4d | %-9s | evals = %5d | f = %.5g  (%+.1f%%)\n", n_iters, step_name, n_evals, fmax, pct)
       end
-      fmax_old = fmax;
+      fmax_prev = fmax
 
-      ### Three stopping tests from MDSMAX.M
+      # -- Stopping criteria -----------------------------------------------------------------------
 
       # Stopping Test 1 - f reached target value?
       if fmax >= target_f
-         msg = "Exceeded target...quitting\n";
-         break  # Quit.
+         msg = "Exceeded target...quitting\n"
+         break
       end
 
       # Stopping Test 2 - too many f-evals?
-      if nf >= max_evals
-         msg = "Max no. of function evaluations exceeded...quitting\n";
-         break  # Quit.
+      if n_evals >= max_evals
+         msg = "Maximum function evaluations exceeded...quitting\n"
+         break
       end
 
       # Stopping Test 3 - too many iterations?
-      if k > max_its
-         msg = "Max no. of iterations exceeded...quitting\n";
-         break  # Quit.
+      if n_iters > max_its
+         msg = "Max no. of iterations exceeded...quitting\n"
+         break
       end
 
       # Stopping Test 4 - converged?   This is test (4.3) in [1].
-      v1 = V[:,1];
-      size_simplex = sum(abs.(V[:, 2:n+1] .- v1)) / max(1.0, sum(abs.(v1)));
+      best         = simplex[:,1]
+      size_simplex = sum(abs.(simplex[:, 2:end] .- best)) / max(1.0, sum(abs.(best)))
       if size_simplex <= tol
-         msg = "Simplex size $(round(size_simplex, sigdigits=5)) <= $(round(tol, sigdigits=5))...quitting\n"
+         msg = @sprintf("Converged: simplex size %.5g ≤ %.5g", size_simplex, tol)
          converged = true
-         break  # Quit.
+         break
       end
 
-      #  One step of the Nelder-Mead simplex algorithm
-      #  NJH: Altered function calls and changed CNT to NF.
-      #       Changed each `fr < f[1]' type test to `>' for maximization
-      #       and re-ordered function values after sort.
+      # -- One Nelder-Mead step --------------------------------------------------------------------
+      worst    = simplex[:, end]
+      centroid = vec(sum(simplex[:, 1:n], dims=2) ./ n)
+      
+      # Reflection
+      v_reflect = (1 + α) .* centroid - α .* worst 
+      f_reflect = fun(v_reflect)
+      n_evals   = n_evals + 1
 
-      vbar = sum(V[:, 1:n], dims=2) ./ n;  # Mean value
-      vr = (1 + alpha)*vbar - alpha*V[:,n+1]; x[:] = vr; fr = fun(x);
-      nf = nf + 1;
-      vk = vr;  fk = fr; how = "reflect, ";
-      if fr > f[n]
-               if fr > f[1]
-                  ve = gamma*vr + (1-gamma)*vbar; x[:] = ve; fe = fun(x);
-                  nf = nf + 1;
-                  if fe > f[1]
-                     vk = ve; fk = fe;
-                     how = "expand,  ";
-                  end
-               end
+      step_name = "reflect, "
+      v_new     = v_reflect
+      f_new     = f_reflect
+
+      if f_reflect > fvals[n]
+         if f_reflect > fvals[1]
+            # Expansion: try to go further in the reflection direction
+            v_expand = γ .* v_reflect .+ (1 - γ) .* centroid
+            f_expand = fun(v_expand)
+            n_evals  = n_evals + 1
+            if f_expand > fvals[1]
+               v_new     = v_expand
+               f_new     = f_expand
+               step_name = "expand,  "
+            end
+         end
       else
-               vt = V[:,n+1]; ft = f[n+1];
-               if fr > ft
-                  vt = vr;  ft = fr;
-               end
-               vc = beta*vt + (1-beta)*vbar; x[:] = vc; fc = fun(x);
-               nf = nf + 1;
-               if fc > f[n]
-                  vk = vc; fk = fc;
-                  how = "contract,";
-               else
-                  for j = 2:n
-                     V[:,j] = (V[:,1] + V[:,j])/2;
-                     x[:] = V[:,j]; f[j] = fun(x);
-                  end
-                  nf = nf + n-1;
-                  vk = (V[:,1] + V[:,n+1])/2; x[:] = vk; fk = fun(x);
-                  nf = nf + 1;
-                  how = "shrink,  ";
-               end
-      end
-      V[:,n+1] = vk;
-      f[n+1] = fk;
-      j = sortperm(f[:]);
-      temp = f[j];
-      j = j[n+1:-1:1];
-      f = f[j]; V = V[:,j];
+         # Contraction: stay closer to the centroid
+         v_contract_base = f_reflect > fvals[end] ? v_reflect : worst
 
-   end   ###### End of outer (and only) loop.
+         v_contract = β .* v_contract_base .+ (1 - β) .* centroid
+         f_contract = fun(v_contract)
+         n_evals    = n_evals + 1
+
+         if f_contract > fvals[n]
+            v_new     = v_contract  
+            f_new     = f_contract
+            step_name = "contract, "
+         else
+            for j in 2:n
+               # Shrink: pull all vertices (except best) halfway toward best
+               simplex[:, j] = (best .+ simplex[:, j]) ./ 2
+               fvals[j]      = fun(simplex[:, j])
+            end
+            n_evals   = n_evals + n - 1
+            v_new     = (best + worst) ./ 2
+            f_new     = fun(v_new)
+            n_evals   = n_evals + 1
+            step_name = "shrink,  "
+         end
+      end
+
+      # Replace worst vertex with the new candidate, then re-sort
+      simplex[:,end] = v_new
+      fvals[end]     = f_new
+      order   = sortperm(fvals, rev=true)
+      fvals   = fvals[order]
+      simplex = simplex[:, order]
+   end
 
    # Finished.
-   if trace
-      println(msg)
-   end
-   x[:] = V[:,1];
+   trace && println(msg)
 
-   return x, fmax, nf, k-1, converged
+   return simplex[:, 1], fvals[1], n_evals, n_iters, converged
 end
 
 end
