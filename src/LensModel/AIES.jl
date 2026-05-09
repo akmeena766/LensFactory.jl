@@ -70,13 +70,13 @@ function aies_runner(log_posterior::Function,
    
 
    # -----------------------------------------------------------------------------------------------
-   # Per-thread RNGs
-   # Each thread gets its own RNG independently seeded from the master rng.
-   # This avoids data races in @threads blocks while keeping the run reproducible
-   # when a seeded master rng is supplied.
+   # Per-walker RNGs
+   # Each walker gets its own RNG independently seeded from the master rng.
+   # Indexed by k (1:n_active) inside @threads — avoids threadid() which is
+   # unstable under Julia >=1.9's task scheduler and can exceed nthreads(),
+   # causing a BoundsError on a per-thread RNG vector.
    # -----------------------------------------------------------------------------------------------
-   nt   = nthreads()
-   rngs = [Xoshiro(rand(rng, UInt64)) for _ in 1:nt]
+   walker_rngs = [Xoshiro(rand(rng, UInt64)) for _ in 1:n_walkers]
 
    
    # -----------------------------------------------------------------------------------------------
@@ -139,16 +139,15 @@ function aies_runner(log_posterior::Function,
          # -- Parallel proposal generation ---------------------------------------------------------
          # Using thread local RNGs         
          @threads for k in 1:n_active
-            tid    = threadid()
             walker = active[k]
             
             # Stretch move: sample Z ~ g(z) ∝ 1/√z on [1/a, a]
-            U     = rand(rngs[tid])
+            U     = rand(walker_rngs[k])
             z     = ((a - 1) * U + 1)^2 / a
             zs[k] = z
 
             # Pick random partner from the complemetary (inactive) set
-            j = rand(rngs[tid], inactive)
+            j = rand(walker_rngs[k], inactive)
 
             # Proposal: Y = X_j + Z(X_i - X_j)
             @views new_positions[:, k] .= x[:, j] + z * (x[:, walker] - x[:, j])

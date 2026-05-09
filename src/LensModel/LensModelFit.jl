@@ -285,7 +285,7 @@ function run_mcmc(model::ModelConfig, mcmc_config::MHConfig, param_ref::Dict{Tup
 end
 
 function run_mcmc(model::ModelConfig, mcmc_config::AIESConfig, param_ref::Dict{Tuple{Symbol,Symbol},Float64}, θ_start::Vector{Vector{Float64}}, verbose::Bool)
-   return AIES.aies_runner(x -> log_posterior(model, x, param_ref), θ_start, mcmc_config.n_steps, mcmc_config.a)
+   return AIES.aies_runner(x -> log_posterior(model, x, param_ref), θ_start, mcmc_config.n_steps; a=mcmc_config.a)
 end
 
 function run_mcmc(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},Float64}, θ_start::Union{Nothing, Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}}, verbose::Bool)   
