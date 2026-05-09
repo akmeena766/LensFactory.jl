@@ -13,50 +13,49 @@ export nmsmax
 
 
 # """
-#     nmsmax(fun, x[, trace = true, initial_simplex = 0, target_f = Inf, max_its = Inf, max_evals = Inf, tol = 1e-3])
+#     nmsmax(fun, x;
+#                   tol::Float64            = 1e-3,
+#                   target_f::Float64       = Inf,
+#                   max_its::Real           = Inf,
+#                   max_evals::Real         = Inf,
+#                   initial_simplex::Symbol = :regular,
+#                   trace::Bool             = false)  
 
-# Nelder-Mead simplex method for direct search optimization.
+# Nelder-Mead simplex method for direct search **maximization**. This function attempts to maximize
+# the function `fun`, using the starting vector `x`. Adapted from the original **MATLAB** source by 
+# Nick Higham.
 
-# This function attempts to maximize the function `fun`, using the
-# starting vector `x`. The Nelder-Mead direct search method is used.
+# # Arguments
+# - `fun`: Objective function to maximize, called as `fun(v::Vector)`
+# - `x`:   Initial vector guess.
 
-# Adaption of the original *MATLAB* source by Nick Higham to *Julia*.
+# # Keyword arguments
+# - `tol::Float64 = 1e-3`:            Convergence tolerance on relative simplex size
+# - `target_f::Float64 = Inf`:        Stop early if `fmax` reaches or exceeds this value
+# - `max_its::Real = Inf`:            Maximum number of iterations
+# - `max_evals::Real = Inf`:          Maximum number of function evaluations
+# - `initial_simplex::Symbol = :regular`: `:regular` (equal-length edges) or `:right_angle`
+# - `trace::Bool = false`:            Print iteration progress when `true`
 
-# Output arguments:
-#       `x`    = vector yielding largest function value found,
-#       `fmax` = function value at `x`,
-#       `nf`   = number of function evaluations,
-#       `its`  = number of iterations required.
+# # Returns
+# - `x`:         Vector yielding the largest function value found
+# - `fmax`:      Corresponding function value
+# - `n_evals`:   Total number of function evaluations
+# - `n_iters`:   Number of iterations performed
+# - `converged`: `true` if the simplex-size tolerance was met
 
-# Parameters:
-# The iteration is terminated when either
-#  - the relative size of the simplex is <= `tol`
-#    (default `1e-3`),
-#  - max_evals function evaluations have been performed
-#    (default `Inf`, i.e., no limit), or
-#  - a function value equals or exceeds `target_f`
-#    (default `Inf`, i.e., no test on function values).
-
-# The form of the initial simplex is determined by initial_simplex:
-#  - `initial_simplex = 0`: regular simplex (sides of equal length, the default)
-#  - `initial_simplex = 1`: right-angled simplex.
-# Progress of the iteration is not shown if `trace = true` (default `false`).
-
-# References:
-#  - N. J. Higham. The Matrix Computation Toolbox.
-#    http://www.ma.man.ac.uk/~higham/mctoolbox.
-#  - N. J. Higham, Optimization by direct search in matrix computations,
-#    SIAM J. Matrix Anal. Appl, 14(2): 317-333, 1993.
-#  - C. T. Kelley, Iterative Methods for Optimization, Society for Industrial
-#    and Applied Mathematics, Philadelphia, PA, 1999.
+# # References
+#  - N. J. Higham. The Matrix Computation Toolbox (http://www.ma.man.ac.uk/~higham/mctoolbox).
+#  - N. J. Higham, Optimization by direct search in matrix computations, SIAM J. Matrix Anal. Appl, 14(2): 317-333, 1993.
+#  - C. T. Kelley, Iterative Methods for Optimization, SIAM, 1999.
 # """
 function nmsmax(fun, x; 
-                tol::Float64            = 1e-3,
-                target_f::Float64       = Inf,
-                max_its::Real           = Inf,
-                max_evals::Real         = Inf,
-                initial_simplex::Symbol = :regular,
-                trace::Bool             = false)
+                       tol::Float64            = 1e-3,
+                       target_f::Float64       = Inf,
+                       max_its::Real           = Inf,
+                       max_evals::Real         = Inf,
+                       initial_simplex::Symbol = :regular,
+                       trace::Bool             = false)
    # flatten to 1-D; x itself is never mutated or written back
    x0 = x[:]
    n  = length(x0)
