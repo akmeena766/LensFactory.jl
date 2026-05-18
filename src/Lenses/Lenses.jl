@@ -46,7 +46,7 @@ include("./MultiPJELens.jl")
 
 
 # --------------------------------------------------------------------------------------------------
-# Various lensing function to export
+# Functions to export
 # --------------------------------------------------------------------------------------------------
 export get_meshgrid
 export get_critical_density
