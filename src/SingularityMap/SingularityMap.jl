@@ -45,6 +45,13 @@ function from_jacobian(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T) where T <: Mat
    _gradeigen!(de1, de2, e1, e2)
 
    # Get extrema
+   nex1::Int64 = 0
+   nex2::Int64 = 0
+   rex1 = Matrix{Float64}(undef, Int(nx*ny/8), 2)
+   rex2 = Matrix{Float64}(undef, Int(nx*ny/8), 2)
+   _extrema!(nex1, rex1, de1)
+   _extrema!(nex2, rex2, de2)
+
    
 end
 
