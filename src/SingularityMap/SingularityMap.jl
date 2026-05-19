@@ -23,15 +23,29 @@ export from_jacobian
 
 
 function from_jacobian(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T) where T <: Matrix{Float64}
+   # Dimensions
+   nx, ny = size(θx)
+
    # Construct a single 3D array for jacobian
-   ddf = Array{Float64}(undef, size(ψxx, 1), size(ψxx, 2), 3)
+   ddf = Array{Float64}(undef, nx, ny, 3)
    ddf[:, :, 1] = ψxx
    ddf[:, :, 2] = ψyy
    ddf[:, :, 3] = ψxy
 
    # Get eigenvalues and eigenvectors
+   e1 = Matrix{Float64}(undef, nx, ny)
+   e2 = Matrix{Float64}(undef, nx, ny)
+   q1 = Array{Float64}(undef, nx, ny, 2)
+   q2 = Array{Float64}(undef, nx, ny, 2)
+   _eigen!(e1, e2, q1, q2, ddf)
 
    # Get gradient of eigenvalues
+   de1 = Array{Float64}(undef, nx, ny, 2)
+   de2 = Array{Float64}(undef, nx, ny, 2)
+   _gradeigen!(de1, de2, e1, e2)
+
+   # Get extrema
+   
 end
 
 

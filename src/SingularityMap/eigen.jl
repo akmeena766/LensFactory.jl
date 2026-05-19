@@ -52,6 +52,15 @@ function _eigen!(e1::T, e2::T, q1::S, q2::S, ddf::S) where {T <: Matrix{Float64}
    return nothing
 end
 
-function _gradeigen()
-
+function _gradeigen!(de1::S, de2::S, e1::T, e2::T) where {T <: Matrix{Float64}, S <: Array{Float64, 3}}
+   ax1, ax2 = axes(ddf, 1)[4:end-3], axes(ddf, 2)[4:end-3]
+   @inbounds for j in ax2
+      @inbounds for i in ax1
+         de1[i, j, 1] = 0.5 * (e1[i+1, j] - e1[i-1, j])
+         de1[i, j, 2] = 0.5 * (e1[i, j+1] - e1[i, j-1])
+         de2[i, j, 1] = 0.5 * (e2[i+1, j] - e2[i-1, j])
+         de2[i, j, 2] = 0.5 * (e2[i, j+1] - e2[i, j-1])
+      end
+   end
+   return nothing
 end
