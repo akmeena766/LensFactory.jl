@@ -108,11 +108,71 @@ function _extrema!(nex::Int64, rex::Matrix{Float64}, de1::Array{Float64, 3})
 end
 
 
-function _minima!()
-   
+function _maxima!(nmax::Int64, rmax::Matrix{Float64}, e1::Matrix{Float64}, nex::Int64, rex::Matrix{Float64})
+   nx, ny = size(e1)
+   half_x = 0.5 * nx
+   half_y = 0.5 * ny
+
+   ntemp = 0
+   @inbounds for ii in 1:nex
+      i0 = Int(rex[ii, 1] + 0.5)
+      j0 = Int(rex[ii, 2] + 0.5)
+      for k1 in i0-1:i0+1
+         for k2 in j0-1:j0+1
+            i = k1
+            j = k2
+            l = 0
+            for i1 in -2:2
+               for i2 in -2:2
+                  if i1 ≠ 0 || i2 ≠ 0
+                     j1 = i1 + i
+                     j2 = i2 + j
+                     if e1[i, j] > e1[j1, j2]
+                        l = l + 1
+                     end
+                  end
+               end
+            end
+            if l == 24
+               ntemp = ntemp + 1
+               rtemp[ntemp, 1] = float(i)
+               rtemp[ntemp, 2] = float(j)
+            end
+         end
+      end
+   end
+
+   i = 1
+   nmax = 1
+   for l in 1:2
+      rmax[nmax, l] = rtemp[i, l]
+   end
+   for i in 2:ntemp
+      ii = 0
+      for j in 1:i-1
+         d = 0.0
+         for l in 1:2
+            dx = abs(rtemp[i, l] - rtemp[j, l])
+            if dx ≥ half_x
+               dx = nx - dx
+            end
+            d = d + dx^2
+         end
+         if d < 2.0
+            ii = 1
+         end
+      end
+      if ii == 0
+         nmax = nmax + 1
+         for l in 1:2
+            rmax[nmax, l] = rtemp[i, l]
+         end
+      end
+   end
+   return nothing
 end
 
 
-function _maxima!()
+function _minima!()
    
 end

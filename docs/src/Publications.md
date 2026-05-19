@@ -9,9 +9,7 @@ publications into multiple categories based on the use cases.
 
 
 ## Basic lensing
-1. AAAA 
-1. BBBB
+1. Meena, A. K., Saha, P., *Beyond collective fluctuations: probing micro-image swarms in lensed quasars with intensity interferometry*, [arXiv:2605.02181](https://ui.adsabs.harvard.edu/abs/2026arXiv260502181M).
 
 ## Lens modelling
-1. CCCC
-1. DDDD
+1. Coming soon
