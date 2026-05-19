@@ -173,6 +173,6 @@ function _maxima!(nmax::Int64, rmax::Matrix{Float64}, e1::Matrix{Float64}, nex::
 end
 
 
-function _minima!()
-   
+function _minima!(nmin::Int64, rmin::Matrix{Float64}, e1::Matrix{Float64}, nex::Int64, rex::Matrix{Float64})
+   return nothing
 end
