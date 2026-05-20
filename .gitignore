@@ -27,5 +27,6 @@ Manifest.toml
 LocalPreferences.toml
 JuliaLocalPreferences.toml
 
-# Ignore .DS_Store
+# Ignore .DS_Store and vscode files
 .DS_Store
+/.vscode

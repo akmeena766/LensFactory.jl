@@ -114,6 +114,7 @@ function _maxima!(nmax::Int64, rmax::T, e1::T, nex::Int64, rex::T) where T <: Ma
    half_y = 0.5 * ny
 
    ntemp = 0
+   rtemp = Matrix{Float64}(undef, Int(nx*ny/8), 2)
    @inbounds for ii in 1:nex
       i0 = Int(rex[ii, 1] + 0.5)
       j0 = Int(rex[ii, 2] + 0.5)
@@ -179,6 +180,7 @@ function _minima!(nmin::Int64, rmin::T, e1::T, nex::Int64, rex::T) where T <: Ma
    half_y = 0.5 * ny
 
    ntemp = 0
+   rtemp = Matrix{Float64}(undef, Int(nx*ny/8), 2)
    @inbounds for ii in 1:nex
       i0 = Int(rex[ii, 1] + 0.5)
       j0 = Int(rex[ii, 2] + 0.5)
