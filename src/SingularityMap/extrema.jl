@@ -9,18 +9,18 @@ function _extrema!(nex::Int64, rex::Matrix{Float64}, de1::Array{Float64, 3})
    k21 = 0
    k22 = 0
 
-   xex1 = Matrix{Float64}(undef, Int(nx*ny/8), 2)
-   yex1 = Matrix{Float64}(undef, Int(nx*ny/8), 2)
-   xex2 = Matrix{Float64}(undef, Int(nx*ny/8), 2)
-   yex2 = Matrix{Float64}(undef, Int(nx*ny/8), 2)
+   xex1 = zeros(Float64, round(Int64, nx*ny/8), 2)
+   yex1 = zeros(Float64, round(Int64, nx*ny/8), 2)
+   xex2 = zeros(Float64, round(Int64, nx*ny/8), 2)
+   yex2 = zeros(Float64, round(Int64, nx*ny/8), 2)
 
-   is11 = zeros(Int64, Int(nx*ny/8))
-   is12 = zeros(Int64, Int(nx*ny/8))
-   is21 = zeros(Int64, Int(nx*ny/8))
-   is22 = zeros(Int64, Int(nx*ny/8))
+   is11 = zeros(Int64, round(Int64, nx*ny/8))
+   is12 = zeros(Int64, round(Int64, nx*ny/8))
+   is21 = zeros(Int64, round(Int64, nx*ny/8))
+   is22 = zeros(Int64, round(Int64, nx*ny/8))
 
    nex = 0
-   rex = Matrix{Float64}(undef, Int(nx*ny/8), 2)
+   rex = zeros(Float64, round(Int64, nx*ny/8), 2)
 
    ax1, ax2 = axes(de1, 1)[4:end-3], axes(de1, 2)[4:end-3]
    @inbounds for j in ax2
@@ -104,7 +104,7 @@ function _extrema!(nex::Int64, rex::Matrix{Float64}, de1::Array{Float64, 3})
          end
       end
    end
-   return nothing
+   return nex
 end
 
 
@@ -114,10 +114,10 @@ function _maxima!(nmax::Int64, rmax::T, e1::T, nex::Int64, rex::T) where T <: Ma
    half_y = 0.5 * ny
 
    ntemp = 0
-   rtemp = Matrix{Float64}(undef, Int(nx*ny/8), 2)
+   rtemp = zeros(Float64, round(Int64, nx*ny/8), 2)
    @inbounds for ii in 1:nex
-      i0 = Int(rex[ii, 1] + 0.5)
-      j0 = Int(rex[ii, 2] + 0.5)
+      i0 = round(Int64, rex[ii, 1])
+      j0 = round(Int64, rex[ii, 2])
       for k1 in i0-1:i0+1
          for k2 in j0-1:j0+1
             i = k1
@@ -180,10 +180,10 @@ function _minima!(nmin::Int64, rmin::T, e1::T, nex::Int64, rex::T) where T <: Ma
    half_y = 0.5 * ny
 
    ntemp = 0
-   rtemp = Matrix{Float64}(undef, Int(nx*ny/8), 2)
+   rtemp = zeros(Float64, round(Int64, nx*ny/8), 2)
    @inbounds for ii in 1:nex
-      i0 = Int(rex[ii, 1] + 0.5)
-      j0 = Int(rex[ii, 2] + 0.5)
+      i0 = round(Int64, rex[ii, 1])
+      j0 = round(Int64, rex[ii, 2])
       for k1 in i0-1:i0+1
          for k2 in j0-1:j0+1
             i = k1

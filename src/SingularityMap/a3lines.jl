@@ -1,4 +1,4 @@
-function _a3lines!(na3::Int64, ra3::T, e::Matrix{Float64}, de::T, q::T) where T<:Array{Float64,3}
+function _a3lines!(na3::Int64, ra3::T, e::T, de::S, q::S) where {T <: Matrix{Float64}, S <: Array{Float64,3}}
    # Local variables
    nx, ny = size(e)
 

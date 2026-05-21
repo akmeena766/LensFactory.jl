@@ -1,6 +1,6 @@
 function _eigen!(e1::T, e2::T, q1::S, q2::S, ddf::S) where {T <: Matrix{Float64}, S <: Array{Float64,3}}
    # Initilize local variables
-   tidal = Matrix{Float64}(undef, 2, 2)
+   tidal = zeros(Float64, 2, 2)
    
    # Calculate eigenvalues and eigenvectors
    ax1, ax2 = axes(ddf, 1)[4:end-3], axes(ddf, 2)[4:end-3]
@@ -53,13 +53,33 @@ function _eigen!(e1::T, e2::T, q1::S, q2::S, ddf::S) where {T <: Matrix{Float64}
 end
 
 function _gradeigen!(de1::S, de2::S, e1::T, e2::T) where {T <: Matrix{Float64}, S <: Array{Float64, 3}}
-   ax1, ax2 = axes(ddf, 1)[4:end-3], axes(ddf, 2)[4:end-3]
+   ax1, ax2 = axes(e1, 1)[4:end-3], axes(e1, 2)[4:end-3]
    @inbounds for j in ax2
       @inbounds for i in ax1
          de1[i, j, 1] = 0.5 * (e1[i+1, j] - e1[i-1, j])
          de1[i, j, 2] = 0.5 * (e1[i, j+1] - e1[i, j-1])
          de2[i, j, 1] = 0.5 * (e2[i+1, j] - e2[i-1, j])
          de2[i, j, 2] = 0.5 * (e2[i, j+1] - e2[i, j-1])
+      end
+   end
+
+   # Normalize the eigen values
+   @inbounds for j in ax2
+      @inbounds for i in ax1
+         de1mag=0.0
+         de2mag=0.0
+         for l in 1:2
+            de1mag=de1mag + de1[i, j, l] * de1[i, j, l]
+            de2mag=de2mag + de2[i, j, l] * de2[i, j, l]
+         end   
+         de1mag=sqrt(de1mag)
+         de2mag=sqrt(de2mag)
+         if de1mag ≠ 0.0 && de2mag ≠ 0.0
+            for l in 1:2
+               de1[i, j, l] = de1[i, j, l] / de1mag
+               de2[i, j, l] = de2[i, j, l] / de2mag
+            end
+         end
       end
    end
    return nothing
