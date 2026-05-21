@@ -1,8 +1,9 @@
-function _extrema!(nex::Int64, rex::Matrix{Float64}, de1::Array{Float64, 3})
+function _extrema!(nex::Int64, rex::Matrix{Float64}, de::Array{Float64, 3})
    # Local variables
-   nx, ny = size(de1, 1), size(de1, 2)
+   nx, ny = size(de, 1), size(de, 2)
    half_x = 0.5 * nx
    half_y = 0.5 * ny
+
    l   = 0
    k11 = 0
    k12 = 0
@@ -19,40 +20,37 @@ function _extrema!(nex::Int64, rex::Matrix{Float64}, de1::Array{Float64, 3})
    is21 = zeros(Int64, round(Int64, nx*ny/8))
    is22 = zeros(Int64, round(Int64, nx*ny/8))
 
-   nex = 0
-   rex = zeros(Float64, round(Int64, nx*ny/8), 2)
-
-   ax1, ax2 = axes(de1, 1)[4:end-3], axes(de1, 2)[4:end-3]
+   ax1, ax2 = axes(de, 1)[4:end-3], axes(de, 2)[4:end-3]
    @inbounds for j in ax2
       @inbounds for i in ax1
          l  = 1
-         j1 = i + 1
-         if de1[j1, j, l] * de1[i, j, l] ≤ 0.0
+         i1 = i + 1
+         if de[i1, j, l] * de[i, j, l] ≤ 0.0
             k11  = k11 + 1
-            xex1[k11, 1] = float(i) - de1[i, j, l] / (de1[j1, j, l] - de1[i, j, l])
+            xex1[k11, 1] = float(i) - de[i, j, l] / (de[i1, j, l] - de[i, j, l])
             yex1[k11, 1] = float(j)
          end
          
          j1 = j + 1
-         if de1[i, j1, l] * de1[i, j, l] ≤ 0.0
+         if de[i, j1, l] * de[i, j, l] ≤ 0.0
             k12  = k12 + 1
             xex2[k12, 1] = float(i)
-            yex2[k12, 1] = float(j) - de1[i, j, l] / (de1[i, j1, l] - de1[i, j, l])
+            yex2[k12, 1] = float(j) - de[i, j, l] / (de[i, j1, l] - de[i, j, l])
          end
          
          l = 2
-         j1 = i + 1
-         if de1[j1, j, l] * de1[i, j, l] ≤ 0.0
+         i1 = i + 1
+         if de[j1, j, l] * de[i, j, l] ≤ 0.0
             k21 = k21 + 1
-            xex1[k21, 2] = float(i) - de1[i, j, l] / (de1[j1, j, l] - de1[i, j, l])
+            xex1[k21, 2] = float(i) - de[i, j, l] / (de[i1, j, l] - de[i, j, l])
             yex1[k21, 2] = float(j)
          end
          
          j1 = j + 1
-         if de1[i, j1, l] * de1[i, j, l] ≤ 0.0
+         if de[i, j1, l] * de[i, j, l] ≤ 0.0
             k22 = k22 + 1
             xex2[k22, 2] = float(i)
-            yex2[k22, 2] = float(j) - de1[i, j, l] / (de1[i, j1, l] - de1[i, j, l])
+            yex2[k22, 2] = float(j) - de[i, j, l] / (de[i, j1, l] - de[i, j, l])
          end
       end
    end

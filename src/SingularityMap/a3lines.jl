@@ -6,7 +6,7 @@ function _a3lines!(na3::Int64, ra3::T, e::T, de::S, q::S) where {T <: Matrix{Flo
    dot2::Float64 = 0.0
    sign::Float64 = 0.0
 
-   ax1, ax2 = axes(e, 1)[4:end-3], axes(e, 2)[4:end-3]
+   ax1, ax2 = axes(e, 1)[10:end-9], axes(e, 2)[10:end-9]
    @inbounds for j in ax2
       @inbounds for i in ax1
          k = i + 1
@@ -17,7 +17,7 @@ function _a3lines!(na3::Int64, ra3::T, e::T, de::S, q::S) where {T <: Matrix{Flo
          if dot1 < 0.0
             sign = -1.0
          else
-            sign = 1.0
+            sign = +1.0
          end
          dot1 = 0.0
          dot2 = 0.0
@@ -39,7 +39,7 @@ function _a3lines!(na3::Int64, ra3::T, e::T, de::S, q::S) where {T <: Matrix{Flo
          if dot1 < 0.0
             sign = -1.0
          else
-            sign = 1.0
+            sign = +1.0
          end
          dot1 = 0.0
          dot2 = 0.0
@@ -54,5 +54,5 @@ function _a3lines!(na3::Int64, ra3::T, e::T, de::S, q::S) where {T <: Matrix{Flo
          end
       end
    end
-   return nothing
+   return na3
 end

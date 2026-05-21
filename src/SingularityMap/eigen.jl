@@ -64,13 +64,15 @@ function _gradeigen!(de1::S, de2::S, e1::T, e2::T) where {T <: Matrix{Float64}, 
    end
 
    # Normalize the eigen values
+   de1mag::Float64 = 0.0
+   de2mag::Float64 = 0.0
    @inbounds for j in ax2
       @inbounds for i in ax1
-         de1mag=0.0
-         de2mag=0.0
+         de1mag = 0.0
+         de2mag = 0.0
          for l in 1:2
-            de1mag=de1mag + de1[i, j, l] * de1[i, j, l]
-            de2mag=de2mag + de2[i, j, l] * de2[i, j, l]
+            de1mag = de1mag + de1[i, j, l] * de1[i, j, l]
+            de2mag = de2mag + de2[i, j, l] * de2[i, j, l]
          end   
          de1mag=sqrt(de1mag)
          de2mag=sqrt(de2mag)
