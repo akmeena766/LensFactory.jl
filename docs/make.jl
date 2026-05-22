@@ -15,9 +15,9 @@ makedocs(
                             prettyurls = get(ENV, "CI", nothing) == "true"),
     pages = [
             "Home" => "index.md",
-            "Constants" => "Constants.md",
-            "Cosmology" => "Cosmology.md",
-            "Lenses" => [
+            "Constants"      => "Constants.md",
+            "Cosmology"      => "Cosmology.md",
+            "Lenses"         => [
                         "General"                      => "Lenses.md",
                         "Point Lens"                   => "PointLens.md",
                         "Plummer Lens"                 => "PlummerLens.md",
@@ -46,20 +46,21 @@ makedocs(
                         "Multi-PJE Lens"               => "MultiPJELens.md",
                         "Composite Lens"               => "CompositeLens.md"
                         ],
-            "MultiPlane" => "MultiPlane.md",
-            "Sources" => "Sources.md",
-            "LensModel" => [
+            "MultiPlane"     => "MultiPlane.md",
+            "Sources"        => "Sources.md",
+            "LensModel"      => [
                         "General"    => "LensModel.md",
                         "Parametric" => "LensModel_Parametric.md"
                         ],
-            "LFUtils" => "LFUtils.md",
+            "SingularityMap" => "SingularityMap.md",
+            "LFUtils"        => "LFUtils.md",
             "Plot Extension" => [
                         "General"       => "PlotExt_Lenses.md",
                         "Multi-Plane"   => "PlotExt_MultiPlane.md",
                         "Lens Modeling" => "PlotExt_LensModel.md"
                         ],
-            "Publications" => "Publications.md",
-            "History" => "History.md",
+            "Publications"   => "Publications.md",
+            "History"        => "History.md",
         ]
 )
 

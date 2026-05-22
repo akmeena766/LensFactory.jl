@@ -83,9 +83,8 @@ function plot_magnification_profile end
 
 """
     get_meshgrid(θx::RV, θy::RV, dθ::RV)
-Generate a meshgrid of coordinates on which various quantities can be evaluated. At present,
-this function only generates square pixels. In future if the need arises, it can be extended 
-to generate rectangular pixels as well.
+Generate a meshgrid of coordinates on which various quantities can be evaluated. At present, this 
+function only generates square pixels.
 
 # Arguments
    - `θx::RV`: Half-size of the grid in x-direction (in ``\\rm \\mathbf{arcseconds}``)
