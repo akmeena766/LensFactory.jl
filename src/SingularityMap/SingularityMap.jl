@@ -26,6 +26,8 @@ export from_jacobian
 include("./eigen.jl")
 include("./extrema.jl")
 include("./a3lines.jl")
+include("./a4points.jl")
+include("./d4points.jl")
 
 
 function from_jacobian(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T) where T <: Matrix{Float64}
@@ -58,8 +60,15 @@ function from_jacobian(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T) where T <: Mat
    ra32 = zeros(Float64, round(Int64, nx*ny/8), 2)
    na31 = _a3lines!(na31, ra31, e1, de1, q1)
    na32 = _a3lines!(na32, ra32, e2, de2, q2)
-   @show na31, na32
-   return na31, na32, ra31, ra32
+
+   # Get A4 points
+
+   # Get D4 points
+   nd4::Int64 = 0
+   rd4 = zeros(Float64, round(Int64, nx*ny/8), 2)
+   nd4 = _d4points(nd4, rd4, ddf)
+
+   return na31, na32, ra31, ra32, nd4, rd4
 
 
    # # Get extrema, minima, and maxima points
