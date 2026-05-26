@@ -12,7 +12,7 @@ function _a3lines!(na3::Int64, ra3::T, e::T, de::S, q::S) where {T <: Matrix{Flo
          k = i + 1
          dot1 = 0.0
          for l in 1:2
-            dot1 = dot1 + q[i, j, l] * q[k, j, l]
+            dot1 = dot1 + q[l, i, j] * q[l, k, j]
          end
          if dot1 < 0.0
             sign = -1.0
@@ -22,19 +22,19 @@ function _a3lines!(na3::Int64, ra3::T, e::T, de::S, q::S) where {T <: Matrix{Flo
          dot1 = 0.0
          dot2 = 0.0
          for l in 1:2
-            dot1 = dot1 +        q[i, j, l] * de[i, j, l]
-            dot2 = dot2 + sign * q[k, j, l] * de[k, j, l]
+            dot1 = dot1 +        q[l, i, j] * de[l, i, j]
+            dot2 = dot2 + sign * q[l, k, j] * de[l, k, j]
          end
          if dot1 * dot2 ≤ 0.0
             na3 = na3 + 1
-            ra3[na3, 1] = float(i) - dot1 / (dot2 - dot1)
-            ra3[na3, 2] = float(j)
+            ra3[1, na3] = float(i) - dot1 / (dot2 - dot1)
+            ra3[2, na3] = float(j)
          end
 
          k = j + 1
          dot1 = 0.0
          for l in 1:2
-            dot1 = dot1 + q[i, j, l] * q[i, k, l]
+            dot1 = dot1 + q[l, i, j] * q[l, i, k]
          end
          if dot1 < 0.0
             sign = -1.0
@@ -44,13 +44,13 @@ function _a3lines!(na3::Int64, ra3::T, e::T, de::S, q::S) where {T <: Matrix{Flo
          dot1 = 0.0
          dot2 = 0.0
          for l in 1:2
-            dot1 = dot1 +        q[i, j, l] * de[i, j, l]
-            dot2 = dot2 + sign * q[i, k, l] * de[i, k, l]
+            dot1 = dot1 +        q[l, i, j] * de[l, i, j]
+            dot2 = dot2 + sign * q[l, i, k] * de[l, i, k]
          end
          if dot1 * dot2 ≤ 0.0
             na3 = na3 + 1
-            ra3[na3, 1] = float(i)
-            ra3[na3, 2] = float(j) - dot1 / (dot2 - dot1)
+            ra3[1, na3] = float(i)
+            ra3[2, na3] = float(j) - dot1 / (dot2 - dot1)
          end
       end
    end
