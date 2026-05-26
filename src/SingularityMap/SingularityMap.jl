@@ -96,9 +96,7 @@ function _common(ddf::Array{Float64, 3}, θx::T, θy::T; adis::Float64=1.0, buff
    ra41 = zeros(Float64, 2, round(Int64, nx*ny/8))
    ra42 = zeros(Float64, 2, round(Int64, nx*ny/8))
    na41 = _a4points!(na41, ra41, e1, na31, ra31, nex1, rex1, nmax1, rmax1, nmin1, rmin1)
-   # na42 = _a4points!(na42, ra42, e2, na32, ra32, nex2, rex2, nmax2, rmax2, nmin2, rmin2)
-
-   # return ra31_ref[1:na31 :], ra32_ref[1:na32, :], ra41[1:na41, :], ra42[1:na42, :], rd4_ref[1:nd4, :]   
+   na42 = _a4points!(na42, ra42, e2, na32, ra32, nex2, rex2, nmax2, rmax2, nmin2, rmin2)
 
    # -----------------------------------------------------------------------------------------------
    # Get D4-points
@@ -116,8 +114,6 @@ function _common(ddf::Array{Float64, 3}, θx::T, θy::T; adis::Float64=1.0, buff
       e1_val = PolygonOps.bilinear_interpolation(ra31[1, i], ra31[2, i], e1)
       if adis * e1_val ≥ 1.0
          na31_ref = na31_ref + 1
-
-         # Convert from pixel to arcsecond
          θx_value = PolygonOps.bilinear_interpolation(ra31[1, i], ra31[2, i], θx)
          θy_value = PolygonOps.bilinear_interpolation(ra31[1, i], ra31[2, i], θy)
          ra31_ref[1, na31_ref] = θx_value
@@ -131,7 +127,6 @@ function _common(ddf::Array{Float64, 3}, θx::T, θy::T; adis::Float64=1.0, buff
       e2_val = PolygonOps.bilinear_interpolation(ra32[1, i], ra32[2, i], e2)
       if adis * e2_val ≥ 1.0
          na32_ref = na32_ref + 1
-
          θx_value = PolygonOps.bilinear_interpolation(ra32[1, i], ra32[2, i], θx)
          θy_value = PolygonOps.bilinear_interpolation(ra32[1, i], ra32[2, i], θy)
          ra32_ref[1, na32_ref] = θx_value
@@ -139,6 +134,31 @@ function _common(ddf::Array{Float64, 3}, θx::T, θy::T; adis::Float64=1.0, buff
       end
    end
 
+   na41_ref::Int64 = 0
+   ra41_ref = zeros(Float64, 2, round(Int64, nx*ny/8))
+   for i in 1:na41
+      e1_val = PolygonOps.bilinear_interpolation(ra41[1, i], ra41[2, i], e1)
+      if adis * e1_val ≥ 1.0
+         na41_ref = na41_ref + 1
+         θx_value = PolygonOps.bilinear_interpolation(ra41[1, i], ra41[2, i], θx)
+         θy_value = PolygonOps.bilinear_interpolation(ra41[1, i], ra41[2, i], θy)
+         ra41_ref[1, na41_ref] = θx_value
+         ra41_ref[2, na41_ref] = θy_value
+      end
+   end 
+   
+   na42_ref::Int64 = 0
+   ra42_ref = zeros(Float64, 2, round(Int64, nx*ny/8))
+   for i in 1:na42
+      e2_val = PolygonOps.bilinear_interpolation(ra42[1, i], ra42[2, i], e2)
+      if adis * e2_val ≥ 1.0
+         na42_ref = na42_ref + 1
+         θx_value = PolygonOps.bilinear_interpolation(ra42[1, i], ra42[2, i], θx)
+         θy_value = PolygonOps.bilinear_interpolation(ra42[1, i], ra42[2, i], θy)
+         ra42_ref[1, na42_ref] = θx_value
+         ra42_ref[2, na42_ref] = θy_value
+      end
+   end
 
    nd4_ref::Int64 = 0
    rd4_ref = zeros(Float64, 2, round(Int64, nx*ny/8))
@@ -147,7 +167,6 @@ function _common(ddf::Array{Float64, 3}, θx::T, θy::T; adis::Float64=1.0, buff
       e2_val = PolygonOps.bilinear_interpolation(rd4[1, i], rd4[2, i], e2)
       if adis * e1_val ≥ 1.0 && adis * e2_val ≥ 1.0
          nd4_ref = nd4_ref + 1
-
          θx_value = PolygonOps.bilinear_interpolation(rd4[1, i], rd4[2, i], θx)
          θy_value = PolygonOps.bilinear_interpolation(rd4[1, i], rd4[2, i], θy)
          rd4_ref[1, nd4_ref] = θx_value
@@ -155,7 +174,7 @@ function _common(ddf::Array{Float64, 3}, θx::T, θy::T; adis::Float64=1.0, buff
       end
    end
    
-   return ra31_ref[:, 1:na31_ref], ra32_ref[:, 1:na32_ref], rd4_ref[:, 1:nd4_ref]
+   return ra31_ref[:, 1:na31_ref], ra32_ref[:, 1:na32_ref], ra41_ref[:, 1:na41_ref], ra42_ref[:, 1:na42_ref], rd4_ref[:, 1:nd4_ref]
 end
 
 
@@ -175,9 +194,7 @@ function from_jacobian(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T; adis::Float64=
    ddf[3, :, :] = ψxy
 
    # Get singularity map
-   ra31, ra32, rd4 = _common(ddf, θx, θy; adis=adis, buffer=buffer)
-
-   return ra31, ra32, rd4
+   return _common(ddf, θx, θy; adis=adis, buffer=buffer)
 end
 
 
@@ -207,7 +224,7 @@ function from_lens(lens::Lenses.AbstractLens, θx::T, θy::T;
    ddf[3, :, :] = ψxy
 
    # Pass jacobian map to from_jacobian function
-   ra31, ra32, rd4 = _common(ddf, θx, θy; adis=adis, buffer=buffer)
+   ra31, ra32, ra41, ra42, rd4 = _common(ddf, θx, θy; adis=adis, buffer=buffer)
 
    return ra31, ra32, rd4
 end

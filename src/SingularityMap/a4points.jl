@@ -73,7 +73,7 @@ function _a4points!(na4::S, ra4::T, e::T, na3::S, ra3::T, nex::S, rex::T, nmax::
          link[2, i] = ie2
       end
       if isv[i] > 2
-         nd4 + nd4 + 1
+         nd4 = nd4 + 1
       end
    end
 
@@ -82,39 +82,44 @@ function _a4points!(na4::S, ra4::T, e::T, na3::S, ra3::T, nex::S, rex::T, nmax::
       if isv[i] == 2
          j1 = link[1, i]
          j2 = link[2, i]
-         k1 = link[1, j1]
-         if i == k1
-            k1 = link[2, j1]
-         end
-         k2 = link[1, j2]
-         if i == k2
-            k2 = link[2, j2]
-         end
-         l1 = link[1, k1]
-         if l1 == j1
-            l1 = link[2, k1]
-         end
-         l2 = link[1, k2]
-         if l2 == j2
-            l2 = link[2, k2]
-         end
-
          if j1 ≠ 0 && j2 ≠ 0
+            k1 = link[1, j1]
+            if i == k1
+               k1 = link[2, j1]
+            end
+            k2 = link[1, j2]
+            if i == k2
+               k2 = link[2, j2]
+            end
             if k1 ≠ 0 && k2 ≠ 0
+               l1 = link[1, k1]
+               if l1 == j1
+                  l1 = link[2, k1]
+               end
+               l2 = link[1, k2]
+               if l2 == j2
+                  l2 = link[2, k2]
+               end
                if l1 ≠ 0 && l2 ≠ 0
                   if ev[i] ≥ ev[j1] && ev[i] ≥ ev[j2]
                      if ev[i] ≥ ev[k1] && ev[i] ≥ ev[k2]
                         if ev[i] ≥ ev[l1] && ev[i] ≥ ev[l2]
                            ia4 = 0
-                           for k in 1:nlmax
+                           for k in 1:nmax
                               d = 0.0
-                              for l in 1:2
-                                 dx = abs(rmax[l, k] - ra3[l, i])
-                                 if dx > half_x
-                                    dx = nx - dx
-                                 end
-                                 d = d + dx * dx
+                              
+                              dx = abs(rmax[1, k] - ra3[1, i])
+                              if dx > half_x
+                                 dx = nx - dx
                               end
+                              d = d + dx * dx
+
+                              dy = abs(rmax[2, k] - ra3[2, i])
+                              if dy > half_y
+                                 dy = ny - dy
+                              end
+                              d = d + dy * dy
+
                               if d ≤ 2.0
                                  ia4 = 1
                               end
@@ -123,13 +128,19 @@ function _a4points!(na4::S, ra4::T, e::T, na3::S, ra3::T, nex::S, rex::T, nmax::
                            if ia4 == 0
                               for k in 1:nex
                                  d = 0.0
-                                 for l in 1:2
-                                    dx = abs(rex[l, k] - ra3[l, i])
-                                    if dx > half_x
-                                       dx = nx - dx
-                                    end
-                                    d = d + dx * dx
+                                 
+                                 dx = abs(rex[1, k] - ra3[1, i])
+                                 if dx > half_x
+                                    dx = nx - dx
                                  end
+                                 d = d + dx * dx
+
+                                 dy = abs(rex[2, k] - ra3[2, i])
+                                 if dy > half_y
+                                    dy = ny - dy
+                                 end
+                                 d = d + dy * dy
+
                                  if d ≤ 2.0
                                     nd4 = nd4 + 1
                                     rd4[1, nd4] = ra3[1, i]
@@ -152,15 +163,21 @@ function _a4points!(na4::S, ra4::T, e::T, na3::S, ra3::T, nex::S, rex::T, nmax::
                      if ev[i] ≤ ev[k1] && ev[i] ≤ ev[k2]
                         if ev[i] ≤ ev[l1] && ev[i] ≤ ev[l2]
                            ia4 = 0
-                           for k in 1:nlmin
+                           for k in 1:nmin
                               d = 0.0
-                              for l in 1:2
-                                 dx = abs(rmin[l, k] - ra3[l, i])
-                                 if dx > half_x
-                                    dx = nx - dx
-                                 end
-                                 d = d + dx * dx
+
+                              dx = abs(rmin[1, k] - ra3[1, i])
+                              if dx > half_x
+                                 dx = nx - dx
                               end
+                              d = d + dx * dx
+
+                              dy = abs(rmin[2, k] - ra3[2, i])
+                              if dy > half_y
+                                 dy = ny - dy
+                              end
+                              d = d + dy * dy
+                              
                               if d ≤ 2.0
                                  ia4 = 1
                               end
@@ -169,13 +186,19 @@ function _a4points!(na4::S, ra4::T, e::T, na3::S, ra3::T, nex::S, rex::T, nmax::
                            if ia4 == 0
                               for k in 1:nex
                                  d = 0.0
-                                 for l in 1:2
-                                    dx = abs(rex[l, k] - ra3[l, i])
-                                    if dx > half_x
-                                       dx = nx - dx
-                                    end
-                                    d = d + dx * dx
+                                 
+                                 dx = abs(rex[1, k] - ra3[1, i])
+                                 if dx > half_x
+                                    dx = nx - dx
                                  end
+                                 d = d + dx * dx
+
+                                 dy = abs(rex[2, k] - ra3[2, i])
+                                 if dy > half_y
+                                    dy = ny - dy
+                                 end
+                                 d = d + dy * dy
+
                                  if d ≤ 2.0
                                     nt = nt + 1
                                     rt[1, nt] = ra3[1, i]
