@@ -7,17 +7,17 @@ multiple sections. The overall structure of the input YAML file is described bel
 ```
 observation:
    modeler: LensFactory
-   lens: Galaxy
+   lens: WhoKnows
    z_d: ...
    reference: [0.0, 0.0]
    pixel_scale: ...
-   FOV: [5.0, 5.0]
+   FOV: ...
 
 cosmology:
-   H0: ...
-   Omega_m0: ...
-   Omega_r0: ...
-   Omega_w0: ...
+   H0: 70.0
+   Omega_m0: 0.30
+   Omega_r0: 0.00
+   Omega_w0: 0.70
 
 source:
    total_sources: S
