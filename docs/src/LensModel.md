@@ -66,12 +66,12 @@ lens_model:
       param2:
          value: p2v
          range: [p2l, p2u]
-      param3:
+      .
+      .
+      .
+      paramN:
          value: p3v
          range: [p3l, p3u]
-      .
-      .
-      .
    .
    .
    .
@@ -83,7 +83,7 @@ lens_model:
       .
 
 sampling:
-   scheme: sourceplane
+   scheme: SourcePlane
    verbose: true
    optimizer:
    mcmc:
@@ -128,42 +128,48 @@ The `source` section contains the details about the observed strongly lensed sou
 corresponding details can be specified in two ways, either directly in the YAML file or through a 
 seperate .txt file. Each source will have an associated redshift and a number of knots.
 
-
 - `total_sources`: **(mandatory)** Total number of sources.
 - `from_file`: **(optional)** Boolean value indicating whether the source model is read from a file 
    (default: false). If `true`, the source parameters will be read from the file specified in the 
    `source_file` keyword.
 - `source_file`: **(optional)** Path to the .txt file containing the source parameters. This keyword 
-   is only required when `from_file` is set to `true`. 
+   is only required when `from_file` is set to `true`. For each source, the only possible free
+   parameter is its redshifts. 
 - `source1`: Details of the first source.
-  - `z_s`:  **(mandatory)** Source redshift.
+  - `z_s`:  **(free)** Source redshift.
   - `total_knots`: **(mandatory)** Total number of strongly lensed knots within the source.
   - `knot1`: Details of the first knot.
-    - `x`: **(mandatory)** x-coordinates of the knots .
-    - `y`: **(mandatory)** y-coordinates of the knots .
-    - `sigma_x`: **(mandatory)** Standard deviation in x-coordinates .
-    - `sigma_y`: **(mandatory)** Standard deviation in y-coordinates .
-    - `sigma_theta`: **(mandatory)** Standard deviation in angles .
+    - `x`: **(mandatory)** x-coordinates of the knots.
+    - `y`: **(mandatory)** y-coordinates of the knots.
+    - `sigma_x`: **(mandatory)** x-component of error ellipse.
+    - `sigma_y`: **(mandatory)** x-component of error ellipse.
+    - `sigma_theta`: **(mandatory)** Angle of error ellipse (measure with respect to x-axis in 
+      anti-clockwise direction).
   - `. . .`
-  - `knotK`: Model for the last knot.
+  - `knotK`: Details of knotK of source1.
 - `. . .`
-- `sourceS`: Model for the last source.
+- `sourceS`: Details of sourceS.
 
-The format of the .txt file is as follows.
+The format of the source .txt file is as follows:
 ```julia
 | sourceID | knotID | x | y | z_s | σx | σy | σθ | parity | magnitude | time delay |
 ```
+!!! warning
+    The support for `parity`, `magnitude`, and `time delay` in modelling is under testing. Hence,
+    the user should avoid using these keywords during lens modelling.
 
 ### lens_model
 The `lens_model` section contains the following keywords.
 
-- `multiplane`: Boolean value indicating whether the lens model is multiplane (default: false).
-- `total_lenses`: Total number of lenses (mandatory).
-- `lens1`: Model for the first lens (mandatory).
-  - `lens`: Lens name (mandatory).
-  - `x_c`: x-coordinate of the lens center (mandatory).
-  - `y_c`: y-coordinate of the lens center (mandatory).
-  - `param1`: Parameter 1 (mandatory).
+- `multiplane`: **(optional)** Boolean value indicating whether the lens model is multiplane 
+   (default: false).
+- `total_lenses`: **(mandatory)** Total number of lenses.
+- `lens1`: **(mandatory)** Model for the first lens component.
+  - `lens`: **(mandatory)** Lens name. 
+  - `param1`: Parameter-1.
+    - `value`: initial value
+    - `range`: [lower, upper]
+  - `param2`: Parameter-2.
   - `. . .`
   - `paramN`: Parameter N (mandatory).
 - `. . .`
@@ -172,9 +178,9 @@ The `lens_model` section contains the following keywords.
 ### sampling
 The `sampling` section contains the following keywords.
 
-- `scheme`: Sampling scheme (default: `sourceplane`). The possible values are `sourceplane`, `imageplane`, `image_plus_sourceplane`, and `image_plus_image_plus_sourceplane`.
-- `verbose`: Boolean value indicating whether the sampling should be verbose (default: `true`).
-- `optimizer`: Optimizer to be used for the sampling. The default optimizer is `L-BFGS-B`.
+- `scheme`: **(mandatory)** Sampling scheme (default: `SourcePlane`). Currently implemented methods are `SourcePlane`.
+- `verbose`: **(optional)** Boolean value indicating whether the sampling should be verbose (default: `true`).
+- `optimizer`: Optimizer to be used for the sampling. The default optimizer is `NM`.
 - `mcmc`: Markov chain Monte Carlo parameters. The following keywords are available.
   - `iterations`: Number of iterations (default: 1000).
   - `burn_in`: Number of burn-in iterations (default: 500).
