@@ -2,14 +2,14 @@
 
 The `LensModel` module is the interface between the user and the lens modeling engine of 
 `LensFactory.jl`. All user inputs are specified through a YAML file. The input YAML is divided into
-multiple sections. The overall structure of the input YAML file is described below.
+multiple sections. The overall structure of the input YAML file is given below.
 
-```
+```yaml
 observation:
    modeler: LensFactory
    lens: WhoKnows
    z_d: ...
-   reference: [0.0, 0.0]
+   reference: [RA, DEC]
    pixel_scale: ...
    FOV: [x, y]
 
@@ -37,24 +37,29 @@ source:
       .
       .
       knotK:
-         x: ...
-         y: ...
-         sigma_x: ...
-         sigma_y: ...
-         sigma_theta: ...
+         x: [x1, x2]
+         y: [y1, y2]
+         sigma_x: [σx1, σx2]
+         sigma_y: [σy1, σy2]
+         sigma_theta: [σθ1, σθ2]
    .
    .
    .
    sourceS:
-      z_s: ...
+      z_s: zs
       total_knots: 1
-      knot1: ...
+      knot1:
+         x: [x1, x2, x3]
+         y: [y1, y2, y3]
+         sigma_x: [σx1, σx2, σx3]
+         sigma_y: [σy1, σy2, σy3]
+         sigma_theta: [σθ1, σθ2, σθ3]
 
 lens_model:
    multiplane: false
    total_lenses: N
    lens1:
-      lens: ...
+      lens: SIELens
       x_c:
          value: xv
          range: [xl, xu]
@@ -83,6 +88,25 @@ sampling:
    optimizer:
    mcmc:
 ```
+
+Looking at the above structure, we note that input YAML file is divided into five sections, i.e.,
+`observation`, `cosmology`, `source`, `lens_model`, and `sampling`. Below, we describe each section
+in more detail.
+
+### observation
+The `observation` section contains the following keywords.
+
+- `modeler`: **(optional)** Modeler name (default: `LensFactory`).
+- `lens`: **(optional)** Lens name (default: `WhoKnows`).
+- `z_d`: **(mandatory)** Lens redshift.
+- `reference`: **(mandatory)** Reference `[RA, DEC]` position of the lens in degrees. If `[0.0, 0.0]` is provided 
+   then it would be assumed that the we are working in arcseconds. 
+- `pixel_scale`: **(mandatory)** Pixel scale in arcseconds.
+- `FOV`: **(mandatory)** Field of view in arcseconds. The user can either specify a single value 
+   (e.g., 20) or a vector of two values [x, y] (e.g., [10, 10]).  If a single value is provided 
+   then square grid of `[-value, value]` will be used otherwise a rectangular grid with size [-x, x]
+   and [-y, y] will be used.
+
 
 ```@docs
 LensModel.read_input

@@ -28,7 +28,11 @@ abstract type AbstractCosmology end
 
 
 """
-    init_cosmology(H0::RV=70.0, w::RV=-1.0, Omega_m0::RV=0.3, Omega_r0::RV=0.0, Omega_w0::RV=0.7)
+    init_cosmology(H0::RV=70.0, 
+                   w::RV=-1.0, 
+                   Omega_m0::RV=0.3, 
+                   Omega_r0::RV=0.0, 
+                   Omega_w0::RV=0.7)
 An Abstract type to initialize a cosmology with given parameters. By default, it will make sure that
 that sum of density parameters is equal to 1 (i.e., ``\\Omega_{m0} + \\Omega_{r0} + \\Omega_{w0} + \\Omega_{k0} = 1``).
 
