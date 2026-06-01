@@ -13,7 +13,7 @@ ROA = Union{Vector{T}, Matrix{T}} where T <: Float64
 ### Natural constants
 ```julia
 CONST_C = 299792458.0                        # Speed of light (in meters/s)
-CONST_G = 6.6743E-11                         # Gravitational constant (in m^3 kg/s^2)
+CONST_G = 6.6743E-11                         # Gravitational constant (in m^3/kg/s^2)
 ```
 
 ### Solar constants
