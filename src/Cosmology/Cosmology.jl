@@ -43,9 +43,15 @@ abstract type AbstractCosmology end
                    w::RV  = -1.0, 
                    Omega_m0::RV = 0.3, 
                    Omega_r0::RV = 0.0, 
-                   Omega_w0::RV = 0.7)
-An Abstract type to initialize a cosmology with given parameters. By default, it will make sure that
-that sum of density parameters is equal to 1 (i.e., ``\\Omega_{m0} + \\Omega_{r0} + \\Omega_{w0} + \\Omega_{k0} = 1``).
+                   Omega_w0::RV = 0.7,
+                   Omega_k0::RV = 1.0 - Omega_m0 - Omega_r0 - Omega_w0)
+An Abstract type to initialize a cosmology with given parameters. 
+
+For typical cases, the user provides values of `H0`, `Omega_m0`, and `Omega_w0` (and `Omega_r0` 
+if non-zero). For such a case, the default value of `Omega_k0` ensures that the sum of density 
+parameters is equal to 1 (i.e., ``\\Omega_{m0} + \\Omega_{r0} + \\Omega_{w0} + \\Omega_{k0} = 1``).
+However, if the user provides all four density parameters, the value of `Omega_k0` provided by the 
+user will be used.
 
 # Arguments
 - `H0::RV = 70.0`: Hubble constant in ``{\\rm \\mathbf{km/s/Mpc}}``.
