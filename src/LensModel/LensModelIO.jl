@@ -483,13 +483,13 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter}, Dol_ref::Float64)
          push!(params, Parameter(owner=:scaling, name=:slope_cut, refer=st, lower=lt, upper=ut))
 
          scaling_obj = ScalingRelation(
-            ref_mag = rm,
+            ref_mag   = rm,
             ref_sigma = rs,
-            ref_core = rc,
-            ref_cut = rt,
+            ref_core  = rc,
+            ref_cut   = rt,
             slope_sigma = ss,
-            slope_core = sc,
-            slope_cut = st
+            slope_core  = sc,
+            slope_cut   = st
          )
       end
       

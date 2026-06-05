@@ -239,6 +239,7 @@ function get_best_fit_parameters(results::Union{Vector{@NamedTuple{θ::Vector{Fl
          end
          return best_θ, best_logL, lower_err, upper_err
       end
+      return best_θ, best_logL     
    else
       error("Please provide either Optimization results or both MCMC logL and chains.")
    end
