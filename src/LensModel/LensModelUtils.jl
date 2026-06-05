@@ -217,7 +217,7 @@ function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, Float6
       # Check if this lens model requires cosmology and lens redshift
       if lens_params[:lens] ∈ REQUIRE_COSMO
          lens_params[:cosmology] = model.cosmology
-         lens_params[:z_d] = model.observation.z_d
+         lens_params[:z_d]       = model.observation.z_d
       end
 
       # Check if this lens model requires galaxy component
