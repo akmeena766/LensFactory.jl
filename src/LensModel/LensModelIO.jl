@@ -89,14 +89,14 @@ end
    ref_core::Float64 = 0.0
    ref_cut::Float64
    slope_sigma::Float64 = 0.25
-   slope_core::Float64 = 0.50
-   slope_cut::Float64 = 0.50
+   slope_core::Float64  = 0.50
+   slope_cut::Float64   = 0.50
 end
 
 @kwdef struct LensConfig <: AbstractLensConfig
    components::Vector{LensComponent}
    galaxies::Union{Nothing, GalaxyComponent} = nothing
-   scaling::Union{Nothing, ScalingRelation} = nothing
+   scaling::Union{Nothing, ScalingRelation}  = nothing
 end
 
 # --------------------------------------------------------------------------------------------------

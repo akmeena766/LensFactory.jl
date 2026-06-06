@@ -222,16 +222,12 @@ function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, Float6
 
       # Check if this lens model requires galaxy component
       if lens_params[:lens] ∈ REQUIRE_SCALING
-         # Total number of galaxies
-         lens_params[:n] = model.lens_config.galaxies.n
-         
-         # Position of the galaxies (vector)
+         # Lens parameters from file
+         lens_params[:n]   = model.lens_config.galaxies.n
          lens_params[:x_c] = model.lens_config.galaxies.x_c
          lens_params[:y_c] = model.lens_config.galaxies.y_c
-
-         # Ellipticity and PA of galaxies (vector)
          lens_params[:eps] = model.lens_config.galaxies.eps
-         lens_params[:pa] = model.lens_config.galaxies.pa
+         lens_params[:pa]  = model.lens_config.galaxies.pa
 
          # Observed magnitudes (vector)
          obs_mag = model.lens_config.galaxies.obs_mag
