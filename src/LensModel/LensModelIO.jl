@@ -397,14 +397,14 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter}, Dol_ref::Float64)
                # reference = (0, 0) ⇒ Lens positions are provided in arcseconds
                # reference = (RA, Dec) ⇒ Lens positions are provided in RA and Dec. Conversion needed.
                if use_ref
-                  x_ref, y_ref = AstrometricOps.gnomonic_offsets_arcsec(ref_ra, ref_dec, rx, ry)
+                  x_lens, y_lens = AstrometricOps.gnomonic_offsets_arcsec(ref_ra, ref_dec, rx, ry)
                else
-                  x_ref, y_ref = rx, ry
+                  x_lens, y_lens = rx, ry
                end
 
                # Add lens position parameters to the parameter vector
-               push!(params, Parameter(owner=lens_id, name=:x_c, refer=x_ref, lower=lx, upper=ux))
-               push!(params, Parameter(owner=lens_id, name=:y_c, refer=y_ref, lower=ly, upper=uy))
+               push!(params, Parameter(owner=lens_id, name=:x_c, refer=x_lens, lower=lx, upper=ux))
+               push!(params, Parameter(owner=lens_id, name=:y_c, refer=y_lens, lower=ly, upper=uy))
             end
 
             # --- Remaining lens parameters ---
@@ -428,17 +428,26 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter}, Dol_ref::Float64)
             catalog_data = readdlm(file_name)
             catalog_data = Float64.(catalog_data)
 
+            # Check if a valid (RA, Dec) is provided as reference or (0, 0) is used
+            # reference = (0, 0) ⇒ Lens positions are provided in arcseconds
+            # reference = (RA, Dec) ⇒ Lens positions are provided in RA and Dec. Conversion needed.
+            if use_ref
+               x_lens, y_lens = AstrometricOps.gnomonic_offsets_arcsec(ref_ra, ref_dec, catalog_data[:, 2], catalog_data[:, 3])
+            else
+               x_lens, y_lens = catalog_data[:, 2], catalog_data[:, 3]
+            end
+
             # Total number of galaxies
             catalog_n = size(catalog_data, 1)
 
             # Get fixed galaxy components
             galaxy_comp = GalaxyComponent(
-               n = catalog_n,
-               x_c = catalog_data[:, 2], 
-               y_c = catalog_data[:, 3], 
+               n       = catalog_n,
+               x_c     = x_lens,
+               y_c     = y_lens, 
                obs_mag = catalog_data[:, 4],
-               eps = catalog_data[:, 5],
-               pa = catalog_data[:, 6]
+               eps     = catalog_data[:, 5],
+               pa      = catalog_data[:, 6]
             )
          end
       end
