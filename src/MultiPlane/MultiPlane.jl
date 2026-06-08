@@ -82,7 +82,7 @@ end
     get_potential(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: ROA
 Calculate potential at the given angular coordinate(s) for a given multi-plane lens system with 
 cosmology and source redshift. The function is designed to handle both single coordinate and array 
-of coordinates as input via multiple dispatch, depending on the type of `T (ROA or RV)`.
+of coordinates as input via multiple dispatch, depending on the type of `T (ROA or RV)`. 
 
 # Arguments
 - `cosmology::Cosmology.AbstractCosmology`: Cosmology model.

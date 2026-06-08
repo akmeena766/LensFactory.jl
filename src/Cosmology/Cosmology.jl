@@ -51,7 +51,7 @@ For typical cases, the user provides values of `H0`, `Omega_m0`, and `Omega_w0` 
 if non-zero). For such a case, the default value of `Omega_k0` ensures that the sum of density 
 parameters is equal to 1 (i.e., ``\\Omega_{m0} + \\Omega_{r0} + \\Omega_{w0} + \\Omega_{k0} = 1``).
 However, if the user provides all four density parameters, the value of `Omega_k0` provided by the 
-user will be used.
+user will be used and the universe will not necessarily be **spatially flat**.
 
 # Arguments
 - `H0::RV = 70.0`: Hubble constant in ``{\\rm \\mathbf{km/s/Mpc}}``.
