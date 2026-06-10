@@ -64,7 +64,7 @@ end
 function θ_random(model::ModelConfig)
    θ = Vector{Float64}(undef, length(model.free_param_idxs))
    for (i, p) in enumerate(free_parameters(model))
-      θ[i] = rand() * (p.upper - p.lower) + p.lower
+      θ[i] = p.lower + rand() * (p.upper - p.lower)
    end
    return θ
 end

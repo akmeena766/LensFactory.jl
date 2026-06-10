@@ -139,7 +139,7 @@ end
 
 @kwdef struct OptimizerConfig <: AbstractOptimizerConfig
    method::Symbol = :NM
-   run_mode::String = "random"
+   run_mode::String = :random
    max_runs::Int64 = 100
    tolerance::Float64 = 1e-3
    config::AbstractOptimizerConfig = NMConfig()
@@ -825,10 +825,10 @@ function _optimizer!(sampling_dict::Dict)
    config = optimizer[method]
 
    # Get convergence parameters (with defaults)
-   convergence = get(optimizer, :convergence, Dict())
-   run_mode = get(convergence, :run_mode, :random)
-   max_runs = get(convergence, :max_runs, 100)
-   tolerance = get(convergence, :tolerance, 1e-3)
+   convergence = get(optimizer,   :convergence, Dict())
+   run_mode    = get(convergence, :run_mode,    :random)
+   max_runs    = get(convergence, :max_runs,    100)
+   tolerance   = get(convergence, :tolerance,   1.0E-3)
 
    algorithm_config =
       if method == :NM
