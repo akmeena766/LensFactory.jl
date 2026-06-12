@@ -48,12 +48,11 @@ function get_potential(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abst
    # Get the number of lens planes
    n_p = lens.n_p
 
-   # Get distance matrix
-   D_ij = _distances(cosmology, lens, zs)
+   # Get distance and distance ratios
+   D_ij, adis_ij, adis_is = _distances(cosmology, lens, zs)
 
    # Temporary deflection vector for each lens plane
    ψ_vec = zeros(2, n_p)
-   ψ = 0.0
 
    # Loop over all coordinates
    for ni in 1:n_p
@@ -63,9 +62,8 @@ function get_potential(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abst
 
       # Get the position vector in i-th plane
       for nj in 1:ni-1
-         distance_ratio = (D_ij[nj+1, ni+1] / D_ij[1, ni+1])
-         θx_i = θx_i - distance_ratio * ψ_vec[1, nj]
-         θy_i = θy_i - distance_ratio * ψ_vec[2, nj]            
+         θx_i = θx_i - adis_ij[nj, ni] * ψ_vec[1, nj]
+         θy_i = θy_i - adis_ij[nj, ni] * ψ_vec[2, nj]            
       end   
 
       # Potential value at (θ_xi, θ_yi) in i-th plane
@@ -75,7 +73,7 @@ function get_potential(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abst
       ψ_vec[1, ni], ψ_vec[2, ni] = Lenses.get_deflection(lens._plane_[ni], θx_i, θy_i)
       
       # Update potential
-      ψ = ψ + (D_ij[ni+1, ni+2] / D_ij[1, ni+2]) * ψ_i
+      ψ = ψ + adis_is[ni] * ψ_i
    end
    return ψ
 end
@@ -105,12 +103,11 @@ function get_potential(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abst
    # Get the number of lens planes
    n_p = lens.n_p
 
-   # Get distance matrix
-   D_ij = _distances(cosmology, lens, zs)
+   # Get distance and distance ratios
+   D_ij, adis_ij, adis_is = _distances(cosmology, lens, zs)
 
    # Temporary deflection vector for each lens plane
    ψ_vec = zeros(2, n_p)
-   ψ = 0.0
 
    # Loop over all coordinates
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
@@ -123,8 +120,8 @@ function get_potential(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abst
 
             # Get the position vector in i-th plane
             for nj in 1:ni-1
-               θx_i = θx_i - (D_ij[nj+1, ni+1] / D_ij[1, ni+1]) * ψ_vec[1, nj]
-               θy_i = θy_i - (D_ij[nj+1, ni+1] / D_ij[1, ni+1]) * ψ_vec[2, nj]            
+               θx_i = θx_i - adis_ij[nj, ni] * ψ_vec[1, nj]
+               θy_i = θy_i - adis_ij[nj, ni] * ψ_vec[2, nj]            
             end   
 
             # Potential value at (θ_xi, θ_yi) in i-th plane
@@ -134,7 +131,7 @@ function get_potential(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abst
             ψ_vec[1, ni], ψ_vec[2, ni] = Lenses.get_deflection(lens._plane_[ni], θx_i, θy_i)
 
             # Update potential
-            ψ[i, j] = ψ[i, j] + (D_ij[ni+1, ni+2] / D_ij[1, ni+2]) * ψ_i
+            ψ[i, j] = ψ[i, j] + adis_is[ni] * ψ_i
          end
       end
    end
@@ -155,8 +152,8 @@ function get_deflection(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abs
    # Get the number of lens planes
    n_p = lens.n_p
 
-   # Get distance matrix
-   D_ij = _distances(cosmology, lens, zs)
+   # Get distance and distance ratios
+   D_ij, adis_ij, adis_is = _distances(cosmology, lens, zs)
 
    # Temporary deflection vector for each lens plane
    ψ_vec = zeros(2, n_p)
@@ -168,18 +165,16 @@ function get_deflection(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abs
 
       # Get the position vector in i-th plane
       for nj in 1:ni-1
-         distance_ratio = (D_ij[nj+1, ni+1] / D_ij[1, ni+1])
-         θx_i = θx_i - distance_ratio * ψ_vec[1, nj]
-         θy_i = θy_i - distance_ratio * ψ_vec[2, nj]
+         θx_i = θx_i - adis_ij[nj, ni] * ψ_vec[1, nj]
+         θy_i = θy_i - adis_ij[nj, ni] * ψ_vec[2, nj]
       end
 
       # Deflection vector at (θx_i, θy_i) in i-th plane
       ψ_vec[1, ni], ψ_vec[2, ni] = Lenses.get_deflection(lens._plane_[ni], θx_i, θy_i)
 
       # Final deflection vector
-      distance_ratio = (D_ij[ni+1, n_p+2] / D_ij[1, n_p+2])
-      ψx = ψx + distance_ratio * ψ_vec[1, ni]
-      ψy = ψy + distance_ratio * ψ_vec[2, ni]
+      ψx = ψx + adis_is[ni] * ψ_vec[1, ni]
+      ψy = ψy + adis_is[ni] * ψ_vec[2, ni]
    end
    return ψx, ψy
 end
@@ -211,8 +206,8 @@ function get_deflection(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abs
    # Get the number of lens planes
    n_p = lens.n_p
 
-   # Get distance matrix
-   D_ij = _distances(cosmology, lens, zs)
+   # Get distance and distance ratios
+   D_ij, adis_ij, adis_is = _distances(cosmology, lens, zs)
 
    # Temporary deflection vector for each lens plane
    ψ_vec = zeros(2, n_p)
@@ -228,18 +223,16 @@ function get_deflection(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abs
             
             # Get the position vector in i-th plane
             for nj in 1:ni-1
-               distance_ratio = (D_ij[nj+1, ni+1] / D_ij[1, ni+1])
-               θx_i = θx_i - distance_ratio * ψ_vec[1, nj]
-               θy_i = θy_i - distance_ratio * ψ_vec[2, nj]
+               θx_i = θx_i - adis_ij[nj, ni] * ψ_vec[1, nj]
+               θy_i = θy_i - adis_ij[nj, ni] * ψ_vec[2, nj]
             end
 
             # Deflection vector at (θx_i, θy_i) in i-th plane
             ψ_vec[1, ni], ψ_vec[2, ni] = Lenses.get_deflection(lens._plane_[ni], θx_i, θy_i)
 
             # Final deflection vector
-            distance_ratio = (D_ij[ni+1, n_p+2] / D_ij[1, n_p+2])
-            ψx[i, j] = ψx[i, j] + distance_ratio * ψ_vec[1, ni]
-            ψy[i, j] = ψy[i, j] + distance_ratio * ψ_vec[2, ni]
+            ψx[i, j] = ψx[i, j] + adis_is[ni] * ψ_vec[1, ni]
+            ψy[i, j] = ψy[i, j] + adis_is[ni] * ψ_vec[2, ni]
          end
       end
    end
@@ -259,8 +252,8 @@ function get_jacobian(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abstr
    # Get the number of lens planes
    n_p = lens.n_p
 
-   # Get distance matrix
-   D_ij = _distances(cosmology, lens, zs)
+   # Get distance and distance ratios
+   D_ij, adis_ij, adis_is = _distances(cosmology, lens, zs)
    
    # Temporary deflection vector for each lens plane
    ψ_vec = zeros(2, n_p)
@@ -276,10 +269,9 @@ function get_jacobian(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abstr
       θy_i = θy
 
       for nj in 1:ni-1
-         distance_ratio = (D_ij[nj+1, ni+1] / D_ij[1, ni+1])
-         θx_i = θx_i - distance_ratio * ψ_vec[1, nj]
-         θy_i = θy_i - distance_ratio * ψ_vec[2, nj]
-         A_vec[:, :, ni] .-= distance_ratio .* (U_vec[:, :, nj] * A_vec[:, :, nj])
+         θx_i = θx_i - adis_ij[nj, ni] * ψ_vec[1, nj]
+         θy_i = θy_i - adis_ij[nj, ni] * ψ_vec[2, nj]
+         A_vec[:, :, ni] .-= adis_ij[nj, ni] .* (U_vec[:, :, nj] * A_vec[:, :, nj])
       end
 
       # Deflection vector at (θ_xi, θ_yi) in i-th plane
@@ -289,8 +281,7 @@ function get_jacobian(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abstr
       (U_vec[1, 1, ni],), (U_vec[2, 2, ni],), (U_vec[1, 2, ni],) = Lenses.get_jacobian(lens._plane_[ni], θx_i, θy_i)
       U_vec[2, 1, ni] = U_vec[1, 2, ni]
 
-      distance_ratio = (D_ij[ni+1, n_p+2] / D_ij[1, n_p+2])
-      ψrr .+= distance_ratio .* (U_vec[:, :, ni] * A_vec[:, :, ni])
+      ψrr .+= adis_is[ni] .* (U_vec[:, :, ni] * A_vec[:, :, ni])
    end
    return ψrr[1, 1], ψrr[2, 2], ψrr[1, 2], ψrr[2, 1]
 end
@@ -325,9 +316,9 @@ function get_jacobian(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abstr
    # Get the number of lens planes
    n_p = lens.n_p
 
-   # Get distance matrix
-   D_ij = _distances(cosmology, lens, zs)
-   
+   # Get distance and distance ratios
+   D_ij, adis_ij, adis_is = _distances(cosmology, lens, zs)
+
    # Temporary deflection vector for each lens plane
    ψ_vec = zeros(2, n_p)
    U_vec = zeros(2, 2, n_p)
@@ -348,10 +339,9 @@ function get_jacobian(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abstr
             θy_i = θy[i, j]
 
             for nj in 1:ni-1
-               dist_ratio = (D_ij[nj+1, ni+1] / D_ij[1, ni+1])
-               θx_i = θx_i - dist_ratio * ψ_vec[1, nj]
-               θy_i = θy_i - dist_ratio * ψ_vec[2, nj]
-               A_vec[:, :, ni] .-= dist_ratio .* (U_vec[:, :, nj] * A_vec[:, :, nj])
+               θx_i = θx_i - adis_ij[nj, ni] * ψ_vec[1, nj]
+               θy_i = θy_i - adis_ij[nj, ni] * ψ_vec[2, nj]
+               A_vec[:, :, ni] .-= adis_ij[nj, ni] .* (U_vec[:, :, nj] * A_vec[:, :, nj])
             end
 
             # Deflection vector at (θ_xi, θ_yi) in i-th plane
@@ -361,8 +351,7 @@ function get_jacobian(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abstr
             (U_vec[1, 1, ni],), (U_vec[2, 2, ni],), (U_vec[1, 2, ni],) = Lenses.get_jacobian(lens._plane_[ni], θx_i, θy_i)
             U_vec[2, 1, ni] = U_vec[1, 2, ni]
 
-            dist_ratio = (D_ij[ni+1, n_p+2] / D_ij[1, n_p+2])
-            ψrr_tmp .+= dist_ratio .* (U_vec[:, :, ni] * A_vec[:, :, ni])
+            ψrr_tmp .+= adis_is[ni] .* (U_vec[:, :, ni] * A_vec[:, :, ni])
          end
          ψrr[i, j, 1] = ψrr_tmp[1, 1]
          ψrr[i, j, 2] = ψrr_tmp[2, 2]
@@ -386,12 +375,11 @@ function get_time_delay(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abs
    # Get the number of lens planes
    n_p = lens.n_p
 
-   # Get distance matrix
-   D_ij = _distances(cosmology, lens, zs)
+   # Get distance and distance ratios
+   D_ij, adis_ij, adis_is = _distances(cosmology, lens, zs)
 
    # Temporary deflection vector for each lens plane
    ψ_vec = zeros(2, n_p)
-   ψ = 0.0
 
    # Get constant factor array
    constant_factor = zeros(n_p)
@@ -407,9 +395,8 @@ function get_time_delay(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abs
 
       # Get the position vector in i-th plane
       for nj in 1:ni-1
-         distance_ratio = (D_ij[nj+1, ni+1] / D_ij[1, ni+1])
-         θx_i = θx_i - distance_ratio * ψ_vec[1, nj]
-         θy_i = θy_i - distance_ratio * ψ_vec[2, nj]            
+         θx_i = θx_i - adis_ij[nj, ni] * ψ_vec[1, nj]
+         θy_i = θy_i - adis_ij[nj, ni] * ψ_vec[2, nj]            
       end   
 
       # Potential value at (θ_xi, θ_yi) in i-th plane
@@ -420,9 +407,8 @@ function get_time_delay(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abs
 
       # Get the position vector in i+1-th plane
       if ni < n_p
-         distance_ratio = (D_ij[ni+1, ni+2] / D_ij[1, ni+2])
-         θx_j = θx_i -  distance_ratio * ψ_vec[1, ni]
-         θy_j = θy_i -  distance_ratio * ψ_vec[2, ni]
+         θx_j = θx_i -  adis_is[ni] * ψ_vec[1, ni]
+         θy_j = θy_i -  adis_is[ni] * ψ_vec[2, ni]
       else
          θx_j = β[1]
          θy_j = β[2]
@@ -777,15 +763,28 @@ end
 function _distances(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, zs::RV)
    # Vector of all redshift (including observer and source)
    z_all = [0; lens.z_d; zs]
+   
+   # Pre-compute distance ratios
+   n_p = lens.n_p
+   D_ij = zeros(n_p+2, n_p+2)
+   adis_ij = Matrix{Float64}(undef, n_p, n_p)
+   adis_is = Vector{Float64}(undef, n_p)
 
-   # Create and fill empty distance matrix
-   D_ij = zeros(length(z_all), length(z_all))
-   for i in axes(D_ij, 2)
-      for j in axes(D_ij, 1)[i+1:end]
+   # Fill empty distance matrix
+   for i in 1:n_p+2
+      for j in i+1:n_p+2
          D_ij[i, j] = Cosmology.angular_diameter_distance(cosmology, z_all[i], z_all[j])
       end
    end
-   return D_ij
+
+   # Fill distance ratio matrix and vector
+   for ni in 1:n_p
+      for nj in 1:ni-1
+         adis_ij[nj, ni] = D_ij[nj+1, ni+1] / D_ij[1, ni+1]
+      end
+      adis_is[ni] = D_ij[ni+1, n_p+2] / D_ij[1, n_p+2]
+   end
+   return D_ij, adis_ij, adis_is
 end
 
 end
