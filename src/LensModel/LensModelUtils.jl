@@ -114,7 +114,7 @@ end
 function θ_initializer(model::ModelConfig)
    opt = model.sampler.optimizer
 
-   run_mode = Symbol(opt.run_mode)
+   run_mode = opt.run_mode
    max_runs = opt.max_runs
 
    if run_mode === :reference

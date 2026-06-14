@@ -16,7 +16,7 @@ using ..Lenses
 # Functions to export
 # --------------------------------------------------------------------------------------------------
 export loglike_sourceplane
-export loglike_imageplane
+export loglike_imageplane_fast
 export loglike_flux
 export loglike_timedelay
 export loglike_parity
@@ -184,7 +184,11 @@ function loglike_sourceplane(model::ModelConfig, adis::Vector{Float64},
 end
 
 
-function loglike_imageplane_fast(model::ModelConfig, adis::Vector{Float64}, αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, A_all::Vector{NTuple{4, Vector{Float64}}})
+function loglike_imageplane_fast(model::ModelConfig, 
+                                 adis::Vector{Float64}, 
+                                 αx_all::Vector{Vector{Float64}}, 
+                                 αy_all::Vector{Vector{Float64}}, 
+                                 A_all::Vector{NTuple{4, Vector{Float64}}})
    # Initialize chi2 for parity
    χ2_total = 0.0
 
@@ -250,7 +254,9 @@ function loglike_imageplane_fast(model::ModelConfig, adis::Vector{Float64}, αx_
 end
 
 
-function loglike_flux(model::ModelConfig, adis::Vector{Float64}, A_all::Vector{NTuple{4, Vector{Float64}}})
+function loglike_flux(model::ModelConfig, 
+                      adis::Vector{Float64}, 
+                      A_all::Vector{NTuple{4, Vector{Float64}}})
    # Initialize chi2 for parity
    χ2_total = 0.0
 
@@ -301,11 +307,11 @@ function loglike_flux(model::ModelConfig, adis::Vector{Float64}, A_all::Vector{N
 end
 
 function loglike_timedelay(model::ModelConfig, lens_model::Lenses.AbstractLens, 
-                        adis::Vector{Float64}, 
-                        z_d::Float64, 
-                        D_d::Float64, 
-                        αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, 
-                        A_all::Vector{NTuple{4, Vector{Float64}}})
+                           adis::Vector{Float64}, 
+                           z_d::Float64, 
+                           D_d::Float64, 
+                           αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, 
+                           A_all::Vector{NTuple{4, Vector{Float64}}})
    # Initialize chi2 for parity
    χ2_total = 0.0
 
@@ -379,7 +385,9 @@ function loglike_timedelay(model::ModelConfig, lens_model::Lenses.AbstractLens,
 end
 
 
-function loglike_parity(model::ModelConfig, adis::Vector{Float64}, A_all::Vector{NTuple{4, Vector{Float64}}})
+function loglike_parity(model::ModelConfig, 
+                        adis::Vector{Float64}, 
+                        A_all::Vector{NTuple{4, Vector{Float64}}})
    # Initialize chi2 for parity
    χ2_total = 0.0
    

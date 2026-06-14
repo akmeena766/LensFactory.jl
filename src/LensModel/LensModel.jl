@@ -478,27 +478,21 @@ end
 
 
 """
-    get_potential(best_model::Lenses.AbstractLens, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
+    get_potential(best_model::Lenses.AbstractLens, θx::T, θy::T;
+                  reference::Tuple{Float64, Float64}) where T <: Union{RV, ROA}
 """
-function get_potential(best_model::Lenses.AbstractLens, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
+function get_potential(best_model::Lenses.AbstractLens, θx::T, θy::T; 
+                       reference::Tuple{Float64, Float64} = (0.0, 0.0)) where T <: Union{RV, ROA}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
    end
-
-   # Convert input coordinates to arcseconds if they are in RA/DEC
-   if unit == :RA_DEC
-      # Get reference position and pixel scale from the model
-      RA_REF = model.observation.reference[1]
-      DEC_REF = model.observation.reference[2]
-
-      # Convert RA/DEC to arcseconds relative to the reference position
-      θx_arcsec, θy_arcsec = AstrometricOps.gnomonic_offsets_arcsec(RA_REF, DEC_REF, θx, θy)
-      return Lenses.get_potential(best_model, θx_arcsec, θy_arcsec)
-   elseif unit == :arcsec
+   
+   if reference[1] == 0.0 && reference[2] == 0.0
       return Lenses.get_potential(best_model, θx, θy)
    else
-      throw(ArgumentError("Invalid unit. Supported units are :RA_DEC and :arcsec."))
+      θx_arcsec, θy_arcsec = AstrometricOps.gnomonic_offsets_arcsec(reference[1], reference[2], θx, θy)
+      return Lenses.get_potential(best_model, θx_arcsec, θy_arcsec)
    end
 end
 
@@ -514,15 +508,10 @@ can specify the unit of the input coordinates as either RA/DEC or arcseconds.
 - `θx`: x-coordinates
 - `θy`: y-coordinates
 
-# Keyword Arguments
-- `unit::Symbol=:RA_DEC`: Unit of the input coordinates. 
-   - `:RA_DEC`: (θx, θy) are assumed to be in RA/DEC (in degrees).
-   - `:arcsec`: (θx, θy) are assumed to be in arcseconds.
-
 # Returns
 - `ψ`: Lensing potential at the input coordinates for the best-fit model.
 """
-function get_potential(data_jld2::JLD2.JLDFile, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
+function get_potential(data_jld2::JLD2.JLDFile, θx::T, θy::T) where T <: Union{RV, ROA}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
@@ -535,33 +524,27 @@ function get_potential(data_jld2::JLD2.JLDFile, θx::T, θy::T; unit::Symbol=:RA
 
    # Get best-fit lens model
    best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_logL=logL)
-   
-   return get_potential(best_model, θx, θy::T; unit=unit)
+
+   return get_potential(best_model, θx, θy::T; reference=(model.observation.RA_REF, model.observation.DEC_REF))
 end
 
 
 """
     get_deflection(best_model::Lenses.AbstractLens, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
 """
-function get_deflection(best_model::Lenses.AbstractLens, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
+function get_deflection(best_model::Lenses.AbstractLens, θx::T, θy::T; 
+                        reference::Tuple{Float64, Float64} = (0.0, 0.0)) where T <: Union{RV, ROA}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
    end
 
    # Convert input coordinates to arcseconds if they are in RA/DEC
-   if unit == :RA_DEC
-      # Get reference position and pixel scale from the model
-      RA_REF = model.observation.reference[1]
-      DEC_REF = model.observation.reference[2]
-
-      # Convert RA/DEC to arcseconds relative to the reference position
-      θx_arcsec, θy_arcsec = AstrometricOps.gnomonic_offsets_arcsec(RA_REF, DEC_REF, θx, θy)
-      return Lenses.get_deflection(best_model, θx_arcsec, θy_arcsec)
-   elseif unit == :arcsec
+   if reference[1] == 0.0 && reference[2] == 0.0
       return Lenses.get_deflection(best_model, θx, θy)
    else
-      throw(ArgumentError("Invalid unit. Supported units are :RA_DEC and :arcsec."))
+      θx_arcsec, θy_arcsec = AstrometricOps.gnomonic_offsets_arcsec(reference[1], reference[2], θx, θy)
+      return Lenses.get_deflection(best_model, θx_arcsec, θy_arcsec)
    end
 end
 
@@ -578,9 +561,7 @@ user can specify the unit of the input coordinates as either RA/DEC or arcsecond
 - `θy`: y-coordinates
 
 # Keyword Arguments
-- `unit::Symbol=:RA_DEC`: Unit of the input coordinates. 
-   - `:RA_DEC`: (θx, θy) are assumed to be in RA/DEC (in degrees).
-   - `:arcsec`: (θx, θy) are assumed to be in arcseconds.
+- reference = (0.0, 0.0): Reference (RA, Dec) coordinate (in degrees). 
 
 # Returns
 - `αx`: x-component of the deflection angle (in arcseconds).
@@ -600,31 +581,26 @@ function get_deflection(data_jld2::JLD2.JLDFile, θx::T, θy::T; unit::Symbol=:R
    # Get best-fit lens model
    best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_logL=logL)
 
-   return get_deflection(best_model, θx::T, θy::T; unit=unit)
+   return get_deflection(best_model, θx::T, θy::T; reference=(model.observation.RA_REF, model.observation.DEC_REF))
 end
 
 """
     get_jacobian(best_model::Lenses.AbstractLens, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
 """
-function get_jacobian(best_model::Lenses.AbstractLens, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
+function get_jacobian(best_model::Lenses.AbstractLens, θx::T, θy::T; 
+                      reference::Tuple{Float64, Float64} = (0.0, 0.0)) where T <: Union{RV, ROA}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
    end
 
    # Convert input coordinates to arcseconds if they are in RA/DEC
-   if unit == :RA_DEC
-      # Get reference position and pixel scale from the model
-      RA_REF = model.observation.reference[1]
-      DEC_REF = model.observation.reference[2]
-
-      # Convert RA/DEC to arcseconds relative to the reference position
-      θx_arcsec, θy_arcsec = AstrometricOps.gnomonic_offsets_arcsec(RA_REF, DEC_REF, θx, θy)
-      return Lenses.get_jacobian(best_model, θx_arcsec, θy_arcsec)
-   elseif unit == :arcsec
+   if reference[1] == 0.0 && reference[2] == 0.0
       return Lenses.get_jacobian(best_model, θx, θy)
    else
-      throw(ArgumentError("Invalid unit. Supported units are :RA_DEC and :arcsec."))
+      # Convert RA/DEC to arcseconds relative to the reference position
+      θx_arcsec, θy_arcsec = AstrometricOps.gnomonic_offsets_arcsec(reference[1], reference[2], θx, θy)
+      return Lenses.get_jacobian(best_model, θx_arcsec, θy_arcsec)
    end
 end
 
@@ -641,16 +617,14 @@ best-fit model. The user can specify the unit of the input coordinates as either
 - `θy`: y-coordinates
 
 # Keyword Arguments
-- `unit::Symbol=:RA_DEC`: Unit of the input coordinates. 
-   - `:RA_DEC`: (θx, θy) are assumed to be in RA/DEC (in degrees).
-   - `:arcsec`: (θx, θy) are assumed to be in arcseconds.
+- reference = (0.0, 0.0): Reference (RA, Dec) coordinate (in degrees). 
 
 # Returns
 - `ψxx`: xx-component of the jacobian.
 - `ψyy`: yy-component of the jacobian.
 - `ψxy`: xy-component of the jacobian.
 """
-function get_jacobian(data_jld2::JLD2.JLDFile, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
+function get_jacobian(data_jld2::JLD2.JLDFile, θx::T, θy::T) where T <: Union{RV, ROA}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
@@ -664,7 +638,7 @@ function get_jacobian(data_jld2::JLD2.JLDFile, θx::T, θy::T; unit::Symbol=:RA_
    # Get best-fit lens model
    best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_logL=logL)
 
-   return get_jacobian(best_model, θx::T, θy::T; unit=unit)
+   return get_jacobian(best_model, θx::T, θy::T; reference=(model.observation.RA_REF, model.observation.DEC_REF))
 end
 
 
