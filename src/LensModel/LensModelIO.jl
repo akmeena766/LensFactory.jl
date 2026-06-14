@@ -236,8 +236,43 @@ end
    return AstrometricOps.gnomonic_offsets_arcsec(ref_ra, ref_dec, x, y)
 end
 
+@inline function _adis_ratio(cosmo::Cosmology.AbstractCosmology, z_d::RV, z_s::RV)
+   D_ds = Cosmology.angular_diameter_distance(cosmo, z_d, z_s)
+   D_os = Cosmology.angular_diameter_distance(cosmo, 0.0, z_s)
+   return D_ds / D_os
+end
 
-# Internal function: Extract parameter values
+function _zs_to_adis(cosmo::Cosmology.AbstractCosmology, z_d::RV, r::RV, l::RV, u::RV)
+   adis_r = _adis_ratio(cosmo, z_d, r)
+
+   if l == u
+      adis_l = adis_r
+      adis_u = adis_r
+   else
+      adis_l = _adis_ratio(cosmo, z_d, l)
+      adis_u = _adis_ratio(cosmo, z_d, u)
+   end
+
+   return adis_r, adis_l, adis_u
+end
+
+# Infer method
+function _infer_method(dict::Dict, meta_keys::Set{Symbol})
+   found = nothing
+   for k in keys(dict)
+      k in meta_keys && continue
+      if found !== nothing 
+         error("Multiple modeling methods found. Please clarify.")
+      end
+      found = k
+   end
+   if found === nothing
+      error("No modeling method found.")
+   end
+   return found
+end
+
+# Extract parameter values
 function _extract_param_range(x::Union{Int64,Float64,Dict})::Tuple{Float64,Float64,Float64}
    # Extract parameter values in case of Int64 or Float64
    if x isa Union{Int64,Float64}
@@ -265,6 +300,7 @@ function _extract_param_range(x::Union{Int64,Float64,Dict})::Tuple{Float64,Float
       throw(ArgumentError("Unknown parameter value type. Allowed types are Int64, Float64, Dict."))
    end
 end
+
 
 # --------------------------------------------------------------------------------------------------
 # ---------------- Read Observation ----------------------------------------------------------------
@@ -370,7 +406,7 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter}, observation::Observa
    needs_scaling = false
 
    # Single plane vs. multiplane lensing
-   multiplane = get(lens_dict, :multiplane, false)
+   multiplane = get!(lens_dict, :multiplane, false)
    if multiplane == false
       # Single plane lensing
       for i in 1:n_lenses
@@ -451,46 +487,19 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter}, observation::Observa
          # Get scaling relations dictionary
          scaling_dict = dict[:scaling_relation]
          
-         # Owner of scaling parameters
-         owner = :scaling
-         
-         # Get reference magnitude
-         rm, lm, um = _extract_param_range(scaling_dict[:ref_mag])
-         push!(params, Parameter(owner=:scaling, name=:ref_mag, refer=rm, lower=lm, upper=um))
+         # Names of all scaling-relation parameters, in the order expected by ScalingRelation
+         scaling_params = (:ref_mag, :ref_sigma, :ref_core, :ref_cut, :slope_sigma, :slope_core, :slope_cut)
 
-         # Get reference sigma_star
-         rs, ls, us = _extract_param_range(scaling_dict[:ref_sigma])
-         push!(params, Parameter(owner=:scaling, name=:ref_sigma, refer=rs, lower=ls, upper=us))
+         # Reference values, keyed by parameter name, used to build the ScalingRelation struct
+         refer_values = Dict{Symbol,Float64}()
 
-         # Get reference rcore_star
-         rc, lc, uc = _extract_param_range(scaling_dict[:ref_core])
-         push!(params, Parameter(owner=:scaling, name=:ref_core, refer=rc, lower=lc, upper=uc))
+         for param in scaling_params
+            r, l, u = _extract_param_range(scaling_dict[param])
+            refer_values[param] = r
+            push!(params, Parameter(owner=:scaling, name=param, refer=r, lower=l, upper=u))
+         end
 
-         # Get reference rcut_star
-         rt, lt, ut = _extract_param_range(scaling_dict[:ref_cut])
-         push!(params, Parameter(owner=:scaling, name=:ref_cut, refer=rt, lower=lt, upper=ut))
-
-         # Get reference slope_sigma
-         ss, ls, us = _extract_param_range(scaling_dict[:slope_sigma])
-         push!(params, Parameter(owner=:scaling, name=:slope_sigma, refer=ss, lower=ls, upper=us))
-
-         # Get reference slope_core
-         sc, lc, uc = _extract_param_range(scaling_dict[:slope_core])
-         push!(params, Parameter(owner=:scaling, name=:slope_core, refer=sc, lower=lc, upper=uc))
-
-         # Get reference slope_cut
-         st, lt, ut = _extract_param_range(scaling_dict[:slope_cut])
-         push!(params, Parameter(owner=:scaling, name=:slope_cut, refer=st, lower=lt, upper=ut))
-
-         scaling_obj = ScalingRelation(
-            ref_mag     = rm,
-            ref_sigma   = rs,
-            ref_core    = rc,
-            ref_cut     = rt,
-            slope_sigma = ss,
-            slope_core  = sc,
-            slope_cut   = st
-         )
+         scaling_obj = ScalingRelation(; refer_values...)
       end
       
       return LensConfig(components=lens_name, galaxies=galaxy_comp, scaling=scaling_obj)
@@ -537,22 +546,7 @@ function _source_direct!(dict::Dict, cosmo::Cosmology.AbstractCosmology, observa
       r, l, u = _extract_param_range(indi_source_dict[:z_s])
 
       # Convert redshift to adis
-      D_ds = Cosmology.angular_diameter_distance(cosmo, z_d, r)
-      D_os = Cosmology.angular_diameter_distance(cosmo, 0.0, r)
-      adis_r = D_ds / D_os
-
-      if l == u
-         adis_l = adis_r
-         adis_u = adis_r
-      else
-         D_ds = Cosmology.angular_diameter_distance(cosmo, z_d, l)
-         D_os = Cosmology.angular_diameter_distance(cosmo, 0.0, l)
-         adis_l = D_ds / D_os
-
-         D_ds = Cosmology.angular_diameter_distance(cosmo, z_d, u)
-         D_os = Cosmology.angular_diameter_distance(cosmo, 0.0, u)
-         adis_u = D_ds / D_os
-      end
+      adis_r, adis_l, adis_u = _zs_to_adis(cosmo, z_d, r, l, u)
 
       # Add redshift parameter to the reference, lower, and upper vectors
       push!(params, Parameter(owner=source_id, name=Symbol(:adis, i), refer=adis_r, lower=adis_l, upper=adis_u))
@@ -664,37 +658,14 @@ function _source_from_file!(dict::Dict, cosmo::Cosmology.AbstractCosmology, obse
          r, l, u = _extract_param_range(indi_source_dict[:z_s])
 
          # Convert redshift to adis
-         D_ds = Cosmology.angular_diameter_distance(cosmo, z_d, r)
-         D_os = Cosmology.angular_diameter_distance(cosmo, 0.0, r)
-         adis_r = D_ds / D_os
-
-         if l == u
-            adis_l = adis_r
-            adis_u = adis_r
-         else
-            D_ds = Cosmology.angular_diameter_distance(cosmo, z_d, l)
-            D_os = Cosmology.angular_diameter_distance(cosmo, 0.0, l)
-            adis_l = D_ds / D_os
-
-            D_ds = Cosmology.angular_diameter_distance(cosmo, z_d, u)
-            D_os = Cosmology.angular_diameter_distance(cosmo, 0.0, u)
-            adis_u = D_ds / D_os
-         end
+         adis_r, adis_l, adis_u = _zs_to_adis(cosmo, z_d, r, l, u)
 
          # Add redshift parameter to the reference, lower, and upper vectors
          push!(params, Parameter(owner=source_id, name=Symbol(:adis, i), refer=adis_r, lower=adis_l, upper=adis_u))
       else
-         # Get the source redshift from the file
+         # Get the source redshift from the file; treat it as fixed (lower == upper == refer)
          z_s = source_data[1, 5]
-
-         # Convert redshift to adis
-         D_ds = Cosmology.angular_diameter_distance(cosmo, z_d, z_s)
-         D_os = Cosmology.angular_diameter_distance(cosmo, 0.0, z_s)
-         adis_r = D_ds / D_os
-
-         # Redshift fixed. Set lower and upper bounds to the same value
-         adis_l = adis_r
-         adis_u = adis_r
+         adis_r, adis_l, adis_u = _zs_to_adis(cosmo, z_d, z_s, z_s, z_s)
 
          # Add redshift parameter to the reference, lower, and upper vectors
          push!(params, Parameter(owner=source_id, name=Symbol(:adis, i), refer=adis_r, lower=adis_l, upper=adis_u))
@@ -764,20 +735,6 @@ end
 # ---------------- Read Optimizer ------------------------------------------------------------------
 # --------------------------------------------------------------------------------------------------
 const OPTIMIZER_META_KEYS = Set([:enabled, :convergence])
-
-function _infer_optimizer_method(dict::Dict)
-   found = nothing
-   for k in keys(dict)
-      k in OPTIMIZER_META_KEYS && continue
-      if found !== nothing
-         error("Multiple entries specified: $(found), $(k)")
-      end
-      found = k
-   end
-   found === nothing && error("No entry specified")
-   return found
-end
-
 function _optimizer!(sampling_dict::Dict)
    optimizer = get(sampling_dict, :optimizer, nothing)
 
@@ -787,14 +744,8 @@ function _optimizer!(sampling_dict::Dict)
    end
 
    # Infer optimizer method from keys
-   method = _infer_optimizer_method(optimizer)
+   method = _infer_method(optimizer, OPTIMIZER_META_KEYS)
    config = optimizer[method]
-
-   # Get convergence parameters (with defaults)
-   convergence = get(optimizer,   :convergence, Dict())
-   run_mode    = get(convergence, :run_mode,    :random)
-   max_runs    = get(convergence, :max_runs,    100)
-   tolerance   = get(convergence, :tolerance,   1.0E-3)
 
    algorithm_config =
       if method == :NM
@@ -804,34 +755,20 @@ function _optimizer!(sampling_dict::Dict)
       else
          error("Unknown optimizer method: $method")
       end
+   
+   # Convergence parameters
+   convergence = get(optimizer, :convergence, Dict{Symbol,Any}())
+   if haskey(convergence, :run_mode)
+      convergence[:run_mode] = Symbol(convergence[:run_mode])
+   end
 
-   return OptimizerConfig(
-      method    = method,
-      run_mode  = run_mode,
-      max_runs  = max_runs,
-      tolerance = tolerance,
-      config    = algorithm_config
-   )
+   return OptimizerConfig(; method = method, config=algorithm_config, convergence...)
 end
 
 # --------------------------------------------------------------------------------------------------
 # ---------------- Read MCMC -----------------------------------------------------------------------
 # --------------------------------------------------------------------------------------------------
 const MCMC_META_KEYS = Set([:enabled, :n_chains])
-
-function _infer_mcmc_method(dict::Dict)
-   found = nothing
-   for k in keys(dict)
-      k in MCMC_META_KEYS && continue
-      if found !== nothing
-         error("Multiple entries specified: $(found), $(k)")
-      end
-      found = k
-   end
-   found === nothing && error("No entry specified")
-   return found
-end
-
 function _mcmc!(sampling_dict::Dict)
    mcmc = get(sampling_dict, :mcmc, nothing)
 
@@ -841,7 +778,7 @@ function _mcmc!(sampling_dict::Dict)
    end
 
    # Infer mcmc method from keys
-   method = _infer_mcmc_method(mcmc)
+   method = _infer_method(mcmc, MCMC_META_KEYS)
    n_chains = get(mcmc, :n_chains, 1)
    config = mcmc[method]
 
@@ -924,13 +861,13 @@ function _read_input(filename::AbstractString)
    free_param_idxs = findall(p -> p.lower != p.upper, params)
 
    return ModelConfig(
-      observation=observation,
-      cosmology=cosmology,
-      lens_config=lens_config,
-      source_config=source_config,
-      parameters=params,
-      free_param_idxs=free_param_idxs,
-      sampler=sampler
+      observation     = observation,
+      cosmology       = cosmology,
+      lens_config     = lens_config,
+      source_config   = source_config,
+      parameters      = params,
+      free_param_idxs = free_param_idxs,
+      sampler         = sampler
    )
 end
 
