@@ -779,7 +779,6 @@ function _mcmc!(sampling_dict::Dict)
 
    # Infer mcmc method from keys
    method = _infer_method(mcmc, MCMC_META_KEYS)
-   n_chains = get(mcmc, :n_chains, 1)
    config = mcmc[method]
 
    algorithm_config =
@@ -790,12 +789,11 @@ function _mcmc!(sampling_dict::Dict)
       else
          error("Unknown MCMC method: $method")
       end
+   
+   extra = Dict{Symbol,Any}()
+   haskey(mcmc, :n_chains) && (extra[:n_chains] = mcmc[:n_chains])
 
-   return MCMCConfig(
-      method   = method,
-      n_chains = n_chains,
-      config   = algorithm_config
-   )
+   return MCMCConfig(; method = method, config = algorithm_config, extra...)
 end
 
 # Internal function: Process Lens Model section
@@ -822,10 +820,10 @@ function _sampling!(dict::Dict)
    mcmc_params = _mcmc!(sampling_dict)
 
    return SamplerConfig(
-      scheme=Symbol(sampling_dict[:scheme]),
-      verbose=verbose,
-      optimizer=optimizer_params,
-      mcmc=mcmc_params
+      scheme    = scheme,
+      verbose   = verbose,
+      optimizer = optimizer_params,
+      mcmc      = mcmc_params
    )
 end
 
