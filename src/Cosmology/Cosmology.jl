@@ -18,18 +18,17 @@ using ..Constants
 # --------------------------------------------------------------------------------------------------
 export init_cosmology
 export scale_factor
-export hubble_time
+export hubble_time, age, lookback_time
 export hubble_distance
 export hubble_parameter
 export Omega_mz, Omega_rz, Omega_wz, Omega_kz, rho_cz
-export lookback_time
 export comoving_distance_radial
 export comoving_distance_transverse
 export angular_diameter_distance
 export luminosity_distance
 export distance_modulus, angular_scale
 export comoving_volume_element, comoving_volume
-export adis_to_zs
+export adis2zs
 
 
 # --------------------------------------------------------------------------------------------------
@@ -45,7 +44,7 @@ abstract type AbstractCosmology end
                    Omega_r0::RV = 0.0, 
                    Omega_w0::RV = 0.7,
                    Omega_k0::RV = 1.0 - Omega_m0 - Omega_r0 - Omega_w0)
-An Abstract type to initialize a cosmology with given parameters. 
+A keyword struct to initialize a cosmology with given parameters. 
 
 For typical cases, the user provides values of `H0`, `Omega_m0`, and `Omega_w0` (and `Omega_r0` 
 if non-zero). For such a case, the default value of `Omega_k0` ensures that the sum of density 
@@ -70,7 +69,7 @@ user will be used and the universe will not necessarily be **spatially flat**.
    Omega_m0::RV = 0.3
    Omega_r0::RV = 0.0
    Omega_w0::RV = 0.7
-   Omega_k0::RV = 1.0 - Omega_m0 - Omega_r0 - Omega_w0
+   Omega_k0::RV = round(1.0 - Omega_m0 - Omega_r0 - Omega_w0, digits=6)
 end
 
 
@@ -151,6 +150,12 @@ function hubble_time(H0::RV)
 end
 
 
+# Helper function to calculate the integrand of the age and lookback time
+function _time_integrand(cosmology::AbstractCosmology, z::RV)
+   return 1.0 / ( (1.0 + z) * Ez(cosmology, z) )
+end
+
+
 """
     age(cosmology::AbstractCosmology, z::RV)
 Calculate age ``(t_{\\rm age})`` of the Universe at redshift ``z`` in ``{\\rm \\mathbf{Gyr}}``,
@@ -169,11 +174,7 @@ function age(cosmology::AbstractCosmology, z::RV)
    # Hubble time (in years)
    tH = hubble_time(cosmology.H0)
 
-   # Integral part
-   function integrand(cosmology, z)
-      return 1.0 / ( (1.0 + z) * Ez(cosmology, z) )
-   end
-   tC, _ = quadgk(x -> integrand(cosmology, x), z, Inf, atol=1E-10)
+   tC, _ = quadgk(x -> _time_integrand(cosmology, x), z, Inf, atol=1E-10, rtol=1E-10)
    return tH * tC
 end
 
@@ -196,11 +197,7 @@ function lookback_time(cosmology::AbstractCosmology, z::RV)
    # Hubble time (in years)
    tH = hubble_time(cosmology.H0)
 
-   # Integral part
-   function integrand(cosmology, z)
-      return 1.0 / ( (1.0 + z) * Ez(cosmology, z) )
-   end
-   tC, _ = quadgk(x -> integrand(cosmology, x), 0, z, atol=1E-10)
+   tC, _ = quadgk(x -> _time_integrand(cosmology, x), 0, z, atol=1E-10, rtol=1E-10)
    return tH * tC
 end
 
@@ -329,6 +326,12 @@ function hubble_distance(H0::RV)
 end
 
 
+# Helper function to calculate comoving radial distance integrals
+function _distance_integrand(cosmology::AbstractCosmology, z::RV)
+   return 1.0 / Ez(cosmology, z)
+end
+
+
 """
     comoving_distance_radial(cosmo::AbstractCosmology, z1::RV, z2::RV)
 Calculate the comoving radial distance ``(D_C)`` between ``z_1`` and ``z_2`` in ``{\\rm \\mathbf{meters}}``.
@@ -349,11 +352,7 @@ function comoving_distance_radial(cosmology::AbstractCosmology, z1::RV, z2::RV)
    # Hubble distance
    dH = hubble_distance(cosmology.H0)
 
-   # Integral part
-   function integrand(cosmology, z)
-      return 1.0 / Ez(cosmology, z)
-   end
-   dC, _ = quadgk(x -> integrand(cosmology, x), z1, z2, atol=1E-10)
+   dC, _ = quadgk(x -> _distance_integrand(cosmology, x), z1, z2, atol=1E-10, rtol=1E-10)
    return dH * dC
 end
 
@@ -386,7 +385,7 @@ function comoving_distance_transverse(cosmology::AbstractCosmology, z1::RV, z2::
 
    # Get the comoving distance (transverse)
    dM = 0.0
-   if cosmology.Omega_k0 != 0
+   if abs(cosmology.Omega_k0) > 1E-6
       Ωχ = sqrt(abs(cosmology.Omega_k0)) * dC/dH
       if cosmology.Omega_k0 > 0
          dM = dH * sinh(Ωχ) / sqrt(abs(cosmology.Omega_k0))
@@ -514,7 +513,7 @@ V_C = \\begin{cases}
    \\left[ \\frac{D_M}{D_H} \\sqrt{1+Ω_k \\left(\\frac{D_M}{D_H}\\right)^2} 
    - \\frac{1}{\\sqrt{|Ω_k|}} {\\rm arcsinh}\\left( \\sqrt{|Ω_k|} \\frac{D_M}{D_H}  \\right) \\right], & \\text{if } Ω_k > 0, \\\\
 \\frac{4π}{3} D_M^3,                                                  & \\text{if } Ω_k = 0, \\\\
-\\frac{4π}{2} \\frac{D_H^3}{|Ω_k|} \\left[ \\frac{D_M}{D_H} \\sqrt{1+Ω_k \\left(\\frac{D_M}{D_H}\\right)^2} 
+\\frac{4π}{2} \\frac{D_H^3}{Ω_k} \\left[ \\frac{D_M}{D_H} \\sqrt{1+Ω_k \\left(\\frac{D_M}{D_H}\\right)^2} 
       - \\frac{1}{\\sqrt{|Ω_k|}} \\arcsin\\left( \\sqrt{|Ω_k|} \\frac{D_M}{D_H}  \\right) \\right], & \\text{if } Ω_k < 0. \\\\
 \\end{cases}
 ```
@@ -535,7 +534,7 @@ function comoving_volume(cosmology::AbstractCosmology, z::RV)
 
    # Get the comoving volume up to redshift z
    com_vol = 0.0
-   if cosmology.Omega_k0 != 0.0
+   if abs(cosmology.Omega_k0) > 1E-6
       term1 = 4.0 * π * dH^3 / 2.0 / cosmology.Omega_k0
       term2 = (dM/dH) * sqrt(1.0 + cosmology.Omega_k0 * (dM / dH)^2)
       if cosmology.Omega_k0 > 0.0
@@ -558,20 +557,18 @@ Calculate the source redshift (``z_s``) from the distance ratio (``a_{\\rm dis}`
 - `cosmology::AbstractCosmology`: Cosmology object.
 - `z_d::RV`: Lens redshift.
 - `adis::RV`: Distance ratio, ``a_{\\rm dis}``.
+
+# Keyword Arguments
 - `max_iter::Int64=10000`: Maximum number of iterations.
-- `tol::Float64=1e-6`: Tolerance for the root finding algorithm.
+- `tol::Float64=1E-6`: Tolerance for the root finding algorithm.
 
 # Returns
 - `z_s::RV`: Redshift of the source.
 """
-function adis2zs(cosmology::AbstractCosmology, z_d::RV, adis::RV; max_iter::Int64=100_000, tol::Float64=1e-10)
+function adis2zs(cosmology::AbstractCosmology, z_d::RV, adis::RV; max_iter::Int64=10000, tol::Float64=1E-6)
    # Source low and high redshift bounds
    z_l = z_d + 1E-6
    z_u = 100.0
-
-   # Get distance ratio between [0, 1]
-   adis_a = angular_diameter_distance(cosmology, z_d, z_l) / angular_diameter_distance(cosmology, 0.0, z_l)
-   adis_b = angular_diameter_distance(cosmology, z_d, z_u) / angular_diameter_distance(cosmology, 0.0, z_u)
 
    for _ in 1:max_iter
       # Get the middle redshift
