@@ -480,7 +480,7 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
          βx_ind = @. x - αx
          βy_ind = @. y - αy
 
-         # Get weighted source position (Section 4.1 in https://arxiv.org/pdf/astro-ph/0102340)
+         # Get weighted source position
          βx_model, βy_model, _ = LensModel.Likelihood._weighted_position(βx_ind, βy_ind, A, σx, σy, σθ, n)
 
          # Get image positions
@@ -553,4 +553,132 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
       save(plot_name, fig, px_per_unit=resolution)
    end
    return fig
+end
+
+
+function LensFactory.LensModel.plot_image_scatter(model::LensModel.ModelConfig,
+                                                  chains::Array{Float64, 3},
+                                                  logL::Matrix{Float64};
+                                                  save_plot::Bool        = true,
+                                                  plot_name::String      = "./predicted_scatter.png",
+                                                  resolution::Int64      = 2,
+                                                  point_kws::NamedTuple  = (markersize=18, marker=:circle, color=:transparent, strokecolor=:black, strokewidth=2)
+                                                 )
+   # Get the best parameters based on minimum log-likelihood
+   best_θ, _ = LensFactory.LensModel.get_best_fit_parameters(logL; chains=chains)
+ 
+   # Get list of parameters for the lens model
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+ 
+   # Replace free parameter values by best-fit values
+   pvals = LensFactory.LensModel.LensModelUtils.param_dict(model, best_θ, param_ref)
+ 
+   best_model = LensFactory.LensModel.LensModelUtils.build_lens(model, pvals)
+
+   # Generate grid
+   FOV = model.observation.FOV
+   pixel_scale = model.observation.pixel_scale
+   x_grid, y_grid = Lenses.get_meshgrid(0.5 * FOV[1], 0.5 * FOV[2], pixel_scale)
+ 
+   # Get angular-diameter distance ratios
+   adis = LensModel.adis_current(model, pvals)
+ 
+   # Calculate lensing quantities
+   ψ_all, αx_all, αy_all, A_all = LensModel.lens_quantities(model, best_model)
+
+   # Identity tuple
+   I4 = (1.0, 0.0, 0.0, 1.0)
+
+   # Collect residuals across every knot/image
+   dx_all = Float64[]
+   dy_all = Float64[]
+
+   sid = 1
+   kid = 1
+   for src in model.source_config.sources
+      # Angular-diameter distance ratio for this source
+      adis_value = adis[sid]
+ 
+      for knot in src.knots
+         # Knot positions and measurement errors
+         x  = knot.x
+         y  = knot.y
+         σx = knot.σx
+         σy = knot.σy
+         σθ = knot.σθ
+
+         # Number of images for this knot
+         n = length(x)
+ 
+         # Deflection vector at the knot positions
+         αx = @. adis_value * αx_all[kid]
+         αy = @. adis_value * αy_all[kid]
+
+         # Deformation tensor at the knot positions
+         A = @. adis_value * A_all[kid]
+         for i in eachindex(A)
+            @. A[i] = I4[i] - A[i]
+         end
+ 
+         # Individual source positions using broadcasting
+         βx_ind = @. x - αx
+         βy_ind = @. y - αy
+ 
+         # Weighted source position
+         βx_model, βy_model, _ = LensModel.Likelihood._weighted_position(βx_ind, βy_ind, A, σx, σy, σθ, n)
+ 
+         # Predicted image positions
+         predicted_image = Lenses.get_image(best_model, x_grid, y_grid, adis_value, (βx_model, βy_model))
+
+         # Convert predicted to mutable arrays for iterative removal
+         pred_x = Float64[p[1] for p in predicted_image]
+         pred_y = Float64[p[2] for p in predicted_image]
+
+         # Matching observed images to predicted images
+         for i in 1:n
+            if isempty(pred_x)
+               push!(results, "MISSING")
+               continue
+            end
+
+            # Calculate distances to all remaining candidates
+            dx = @. pred_x .- x[i]
+            dy = @. pred_y .- y[i]
+            dist_sq = @. dx^2 + dy^2
+
+            # Find the closest predicted image index
+            best_idx = argmin(dist_sq)
+
+            d2 = dist_sq[best_idx]
+            dist = sqrt(d2)
+
+            # Residuals (observed - predicted), assumed same ordering/length as knot.x, knot.y
+            push!(dx_all, x[i] - pred_x[best_idx])
+            push!(dy_all, y[i] - pred_y[best_idx])
+
+            # Remove this candidate so it can't be matched twice
+            deleteat!(pred_x, best_idx)
+            deleteat!(pred_y, best_idx)
+         end
+         kid = kid + 1
+      end
+      sid = sid + 1
+   end
+
+   # Initialize figure
+   fig, ax = LensFactory.Lenses.plot_sky(2, 2) 
+   # Residuals
+   scatter!(ax, dx_all, dy_all; point_kws..., label="Residuals (obs - pred)")
+ 
+   ax.xlabel = L"\Delta\theta_1~\text{(arcsec)}"
+   ax.ylabel = L"\Delta\theta_2~\text{(arcsec)}"
+   ax.title  = "Image-plane residuals"
+ 
+   axislegend(ax)
+ 
+   if save_plot
+      save(plot_name, fig, px_per_unit=resolution)
+   end
+ 
+   return fig, ax
 end

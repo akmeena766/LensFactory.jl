@@ -24,26 +24,38 @@ end
 
 
 """
-    LensFactory.Lenses.plot_sky(θx::Matrix{<:RV}, θy::Matrix{<:RV})
+    LensFactory.Lenses.plot_sky(θx::RV, θy::RV)
 This function initializes a blank sky plot with specified axis labels and limits. The user can then 
 add additional elements to the plot as needed. The function returns the `figure` and `axis` objects 
 for further customization.
 
 # Arguments
-- `θx::Matrix{<:RV}` -- x-coordinates grid
-- `θy::Matrix{<:RV}` -- y-coordinates grid
+- `θx::RV` -- x-coordinates half size
+- `θy::RV` -- y-coordinates half size
 
-# Keyword arguments
+# Keyword Arguments
 - `figure_size::NTuple{2, RV} = (500, 400)` -- Figure size
-- `resolution::Int = 2` -- Resolution of the plot
+- `resolution::Int64          = 2` -- Resolution of the plot
+- `figure_padding::Int64      = 15` -- Padding around the plot
+- `fontsize::Int64            = 20` -- Font size for the plot
+- `xlabel::String             = L"θ_x \\text{(in arcseconds)}"` -- X-axis label
+- `ylabel::String             = L"θ_y \\text{(in arcseconds)}"` -- Y-axis label
+
 
 # Returns
 - `fig`: A Makie figure object containing the sky plot.
 - `ax`: The axis object of the plot for further customization.
 """
-function LensFactory.Lenses.plot_sky(θx::Matrix{<:RV}, θy::Matrix{<:RV}; figure_size::NTuple{2, RV} = (500, 400), resolution::Int = 2)
+function LensFactory.Lenses.plot_sky(θx::RV, θy::RV; 
+                                     figure_size::NTuple{2, RV} = (500, 500), 
+                                     resolution::Int64          = 2, 
+                                     figure_padding::Int64      = 15,
+                                     fontsize::Int64            = 20,
+                                     xlabel::AbstractString     = L"θ_x \text{(in arcseconds)}",
+                                     ylabel::AbstractString     = L"θ_y \text{(in arcseconds)}"
+                                    )
    # Initialize empty figure
-   fig = Figure(size=figure_size, figure_padding=15, fontsize=20, fonts=(; regular="Times New Roman"))
+   fig = Figure(size=figure_size, figure_padding=figure_padding, fontsize=fontsize, fonts=(; regular="Times New Roman"))
 
    # create axis for the plot
    ax = Axis(fig[1, 1])
@@ -51,11 +63,13 @@ function LensFactory.Lenses.plot_sky(θx::Matrix{<:RV}, θy::Matrix{<:RV}; figur
    # Set plot keywords
    LensFactory.Lenses.set_plotKws!(ax)
 
-   # Set axis labels and limits
-   ax.xlabel = L"\theta_1 \text{(in arcseconds)}"
-   ax.ylabel = L"\theta_2 \text{(in arcseconds)}"
-   xlims!(minimum(θx), maximum(θx))
-   ylims!(minimum(θy), maximum(θy))
+   # Set axis labels
+   ax.xlabel = xlabel
+   ax.ylabel = ylabel
+
+   # Set axis limits
+   xlims!(-θx, +θx)
+   ylims!(-θy, +θy)
 
    return fig, ax
 end
@@ -137,7 +151,6 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Mat
             lines!(ax1, first.(curve), last.(curve); caustic_rad_kws...)
          end
       end
-
    
       # Set plot keywords
       LensFactory.Lenses.set_plotKws!(ax1)

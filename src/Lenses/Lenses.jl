@@ -268,7 +268,7 @@ Calculate (vector) deflection angle at the given angular coordinate(s) for a giv
    - `αx`: x-component of the deflection angle (in ``\\rm \\mathbf{arcseconds}``).
    - `αy`: y-component of the deflection angle (in ``\\rm \\mathbf{arcseconds}``).
 """
-function get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: ROA
+function get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: Union{ROA, Vector{Int64}}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
@@ -282,7 +282,7 @@ function get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: ROA
 
    # Initialize zero-valued potential array
    ψx = zero(θx)
-   ψy = zero(θx)
+   ψy = zero(θy)
 
    if lens._lens_ == :CompositeLens
       for component in lens._components_
@@ -310,9 +310,6 @@ function get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: RV
    ψxx = zero(θx)
    ψyy = zero(θy)
    ψxy = zero(θx)
-
-   # Promote the input coordinates from Int64 to Float64
-   ψxx, ψyy, ψxy, θx, θy = promote(ψxx, ψyy, ψxy, θx, θy)
 
    if lens._lens_ == :CompositeLens
       for component in lens._components_
@@ -349,17 +346,12 @@ i.e., ``(ψ_{xx}, ψ_{yy}, ψ_{xy})``.
    - `ψyy`: yy-component of the jacobian.
    - `ψxy`: xy-component of the jacobian.
 """
-function get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: ROA
+function get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: Union{ROA, Vector{Int64}}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
    end
-   
-   # Check if the input coordinates are of the same size
-   if size(θx) != size(θy)
-      throw(ArgumentError("Input coordinates must be of the same size."))
-   end
-   
+      
    # Promote both only if either is Int64
    if eltype(θx) === Int64 || eltype(θy) === Int64
       θx = Float64.(θx)
@@ -596,6 +588,14 @@ end
 
 """
     get_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64, β::NTuple{2, RV})
+Calculate image positions for a given lens model and source position. To get the image positions,
+this implementation finds the intersection points of contours corresponding to,
+```math
+\\pmb{β} - \\pmb{θ} + a_{\\rm dis} \\, \\pmb{α}(\\pmb{θ}) = 0,
+```
+where ``\\pmb{β}`` is the source position, ``\\pmb{θ}`` is the image plane grid, ``a_{\\rm dis}`` is 
+the distance ratio (i.e., ``D_{ds}/D_s``), and ``\\pmb{α}(\\pmb{θ})`` is the deflection angle. To 
+find the intersection points inside the pixels, we use bi-linear interpolation.
 """
 function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::NTuple{2, RV}) where T <: Matrix{<:RV}
    # Get the potential gradient
@@ -623,21 +623,16 @@ end
 
 """
     get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::T) where T <: Matrix{<:RV}
-Calculate image positions for a given lens model and source position. To get the image positions,
-this implementation finds the intersection points of contours corresponding to,
-```math
-\\pmb{β} - \\pmb{θ} + a_{\\rm dis} \\, \\pmb{α}(\\pmb{θ}) = 0,
-```
-where ``\\pmb{β}`` is the source position, ``\\pmb{θ}`` is the image plane grid, ``a_{\\rm dis}`` is the 
-distance ratio (i.e., ``D_{ds}/D_s``), and ``\\pmb{α}(\\pmb{θ})`` is the deflection angle. To find 
-the intersection points inside the pixels, we use bi-linear interpolation.
+Calculate image map for an extended source given a lens model. This function employs inverse ray 
+shooting (IRS) to construct the image plane map.
 
 # Arguments
    - `lens::AbstractLens`: Lens model.
    - `θx::Matrix{<:RV}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
    - `θy::Matrix{<:RV}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
    - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
-   - `β`: Source position (in ``\\rm \\mathbf{arcseconds}``).
+   - `β::NTuple{2, RV}` or `β::Matrix{<:RV}`: Either point source position (in ``\\rm \\mathbf{arcseconds}``) 
+      or source intensity map (in ``\\rm \\mathbf{mag/arcsec^2}``).
 
 # Returns
    - `image_position`: Image positions (in ``\\rm \\mathbf{arcseconds}``).
@@ -1297,7 +1292,7 @@ end
 end
 
 @inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_EinastoLens, θx::T, θy::T) where T <: Union{RV, ROA}
-   EinastoLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s, lens.n)
+   return EinastoLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s, lens.n)
 end
 
 @inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_aHernquistLens, θx::T, θy::T) where T <: Union{RV, ROA}
