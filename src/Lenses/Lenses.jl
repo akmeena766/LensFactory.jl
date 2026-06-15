@@ -57,10 +57,15 @@ export get_time_delay
 export get_magnification_image
 export get_magnification_source
 export get_image
+export get_kappa_gamma
 export get_critical_curve
 export get_caustic
 export get_critical_area
 export get_einstein_angle
+export get_radial_profile
+export get_mass_profile
+export shear_cartesian2polar, shear_polar2cartesian
+export ellipticity_cartesian2polar, ellipticity_polar2cartesian
 
 
 # --------------------------------------------------------------------------------------------------
@@ -534,12 +539,13 @@ This function is not optimized for speed and is only intended to visualize the m
    - `θx::Matrix{<:RV}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
    - `θy::Matrix{<:RV}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
    - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
-   - `rays_per_pixel::Int64`: Average number of rays per pixel.
+   - `rays_per_pixel::Int64 = 1`: Average number of rays per pixel.
 
 # Returns
    - `μ_source::Matrix{<:RV}`: Magnification map in source plane.
 """
-function get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Float64; rays_per_pixel::Int64=1) where T <: Matrix{<:RV}
+function get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Float64; 
+                                  rays_per_pixel::Int64 = 1) where T <: Matrix{<:RV}
    # Deflection field
    ψx, ψy = get_deflection(lens, θx, θy)
 
@@ -567,9 +573,13 @@ function get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Floa
          end
 
          for k in 1:rays_per_pixel
+            # Interpolated deflection valies
+            ψx_interp = PolygonOps.bilinear_interpolation(rand_x[k], rand_y[k], ψx)
+            ψy_interp = PolygonOps.bilinear_interpolation(rand_x[k], rand_y[k], ψy)
+
             # Get the source plane position
-            βx = PolygonOps.bilinear_interpolation(rand_x[k], rand_y[k], θx) - adis * PolygonOps.bilinear_interpolation(rand_x[k], rand_y[k], ψx)
-            βy = PolygonOps.bilinear_interpolation(rand_x[k], rand_y[k], θy) - adis * PolygonOps.bilinear_interpolation(rand_x[k], rand_y[k], ψy)
+            βx = PolygonOps.bilinear_interpolation(rand_x[k], rand_y[k], θx) - adis * ψx_interp
+            βy = PolygonOps.bilinear_interpolation(rand_x[k], rand_y[k], θy) - adis * ψy_interp
 
             # Get the corresponding pixel values
             βx_p = round(Int64, βx/pixel_h + nx/2.0)
