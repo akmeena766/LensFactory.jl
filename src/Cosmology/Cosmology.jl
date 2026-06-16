@@ -590,9 +590,7 @@ function adis2zs(cosmology::AbstractCosmology, z_d::RV, adis::RV; max_iter::Int6
          z_u = z_m
       end
    end
-   
    error("Failed to converge after $max_iter iterations.")
-   return nothing
 end
 
 end
