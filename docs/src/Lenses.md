@@ -35,4 +35,7 @@ Lenses.shear_cartesian2polar
 Lenses.shear_polar2cartesian
 Lenses.ellipticity_cartesian2polar
 Lenses.ellipticity_polar2cartesian
+Lenses.parameter_NFWLens
+Lenses.parameter_gNFWLens
+Lenses.parameter_EinastoLens
 ```

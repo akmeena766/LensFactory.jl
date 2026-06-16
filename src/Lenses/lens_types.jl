@@ -1027,7 +1027,11 @@ end
 # Parameter functions for various lenses
 # --------------------------------------------------------------------------------------------------
 """
-    parameter_NFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d::Real=NaN, mass::Real=NaN, x_s::Real=NaN, c::Real=NaN)
+    parameter_NFWLens(; cosmology::Cosmology.AbstractCosmology = nothing, 
+                        z_d::Real  = NaN, 
+                        mass::Real = NaN, 
+                        x_s::Real  = NaN, 
+                        c::Real    = NaN)
 Calculate parameters for NFW lens. The function would either need the concentration `c` or the 
 scale radius `x_s`. **If both are provided, `c` will be used to calculate `x_s` and the input `x_s` 
 will be overwritten.**
@@ -1042,7 +1046,11 @@ will be overwritten.**
 # Returns
 - `NamedTuple`: Tuple of lens parameters.
 """
-function parameter_NFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d::Real=NaN, mass::Real=NaN, x_s::Real=NaN, c::Real=NaN)
+function parameter_NFWLens(; cosmology::Cosmology.AbstractCosmology = nothing, 
+                             z_d::Real  = NaN, 
+                             mass::Real = NaN, 
+                             x_s::Real  = NaN, 
+                             c::Real    = NaN)
    # Overdensity value
    Δ_z = 200.0
 
@@ -1074,7 +1082,12 @@ end
 
 
 """
-    parameter_gNFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d::Real, mass::Real=NaN, x_s::Real=NaN, c::Real=NaN, n::Real=1.0)
+    parameter_gNFWLens(; cosmology::Cosmology.AbstractCosmology = nothing, 
+                         z_d::Real  = NaN, 
+                         mass::Real = NaN, 
+                         x_s::Real  = NaN, 
+                         c::Real    = NaN, 
+                         n::Real    = 1.0)
 Calculate parameters for gNFW lens. The function would either need the concentration `c` or the 
 scale radius `x_s`. **If both are provided, `c` will be used to calculate `x_s` and the input `x_s` 
 will be overwritten.**
@@ -1090,7 +1103,12 @@ will be overwritten.**
 # Returns
 - `NamedTuple`: Tuple of lens parameters.
 """
-function parameter_gNFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d::Real=NaN, mass::Real=NaN, x_s::Real=NaN, c::Real=NaN, n::Real=1.0)
+function parameter_gNFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, 
+                              z_d::Real  = NaN, 
+                              mass::Real = NaN, 
+                              x_s::Real  = NaN, 
+                              c::Real    = NaN, 
+                              n::Real    = 1.0)
    # Check for valid slope parameter
    if !(0.0 < n < 2.0)
       throw(ArgumentError("Slope parameter outside allowed range n ∈ (0, 2) in **parameter_gNFWLens**."))
@@ -1133,7 +1151,12 @@ end
 
 
 """
-    parameter_EinastoLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d::Real, mass::Real=NaN, x_s::Real=NaN, c::Real=NaN, n::Real=0.2)
+    parameter_EinastoLens(; cosmology::Cosmology.AbstractCosmology=nothing, 
+                            z_d::Real  = NaN, 
+                            mass::Real = NaN, 
+                            x_s::Real  = NaN, 
+                            c::Real    = NaN, 
+                            n::Real    = 0.2)
 Calculate parameters of an Einasto lens model. The function would either need the concentration `c` 
 or the scale radius `x_s`. **If both are provided, `c` will be used to calculate `x_s` and the input 
 `x_s` will be overwritten.**
@@ -1149,7 +1172,12 @@ or the scale radius `x_s`. **If both are provided, `c` will be used to calculate
 # Returns
 - `NamedTuple`: Tuple of lens parameters.
 """
-function parameter_EinastoLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d::Real=NaN, mass::Real=NaN, x_s::Real=NaN, c::Real=NaN, n::Real=0.2)
+function parameter_EinastoLens(; cosmology::Cosmology.AbstractCosmology=nothing, 
+                                 z_d::Real  = NaN, 
+                                 mass::Real = NaN, 
+                                 x_s::Real  = NaN, 
+                                 c::Real    = NaN, 
+                                 n::Real    = 0.2)
    # Overdensity value
    Δ_z = 200.0
 
