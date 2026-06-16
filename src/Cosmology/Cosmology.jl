@@ -16,6 +16,7 @@ using ..Constants
 # --------------------------------------------------------------------------------------------------
 # Functions to export
 # --------------------------------------------------------------------------------------------------
+export AbstractCosmology
 export init_cosmology
 export scale_factor
 export hubble_time, age, lookback_time
