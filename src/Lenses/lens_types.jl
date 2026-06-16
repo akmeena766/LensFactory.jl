@@ -425,40 +425,13 @@ Initialize an approximate Hernquist lens (aHernquistLens) with the given paramet
 end
 
 
-@kwdef struct init_gNFWLens <: AbstractLens
-   _lens_::Symbol = :gNFWLens
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   k_s::Real = NaN
-   x_s::Real = NaN
-   n::Real   = NaN
-end
-
-@kwdef struct init_EinastoLens <: AbstractLens
-   _lens_::Symbol = :EinastoLens
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   k_s::Real = NaN
-   x_s::Real = NaN
-   n::Real   = 0.2
-end
-
-@kwdef struct init_eNFWMDLens <: AbstractLens
-   _lens_::Symbol = :eNFWMDLens
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   k_s::Real = NaN
-   x_s::Real  = NaN
-   eps::Real  = NaN
-   pa::Real   = NaN
-end
-
-
 """
-    init_MultiPlummerLens(n::Int64=NaN, D_d::Real=NaN, x_c=Vector{<:Real}, y_c=Vector{<:Real}, mass=Vector{<:Real}, x_s=Vector{<:Real})
+    init_MultiPlummerLens(n::Int64  = NaN, 
+                          D_d::Real = NaN, 
+                          x_c  = Vector{<:Real}, 
+                          y_c  = Vector{<:Real}, 
+                          mass = Vector{<:Real}, 
+                          x_s  = Vector{<:Real})
 Initialize a Multi-component Plummer lens with the given parameters.
 
 # Keyword Arguments
@@ -481,7 +454,12 @@ end
 
 
 """
-    init_MultiGaussianLens(n::Int64=NaN, D_d::Real=NaN, x_c=Vector{<:Real}, y_c=Vector{<:Real}, mass=Vector{<:Real}, x_s=Vector{<:Real})
+    init_MultiGaussianLens(n::Int64  = NaN, 
+                           D_d::Real = NaN, 
+                           x_c  = Vector{<:Real}, 
+                           y_c  = Vector{<:Real}, 
+                           mass = Vector{<:Real}, 
+                           x_s  = Vector{<:Real})
 Initialize a Multi-component Gaussian lens with the given parameters.
 
 # Keyword Arguments
@@ -504,7 +482,14 @@ end
 
 
 """
-    init_MultiPJELens(n::Int64=NaN, x_c=Vector{<:Real}, y_c=Vector{<:Real}, v_d=Vector{<:Real}, x_s=Vector{<:Real}, x_t=Vector{<:Real}, eps=Vector{<:Real}, pa=Vector{<:Real})
+    init_MultiPJELens(n::Int64 = NaN, 
+                      x_c = Vector{<:Real}, 
+                      y_c = Vector{<:Real}, 
+                      v_d = Vector{<:Real}, 
+                      x_s = Vector{<:Real}, 
+                      x_t = Vector{<:Real}, 
+                      eps = Vector{<:Real}, 
+                      pa  = Vector{<:Real})
 Initialize a Multi-component PJE lens with the given parameters.
 
 # Keyword Arguments
@@ -527,20 +512,6 @@ Initialize a Multi-component PJE lens with the given parameters.
    x_t  = Vector{Real}()
    eps  = Vector{Real}()
    pa   = Vector{Real}()
-end
-
-
-@kwdef struct init_CompositeLens <: AbstractLens
-   _lens_::Symbol = :CompositeLens
-   _components_ = Vector{AbstractLens}()
-end
-
-
-@kwdef struct init_MultiPlaneLens <: AbstractLens
-   _lens_::Symbol = :MultiPlaneLens
-   n_p::Int64   = NaN
-   z_d = Vector{<:Real}()
-   _plane_ = Vector{AbstractLens}()
 end
 
 
@@ -636,14 +607,15 @@ overwritten.**
 - `eps::Real = NaN`: Ellipticity.
 - `pa::Real = NaN`: Position angle (in ``\\rm \\mathbf{radians}``).
 """
-@kwdef struct init_tNFWLens <: AbstractLens
-   _lens_::Symbol = :tNFWLens
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   k_s::Real = NaN
-   x_s::Real = NaN
-   x_t::Real = NaN
+@kwdef struct init_eNFWMDLens <: AbstractLens
+   _lens_::Symbol = :eNFWMDLens
+   D_d::Real  = NaN
+   x_c::Real  = 0.0
+   y_c::Real  = 0.0
+   k_s::Real  = NaN
+   x_s::Real  = NaN
+   eps::Real  = NaN
+   pa::Real   = NaN
 end
 
 function init_eNFWMDLens(cosmology::Cosmology.AbstractCosmology, z_d::Real; x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_s::Real=NaN, c::Real=NaN, eps::Real=NaN, pa::Real=NaN)
@@ -747,7 +719,13 @@ end
 
 
 """
-    init_tNFWLens(cosmology::AbstractCosmology, z_d::Real; x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_s::Real=NaN, c::Real=NaN, x_t::Real=NaN)
+    init_tNFWLens(cosmology::AbstractCosmology, z_d::Real; 
+                  x_c::Real  = 0.0, 
+                  y_c::Real  = 0.0, 
+                  mass::Real = NaN, 
+                  x_s::Real  = NaN, 
+                  c::Real    = NaN, 
+                  x_t::Real  = NaN)
 Initialize a truncated Navarro-Frenk-White (tNFW) lens with the given parameters. The lens model can
 be initialized with either the concentration `c` or the scale radius `x_s`. **If both are provided, 
 `c` will be used to calculate `x_s` and the input `x_s` will be overwritten.**
@@ -764,6 +742,16 @@ be initialized with either the concentration `c` or the scale radius `x_s`. **If
 - `c::Real = NaN`: Concentration of the lens.
 - `x_t::Real = NaN`: Truncation radius (in ``\\rm \\mathbf{arcseconds}``).
 """
+@kwdef struct init_tNFWLens <: AbstractLens
+   _lens_::Symbol = :tNFWLens
+   D_d::Real = NaN
+   x_c::Real = 0.0
+   y_c::Real = 0.0
+   k_s::Real = NaN
+   x_s::Real = NaN
+   x_t::Real = NaN
+end
+
 function init_tNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::Real; x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_s::Real=NaN, c::Real=NaN, x_t::Real=NaN)
    # Overdensity value
    Δ_z = 200.0
@@ -796,7 +784,13 @@ end
 
 
 """
-    init_gNFWLens(cosmology::AbstractCosmology, z_d::Real; x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_s::Real=NaN, c::Real=NaN, n::Real=1.0)
+    init_gNFWLens(cosmology::AbstractCosmology, z_d::Real; 
+                  x_c::Real  = 0.0, 
+                  y_c::Real  = 0.0, 
+                  mass::Real = NaN, 
+                  x_s::Real  = NaN, 
+                  c::Real    = NaN, 
+                  n::Real    = 1.0)
 Initialize a generalized Navarro-Frenk-White (gNFW) lens with the given parameters. The lens model can
 be initialized with either the concentration `c` or the scale radius `x_s`. **If both are provided, 
 `c` will be used to calculate `x_s` and the input `x_s` will be overwritten.** The parameter `n` 
@@ -814,6 +808,16 @@ defines the slope of the density profile.
 - `c::Real = NaN`: Concentration of the lens.
 - `n::Real = 1.0`: Slope parameter of the lens.
 """
+@kwdef struct init_gNFWLens <: AbstractLens
+   _lens_::Symbol = :gNFWLens
+   D_d::Real = NaN
+   x_c::Real = 0.0
+   y_c::Real = 0.0
+   k_s::Real = NaN
+   x_s::Real = NaN
+   n::Real   = NaN
+end
+
 function init_gNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::Real; x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_s::Real=NaN, c::Real=NaN, n::Real=1.0)
    # Check for valid slope parameter
    if !(0.0 < n < 2.0)
@@ -858,7 +862,12 @@ end
 
 
 """
-    init_EinastoLens(D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, k_s::Real=NaN, x_s::Real=NaN, n::Real=0.2)
+    init_EinastoLens(D_d::Real = NaN, 
+                     x_c::Real = 0.0, 
+                     y_c::Real = 0.0, 
+                     k_s::Real = NaN, 
+                     x_s::Real = NaN, 
+                     n::Real   = 0.2)
 Initialize an Einasto lens with the given parameters. The lens model can be initialized with either
 the concentration `c` or the scale radius `x_s`. **If both are provided, `c` will be used to 
 calculate `x_s` and the input `x_s` will be overwritten.** The parameter `n` defines the slope of 
@@ -876,6 +885,16 @@ the density profile.
 - `c::Real = NaN`: Concentration of the lens.
 - `n::Real = 0.2`: Slope parameter of the lens.
 """
+@kwdef struct init_EinastoLens <: AbstractLens
+   _lens_::Symbol = :EinastoLens
+   D_d::Real = NaN
+   x_c::Real = 0.0
+   y_c::Real = 0.0
+   k_s::Real = NaN
+   x_s::Real = NaN
+   n::Real   = 0.2
+end
+
 function init_EinastoLens(cosmology::Cosmology.AbstractCosmology, z_d::Real; x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_s::Real=NaN, c::Real=NaN, n::Real=0.2)
    # Overdensity value
    Δ_z = 200.0
@@ -910,7 +929,9 @@ function init_EinastoLens(cosmology::Cosmology.AbstractCosmology, z_d::Real; x_c
 end
 
 
-#---------------------- Composite and Multi-plane lens constructors --------------------------------
+# --------------------------------------------------------------------------------------------------
+# Composite and Multi-plane lens constructors
+# --------------------------------------------------------------------------------------------------
 # Dictionary to map lens types to their initialization functions and arguments
 const lens_init_functions = Dict{Symbol, Function}(
    :PointLens         => (comp -> init_PointLens(D_d=comp.D_d, x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass)),
@@ -949,6 +970,11 @@ Initialize a composite lens from a vector of lens components.
 # Returns
 - `CompositeLens`: Composite lens.
 """
+@kwdef struct init_CompositeLens <: AbstractLens
+   _lens_::Symbol = :CompositeLens
+   _components_ = Vector{AbstractLens}()
+end
+
 function init_CompositeLens(lens::Vector{<:NamedTuple})
    # Define a compoent vector of known size
    lens_components = Vector{AbstractLens}(undef, length(lens))
@@ -968,7 +994,13 @@ function init_CompositeLens(lens::Vector{<:NamedTuple})
 end
 
 
-# Constructor for multi-plane lens
+@kwdef struct init_MultiPlaneLens <: AbstractLens
+   _lens_::Symbol = :MultiPlaneLens
+   n_p::Int64   = NaN
+   z_d = Vector{<:Real}()
+   _plane_ = Vector{AbstractLens}()
+end
+
 function init_MultiPlaneLens(lens::Vector{<:NamedTuple})   
    # Get sorted unique lens redshifts
    zd_unique = unique(component.z_d for component in lens)
@@ -991,7 +1023,9 @@ function init_MultiPlaneLens(lens::Vector{<:NamedTuple})
 end
 
 
-#---------------------- Parameter functions for various lenses -------------------------------------
+# --------------------------------------------------------------------------------------------------
+# Parameter functions for various lenses
+# --------------------------------------------------------------------------------------------------
 """
     parameter_NFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, z_d::Real=NaN, mass::Real=NaN, x_s::Real=NaN, c::Real=NaN)
 Calculate parameters for NFW lens. The function would either need the concentration `c` or the 
