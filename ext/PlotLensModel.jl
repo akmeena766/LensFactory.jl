@@ -1,20 +1,93 @@
+# Calculate the density threshold values corresponding to specific cumulative 
+# probability contours (quantiles).
+#
+# Arguments
+# - `dens::` A multi-dimensional array or vector containing density values (e.g., from a KDE).
+#
+# Keyword Arguments
+# - `quantiles::Vector{Float64} = [0.393, 0.865, 0.989]`: A sorted list of target cumulative 
+# probabilities. 
+#
+# Returns
+# - `Vector{Float64}`: The threshold density values for each requested quantile, 
+# ordered the same as `quantiles`.
 function _get_levels(dens; quantiles=[0.393, 0.865, 0.989])
    sorted_dens = sort(vec(dens), rev=true)
    cumulative_dens = cumsum(sorted_dens) ./ sum(sorted_dens)
    return [sorted_dens[findfirst(x -> x >= q, cumulative_dens)] for q in quantiles]
 end
 
+# Turns the user-facing `param_indices` argument into a concrete vector of
+# integer positions into `free_parameter_names` / the third dimension of `chains`.
+#
+# Arguments
+# - `free_parameter_names::Vector{Tuple{Symbol, Symbol}}`: list of free parameter names.
+#
+# Arguments
+# - `param_ids`: can be:
+#   - `Nothing`:                       every parameter
+#   - `Symbol`:                        filter by component (1st tuple element), e.g. :lens1
+#   - `Vector{Symbol}`:                filter by component (1st tuple element), e.g. :lens1 
+#                                      or `[:lens1, :lens3]`
+#   - `Vector{Tuple{Symbol, Symbol}}`: exact matches, e.g. [(:lens1, :eps), (:lens2, :mass)]
+#   - `Vector{Int64}`:                 direct positions, e.g. [1, 3, 5]
+#
+# Returns
+# - `Vector{Int64}`: indices corresponding to `free_parameter_names` based on `param_ids`.
+function _resolve_param_indices(free_parameter_names::AbstractVector{Tuple{Symbol, Symbol}}, 
+                                param_ids::Union{Nothing, 
+                                                 Symbol, 
+                                                 AbstractVector{Symbol}, 
+                                                 AbstractVector{Int64}, 
+                                                 AbstractVector{Tuple{Symbol, Symbol}}}
+                                )
+   # Get total number of free parameters
+   n_total = length(free_parameter_names)
+   
+   # If no indices are provided, return all indices
+   if isnothing(param_ids)
+      return collect(1:n_total)
+   end
+
+   # Allow a single bare symbol, e.g. param_indices = :lens1
+   selection = param_ids isa Symbol ? [param_ids] : param_ids
+
+   if all(x -> x isa Integer, selection)
+      # Direct positions, e.g. [1, 3, 5]
+      idx = collect(Int64, selection)
+      @assert all(1 .<= idx .<= n_total) "param_ids out of range 1:$(n_total)"
+
+   elseif all(x -> x isa Symbol, selection)
+      # Filter by component name only, e.g. :lens1 -> every (:lens1, *) entry
+      idx = findall(p -> p[1] in selection, free_parameter_names)
+      isempty(idx) && error("No entries in free_parameter_names match component(s) $(selection)")
+   else
+      # Full (component, param) pairs to look up directly
+      idx = Int[]
+      for entry in selection
+         pos = findfirst(==(entry), free_parameter_names)
+         isnothing(pos) && error("Could not find $(entry) in free_parameter_names")
+         push!(idx, pos)
+      end
+   end
+   return idx
+end
+
 # --------------------------------------------------------------------------------------------------
 # Corner Plot
 # --------------------------------------------------------------------------------------------------
-PARAM_NAME = Dict(:lens1 => "L1", :lens2 => "L2", :lens3 => "L3", :lens4 => "L4", :lens5 => "L5", 
-                  :lens6 => "L6", :lens7 => "L7", :lens8 => "L8", :lens9 => "L9", :lens10 => "L10",
-                  :scaling => "S", 
-                  :x_c => "x_c", :y_c => "y_c", :eps => "\\epsilon", :pa => "\\phi", :x_s => "x_s", :x_t => "x_t",
-                  :v_d => "v_d", :mass => "\\log[M]", :c => "c",
-                  :gamma => "\\gamma", :angle => "\\theta", :delta => "\\delta",
-                  :ref_sigma => "\\sigma_{\\star}", :ref_core => "\\theta_{c,\\star}", :ref_cut => "\\theta_{t,\\star}")
-
+PARAM_NAME = Dict{Symbol, String}(:lens1 => "L1", :lens2 => "L2", :lens3 => "L3", :lens4 => "L4", 
+                                  :lens5 => "L5", :lens6 => "L6", :lens7 => "L7", :lens8 => "L8", 
+                                  :lens9 => "L9", :lens10 => "L10",
+                                  :scaling => "S", 
+                                  :x_c => "x_c", :y_c => "y_c", 
+                                  :eps => "\\epsilon", :pa => "\\phi", 
+                                  :x_s => "x_s", :x_t => "x_t",
+                                  :v_d => "v_d", :mass => "\\log[M]", :c => "c",
+                                  :gamma => "\\gamma", :angle => "\\theta", :delta => "\\delta",
+                                  :ref_sigma => "\\sigma_{\\star}", 
+                                  :ref_core => "\\theta_{c,\\star}", 
+                                  :ref_cut => "\\theta_{t,\\star}")
 
 """
     LensFactory.LensModel.plot_corner(chains, logL; free_parameter_names=nothing,
@@ -40,22 +113,40 @@ Generates a corner plot for the given MCMC chains and log-likelihood values.
 # Returns
 - A Makie figure object containing the corner plot.
 """
-function LensFactory.LensModel.plot_corner(chains, logL; free_parameter_names=nothing, 
-                                                         burn_in::Float64=0.2, 
-                                                         thin::Int64=100, 
-                                                         save_plot::Bool=true, 
-                                                         plot_name::String="./corner.png", 
-                                                         resolution::Int64=2)
+function LensFactory.LensModel.plot_corner(chains, logL; 
+                                           free_parameter_names = nothing,
+                                           plot_parameters      = nothing,
+                                           burn_in::Float64     = 0.3,
+                                           thin::Int64          = 100,
+                                           save_plot::Bool      = true,
+                                           plot_name::String    = "./corner.png",
+                                           resolution::Int64    = 2)
    # Get chain details 
    n_steps, n_chains, n_params = size(chains)
+
+   # Get parameter indices to plot
+   plot_idx = _resolve_param_indices(free_parameter_names, plot_parameters)
+   n_params = length(plot_idx)
    
    # Get best-fit parameter and errors
-   best_θ, _, lower_err, upper_err = LensFactory.LensModel.get_best_fit_parameters(logL; 
-                                       chains=chains, with_errors=true, burn_in=burn_in, thin=thin)
+   best_θ_all, _, lower_err_all, upper_err_all = 
+      LensFactory.LensModel.get_best_fit_parameters(logL; 
+                                                    chains=chains, 
+                                                    with_errors=true, 
+                                                    burn_in=burn_in, 
+                                                    thin=thin)
 
+   # Get best-fit and errors for selected parameters
+   best_θ    = best_θ_all[plot_idx]
+   lower_err = lower_err_all[plot_idx]
+   upper_err = upper_err_all[plot_idx]
+
+   # Keep only the requested labels, in the requested order
+   free_parameter_names = free_parameter_names[plot_idx]
+   
    # Remove Burn-in
    start_idx = Int(floor(n_steps * burn_in)) + 1
-   thinned_chain = chains[start_idx:thin:end, :, :]
+   thinned_chain = chains[start_idx:thin:end, :, plot_idx]
 
    # Reshape the thinned chain into a flat array
    flat_chain = reshape(thinned_chain, :, n_params)
@@ -68,7 +159,8 @@ function LensFactory.LensModel.plot_corner(chains, logL; free_parameter_names=no
    
    # Create figure and pad in all directions
    fig = Figure(size = (base_size, base_size), 
-               rowgap = 0, colgap = 0, 
+               rowgap = 0, 
+               colgap = 0, 
                figure_padding = 25,
                fontsize = font_size, 
                fonts=(; regular="Times New Roman"))
@@ -140,135 +232,6 @@ function LensFactory.LensModel.plot_corner(chains, logL; free_parameter_names=no
    rowgap!(fig.layout, 0)
    colgap!(fig.layout, 0)
 
-   if save_plot
-      save(plot_name, fig, px_per_unit=resolution)
-   end
-   return fig
-end
-
-
-"""
-    LensFactory.LensModel.plot_corner(results; free_parameter_names=nothing,
-                                               save_plot::Bool=true,
-                                               plot_name::String="./corner_optimizer.png",
-                                               resolution::Int64=2)
-Generates a corner plot for the optimizer results. This plot is useful to check the convergence of
-the optimizer runs. For example, if the optimizer is run for 1000 times, the corner plot
-will show the distribution of the parameters in each of the converged runs.
-
-# Arguments
-- `results`: Vector of optimizer results, each containing `.θ` (parameter vector) and `.f` (chi-squared value).
-
-# Keyword arguments
-- `free_parameter_names = nothing`: List of parameter names for labeling the axes.
-- `save_plot::Bool = true`: Whether to save the plot as "corner_optimizer.png".
-   - `plot_name::String = "./corner_optimizer.png"`: Filename for saving the plot.
-   - `resolution::Int64 = 2`: Resolution for saving the plot.
-
-# Returns
-- A Makie figure object containing the corner plot.
-"""
-function LensFactory.LensModel.plot_corner(results; free_parameter_names=nothing,
-                                                    save_plot::Bool=true, 
-                                                    plot_name::String="./corner_optimizer.png", 
-                                                    resolution::Int64=2)
-
-   # Get the best-fit parameter vector. Results are already sorted based on log-likelihood
-   best_θ = results[1].θ
-   n_params = length(best_θ)
-
-   # Create matrix from optimizer results
-   θ_matrix = hcat([res.θ for res in results]...)'
-
-   # Get result details
-   n_steps, n_params = size(θ_matrix)
-
-   # Calculate (asymmetric) errors as we are defining errors relative to the Best-Fit value
-   lower_err = zeros(n_params)
-   upper_err = zeros(n_params)
-
-   for i in 1:n_params
-      # Get 16th and 84th percentiles of the posterior
-      q16, q84 = StatsBase.quantile(θ_matrix[:, i], [0.16, 0.84])
-        
-      # Asymmetric error: distance from best-fit to the quantiles
-      lower_err[i] = q16 - best_θ[i]
-      upper_err[i] = q84 - best_θ[i]
-   end
-
-   # Dynamic figure sampling
-   N = n_params
-   base_size = max(1000, N * 90) 
-   font_size = max(6, 20 - (N / 3))
-   tick_size = max(5, 15 - (N / 3))
-   
-   # Create figure and pad in all directions
-   fig = Figure(size = (base_size, base_size), 
-               rowgap = 0, colgap = 0, 
-               figure_padding = 25,
-               fontsize = font_size, 
-               fonts=(; regular="Times New Roman"))
-
-   for i in 1:n_params
-      # Get parameter labels
-      p_name = PARAM_NAME[free_parameter_names[i][2]]
-
-      # Marginal Stats for Title
-      title_str = L"%$(p_name) = %$(round(best_θ[i], digits=2))"
-      
-      for j in 1:i
-         p_name_i = L"%$(PARAM_NAME[free_parameter_names[i][1]]): %$(PARAM_NAME[free_parameter_names[i][2]])"
-         p_name_j = L"%$(PARAM_NAME[free_parameter_names[j][1]]): %$(PARAM_NAME[free_parameter_names[j][2]])"
-         ax = Axis(fig[i, j];
-                  xtickalign = 1, ytickalign = 1,
-                  xticksize = 2, yticksize = 2,
-                  xticklabelsize = tick_size, 
-                  yticklabelsize = tick_size,
-                  xgridvisible = false, ygridvisible = false,
-                  titlevisible = false,
-                  xticks = LinearTicks(3),
-                  yticks = LinearTicks(3),
-                  xlabel = (i == n_params) ? p_name_j : "",
-                  ylabel = (j == 1) ? p_name_i : "",
-                  xticklabelrotation = π/4)
-         
-         tightlimits!(ax)  
-
-         if i == j
-            # Diagonal: 1D Density
-            density!(ax, θ_matrix[:, i], color=(:dodgerblue, 0.5), strokewidth=2)
-               
-            # Sigma lines
-            vlines!(ax, [best_θ[i]], color=:black, linestyle=:dash)
-            # vlines!(ax, [best_θ[i] + lower_err[i], best_θ[i], best_θ[i] + upper_err[i]], color=:black, linestyle=:dash)
-
-            # Manual label creation and placing it above the diagonal plots
-            Label(fig[i, j, Top()], title_str;
-                    tellheight = false,
-                    padding = (0, 0, 23, 0),
-                    fontsize = font_size,
-                    font = :bold,
-                    halign = :center)
-         else
-            # Scatter plot
-            scatter!(ax, θ_matrix[:, j], θ_matrix[:, i], alpha=0.1, color=:black, markersize=20)
-         end
-
-         # Clean up decorations for inner plots
-         if i < n_params 
-            hidexdecorations!(ax, grid = false, ticks = false)
-         end
-         
-         if j > 1 
-            hideydecorations!(ax, grid = false, ticks = false)
-         end
-      end
-   end
-
-   # Reset gaps to zero
-   rowgap!(fig.layout, 0)
-   colgap!(fig.layout, 0)
-   
    if save_plot
       save(plot_name, fig, px_per_unit=resolution)
    end
@@ -666,16 +629,16 @@ function LensFactory.LensModel.plot_image_scatter(model::LensModel.ModelConfig,
    end
 
    # Initialize figure
-   fig, ax = LensFactory.Lenses.plot_sky(2, 2) 
+   fig, ax = LensFactory.Lenses.plot_sky(2, 2; xlabel=L"\Delta\theta_1~\text{(arcsec)}", 
+                                               ylabel=L"\Delta\theta_2~\text{(arcsec)}",
+                                               title="Image-plane residuals")
+
    # Residuals
    scatter!(ax, dx_all, dy_all; point_kws..., label="Residuals (obs - pred)")
- 
-   ax.xlabel = L"\Delta\theta_1~\text{(arcsec)}"
-   ax.ylabel = L"\Delta\theta_2~\text{(arcsec)}"
-   ax.title  = "Image-plane residuals"
- 
+  
+   # Legend
    axislegend(ax)
- 
+
    if save_plot
       save(plot_name, fig, px_per_unit=resolution)
    end
