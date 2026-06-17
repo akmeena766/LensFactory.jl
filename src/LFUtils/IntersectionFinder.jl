@@ -18,7 +18,8 @@ using LinearAlgebra
 export get_intersection
 
 
-function get_intersection(x1::AbstractVector{<:Real}, y1::AbstractVector{<:Real}, x2::AbstractVector{<:Real}, y2::AbstractVector{<:Real})::Vector{NTuple{2,Real}}
+function get_intersection(x1::AbstractVector{<:Real}, y1::AbstractVector{<:Real},
+                          x2::AbstractVector{<:Real}, y2::AbstractVector{<:Real})
     """
     # Based on: https://www.mathworks.com/matlabcentral/fileexchange/11837-fast-and-robust-curve-intersections
     # Python implementation: https://github.com/sukhbinder/intersection/tree/master/intersect

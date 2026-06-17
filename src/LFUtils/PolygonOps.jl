@@ -22,7 +22,7 @@ export fit_ellipse
 
 
 """
-    bilinear_interpolation(x::Float64, y::Float64, df::Matrix{<:Float64})
+    bilinear_interpolation(x::Real, y::Real, df::AbstractMatrix{<:Real})
 Bilinear interpolation at (x, y) given in pixel coordinates.
 
 # Arguments
@@ -33,7 +33,7 @@ Bilinear interpolation at (x, y) given in pixel coordinates.
 # Returns
 - `Float64`: Interpolated value at (x, y) position
 """
-function bilinear_interpolation(x::Float64, y::Float64, df::Matrix{<:Float64})
+function bilinear_interpolation(x::Real, y::Real, df::AbstractMatrix{<:Real})
    # Data matrix dimesions
    nx, ny = size(df)
    
@@ -65,12 +65,12 @@ end
 Calculate the area of a 2D polygon using the shoelace formula.
 
 # Arguments
-- `polygon::Vector{Vector{Float64}}`: A vector of `[x, y]` coordinates representing the polygon vertices
+- `polygon::Vector{Vector{<:Real}}`: A vector of `[x, y]` coordinates representing the polygon vertices
 
 # Returns
-- `Float64`: The area of the polygon
+- The area of the polygon
 """
-function shoelace(polygon::Vector{Vector{Float64}})::Float64
+function shoelace(polygon::Vector{Vector{<:Real}})
    # Close the polygon if needed
    if polygon[1] != polygon[end]
       push!(polygon, polygon[1])
