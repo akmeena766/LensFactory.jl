@@ -20,9 +20,9 @@ export deflection!
 export jacobian!
 
 """
-    potential!(ψ::T, θx::T, θy::T, κ::RV, γ::RV, ϕ::RV) where T <: RV
+    potential!(ψ::T, θx::T, θy::T, κ::Real, γ::Real, ϕ::Real) where T <: Real
 """
-function potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: RV
+function potential!(ψ::T, θx::T, θy::T, kappa::Real, gamma::Real, angle::Real) where T <: Real
    angle = deg2rad(angle)
    gamma1 = gamma * cos(2.0 * angle)
    gamma2 = gamma * sin(2.0 * angle)
@@ -35,19 +35,19 @@ function potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) wher
 end
 
 """
-    potential!(ψ::T, θx::T, θy::T, κ::RV, γ::RV, ϕ::RV) where T <: ROA
+    potential!(ψ::T, θx::T, θy::T, κ::Real, γ::Real, ϕ::Real) where T <: ROA
 Calculate potential at given coordinates for constant external convergence and shear and update the 
 potential in place.
 
 # Arguments
-- `ψ`: Potential at given coordinates
+- `ψ` : Potential at given coordinates
 - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `κ::RV`: External convergence.
-- `γ::RV`: External shear value.
-- `ϕ::RV`: External Shear angle (in ``\\rm \\mathbf{degrees}``).
+- `κ` : External convergence.
+- `γ` : External shear value.
+- `ϕ` : External Shear angle (in ``\\rm \\mathbf{degrees}``).
 """
-function potential!(ψ::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: ROA
+function potential!(ψ::T, θx::T, θy::T, kappa::Real, gamma::Real, angle::Real) where T <: ROA
    angle = deg2rad(angle)
    gamma1 = gamma * cos(2.0 * angle)
    gamma2 = gamma * sin(2.0 * angle)
@@ -65,9 +65,9 @@ end
 
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, κ::RV, γ::RV, ϕ::RV) where T <: RV
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, κ::Real, γ::Real, ϕ::Real) where T <: Real
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: RV
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::Real, gamma::Real, angle::Real) where T <: Real
    angle = deg2rad(angle)
    gamma1 = gamma * cos(2.0 * angle)
    gamma2 = gamma * sin(2.0 * angle)
@@ -81,7 +81,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, κ::RV, γ::RV, ϕ::RV) where T <: ROA
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, κ::Real, γ::Real, ϕ::Real) where T <: ROA
 Calculate deflection at given coordinates for constant external convergence and shear and update 
 the deflection in place.
 
@@ -90,11 +90,11 @@ the deflection in place.
 - `ψy`: y-component of deflection at given coordinates
 - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `κ::RV`: External convergence.
-- `γ::RV`: External shear value.
-- `ϕ::RV`: External Shear angle (in ``\\rm \\mathbf{degrees}``).
+- `κ` : External convergence.
+- `γ` : External shear value.
+- `ϕ` : External Shear angle (in ``\\rm \\mathbf{degrees}``).
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: ROA
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::Real, gamma::Real, angle::Real) where T <: ROA
    angle = deg2rad(angle)
    gamma1 = gamma * cos(2.0 * angle)
    gamma2 = gamma * sin(2.0 * angle)
@@ -113,9 +113,9 @@ end
 
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, κ::RV, γ::RV, ϕ::RV) where T <: RV
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, κ::Real, γ::Real, ϕ::Real) where T <: Real
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: RV
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::Real, gamma::Real, angle::Real) where T <: Real
    angle = deg2rad(angle)
    gamma1 = gamma * cos(2.0 * angle)
    gamma2 = gamma * sin(2.0 * angle)
@@ -130,7 +130,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma::
 end
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, κ::RV, γ::RV, ϕ::RV) where T <: ROA
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, κ::Real, γ::Real, ϕ::Real) where T <: ROA
 Calculate Jacobian at given coordinates for constant external convergence and shear and update the 
 Jacobian in place.
 
@@ -138,13 +138,13 @@ Jacobian in place.
 - `ψxx`: xx-component of Jacobian at given coordinates
 - `ψyy`: yy-component of Jacobian at given coordinates
 - `ψxy`: xy-component of Jacobian at given coordinates
-- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `κ::RV`: External convergence.
-- `γ::RV`: External shear value.
-- `ϕ::RV`: External Shear angle (in ``\\rm \\mathbf{degrees}``).
+- `θx` : x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy` : y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `κ`  : External convergence.
+- `γ`  : External shear value.
+- `ϕ`  : External Shear angle (in ``\\rm \\mathbf{degrees}``).
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::RV, gamma::RV, angle::RV) where T <: ROA
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::Real, gamma::Real, angle::Real) where T <: ROA
    angle = deg2rad(angle)
    gamma1 = gamma * cos(2.0 * angle)
    gamma2 = gamma * sin(2.0 * angle)

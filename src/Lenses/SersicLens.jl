@@ -14,7 +14,7 @@ export jacobian!
 export scale_to_halflight
 
 
-@inline function b_n(n::RV)
+@inline function b_n(n::Real)
    if 0.06 < n < 0.36
       return 0.01945 - n * (0.8902 - n * (10.95 - n * (19.67 - 13.47 * n)))
    else
@@ -24,9 +24,9 @@ end
 
 
 """
-    potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV, n::RV) where T <: RV
+    potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θe::Real, n::Real) where T <: Real
 """
-function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV, n::RV) where T <: RV
+function potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θe::Real, n::Real) where T <: Real
    bn = b_n(n)
    θs = θe / bn^n
    κs = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
@@ -41,21 +41,21 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV
 end
 
 """
-    potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV, n::RV) where T <: ROA
+    potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θe::Real, n::Real) where T <: ROA
 Calculate potential at given coordinates for a Sersic lens and update the potential in place.
 
 # Arguments
-- `ψ`: Potential at given coordinates
-- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `D_d::RV`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
-- `θxc::RV`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `θyc::RV`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `mass::RV`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
-- `θe::RV`: Half-light radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `n::RV`: Sersic index of the lens.
+- `ψ`   : Potential at given coordinates
+- `θx`  : x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d` : ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
+- `θxc` : x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc` : y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `θe`  : Half-light radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `n`   : Sersic index of the lens.
 """
-function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV, n::RV) where T <: ROA
+function potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θe::Real, n::Real) where T <: ROA
    bn = b_n(n)
    θs = θe / bn^n
    κs = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
@@ -73,9 +73,9 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV, n::RV) where T <: RV
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θe::Real, n::Real) where T <: Real
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV, n::RV) where T <: RV
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θe::Real, n::Real) where T <: Real
    bn = b_n(n)
    θs = θe / bn^n
    κs = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
@@ -92,22 +92,22 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV, n::RV) where T <: ROA
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θe::Real, n::Real) where T <: ROA
 Calculate deflection at given coordinates for a Sersic lens and update the deflection in place.
 
 # Arguments
-- `ψx`: x-component of deflection at given coordinates
-- `ψy`: y-component of deflection at given coordinates
-- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `D_d::RV`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
-- `θxc::RV`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `θyc::RV`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `mass::RV`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
-- `θe::RV`: Half-light radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `n::RV`: Sersic index of the lens.
+- `ψx`  : x-component of deflection at given coordinates
+- `ψy`  : y-component of deflection at given coordinates
+- `θx`  : x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d` : ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
+- `θxc` : x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc` : y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `θe`  : Half-light radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `n`   : Sersic index of the lens.
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV, n::RV) where T <: ROA
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θe::Real, n::Real) where T <: ROA
    bn = b_n(n)
    θs = θe / bn^n
    κs = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
@@ -128,9 +128,9 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
 end
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV, n::RV) where T <: RV
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θe::Real, n::Real) where T <: Real
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV, n::RV) where T <: RV
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θe::Real, n::Real) where T <: Real
    bn = b_n(n)
    θs = θe / bn^n
    κs = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
@@ -150,23 +150,23 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
 end
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV, n::RV) where T <: ROA
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θe::Real, n::Real) where T <: ROA
 Calculate Jacobian of the deflection at given coordinates for a Sersic lens and update the Jacobian in place.
 
 # Arguments
-- `ψxx`: x-component of Jacobian at given coordinates
-- `ψyy`: y-component of Jacobian at given coordinates
-- `ψxy`: xy-component of Jacobian at given coordinates
-- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `D_d::RV`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
-- `θxc::RV`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `θyc::RV`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `mass::RV`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
-- `θe::RV`: Half-light radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `n::RV`: Sersic index of the lens.
+- `ψxx` : x-component of Jacobian at given coordinates
+- `ψyy` : y-component of Jacobian at given coordinates
+- `ψxy` : xy-component of Jacobian at given coordinates
+- `θx`  : x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d` : ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
+- `θxc` : x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc` : y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `θe`  : Half-light radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `n`   : Sersic index of the lens.
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θe::RV, n::RV) where T <: ROA
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θe::Real, n::Real) where T <: ROA
    bn = b_n(n)
    θs = θe / bn^n
    κs = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
@@ -191,17 +191,17 @@ end
 
 
 """
-    scale_to_halflight(;n::RV=NaN, x_s::RV=NaN)
+    scale_to_halflight(; n::Real=NaN, x_s::Real=NaN)
 Calculate the scale radius of a Sersic lens given the half-light radius and the Sersic index.
 
 # Keyword Arguments
-- `n::RV = NaN`: Sersic index of the lens.
-- `x_s::RV = NaN`: Half-light radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `n   = NaN`: Sersic index of the lens.
+- `x_s = NaN`: Half-light radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
 
 # Returns
-- `θs`: Scale radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `::Real`: Scale radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
 """
-function scale_to_halflight(;n::RV=NaN, x_s::RV=NaN)
+function scale_to_halflight(;n::Real=NaN, x_s::Real=NaN)
    return x_s * b_n(n)^n
 end
 
