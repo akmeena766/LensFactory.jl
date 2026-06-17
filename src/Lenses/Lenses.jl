@@ -16,7 +16,7 @@ using ..Constants
 using ..Cosmology
 using ..LFUtils
 
-# Include the lens types files
+# Include the lens model files
 include("./lens_types.jl")
 include("./PointLens.jl")
 include("./SISLens.jl")
@@ -66,6 +66,7 @@ export get_radial_profile
 export get_mass_profile
 export shear_cartesian2polar, shear_polar2cartesian
 export ellipticity_cartesian2polar, ellipticity_polar2cartesian
+export parameter_NFWLens, parameter_gNFWLens, parameter_EinastoLens
 
 
 # --------------------------------------------------------------------------------------------------
@@ -92,27 +93,31 @@ Generate a meshgrid of coordinates on which various quantities can be evaluated.
 function only generates square pixels.
 
 # Arguments
-   - `θx::Real`: Half-size of the grid in x-direction (in ``\\rm \\mathbf{arcseconds}``)
-   - `θy::Real`: Half-size of the grid in y-direction (in ``\\rm \\mathbf{arcseconds}``)
-   - `dθ::Real`: Pixel size (in ``\\rm \\mathbf{arcseconds}``)
+   - `θx`: Half-size of the grid in x-direction (in ``\\rm \\mathbf{arcseconds}``)
+   - `θy`: Half-size of the grid in y-direction (in ``\\rm \\mathbf{arcseconds}``)
+   - `dθ`: Pixel size (in ``\\rm \\mathbf{arcseconds}``)
 
 # Returns
    - `grid_x::Matrix{Float64}`: x-coordinates of the grid (in ``\\rm \\mathbf{arcseconds}``)
    - `grid_y::Matrix{Float64}`: y-coordinates of the grid (in ``\\rm \\mathbf{arcseconds}``)
 """
 function get_meshgrid(θx::Real, θy::Real, dθ::Real)
+   # Promote to common type
+   θx, θy, dθ = promote(θx, θy, dθ)
+   T = typeof(θx)
+
    # Making sure that grid and pixel size are positive
    if θx <= 0 || θy <= 0 || dθ <= 0
       throw(ArgumentError("All arguments must be positive."))
    end
 
    # Number of pixels along x- and y-directions
-   nx = floor(Int64, 2.0*θx/dθ + 1)
-   ny = floor(Int64, 2.0*θy/dθ + 1)
+   nx = floor(Int, 2.0 * θx / dθ + 1)
+   ny = floor(Int, 2.0 * θy / dθ + 1)
 
    # Initialize an empty nx x ny grid
-   grid_x = Matrix{Float64}(undef, nx, ny)
-   grid_y = Matrix{Float64}(undef, nx, ny)
+   grid_x = Matrix{T}(undef, nx, ny)
+   grid_y = Matrix{T}(undef, nx, ny)
 
    # Filling the empty grid with positions
    @inbounds for j = 1:ny     # Loop over y-dimension (i.e., columns)
@@ -165,17 +170,15 @@ end
 
 
 """
-    get_potential(lens::AbstractLens, θx::T, θy::T) where T <: RV
+    get_potential(lens::AbstractLens, θx::T, θy::T) where T <: Real
 """
-function get_potential(lens::AbstractLens, θx::T, θy::T) where T <: Real
-   # Promote the input coordinates from Int64 to Float64
-   if typeof(θx) === Int64 || typeof(θy) === Int64
-      θx = Float64(θx)
-      θy = Float64(θy)
-   end
+function get_potential(lens::AbstractLens, θx::Real, θy::Real)
+   # Promote to common type
+   θx, θy = promote(θx, θy)
+   T = typeof(θx)
 
    # Initialize zero-valued potential scalar
-   ψ = zero(θx)
+   ψ = zero(T)
    
    if lens._lens_ == :CompositeLens
       for component in lens._components_
@@ -203,7 +206,7 @@ Calculate lensing potential at the given angular coordinates for the given lens 
 # Returns
    - `ψ`: Lensing potential at the given angular coordinate(s).
 """
-function get_potential(lens::AbstractLens, θx::T, θy::T) where T <: Union{ROA, Vector{Int64}}
+function get_potential(lens::AbstractLens, θx::T, θy::T) where T <: ROA
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
@@ -231,18 +234,16 @@ end
 
 
 """
-    get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: RV
+    get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: Real
 """
-function get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: RV
-   # Promote the input coordinates from Int64 to Float64
-   if typeof(θx) === Int64 || typeof(θy) === Int64
-      θx = Float64(θx)
-      θy = Float64(θy)
-   end
+function get_deflection(lens::AbstractLens, θx::Real, θy::Real)
+   # Promote to common type
+   θx, θy = promote(θx, θy)
+   T = typeof(θx)
 
    # Initialize zero-valued deflection scalars
-   ψx = zero(θx)
-   ψy = zero(θy)
+   ψx = zero(T)
+   ψy = zero(T)
 
    # Calculate deflection based on lens type
    if lens._lens_ == :CompositeLens
@@ -302,19 +303,17 @@ end
 
 
 """
-    get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: RV
+    get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: Real
 """
-function get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: RV
-   # Promote the input coordinates from Int64 to Float64
-   if typeof(θx) === Int64 || typeof(θy) === Int64
-      θx = Float64(θx)
-      θy = Float64(θy)
-   end
+function get_jacobian(lens::AbstractLens, θx::Real, θy::Real)
+   # Promote to common type
+   θx, θy = promote(θx, θy)
+   T = typeof(θx)
 
    # Initialize zero-valued deflection scalars
-   ψxx = zero(θx)
-   ψyy = zero(θy)
-   ψxy = zero(θx)
+   ψxx = zero(T)
+   ψyy = zero(T)
+   ψxy = zero(T)
 
    if lens._lens_ == :CompositeLens
       for component in lens._components_
@@ -381,9 +380,9 @@ end
 
 
 """
-    get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::RV, D_d::RV, β::NTuple{2, RV}) where T <: RV
+    get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::Real, D_d::Real, β::NTuple{2, Real}) where T <: Real
 """
-function get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::RV, D_d::RV, β::NTuple{2, RV}) where T <: RV
+function get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::Real, D_d::Real, β::NTuple{2, Real}) where T <: Real
    # Constant multiplicative factor
    constant_factor =  (1.0 + z_d) / CONST_C * (D_d / adis) * ANGLE_ARCSEC^2
 
@@ -396,7 +395,7 @@ function get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::
 end
 
 """
-    get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::RV, D_d::RV, β::NTuple{2, RV}) where T <: ROA
+    get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::Real, D_d::Real, β::NTuple{2, Real}) where T <: ROA
 Calculate time delay for a given lens model and source position. The corresponding expression is given as,
 ```math
 t_d(\\pmb{θ}; \\pmb{β}) = \\frac{1+z_l}{\\rm c} \\frac{D_d D_s}{D_{ds}} \\theta_0^2
@@ -410,14 +409,14 @@ for our case, ``\\mathbf{\\theta_0 = 1~\\rm \\mathbf{arcsecond}}``.
    - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
    - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
    - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
-   - `z_d::RV`: Lens redshift.
-   - `D_d::RV`: Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``).
-   - `β::NTuple{2, RV}`: Source angular position (in ``\\rm \\mathbf{arcseconds}``).
+   - `z_d::Real`: Lens redshift.
+   - `D_d::Real`: Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``).
+   - `β::NTuple{2, Real}`: Source angular position (in ``\\rm \\mathbf{arcseconds}``).
 
 # Returns
    - `t_d`: Time delay at the given angular coordinate(s) (in ``\\rm \\mathbf{seconds}``).
 """
-function get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::RV, D_d::RV, β::NTuple{2, RV}) where T <: ROA
+function get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::Real, D_d::Real, β::NTuple{2, Real}) where T <: ROA
    # Constant multiplicative factor
    constant_factor =  (1.0 + z_d) / CONST_C * (D_d / adis) * ANGLE_ARCSEC^2
 
@@ -428,9 +427,9 @@ function get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::
 end
 
 """
-    get_kappa_gamma(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: RV
+    get_kappa_gamma(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Real
 """
-function get_kappa_gamma(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: RV
+function get_kappa_gamma(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Real
    # Get the jacobian components
    ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
 
@@ -481,9 +480,9 @@ end
 
 
 """
-    get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: RV
+    get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Real
 """
-function get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: RV
+function get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Real
    # Get the jacobian components
    ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
 
@@ -529,23 +528,23 @@ end
 
 
 """
-    get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Float64; rays_per_pixel::Int64=1) where T <: Matrix{<:RV}
+    get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Float64; rays_per_pixel::Int64=1) where T <: Matrix{<:Real}
 Calculates the magnification map in source plane using inverse ray shooting (IRS) for a given lens 
 model. The number of average rays per pixel can be specified using the `rays_per_pixel` keyword argument. 
 This function is not optimized for speed and is only intended to visualize the magnification map.
 
 # Arguments
    - `lens::AbstractLens`: Lens model.
-   - `θx::Matrix{<:RV}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
-   - `θy::Matrix{<:RV}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
+   - `θx::Matrix{<:Real}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
+   - `θy::Matrix{<:Real}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
    - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
    - `rays_per_pixel::Int64 = 1`: Average number of rays per pixel.
 
 # Returns
-   - `μ_source::Matrix{<:RV}`: Magnification map in source plane.
+   - `μ_source::Matrix{<:Real}`: Magnification map in source plane.
 """
 function get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Float64; 
-                                  rays_per_pixel::Int64 = 1) where T <: Matrix{<:RV}
+                                  rays_per_pixel::Int64 = 1) where T <: Matrix{<:Real}
    # Deflection field
    ψx, ψy = get_deflection(lens, θx, θy)
 
@@ -597,7 +596,7 @@ end
 
 
 """
-    get_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64, β::NTuple{2, RV})
+    get_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64, β::NTuple{2, Real})
 Calculate image positions for a given lens model and source position. To get the image positions,
 this implementation finds the intersection points of contours corresponding to,
 ```math
@@ -607,7 +606,7 @@ where ``\\pmb{β}`` is the source position, ``\\pmb{θ}`` is the image plane gri
 the distance ratio (i.e., ``D_{ds}/D_s``), and ``\\pmb{α}(\\pmb{θ})`` is the deflection angle. To 
 find the intersection points inside the pixels, we use bi-linear interpolation.
 """
-function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::NTuple{2, RV}) where T <: Matrix{<:RV}
+function get_image(lens::AbstractLens, θx::T, θy::T, adis::Real, β::NTuple{2, Real}) where T <: AbstractMatrix{<:Real}
    # Get the potential gradient
    ψx, ψy = get_deflection(lens, θx, θy)
 
@@ -616,7 +615,7 @@ function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::NTuple
    RYC = ContourFinder.get_contour(θx, θy, β[2] .- θy .+ adis .* ψy, 0.0)
 
    # Initialize empty Vector of tuples to store image positions
-   image_position::Vector{NTuple{2, RV}} = []
+   image_position::Vector{NTuple{2, Real}} = []
    for contour_1 in RXC
       for contour_2 in RYC
          # Find the intersection points
@@ -632,22 +631,22 @@ function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::NTuple
 end
 
 """
-    get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::T) where T <: Matrix{<:RV}
+    get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::T) where T <: Matrix{<:Real}
 Calculate image map for an extended source given a lens model. This function employs inverse ray 
 shooting (IRS) to construct the image plane map.
 
 # Arguments
    - `lens::AbstractLens`: Lens model.
-   - `θx::Matrix{<:RV}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
-   - `θy::Matrix{<:RV}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
+   - `θx::Matrix{<:Real}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
+   - `θy::Matrix{<:Real}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
    - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
-   - `β::NTuple{2, RV}` or `β::Matrix{<:RV}`: Either point source position (in ``\\rm \\mathbf{arcseconds}``) 
+   - `β::NTuple{2, Real}` or `β::Matrix{<:Real}`: Either point source position (in ``\\rm \\mathbf{arcseconds}``) 
       or source intensity map (in ``\\rm \\mathbf{mag/arcsec^2}``).
 
 # Returns
    - `image_position`: Image positions (in ``\\rm \\mathbf{arcseconds}``).
 """
-function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::T) where T <: Matrix{<:RV}
+function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::T) where T <: Matrix{<:Real}
    # Get the potential gradient
    ψx, ψy = get_deflection(lens, θx, θy)
 
@@ -686,21 +685,21 @@ function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::T) whe
 end
 
 """
-    get_critical_curve(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
+    get_critical_curve(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:Real}
 Calculate critical curves for a given lens model. This function essentially runs marching squares
 algorithm to find the zero eigenvalue contours.
 
 # Arguments
    - `lens::AbstractLens`: Lens model.
-   - `θx::Matrix{<:RV}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
-   - `θy::Matrix{<:RV}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
+   - `θx::Matrix{<:Real}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
+   - `θy::Matrix{<:Real}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
    - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
 
 # Returns
    - `critical_tan::Vector{Vector{Vector{Float64}}}`: Tangential critical curve(s) (in ``\\rm \\mathbf{arcseconds}``).
    - `critical_rad::Vector{Vector{Vector{Float64}}}`: Radial critical curve(s) (in ``\\rm \\mathbf{arcseconds}``).
 """
-function get_critical_curve(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
+function get_critical_curve(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:Real}
    # Get the jacobian components
    ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
 
@@ -723,21 +722,21 @@ end
 
 
 """
-    get_caustic(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
+    get_caustic(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:Real}
 Calculate caustics for a given lens model. The function first gets the critical curves and then maps
 them to the source plane using lens equation.
 
 # Arguments
    - `lens::AbstractLens`: Lens model.
-   - `θx::Matrix{<:RV}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
-   - `θy::Matrix{<:RV}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
+   - `θx::Matrix{<:Real}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
+   - `θy::Matrix{<:Real}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
    - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
 
 # Returns
    - `caustics_tan::Vector{Vector{Vector{Float64}}}`: Tangential caustic curve(s) (in ``\\rm \\mathbf{arcseconds}``).
    - `caustics_rad::Vector{Vector{Vector{Float64}}}`: Radial caustic curve(s) (in ``\\rm \\mathbf{arcseconds}``).
 """
-function get_caustic(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
+function get_caustic(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:Real}
    # Generate critical curves
    critical_tan, critical_rad = get_critical_curve(lens, θx, θy, adis)
 
@@ -763,20 +762,20 @@ end
 
 
 """
-    get_critical_area(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
+    get_critical_area(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:Real}
 Calculate the total angular area enclosed by tangential critical curve(s). The function runs shoelace
 algorithm to calculate the area.
 
 # Arguments
    - `lens::AbstractLens`: Lens model.
-   - `θx::Matrix{<:RV}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
-   - `θy::Matrix{<:RV}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
+   - `θx::Matrix{<:Real}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
+   - `θy::Matrix{<:Real}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
    - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
 
 # Returns
    - `area::Float64`: Total angular area enclosed by tangential critical curve(s) (in ``\\rm \\mathbf{arcseconds^2}``).
 """
-function get_critical_area(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
+function get_critical_area(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:Real}
    # Get tangential critical curves
    critical_tan, _ = get_critical_curve(lens, θx, θy, adis)
 
@@ -790,7 +789,7 @@ end
 
 
 """
-    get_einstein_angle(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
+    get_einstein_angle(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:Real}
 Calculate the Einstein radius (i.e., ``θ_E``) for an arbitrary lens model, which is defined as,
 ```math
 θ_E = \\sqrt{\\frac{A_{\\rm critical}}{π}},
@@ -799,14 +798,14 @@ where ``A_{\\rm critical}`` is the total angular area enclosed by the tangential
 
 # Arguments
    - `lens::AbstractLens`: Lens model.
-   - `θx::Matrix{<:RV}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
-   - `θy::Matrix{<:RV}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
+   - `θx::Matrix{<:Real}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
+   - `θy::Matrix{<:Real}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
    - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
 
 # Returns
    - `θ_E::Float64`: Einstein radius (i.e., ``θ_E``) (in ``\\rm \\mathbf{arcseconds}``).
 """
-function get_einstein_angle(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:RV}
+function get_einstein_angle(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:Real}
    return sqrt(get_critical_area(lens, θx, θy, adis) / π)
 end
 
@@ -820,9 +819,9 @@ critical density ``Σ_{\\rm cr}``.
 
 
 # Arguments
-   - `kappa::Matrix{<:RV}`: Convergence map.
-   - `θx::Matrix{<:RV}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
-   - `θy::Matrix{<:RV}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
+   - `kappa::Matrix{<:Real}`: Convergence map.
+   - `θx::Matrix{<:Real}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
+   - `θy::Matrix{<:Real}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
    
 # Keyword Arguments
    - `origin::Union{Tuple{Float64, Float64}, Nothing}=nothing`: Center (in ``\\rm \\mathbf{arcseconds}``).
@@ -836,7 +835,7 @@ critical density ``Σ_{\\rm cr}``.
 """
 function get_radial_profile(kappa::T, θx::T, θy::T; origin::Union{Tuple{Float64, Float64}, Nothing}=nothing, 
                                                    n_bin::Int64=50, 
-                                                   bin_type::Symbol=:log) where T <: Matrix{<:RV}
+                                                   bin_type::Symbol=:log) where T <: Matrix{<:Real}
    # Get the radial 1D grid based the input 2D grid and origin. If origin is not provided, then the 
    # largest value pixel will be chosen as the center.
    if origin === nothing
@@ -877,18 +876,18 @@ end
 
 """
     get_mass_profile(kappa::T, θx::T, θy::T, D_d; 
-                                             origin::Union{Tuple{Float64, Float64}, Nothing}=nothing, 
-                                             n_bin::Int64=50, 
-                                             bin_type::Symbol=:log) where T <: Matrix{<:RV}
+                     origin::Union{Tuple{Float64, Float64}, Nothing}=nothing, 
+                     n_bin::Int64=50, 
+                     bin_type::Symbol=:log) where T <: Matrix{<:Real}
 Calculate the cumulative mass enclosed within a given radius ``θ`` for a given lens model. While 
 converting the input convergence map into the physical units, it is assumed that source is at infinity 
 (i.e., ``a_{\\rm dis} = 1``). Hence, if the input convergence is for any finite source redshift, then
 divide the output mass values by ``a_{\\rm dis}``.
 
 # Arguments
-- `kappa::Matrix{<:RV}`: Convergence map.
-- `θx::Matrix{<:RV}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
-- `θy::Matrix{<:RV}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `kappa::Matrix{<:Real}`: Convergence map.
+- `θx::Matrix{<:Real}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `θy::Matrix{<:Real}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
 - `D_d::Float64`: Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``).
 
 # Keyword Arguments
@@ -903,9 +902,9 @@ divide the output mass values by ``a_{\\rm dis}``.
    - `mass::Vector{Float64}`: Cumulative mass (in ``\\rm \\mathbf{M_\\odot}``).
 """
 function get_mass_profile(kappa::T, θx::T, θy::T, D_d::Float64; 
-                                                  origin::Union{Tuple{Float64, Float64}, Nothing}=nothing, 
-                                                  n_bin::Int64=50, 
-                                                  bin_type::Symbol=:log) where T <: Matrix{<:RV}
+                          origin::Union{Tuple{Float64, Float64}, Nothing}=nothing, 
+                          n_bin::Int64=50, 
+                          bin_type::Symbol=:log) where T <: Matrix{<:Real}
    # Calculate convergence radial profile (in units of Σ_cr)
    centers, profile, edges = get_radial_profile(kappa, θx, θy; origin=origin, n_bin=n_bin, bin_type=bin_type)
 
@@ -927,7 +926,7 @@ end
 
 
 """
-    shear_cartesian2polar(γ1::T, γ2::T) where T <: RV
+    shear_cartesian2polar(γ1::Real, γ2::Real)
 Converts the Cartesian components of the shear (i.e., ``γ_1`` and ``γ_2``) to polar components
 (i.e., ``γ`` and ``φ``) using the relations,
 ```math
@@ -938,20 +937,20 @@ Converts the Cartesian components of the shear (i.e., ``γ_1`` and ``γ_2``) to 
 ```
 
 # Arguments
-   - `γ1::T`: Cartesian component of the shear (i.e., ``γ_1``).
-   - `γ2::T`: Cartesian component of the shear (i.e., ``γ_2``).
+   - `γ1`: Cartesian component of the shear (i.e., ``γ_1``).
+   - `γ2`: Cartesian component of the shear (i.e., ``γ_2``).
 
 # Returns
-   - `γ::Float64`: Polar component of the shear (i.e., ``γ``).
-   - `φ::Float64`: Polar component of the shear (i.e., ``φ`` in ``\\rm \\mathbf{degrees}``).
+   - `γ`: Polar component of the shear (i.e., ``γ``).
+   - `φ`: Polar component of the shear (i.e., ``φ`` in ``\\rm \\mathbf{degrees}``).
 """
-function shear_cartesian2polar(γ1::T, γ2::T) where T <: RV
+function shear_cartesian2polar(γ1::Real, γ2::Real)
    return hypot(γ1, γ2), 0.5 * rad2deg(atan(γ2, γ1))
 end
 
 
 """
-    shear_polar2cartesian(γ::T, phi::T) where T <: RV
+    shear_polar2cartesian(γ::Real, phi::Real)
 Converts the polar components of the shear (i.e., ``γ`` and ``φ``) to Cartesian components
 (i.e., ``γ_1`` and ``γ_2``) using the relations,
 ```math
@@ -962,20 +961,20 @@ Converts the polar components of the shear (i.e., ``γ`` and ``φ``) to Cartesia
 ```
 
 # Arguments
-   - `γ::T`: Polar component of the shear (i.e., ``γ``).
-   - `φ::T`: Polar component of the shear (i.e., ``φ`` in ``\\rm \\mathbf{degrees}``).
+   - `γ`: Polar component of the shear (i.e., ``γ``).
+   - `φ`: Polar component of the shear (i.e., ``φ`` in ``\\rm \\mathbf{degrees}``).
 
 # Returns
-   - `γ1::Float64`: Cartesian component of the shear (i.e., ``γ_1``).
-   - `γ2::Float64`: Cartesian component of the shear (i.e., ``γ_2``).
+   - `γ1`: Cartesian component of the shear (i.e., ``γ_1``).
+   - `γ2`: Cartesian component of the shear (i.e., ``γ_2``).
 """
-function shear_polar2cartesian(γ::T, phi::T) where T <: RV
+function shear_polar2cartesian(γ::Real, phi::Real)
    return γ * cos(2.0 * deg2rad(phi)), γ * sin(2.0 * deg2rad(phi))
 end
 
 
 """
-    ellipticity_cartesian2polar(e1::T, e2::T) where T <: RV
+    ellipticity_cartesian2polar(e1::Real, e2::Real)
 Converts the Cartesian components of the ellipticity (i.e., ``e_1`` and ``e_2``) to polar components
 (i.e., ``e`` and ``φ``) using the relations,
 ```math
@@ -993,13 +992,13 @@ e &= \\sqrt{e_1^2 + e_2^2}, \\\\
    - `e::Float64`: Polar component of the ellipticity (i.e., ``e``).
    - `φ::Float64`: Polar component of the ellipticity (i.e., ``φ`` in ``\\rm \\mathbf{degrees}``).
 """
-function ellipticity_cartesian2polar(e1::T, e2::T) where T <: RV
+function ellipticity_cartesian2polar(e1::Real, e2::Real)
    return hypot(e1, e2), 0.5 * rad2deg(atan(e2, e1))
 end
 
 
 """
-    ellipticity_polar2cartesian(e::T, phi::T) where T <: RV
+    ellipticity_polar2cartesian(e::Real, phi::Real)
 Converts the polar components of the ellipticity (i.e., ``e`` and ``φ``) to Cartesian components
 (i.e., ``e_1`` and ``e_2``) using the relations,
 ```math
@@ -1010,14 +1009,14 @@ e_2 &= e \\sin(2φ).
 ```
 
 # Arguments
-   - `e::T`: Polar component of the ellipticity (i.e., ``e``).
-   - `φ::T`: Polar component of the ellipticity (i.e., ``φ`` in ``\\rm \\mathbf{degrees}``).
+   - `e`: Polar component of the ellipticity (i.e., ``e``).
+   - `φ`: Polar component of the ellipticity (i.e., ``φ`` in ``\\rm \\mathbf{degrees}``).
 
 # Returns
-   - `e1::Float64`: Cartesian component of the ellipticity (i.e., ``e_1``).
-   - `e2::Float64`: Cartesian component of the ellipticity (i.e., ``e_2``).
+   - `e1`: Cartesian component of the ellipticity (i.e., ``e_1``).
+   - `e2`: Cartesian component of the ellipticity (i.e., ``e_2``).
 """
-function ellipticity_polar2cartesian(e::T, phi::T) where T <: RV
+function ellipticity_polar2cartesian(e::Real, phi::Real)
    return e * cos(2.0 * deg2rad(phi)), e * sin(2.0 * deg2rad(phi))
 end
 
@@ -1025,103 +1024,103 @@ end
 # --------------------------------------------------------------------------------------------------
 # -------------------- Potential functions for specific lens models --------------------------------
 # --------------------------------------------------------------------------------------------------
-@inline function potential_helper!(ψ::T, lens::init_PointLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_PointLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return PointLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass)
 end
 
-@inline function potential_helper!(ψ::T, lens::init_PlummerLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_PlummerLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return PlummerLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s)
 end
 
-@inline function potential_helper!(ψ::T, lens::init_SISLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_SISLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return SISLens.potential!(ψ, θx, θy, lens.x_c, lens.y_c, lens.v_d)
 end
 
-@inline function potential_helper!(ψ::T, lens::init_NSISPLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_NSISPLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return NSISPLens.potential!(ψ, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s)
 end
 
-@inline function potential_helper!(ψ::T, lens::init_NSISMDLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_NSISMDLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return NSISMDLens.potential!(ψ, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s)
 end
 
-@inline function potential_helper!(ψ::T, lens::init_GaussianLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_GaussianLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return GaussianLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s)
 end
 
-@inline function potential_helper!(ψ::T, lens::init_SersicLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_SersicLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return SersicLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_e, lens.n)
 end
 
-@inline function potential_helper!(ψ::T, lens::init_ExternalEffects, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_ExternalEffects, θx::T, θy::T) where T <: Union{Real, ROA}
    return ExternalEffects.potential!(ψ, θx, θy, lens.kappa, lens.gamma, lens.angle)
 end
 
-@inline function potential_helper!(ψ::T, lens::init_ExternalEffects3, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_ExternalEffects3, θx::T, θy::T) where T <: Union{Real, ROA}
    return ExternalEffects3.potential!(ψ, θx, θy, lens.delta, lens.angle)
 end
 
-@inline function potential_helper!(ψ::T, lens::init_Multipole, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_Multipole, θx::T, θy::T) where T <: Union{Real, ROA}
    return Multipole.potential!(ψ, θx, θy, lens.delta, lens.angle, lens.m, lens.n)
 end
 
-@inline function potential_helper!(ψ::T, lens::init_PIEPLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_PIEPLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return PIEPLens.potential!(ψ, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.eps, lens.pa)
 end
 
-@inline function potential_helper!(ψ::T, lens::init_SIELens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_SIELens, θx::T, θy::T) where T <: Union{Real, ROA}
    return SIELens.potential!(ψ, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.eps, lens.pa)
 end
 
-@inline function potential_helper!(ψ::T, lens::init_PJELens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_PJELens, θx::T, θy::T) where T <: Union{Real, ROA}
    return PJELens.potential!(ψ, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.x_t, lens.eps, lens.pa)
 end
 
-@inline function potential_helper!(ψ::T, lens::init_HernquistLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_HernquistLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return HernquistLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s)
 end
 
-@inline function potential_helper!(ψ::T, lens::init_NFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_NFWLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return NFWLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s)
 end
 
-@inline function potential_helper!(ψ::T, lens::init_tNFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_tNFWLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return tNFWLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s, lens.x_t)
 end
 
-@inline function potential_helper!(ψ::T, lens::init_gNFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_gNFWLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return gNFWLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s, lens.n)
 end
 
-@inline function potential_helper!(ψ::T, lens::init_EinastoLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_EinastoLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return EinastoLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s, lens.n)
 end
 
-@inline function potential_helper!(ψ::T, lens::init_aHernquistLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_aHernquistLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return aHernquistLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.eps, lens.pa)
 end
 
-@inline function potential_helper!(ψ::T, lens::init_aNFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_aNFWLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return aNFWLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s, lens.eps, lens.pa)
 end
 
-@inline function potential_helper!(ψ::T, lens::init_eHernquistMDLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_eHernquistMDLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return eHernquistMDLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.eps, lens.pa)
 end
 
-@inline function potential_helper!(ψ::T, lens::init_eNFWMDLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_eNFWMDLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return eNFWMDLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s, lens.eps, lens.pa)
 end
 
-@inline function potential_helper!(ψ::T, lens::init_MultiPlummerLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_MultiPlummerLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return MultiPlummerLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.n)
 end
 
-@inline function potential_helper!(ψ::T, lens::init_MultiGaussianLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_MultiGaussianLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return MultiGaussianLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.n)
 end
 
-@inline function potential_helper!(ψ::T, lens::init_MultiPJELens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function potential_helper!(ψ::T, lens::init_MultiPJELens, θx::T, θy::T) where T <: Union{Real, ROA}
    return MultiPJELens.potential!(ψ, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.x_t, lens.eps, lens.pa, lens.n)
 end
 
@@ -1129,103 +1128,103 @@ end
 # --------------------------------------------------------------------------------------------------
 # -------------------- Deflection functions for specific lens models -------------------------------
 # --------------------------------------------------------------------------------------------------
-@inline function deflection_helper!(ψx::T, ψy::T, lens::init_PointLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_PointLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return PointLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass)
 end
 
-@inline function deflection_helper!(ψx::T, ψy::T, lens::init_PlummerLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_PlummerLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return PlummerLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s)
 end
 
-@inline function deflection_helper!(ψx::T, ψy::T, lens::init_SISLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_SISLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return SISLens.deflection!(ψx, ψy, θx, θy, lens.x_c, lens.y_c, lens.v_d)
 end
 
-@inline function deflection_helper!(ψx::T, ψy::T, lens::init_NSISPLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_NSISPLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return NSISPLens.deflection!(ψx, ψy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s)
 end
 
-@inline function deflection_helper!(ψx::T, ψy::T, lens::init_NSISMDLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_NSISMDLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return NSISMDLens.deflection!(ψx, ψy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s)
 end
 
-@inline function deflection_helper!(ψx::T, ψy::T, lens::init_GaussianLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_GaussianLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return GaussianLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s)
 end
 
-@inline function deflection_helper!(ψx::T, ψy::T, lens::init_SersicLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_SersicLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return SersicLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_e, lens.n)
 end
 
-@inline function deflection_helper!(ψx::T, ψy::T, lens::init_ExternalEffects, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_ExternalEffects, θx::T, θy::T) where T <: Union{Real, ROA}
    return ExternalEffects.deflection!(ψx, ψy, θx, θy, lens.kappa, lens.gamma, lens.angle)
 end
 
-@inline function deflection_helper!(ψx::T, ψy::T, lens::init_ExternalEffects3, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_ExternalEffects3, θx::T, θy::T) where T <: Union{Real, ROA}
    return ExternalEffects3.deflection!(ψx, ψy, θx, θy, lens.delta, lens.angle)
 end
 
-@inline function deflection_helper!(ψx::T, ψy::T, lens::init_Multipole, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_Multipole, θx::T, θy::T) where T <: Union{Real, ROA}
    return Multipole.deflection!(ψx, ψy, θx, θy, lens.delta, lens.angle, lens.m, lens.n)
 end
 
-@inline function deflection_helper!(ψx::T, ψy::T, lens::init_PIEPLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_PIEPLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return PIEPLens.deflection!(ψx, ψy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.eps, lens.pa)
 end
 
-@inline function deflection_helper!(ψx::T, ψy::T, lens::init_SIELens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_SIELens, θx::T, θy::T) where T <: Union{Real, ROA}
    return SIELens.deflection!(ψx, ψy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.eps, lens.pa)
 end
 
-@inline function deflection_helper!(ψx::T, ψy::T, lens::init_PJELens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_PJELens, θx::T, θy::T) where T <: Union{Real, ROA}
    return PJELens.deflection!(ψx, ψy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.x_t, lens.eps, lens.pa)
 end
 
-@inline function deflection_helper!(ψx::T, ψy::T, lens::init_HernquistLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_HernquistLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return HernquistLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s)
 end
 
-@inline function deflection_helper!(ψx::T, ψy::T, lens::init_NFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_NFWLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return NFWLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s)
 end
 
-@inline function deflection_helper!(ψx::T, ψy::T, lens::init_tNFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_tNFWLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return tNFWLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s, lens.x_t)
 end
 
-@inline function deflection_helper!(ψx::T, ψy::T, lens::init_gNFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_gNFWLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return gNFWLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s, lens.n)
 end
 
-@inline function deflection_helper!(ψx::T, ψy::T, lens::init_EinastoLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_EinastoLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return EinastoLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s, lens.n)
 end
 
-@inline function deflection_helper!(ψx::T, ψy::T, lens::init_aHernquistLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_aHernquistLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return aHernquistLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.eps, lens.pa)
 end
 
-@inline function deflection_helper!(ψx::T, ψy::T, lens::init_aNFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_aNFWLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return aNFWLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s, lens.eps, lens.pa)
 end
 
-@inline function deflection_helper!(ψx::T, ψy::T, lens::init_eHernquistMDLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_eHernquistMDLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return eHernquistMDLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.eps, lens.pa)
 end
 
-@inline function deflection_helper!(ψx::T, ψy::T, lens::init_eNFWMDLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_eNFWMDLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return eNFWMDLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s, lens.eps, lens.pa)
 end
 
-@inline function deflection_helper!(ψx::T, ψy::T, lens::init_MultiPlummerLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_MultiPlummerLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return MultiPlummerLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.n)
 end
 
-@inline function deflection_helper!(ψx::T, ψy::T, lens::init_MultiGaussianLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_MultiGaussianLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return MultiGaussianLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.n)
 end
 
-@inline function deflection_helper!(ψx::T, ψy::T, lens::init_MultiPJELens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_MultiPJELens, θx::T, θy::T) where T <: Union{Real, ROA}
    return MultiPJELens.deflection!(ψx, ψy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.x_t, lens.eps, lens.pa, lens.n)
 end
 
@@ -1233,103 +1232,103 @@ end
 # --------------------------------------------------------------------------------------------------
 # -------------------- Deformation tensor for various lens models ----------------------------------
 # --------------------------------------------------------------------------------------------------
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PointLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PointLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return PointLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PlummerLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PlummerLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return PlummerLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_SISLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_SISLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return SISLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, lens.v_d)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_NSISPLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_NSISPLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return NSISPLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_NSISMDLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_NSISMDLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return NSISMDLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_GaussianLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_GaussianLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return GaussianLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_SersicLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_SersicLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return SersicLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_e, lens.n)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_ExternalEffects, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_ExternalEffects, θx::T, θy::T) where T <: Union{Real, ROA}
    return ExternalEffects.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.kappa, lens.gamma, lens.angle)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_ExternalEffects3, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_ExternalEffects3, θx::T, θy::T) where T <: Union{Real, ROA}
    return ExternalEffects3.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.delta, lens.angle)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_Multipole, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_Multipole, θx::T, θy::T) where T <: Union{Real, ROA}
    return Multipole.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.delta, lens.angle, lens.m, lens.n)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PIEPLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PIEPLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return PIEPLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.eps, lens.pa)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_SIELens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_SIELens, θx::T, θy::T) where T <: Union{Real, ROA}
    return SIELens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.eps, lens.pa)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PJELens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PJELens, θx::T, θy::T) where T <: Union{Real, ROA}
    return PJELens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.x_t, lens.eps, lens.pa)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_HernquistLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_HernquistLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return HernquistLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_NFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_NFWLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return NFWLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_tNFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_tNFWLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return tNFWLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s, lens.x_t)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_gNFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_gNFWLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return gNFWLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s, lens.n)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_EinastoLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_EinastoLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return EinastoLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s, lens.n)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_aHernquistLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_aHernquistLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return aHernquistLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.eps, lens.pa)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_aNFWLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_aNFWLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return aNFWLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s, lens.eps, lens.pa)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_eHernquistMDLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_eHernquistMDLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return eHernquistMDLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.eps, lens.pa)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_eNFWMDLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_eNFWMDLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return eNFWMDLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s, lens.eps, lens.pa)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_MultiPlummerLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_MultiPlummerLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return MultiPlummerLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.n)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_MultiGaussianLens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_MultiGaussianLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return MultiGaussianLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.n)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_MultiPJELens, θx::T, θy::T) where T <: Union{RV, ROA}
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_MultiPJELens, θx::T, θy::T) where T <: Union{Real, ROA}
    return MultiPJELens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.x_t, lens.eps, lens.pa, lens.n)
 end
 
