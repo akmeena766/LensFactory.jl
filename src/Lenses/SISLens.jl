@@ -76,14 +76,7 @@ end
 """
     deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real) where T <: ROA
 Calculate deflection at given coordinates for a SIS lens and update the deflection components 
-(ψx, ψy) in place. The deflection components are given as,
-
-```math
-\\begin{align*} 
-ψ_x(θ_x, θ_y) &= 4 π \\left( \\frac{v_d}{{\\rm c}} \\right)^2 \\frac{θ_x - θ_{x,c}}{|\\pmb{θ} - \\pmb{θ}_c|}, \\\\
-ψ_y(θ_x, θ_y) &= 4 π \\left( \\frac{v_d}{{\\rm c}} \\right)^2 \\frac{θ_y - θ_{y,c}}{|\\pmb{θ} - \\pmb{θ}_c|}.
-\\end{align*}
-```
+(ψx, ψy) in place.
 
 # Arguments
 - `ψx`: x-component of the deflection at given coordinates
@@ -135,15 +128,7 @@ end
 """
     jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real) where T <: ROA
 Calculate jacobian at given coordinates for a SIS lens and update the jacobian components 
-(ψxx, ψyy, ψxy) in place. The jacobian components are given as,
-
-```math
-\\begin{align*}
-ψ_{xx} &= 4 π \\left( \\frac{v_d}{{\\rm c}} \\right)^2 \\frac{(θ_y - θ_{y,c})^2}{|\\pmb{θ} - \\pmb{θ}_c|^3}, \\\\
-ψ_{yy} &= 4 π \\left( \\frac{v_d}{{\\rm c}} \\right)^2 \\frac{(θ_x - θ_{x,c})^2}{|\\pmb{θ} - \\pmb{θ}_c|^3}, \\\\
-ψ_{xy} &= 4 π \\left( \\frac{v_d}{{\\rm c}} \\right)^2 \\frac{- (θ_x - θ_{x,c}) (θ_y - θ_{y,c})}{|\\pmb{θ} - \\pmb{θ}_c|^3}.
-\\end{align*}
-```
+(ψxx, ψyy, ψxy) in place.
 
 # Arguments
 - `ψxx`: xx-component of the jacobian at given coordinates

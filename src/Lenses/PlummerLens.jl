@@ -82,13 +82,7 @@ end
 """
     deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: ROA
 Calculate deflection at given coordinates for a Plummer lens and update the deflection components
-(ψx, ψy) in place. The deflection angle components are given as,
-```math
-\\begin{align*} 
-ψ_x(θ_x, θ_y) &= \\frac{4 \\, \\rm{G} \\, M}{\\rm{c}^2} \\frac{1}{D_d} \\frac{θ_x - θ_{x,c}}{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2}, \\\\
-ψ_y(θ_x, θ_y) &= \\frac{4 \\, \\rm{G} \\, M}{\\rm{c}^2} \\frac{1}{D_d} \\frac{θ_y - θ_{y,c}}{θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2}.
-\\end{align*}
-```
+(ψx, ψy) in place.
 
 # Arguments
 - `ψx`: x-component of the deflection at given coordinates
@@ -143,14 +137,7 @@ end
 """
     jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: ROA
 Calculate jacobian at given coordinates for a Plummer lens and update the jacobian components 
-(ψxx, ψyy, ψxy) in place. The jacobian components are given as,
-```math
-\\begin{align*}
-\\psi_{xx} &= \\frac{4 \\, \\rm{G} \\, M}{\\rm{c}^2} \\frac{1}{D_d} \\frac{θ_s^2 - (θ_x - θ_{x,c})^2 + (θ_y - θ_{y,c})^2}{\\left[ θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2 \\right]^2}, \\\\
-\\psi_{yy} &= \\frac{4 \\, \\rm{G} \\, M}{\\rm{c}^2} \\frac{1}{D_d} \\frac{θ_s^2 + (θ_x - θ_{x,c})^2 - (θ_y - θ_{y,c})^2}{\\left[ θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2 \\right]^2}, \\\\
-\\psi_{xy} &= \\frac{4 \\, \\rm{G} \\, M}{\\rm{c}^2} \\frac{1}{D_d} \\frac{-2 \\, (θ_x - θ_{x,c}) (θ_y - θ_{y,c})}{\\left[ θ_s^2 + |\\pmb{θ} - \\pmb{θ}_c|^2 \\right]^2}.
-\\end{align*}
-```
+(ψxx, ψyy, ψxy) in place.
 
 # Arguments
 - `ψxx`: x-component of the jacobian at given coordinates
