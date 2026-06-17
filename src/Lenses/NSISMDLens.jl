@@ -37,13 +37,13 @@ The lensing potential is given as,
 ```
 
 # Arguments
-- `ψ`: Potential at given coordinates
-- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `ψ`  : Potential at given coordinates
+- `θx` : x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy` : y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `θxc`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `v_d`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
-- `θs`: Core radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θs` : Core radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
 
 # Returns
 - `nothing`: Updates the potential (ψ) in place.
@@ -88,14 +88,14 @@ Calculate deflection at given coordinates for NSISMD lens and update the deflect
 (ψx, ψy) in place.
 
 # Arguments
-- `ψx`: x-component of the deflection at given coordinates
-- `ψy`: y-component of the deflection at given coordinates
-- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `ψx` : x-component of the deflection at given coordinates
+- `ψy` : y-component of the deflection at given coordinates
+- `θx` : x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy` : y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `θxc`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `v_d`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
-- `θs`: Core radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θs` : Core radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
 
 # Returns
 - `nothing`: Updates the deflection (ψx, ψy) in place.
@@ -145,12 +145,12 @@ Calculate jacobian at given coordinates for NSISMD lens and update the jacobian 
 - `ψxx`: xx-component of the jacobian at given coordinates
 - `ψyy`: yy-component of the jacobian at given coordinates
 - `ψxy`: xy-component of the jacobian at given coordinates
-- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θx` : x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy` : y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `θxc`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `v_d`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
-- `θs`: Core radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θs` : Core radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
 
 # Returns
 - `nothing`: Updates the jacobian (ψxx, ψyy, ψxy) in place.
@@ -189,9 +189,9 @@ where,
 
 # Keyword Arguments
 - `D_ds = NaN`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
-- `D_s = NaN`: ADD from the observer to the source (in ``\\rm \\mathbf{meters}``).
-- `v_d = NaN`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
-- `x_s = NaN`: Core radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `D_s  = NaN`: ADD from the observer to the source (in ``\\rm \\mathbf{meters}``).
+- `v_d  = NaN`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
+- `x_s  = NaN`: Core radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
 
 # Returns
 - `θE`: Einstein angle (in ``\\rm \\mathbf{arcseconds}``).

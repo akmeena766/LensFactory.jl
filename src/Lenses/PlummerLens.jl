@@ -33,14 +33,14 @@ The lensing potential is given as,
 ```
 
 # Arguments
-- `ψ`: Potential at given coordinates
-- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `D_d`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
-- `θxc`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `ψ`   : Potential at given coordinates
+- `θx`  : x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d` : ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
+- `θxc` : x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc` : y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `mass`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
-- `θs`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
+- `θs` : Core radius (in ``\\rm \\mathbf{arcseconds}``).
 
 # Returns
 - `nothing`: Updates the potential (ψ) in place.
@@ -85,15 +85,15 @@ Calculate deflection at given coordinates for a Plummer lens and update the defl
 (ψx, ψy) in place.
 
 # Arguments
-- `ψx`: x-component of the deflection at given coordinates
-- `ψy`: y-component of the deflection at given coordinates
-- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `D_d`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
-- `θxc`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `ψx`  : x-component of the deflection at given coordinates
+- `ψy`  : y-component of the deflection at given coordinates
+- `θx`  : x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d` : ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
+- `θxc` : x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc` : y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `mass`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
-- `θs`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
+- `θs`  : Core radius (in ``\\rm \\mathbf{arcseconds}``).
 
 # Returns
 - `nothing`: Updates the deflection (ψx, ψy) in place.
@@ -140,16 +140,16 @@ Calculate jacobian at given coordinates for a Plummer lens and update the jacobi
 (ψxx, ψyy, ψxy) in place.
 
 # Arguments
-- `ψxx`: x-component of the jacobian at given coordinates
-- `ψyy`: y-component of the jacobian at given coordinates
-- `ψxy`: xy-component of the jacobian at given coordinates
-- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `D_d`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
-- `θxc`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `ψxx` : x-component of the jacobian at given coordinates
+- `ψyy` : y-component of the jacobian at given coordinates
+- `ψxy` : xy-component of the jacobian at given coordinates
+- `θx`  : x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d` : ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
+- `θxc` : x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc` : y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `mass`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
-- `θs`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
+- `θs`  : Core radius (in ``\\rm \\mathbf{arcseconds}``).
 
 # Returns
 - `nothing`: Updates the jacobian (ψxx, ψyy, ψxy) in place.
@@ -181,11 +181,11 @@ Calculate the Einstein angle for a point mass lens,
 ```
 
 # Keyword Arguments
-- `D_d = NaN`: ADD from observer to lens (in ``\\rm \\mathbf{meters}``).
-- `D_ds= NaN`: ADD from lens to source (in ``\\rm \\mathbf{meters}``).
-- `D_s = NaN`: ADD from observer to source (in ``\\rm \\mathbf{meters}``).
-- `mass= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
-- `x_s = NaN`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d  = NaN`: ADD from observer to lens (in ``\\rm \\mathbf{meters}``).
+- `D_ds = NaN`: ADD from lens to source (in ``\\rm \\mathbf{meters}``).
+- `D_s  = NaN`: ADD from observer to source (in ``\\rm \\mathbf{meters}``).
+- `mass = NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s  = NaN`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
 
 # Returns
 - `θE`: Einstein angle (in ``\\rm \\mathbf{arcseconds}``)

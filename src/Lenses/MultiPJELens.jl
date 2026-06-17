@@ -9,7 +9,7 @@ export deflection!
 export jacobian!
 
 
-function potential!(ψ::T, θx::T, θy::T, θxc::S, θyc::S, vd::S, θs::S, θt::S, ϵ::S, pa::S, nl::Int64) where {T <: RV, S <: Vector{<:RV}}
+function potential!(ψ::T, θx::T, θy::T, θxc::S, θyc::S, vd::S, θs::S, θt::S, ϵ::S, pa::S, nl::Int64) where {T <: Real, S <: Vector{<:Real}}
    ψ_up = ψ
    for k in 1:nl
       # Get axis-ratio
@@ -48,7 +48,7 @@ function potential!(ψ::T, θx::T, θy::T, θxc::S, θyc::S, vd::S, θs::S, θt:
    return ψ_up
 end
 
-function potential!(ψ::T, θx::T, θy::T, θxc::S, θyc::S, vd::S, θs::S, θt::S, ϵ::S, pa::S, nl::Int64) where {T <: ROA, S <: Vector{<:RV}}
+function potential!(ψ::T, θx::T, θy::T, θxc::S, θyc::S, vd::S, θs::S, θt::S, ϵ::S, pa::S, nl::Int64) where {T <: ROA, S <: Vector{<:Real}}
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    for k in 1:nl
       # Get axis-ratio
@@ -91,7 +91,7 @@ function potential!(ψ::T, θx::T, θy::T, θxc::S, θyc::S, vd::S, θs::S, θt:
 end
 
 
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::S, θyc::S, vd::S, θs::S, θt::S, ϵ::S, pa::S, nl::Int64) where {T <: RV, S <: Vector{<:RV}}
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::S, θyc::S, vd::S, θs::S, θt::S, ϵ::S, pa::S, nl::Int64) where {T <: Real, S <: Vector{<:Real}}
    ψx_up = ψx
    ψy_up = ψy
    for k in 1:nl
@@ -136,7 +136,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::S, θyc::S, vd::S, θ
 end
 
 
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::S, θyc::S, vd::S, θs::S, θt::S, ϵ::S, pa::S, nl::Int64) where {T <: ROA, S <: Vector{<:RV}}
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::S, θyc::S, vd::S, θs::S, θt::S, ϵ::S, pa::S, nl::Int64) where {T <: ROA, S <: Vector{<:Real}}
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    for k in 1:nl
       # Get axis-ratio
@@ -183,7 +183,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::S, θyc::S, vd::S, θ
 end
 
 
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::S, θyc::S, vd::S, θs::S, θt::S, ϵ::S, pa::S, nl::Int64) where {T <: RV, S <: Vector{<:RV}}
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::S, θyc::S, vd::S, θs::S, θt::S, ϵ::S, pa::S, nl::Int64) where {T <: Real, S <: Vector{<:Real}}
    ψxx_up = ψxx
    ψyy_up = ψyy
    ψxy_up = ψxy
@@ -236,7 +236,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::S, θyc::S, 
    return ψxx_up, ψyy_up, ψxy_up
 end
 
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::S, θyc::S, vd::S, θs::S, θt::S, ϵ::S, pa::S, nl::Int64) where {T <: ROA, S <: Vector{<:RV}}
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::S, θyc::S, vd::S, θs::S, θt::S, ϵ::S, pa::S, nl::Int64) where {T <: ROA, S <: Vector{<:Real}}
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    for k in 1:nl
       # Get axis-ratio

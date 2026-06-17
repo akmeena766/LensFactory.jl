@@ -32,13 +32,13 @@ The lensing potential is given as,
 ```
 
 # Arguments
-- `ψ`: Potential at given coordinates
-- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `D_d::Real`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
-- `θxc::Real`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `θyc::Real`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `mass::Real`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `ψ`   : Potential at given coordinates
+- `θx`  : x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d` : ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
+- `θxc` : x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc` : y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
 
 # Returns
 - `nothing`: Updates the potential (ψ) in place.
@@ -79,14 +79,14 @@ Calculate deflection at given coordinates for a point mass lens and update the d
 (ψx, ψy) in place.
 
 # Arguments
-- `ψx`: x-component of the deflection at given coordinates
-- `ψy`: y-component of the deflection at given coordinates
-- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `D_d::Real`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
-- `θxc::Real`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `θyc::Real`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `mass::Real`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `ψx`  : x-component of the deflection at given coordinates
+- `ψy`  : y-component of the deflection at given coordinates
+- `θx`  : x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d` : ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
+- `θxc` : x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc` : y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
 
 # Returns
 - `nothing`: Updates the deflection (ψx, ψy) in place.
@@ -134,15 +134,15 @@ Calculate jacobian at given coordinates for a point mass lens and update the jac
 (ψxx, ψyy, ψxy) in place.
 
 # Arguments
-- `ψxx`: x-component of the jacobian at given coordinates
-- `ψyy`: y-component of the jacobian at given coordinates
-- `ψxy`: xy-component of the jacobian at given coordinates
-- `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `D_d::Real`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
-- `θxc::Real`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `θyc::Real`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `mass::Real`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `ψxx` : x-component of the jacobian at given coordinates
+- `ψyy` : y-component of the jacobian at given coordinates
+- `ψxy` : xy-component of the jacobian at given coordinates
+- `θx`  : x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d` : ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
+- `θxc` : x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc` : y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
 
 # Returns
 - `nothing`: Updates the jacobian (ψxx, ψyy, ψxy) in place.
@@ -169,17 +169,20 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::R
 end
 
 """
-    einstein_angle(;D_d::Float64=NaN, D_ds::Float64=NaN, D_s::Float64=NaN, mass::Float64=NaN)
+    einstein_angle(; D_d::Real  = NaN, 
+                     D_ds::Real = NaN, 
+                     D_s::Real  = NaN, 
+                     mass::Real = NaN)
 Calculate the Einstein angle for a point mass lens,
 ```math
 \\theta_E = \\sqrt{\\frac{4 \\, \\rm{G} \\, M}{\\rm{c}^2} \\frac{D_{ds}}{D_d D_s}}.
 ```
 
 # Keyword Arguments
-- `D_d::Float64`=NaN: ADD from observer to lens (in ``\\rm \\mathbf{meters}``).
-- `D_ds::Float64`=NaN: ADD from lens to source (in ``\\rm \\mathbf{meters}``).
-- `D_s::Float64`=NaN: ADD from observer to source (in ``\\rm \\mathbf{meters}``).
-- `mass::Float64`=NaN: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `D_d` : ADD from observer to lens (in ``\\rm \\mathbf{meters}``).
+- `D_ds`: ADD from lens to source (in ``\\rm \\mathbf{meters}``).
+- `D_s` : ADD from observer to source (in ``\\rm \\mathbf{meters}``).
+- `mass`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
 
 # Returns
 - `θE`: Einstein angle (in ``\\rm \\mathbf{arcseconds}``)

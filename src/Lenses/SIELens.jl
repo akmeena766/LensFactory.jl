@@ -10,9 +10,9 @@ export jacobian!
 
 
 """
-    potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+    potential!(ψ::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real, ϵ::Real, pa::Real) where T <: Real
 """
-function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+function potential!(ψ::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real, ϵ::Real, pa::Real) where T <: Real
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
@@ -42,21 +42,21 @@ function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV,
 end
 
 """
-    potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+    potential!(ψ::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real, ϵ::Real, pa::Real) where T <: ROA
 Calculate potential at given coordinates for SIE lens and update the potential values in-place.
 
 # Arguments
 - `ψ`: Potential at given coordinates
 - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `θxc::RV`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `θyc::RV`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `v_d::RV`: Velocity dispersion of the lens (in ``\\rm \\mathbf{km/s}``).
-- `θs::RV`: Scale radius i.e., standard deviation of the Gaussian (in ``\\rm \\mathbf{arcseconds}``).
-- `ϵ::RV`: Ellipticity of the lens.
-- `pa::RV`: Position angle of the lens (in ``\\rm \\mathbf{degrees}``).
+- `θxc::Real`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc::Real`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `v_d::Real`: Velocity dispersion of the lens (in ``\\rm \\mathbf{km/s}``).
+- `θs::Real`: Scale radius i.e., standard deviation of the Gaussian (in ``\\rm \\mathbf{arcseconds}``).
+- `ϵ::Real`: Ellipticity of the lens.
+- `pa::Real`: Position angle of the lens (in ``\\rm \\mathbf{degrees}``).
 """
-function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+function potential!(ψ::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real, ϵ::Real, pa::Real) where T <: ROA
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
@@ -90,9 +90,9 @@ end
 
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real, ϵ::Real, pa::Real) where T <: Real
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real, ϵ::Real, pa::Real) where T <: Real
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
@@ -124,7 +124,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real, ϵ::Real, pa::Real) where T <: ROA
 Calculate deflection at given coordinates for SIE lens and update the deflection values in-place.
 
 # Arguments
@@ -132,14 +132,14 @@ Calculate deflection at given coordinates for SIE lens and update the deflection
 - `ψy`: y-component of deflection at given coordinates
 - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `θxc::RV`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `θyc::RV`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `v_d::RV`: Velocity dispersion of the lens (in ``\\rm \\mathbf{km/s}``).
-- `θs::RV`: Scale radius i.e., standard deviation of the Gaussian (in ``\\rm \\mathbf{arcseconds}``).
-- `ϵ::RV`: Ellipticity of the lens.
-- `pa::RV`: Position angle of the lens (in ``\\rm \\mathbf{degrees}``).
+- `θxc::Real`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc::Real`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `v_d::Real`: Velocity dispersion of the lens (in ``\\rm \\mathbf{km/s}``).
+- `θs::Real`: Scale radius i.e., standard deviation of the Gaussian (in ``\\rm \\mathbf{arcseconds}``).
+- `ϵ::Real`: Ellipticity of the lens.
+- `pa::Real`: Position angle of the lens (in ``\\rm \\mathbf{degrees}``).
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real, ϵ::Real, pa::Real) where T <: ROA
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
@@ -175,9 +175,9 @@ end
 
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real, ϵ::Real, pa::Real) where T <: Real
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real, ϵ::Real, pa::Real) where T <: Real
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
@@ -216,7 +216,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
 end
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real, ϵ::Real, pa::Real) where T <: ROA
 Calculate Jacobian at given coordinates for SIE lens and update the Jacobian values in-place.
 
 # Arguments
@@ -225,14 +225,14 @@ Calculate Jacobian at given coordinates for SIE lens and update the Jacobian val
 - `ψxy`: xy-component of Jacobian at given coordinates
 - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `θxc::RV`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `θyc::RV`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `v_d::RV`: Velocity dispersion of the lens (in ``\\rm \\mathbf{km/s}``).
-- `θs::RV`: Scale radius i.e., standard deviation of the Gaussian (in ``\\rm \\mathbf{arcseconds}``).
-- `ϵ::RV`: Ellipticity of the lens.
-- `pa::RV`: Position angle of the lens (in ``\\rm \\mathbf{degrees}``).
+- `θxc::Real`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc::Real`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `v_d::Real`: Velocity dispersion of the lens (in ``\\rm \\mathbf{km/s}``).
+- `θs::Real`: Scale radius i.e., standard deviation of the Gaussian (in ``\\rm \\mathbf{arcseconds}``).
+- `ϵ::Real`: Ellipticity of the lens.
+- `pa::Real`: Position angle of the lens (in ``\\rm \\mathbf{degrees}``).
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real, ϵ::Real, pa::Real) where T <: ROA
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
 

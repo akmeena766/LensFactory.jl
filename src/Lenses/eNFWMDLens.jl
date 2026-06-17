@@ -11,7 +11,7 @@ export potential!
 export deflection!
 export jacobian!
 
-@inline function F_x(x::RV)
+@inline function F_x(x::Real)
    if x < 0.999999999
       if x > 1E-6 
          arg = sqrt( 1.0 - x^2 )
@@ -27,52 +27,52 @@ export jacobian!
    end
 end
 
-@inline function α_r(x::RV)
+@inline function α_r(x::Real)
    return (F_x(x) + log(0.5 * x)) / x
 end
 
-@inline function κ_r(x::RV)
+@inline function κ_r(x::Real)
    return 0.5 * (1.0 - F_x(x)) / (x^2 - 1.0)
 end
 
-@inline function κ_dr(x::RV)
+@inline function κ_dr(x::Real)
    return 0.5 * (3.0 * x^2 * F_x(x) - 2.0 * x^2 - 1.0) / (x * (x^2 - 1.0)^2)
 end
 
-function I_integrand(u::RV, x::RV, y::RV, q::RV)
+function I_integrand(u::Real, x::Real, y::Real, q::Real)
    ξ_u = sqrt(u * (x^2 + y^2 / (1.0 - (1.0 - q^2) * u)))
    return ξ_u * α_r(ξ_u) / (u * sqrt(1.0 - (1.0 - q^2) * u))
 end
 
-function I_integral(x::RV, y::RV, q::RV)
+function I_integral(x::Real, y::Real, q::Real)
    I, _ = quadgk(u -> I_integrand(u, x, y, q), 0, 1)
    return I
 end
 
-function J_integrand(u::RV, x::RV, y::RV, q::RV, n::Int64)
+function J_integrand(u::Real, x::Real, y::Real, q::Real, n::Int64)
    ξ_u = sqrt(u * (x^2 + y^2 / (1.0 - (1.0 - q^2) * u)))
    return κ_r(ξ_u) / (1.0 - (1.0 - q^2) * u)^(n + 0.5)
 end
 
-function J_integral(x::RV, y::RV, q::RV, n::Int64)
+function J_integral(x::Real, y::Real, q::Real, n::Int64)
    J, _ = quadgk(u -> J_integrand(u, x, y, q, n), 0, 1)
    return J
 end
 
-function K_integrand(u::RV, x::RV, y::RV, q::RV, n::Int64)
+function K_integrand(u::Real, x::Real, y::Real, q::Real, n::Int64)
    ξ_u = sqrt(u * (x^2 + y^2 / (1.0 - (1.0 - q^2) * u)))
    return 0.5 * u * κ_dr(ξ_u) / ξ_u / (1.0 - (1.0 - q^2) * u)^(n + 0.5)
 end
 
-function K_integral(x::RV, y::RV, q::RV, n::Int64)
+function K_integral(x::Real, y::Real, q::Real, n::Int64)
    K, _ = quadgk(u -> K_integrand(u, x, y, q, n), 0, 1)
    return K
 end
 
 """
-    potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+    potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, k_s:: Real, θs::Real, ϵ::Real, pa::Real) where T <: Real
 """
-function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+function potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, k_s:: Real, θs::Real, ϵ::Real, pa::Real) where T <: Real
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
    θs_p = θs / sqrt(q)
@@ -104,9 +104,9 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV
 end
 
 """
-    potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+    potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, k_s:: Real, θs::Real, ϵ::Real, pa::Real) where T <: ROA
 """
-function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+function potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, k_s:: Real, θs::Real, ϵ::Real, pa::Real) where T <: ROA
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
    θs_p = θs / sqrt(q)
@@ -142,9 +142,9 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, k_s:: Real, θs::Real, ϵ::Real, pa::Real) where T <: Real
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, k_s:: Real, θs::Real, ϵ::Real, pa::Real) where T <: Real
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
    θs_p = θs / sqrt(q)
@@ -182,9 +182,9 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, k_s:: Real, θs::Real, ϵ::Real, pa::Real) where T <: ROA
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, k_s:: Real, θs::Real, ϵ::Real, pa::Real) where T <: ROA
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
    θs_p = θs / sqrt(q)
@@ -226,9 +226,9 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
 end
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, k_s:: Real, θs::Real, ϵ::Real, pa::Real) where T <: Real
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV, θs::RV, ϵ::RV, pa::RV) where T <: RV
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, k_s:: Real, θs::Real, ϵ::Real, pa::Real) where T <: Real
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
    θs_p = θs / sqrt(q)
@@ -272,9 +272,9 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
 end
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, k_s:: Real, θs::Real, ϵ::Real, pa::Real) where T <: ROA
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, k_s:: RV, θs::RV, ϵ::RV, pa::RV) where T <: ROA
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, k_s:: Real, θs::Real, ϵ::Real, pa::Real) where T <: ROA
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
    θs_p = θs / sqrt(q)
