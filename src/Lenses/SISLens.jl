@@ -11,10 +11,10 @@ export einstein_angle
 
 
 """
-    potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: RV
+    potential!(ψ::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real) where T <: Real
 """
-function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: RV
-   θE = 4.0 * pi * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
+function potential!(ψ::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real) where T <: Real
+   θE = 4π * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    
    dx = θx - θxc
    dy = θy - θyc
@@ -24,11 +24,11 @@ function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T 
 end
 
 """
-    potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: ROA
+    potential!(ψ::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real) where T <: ROA
 Calculate potential at given coordinates for a SIS lens and update the potential (ψ) in place. The
 lensing potential is given as,
 ```math
-ψ(θ_x, θ_y) = 4 π \\left( \\frac{v_d}{{\\rm c}} \\right)^2 |\\pmb{θ} - \\pmb{θ}_c|.
+ψ(θ_x, θ_y) = 4π \\left( \\frac{v_d}{{\\rm c}} \\right)^2 |\\pmb{θ} - \\pmb{θ}_c|.
 ```
 
 # Arguments
@@ -42,8 +42,8 @@ lensing potential is given as,
 # Returns
 - `nothing`: Updates the potential (ψ) in place.
 """
-function potential!(ψ::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: ROA
-   θE = 4.0 * pi * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
+function potential!(ψ::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real) where T <: ROA
+   θE = 4π * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -59,10 +59,10 @@ end
 
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: RV
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real) where T <: Real
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: RV
-   θE = 4.0 * pi * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real) where T <: Real
+   θE = 4π * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
 
    dx = θx - θxc
    dy = θy - θyc
@@ -74,7 +74,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: ROA
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real) where T <: ROA
 Calculate deflection at given coordinates for a SIS lens and update the deflection components 
 (ψx, ψy) in place. The deflection components are given as,
 
@@ -97,8 +97,8 @@ Calculate deflection at given coordinates for a SIS lens and update the deflecti
 # Returns
 - `nothing`: Updates the deflection (ψx, ψy) in place.
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: ROA
-   θE = 4.0 * pi * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real) where T <: ROA
+   θE = 4π * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -116,10 +116,10 @@ end
 
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: RV
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real) where T <: Real
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: RV
-   θE = 4.0 * pi * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real) where T <: Real
+   θE = 4π * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    
    dx = θx - θxc
    dy = θy - θyc
@@ -133,7 +133,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV
 end
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: ROA
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real) where T <: ROA
 Calculate jacobian at given coordinates for a SIS lens and update the jacobian components 
 (ψxx, ψyy, ψxy) in place. The jacobian components are given as,
 
@@ -158,8 +158,8 @@ Calculate jacobian at given coordinates for a SIS lens and update the jacobian c
 # Returns
 - `nothing`: Updates the jacobian (ψxx, ψyy, ψxy) in place.
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::RV, θyc::RV, v_d::RV) where T <: ROA
-   θE = 4.0 * pi * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real) where T <: ROA
+   θE = 4π * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -179,7 +179,7 @@ end
 
 
 """
-    einstein_angle(;D_ds::Float64=NaN, D_s::Float64=NaN, v_d::RV=NaN)
+    einstein_angle(;D_ds::Float64=NaN, D_s::Float64=NaN, v_d::Real=NaN)
 Calculate the Einstein angle for a SIS lens,
 ```math
 \\theta_E = 4 \\pi \\frac{D_{ds}}{D_s} \\left( \\frac{v_d}{{\\rm c}} \\right)^2.
@@ -193,7 +193,7 @@ Calculate the Einstein angle for a SIS lens,
 # Returns
 - `θE`: Einstein angle (in ``\\rm \\mathbf{arcseconds}``).
 """
-function einstein_angle(;D_ds::Float64=NaN, D_s::Float64=NaN, v_d::RV=NaN)
+function einstein_angle(;D_ds::Float64=NaN, D_s::Float64=NaN, v_d::Real=NaN)
    return 4π * (v_d * 1.0E3 / CONST_C)^2 * (D_ds / D_s) / ANGLE_ARCSEC
 end
 

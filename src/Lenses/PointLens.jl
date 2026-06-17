@@ -197,7 +197,7 @@ Calculate the Einstein angle for a point mass lens,
 # Returns
 - `θE`: Einstein angle (in ``\\rm \\mathbf{arcseconds}``)
 """
-function einstein_angle(;D_d::Float64=NaN, D_ds::Float64=NaN, D_s::Float64=NaN, mass::Float64=NaN)
+function einstein_angle(; D_d::Real=NaN, D_ds::Real=NaN, D_s::Real=NaN, mass::Real=NaN)
   return  sqrt((4.0 * CONST_G * mass * MASS_SUN / CONST_C^2) * (D_ds / D_d / D_s)) / ANGLE_ARCSEC
 end
 

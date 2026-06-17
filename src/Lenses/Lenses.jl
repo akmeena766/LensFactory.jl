@@ -87,20 +87,20 @@ function plot_magnification_profile end
 
 
 """
-    get_meshgrid(θx::RV, θy::RV, dθ::RV)
+    get_meshgrid(θx::Real, θy::Real, dθ::Real)
 Generate a meshgrid of coordinates on which various quantities can be evaluated. At present, this 
 function only generates square pixels.
 
 # Arguments
-   - `θx::RV`: Half-size of the grid in x-direction (in ``\\rm \\mathbf{arcseconds}``)
-   - `θy::RV`: Half-size of the grid in y-direction (in ``\\rm \\mathbf{arcseconds}``)
-   - `dθ::RV`: Pixel size (in ``\\rm \\mathbf{arcseconds}``)
+   - `θx::Real`: Half-size of the grid in x-direction (in ``\\rm \\mathbf{arcseconds}``)
+   - `θy::Real`: Half-size of the grid in y-direction (in ``\\rm \\mathbf{arcseconds}``)
+   - `dθ::Real`: Pixel size (in ``\\rm \\mathbf{arcseconds}``)
 
 # Returns
    - `grid_x::Matrix{Float64}`: x-coordinates of the grid (in ``\\rm \\mathbf{arcseconds}``)
    - `grid_y::Matrix{Float64}`: y-coordinates of the grid (in ``\\rm \\mathbf{arcseconds}``)
 """
-function get_meshgrid(θx::RV, θy::RV, dθ::RV)
+function get_meshgrid(θx::Real, θy::Real, dθ::Real)
    # Making sure that grid and pixel size are positive
    if θx <= 0 || θy <= 0 || dθ <= 0
       throw(ArgumentError("All arguments must be positive."))
@@ -127,16 +127,16 @@ end
 
 
 """
-    get_critical_density(D_d::Float64, D_ds::Float64, D_s::Float64; unit::Symbol=:kg_m2)
+    get_critical_density(D_d::Real, D_ds::Real, D_s::Real; unit::Symbol=:kg_m2)
 Calculate the critical surface density,
 ```math
 Σ_{\\rm cr} = \\frac{c^2}{4 π {\\rm G}} \\frac{D_s}{D_d D_{ds}}.
 ``` 
 
 # Arguments
-   - `D_d::Float64`: Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``)
-   - `D_ds::Float64`: Angular diameter distance to the source (in ``\\rm \\mathbf{meters}``)
-   - `D_s::Float64`: Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``)
+   - `D_d::Real`: Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``)
+   - `D_ds::Real`: Angular diameter distance to the source (in ``\\rm \\mathbf{meters}``)
+   - `D_s::Real`: Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``)
 
    # Keyword Arguments
    - `unit::Symbol = :kg_m2`: Output units of the critical surface density.
@@ -145,9 +145,9 @@ Calculate the critical surface density,
       - `:msun_arcsec2` ``\\Rightarrow{\\rm \\mathbf{M_⊙/arcsec^2}}``
 
 # Returns
-   - `Σ_cr::Float64`: Critical surface density in the requested unit
+   - `Σ_cr::Real`: Critical surface density in the requested unit
 """
-function get_critical_density(D_d::Float64, D_ds::Float64, D_s::Float64; unit::Symbol=:kg_m2)
+function get_critical_density(D_d::Real, D_ds::Real, D_s::Real; unit::Symbol=:kg_m2)
    # Calculate Σ_cr in kg/m^2 based type of input parameters
    Σ_cr = (CONST_C^2 / (4.0 * π * CONST_G)) * (D_s / (D_d * D_ds))
    
@@ -167,7 +167,7 @@ end
 """
     get_potential(lens::AbstractLens, θx::T, θy::T) where T <: RV
 """
-function get_potential(lens::AbstractLens, θx::T, θy::T) where T <: RV
+function get_potential(lens::AbstractLens, θx::T, θy::T) where T <: Real
    # Promote the input coordinates from Int64 to Float64
    if typeof(θx) === Int64 || typeof(θy) === Int64
       θx = Float64(θx)

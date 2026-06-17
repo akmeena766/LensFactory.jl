@@ -11,9 +11,9 @@ export einstein_angle
 
 
 """
-    potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: RV
+    potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: Real
 """
-function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: RV
+function potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: Real
    θE2 = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
    θs2 = θs^2
 
@@ -25,7 +25,7 @@ function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV
 end
 
 """
-    potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
+    potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: ROA
 Calculate potential at given coordinates for a Plummer lens and update the potential (ψ) in place.
 The lensing potential is given as,
 ```math
@@ -36,16 +36,16 @@ The lensing potential is given as,
 - `ψ`: Potential at given coordinates
 - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `D_d::RV`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
-- `θxc::RV`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `θyc::RV`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `mass::RV`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
-- `θs::RV`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
+- `θxc`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `θs`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
 
 # Returns
 - `nothing`: Updates the potential (ψ) in place.
 """
-function potential!(ψ::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
+function potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: ROA
    θE2 = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
    θs2 = θs^2
 
@@ -64,9 +64,9 @@ end
 
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: RV
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: Real
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: RV
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: Real
    θE2 = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
    θs2 = θs^2
 
@@ -80,7 +80,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
+    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: ROA
 Calculate deflection at given coordinates for a Plummer lens and update the deflection components
 (ψx, ψy) in place. The deflection angle components are given as,
 ```math
@@ -95,16 +95,16 @@ Calculate deflection at given coordinates for a Plummer lens and update the defl
 - `ψy`: y-component of the deflection at given coordinates
 - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `D_d::RV`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
-- `θxc::RV`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `θyc::RV`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `mass::RV`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
-- `θs::RV`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
+- `θxc`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `θs`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
 
 # Returns
 - `nothing`: Updates the deflection (ψx, ψy) in place.
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
+function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: ROA
    θE2 = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
    θs2 = θs^2
 
@@ -124,9 +124,9 @@ end
 
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: RV
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: Real
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: RV
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: Real
    θE2 = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
    θs2 = θs^2
 
@@ -141,7 +141,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV,
 end
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
+    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: ROA
 Calculate jacobian at given coordinates for a Plummer lens and update the jacobian components 
 (ψxx, ψyy, ψxy) in place. The jacobian components are given as,
 ```math
@@ -158,16 +158,16 @@ Calculate jacobian at given coordinates for a Plummer lens and update the jacobi
 - `ψxy`: xy-component of the jacobian at given coordinates
 - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-- `D_d::RV`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
-- `θxc::RV`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `θyc::RV`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `mass::RV`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
-- `θs::RV`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d`: ADD from the observer to the lens (in ``\\rm \\mathbf{meters}``).
+- `θxc`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `mass`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `θs`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
 
 # Returns
 - `nothing`: Updates the jacobian (ψxx, ψyy, ψxy) in place.
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::RV, θxc::RV, θyc::RV, mass::RV, θs::RV) where T <: ROA
+function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: ROA
    θE2 = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
    θs2 = θs^2
 
@@ -187,23 +187,23 @@ end
 
 
 """
-    einstein_angle(;D_d::Float64=NaN, D_ds::Float64=NaN, D_s::Float64=NaN, mass::Float64=NaN, x_s::Float64=NaN)
+    einstein_angle(; D_d::Real=NaN, D_ds::Real=NaN, D_s::Real=NaN, mass::Real=NaN, x_s::Real=NaN)
 Calculate the Einstein angle for a point mass lens,
 ```math
 \\theta_E = \\sqrt{\\frac{4 \\, \\rm{G} \\, M}{\\rm{c}^2} \\frac{D_{ds}}{D_d D_s} - x_s^2}.
 ```
 
 # Keyword Arguments
-- `D_d::Float64 = NaN`: ADD from observer to lens (in ``\\rm \\mathbf{meters}``).
-- `D_ds::Float64= NaN`: ADD from lens to source (in ``\\rm \\mathbf{meters}``).
-- `D_s::Float64 = NaN`: ADD from observer to source (in ``\\rm \\mathbf{meters}``).
-- `mass::Float64= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
-- `x_s::Float64 = NaN`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d = NaN`: ADD from observer to lens (in ``\\rm \\mathbf{meters}``).
+- `D_ds= NaN`: ADD from lens to source (in ``\\rm \\mathbf{meters}``).
+- `D_s = NaN`: ADD from observer to source (in ``\\rm \\mathbf{meters}``).
+- `mass= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s = NaN`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
 
 # Returns
 - `θE`: Einstein angle (in ``\\rm \\mathbf{arcseconds}``)
 """
-function einstein_angle(;D_d::Float64=NaN, D_ds::Float64=NaN, D_s::Float64=NaN, mass::Float64=NaN, x_s::Float64=NaN)
+function einstein_angle(; D_d::Real=NaN, D_ds::Real=NaN, D_s::Real=NaN, mass::Real=NaN, x_s::Real=NaN)
    return sqrt((4.0 * CONST_G * mass * MASS_SUN / CONST_C^2) * (D_ds / D_d / D_s) / ANGLE_ARCSEC^2 - x_s^2)
 end
 
