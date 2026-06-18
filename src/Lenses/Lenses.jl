@@ -169,6 +169,18 @@ function get_critical_density(D_d::Real, D_ds::Real, D_s::Real; unit::Symbol=:kg
 end
 
 
+# --------------------------------------------------------------------------------------------------
+# 
+# --------------------------------------------------------------------------------------------------
+lens_eltype(lens::AbstractLens) = typeof(lens).parameters[1]
+lens_eltype(lens::init_CompositeLens)  = mapreduce(lens_eltype, promote_type, lens._components_)
+lens_eltype(lens::init_MultiPlaneLens) = mapreduce(lens_eltype, promote_type, lens._plane_)
+
+
+
+# --------------------------------------------------------------------------------------------------
+# 
+# --------------------------------------------------------------------------------------------------
 """
     get_potential(lens::AbstractLens, θx::T, θy::T) where T <: Real
 """
@@ -219,7 +231,8 @@ function get_potential(lens::AbstractLens, θx::T, θy::T) where T <: ROA
    end
 
    # Initialize zero-valued potential array
-   ψ = zero(θx)
+   OutT = promote_type(eltype(θx), eltype(θy), lens_eltype(lens))
+   ψ = zeros(OutT, size(θx))
 
    if lens._lens_ == :CompositeLens
       for component in lens._components_
@@ -379,6 +392,9 @@ function get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: Union{ROA, 
 end
 
 
+# --------------------------------------------------------------------------------------------------
+# 
+# --------------------------------------------------------------------------------------------------
 """
     get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::Real, D_d::Real, β::NTuple{2, Real}) where T <: Real
 """

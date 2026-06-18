@@ -1155,6 +1155,10 @@ struct init_MultiPlaneLens{T<:Real} <: AbstractLens
    _plane_::Vector{AbstractLens}
 end
 function init_MultiPlaneLens(; n_p::Int64=0, z_d::Vector{<:Real}=Float64[], _plane_::Vector{<:AbstractLens}=AbstractLens[])
+   if n_p != length(z_d)
+      throw(ArgumentError("n_p ($n_p) must match length(z_d) ($(length(z_d)))."))
+   end
+   
    T = eltype(z_d)
    return init_MultiPlaneLens{T}(:MultiPlaneLens, n_p, z_d, Vector{AbstractLens}(_plane_))
 end
