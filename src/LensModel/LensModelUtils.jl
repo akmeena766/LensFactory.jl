@@ -223,7 +223,6 @@ function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, Float6
       # Check if this lens model requires galaxy component
       if lens_params[:lens] ∈ REQUIRE_SCALING
          # Lens parameters from file
-         lens_params[:n]   = model.lens_config.galaxies.n
          lens_params[:x_c] = model.lens_config.galaxies.x_c
          lens_params[:y_c] = model.lens_config.galaxies.y_c
          lens_params[:eps] = model.lens_config.galaxies.eps

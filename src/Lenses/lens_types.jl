@@ -1107,9 +1107,9 @@ const lens_init_functions = Dict{Symbol, Function}(
    :tNFWLens          => (comp -> init_tNFWLens(comp.cosmology, comp.z_d; x_c=comp.x_c, y_c=comp.y_c, x_s=comp.x_s, x_t=comp.x_t)),
    :gNFWLens          => (comp -> init_gNFWLens(comp.cosmology, comp.z_d; x_c=comp.x_c, y_c=comp.y_c, x_s=comp.x_s, n=comp.n)),
    :EinastoLens       => (comp -> init_EinastoLens(comp.cosmology, comp.z_d; x_c=comp.x_c, y_c=comp.y_c, x_s=comp.x_s, n=comp.n)),
-   :MultiPlummerLens  => (comp -> init_MultiPlummerLens(D_d=comp.D_d, n=comp.n, x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, x_s=comp.x_s)),
-   :MultiGaussianLens => (comp -> init_MultiGaussianLens(D_d=comp.D_d, n=comp.n, x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, x_s=comp.x_s)),
-   :MultiPJELens      => (comp -> init_MultiPJELens(n=comp.n, x_c=comp.x_c, y_c=comp.y_c, v_d=comp.v_d, x_s=comp.x_s, x_t=comp.x_t, eps=comp.eps, pa=comp.pa))
+   :MultiPlummerLens  => (comp -> init_MultiPlummerLens(D_d=comp.D_d, x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, x_s=comp.x_s)),
+   :MultiGaussianLens => (comp -> init_MultiGaussianLens(D_d=comp.D_d, x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, x_s=comp.x_s)),
+   :MultiPJELens      => (comp -> init_MultiPJELens(x_c=comp.x_c, y_c=comp.y_c, v_d=comp.v_d, x_s=comp.x_s, x_t=comp.x_t, eps=comp.eps, pa=comp.pa))
    )
 
 """
