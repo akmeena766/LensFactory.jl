@@ -11,9 +11,9 @@ export einstein_angle
 
 
 """
-    potential!(ψ::T, θx::T, θy::T, θxc::Real, θyc::Real, vd::Real, θs::Real) where T <: Real
+    potential!(ψ::Real, θx::Real, θy::Real, θxc::T, θyc::T, vd::T, θs::T) where T <: Real
 """
-function potential!(ψ::T, θx::T, θy::T, θxc::Real, θyc::Real, vd::Real, θs::Real) where T <: Real
+function potential!(ψ::Real, θx::Real, θy::Real, θxc::T, θyc::T, vd::T, θs::T) where T <: Real
    θE = 4π * (vd * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    θs2 = θs^2
 
@@ -26,7 +26,7 @@ function potential!(ψ::T, θx::T, θy::T, θxc::Real, θyc::Real, vd::Real, θs
 end
 
 """
-    potential!(ψ::T, θx::T, θy::T, θxc::Real, θyc::Real, vd::Real, θs::Real) where T <: ROA
+    potential!(ψ::ROA, θx::ROA, θy::ROA, θxc::T, θyc::T, vd::T, θs::T) where T <: Real
 Calculate potential at given coordinates for NSISMD lens and update the potential (ψ) in place.
 The lensing potential is given as,
 
@@ -48,7 +48,7 @@ The lensing potential is given as,
 # Returns
 - `nothing`: Updates the potential (ψ) in place.
 """
-function potential!(ψ::T, θx::T, θy::T, θxc::Real, θyc::Real, vd::Real, θs::Real) where T <: ROA
+function potential!(ψ::ROA, θx::ROA, θy::ROA, θxc::T, θyc::T, vd::T, θs::T) where T <: Real
    θE = 4π * (vd * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    θs2 = θs^2
    
@@ -67,9 +67,9 @@ end
 
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::Real, θyc::Real, vd::Real, θs::Real) where T <: Real
+    deflection!(ψx::Real, ψy::Real, θx::Real, θy::Real, θxc::T, θyc::T, vd::T, θs::T) where T <: Real
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::Real, θyc::Real, vd::Real, θs::Real) where T <: Real
+function deflection!(ψx::Real, ψy::Real, θx::Real, θy::Real, θxc::T, θyc::T, vd::T, θs::T) where T <: Real
    θE = 4π * (vd * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    θs2 = θs^2
 
@@ -83,7 +83,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::Real, θyc::Real, vd:
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::Real, θyc::Real, vd::Real, θs::Real) where T <: ROA
+    deflection!(ψx::ROA, ψy::ROA, θx::ROA, θy::ROA, θxc::T, θyc::T, vd::T, θs::T) where T <: Real
 Calculate deflection at given coordinates for NSISMD lens and update the deflection components
 (ψx, ψy) in place.
 
@@ -100,7 +100,7 @@ Calculate deflection at given coordinates for NSISMD lens and update the deflect
 # Returns
 - `nothing`: Updates the deflection (ψx, ψy) in place.
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::Real, θyc::Real, vd::Real, θs::Real) where T <: ROA
+function deflection!(ψx::ROA, ψy::ROA, θx::ROA, θy::ROA, θxc::T, θyc::T, vd::T, θs::T) where T <: Real
    θE = 4π * (vd * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    θs2 = θs^2
 
@@ -119,9 +119,9 @@ end
 
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::Real, θyc::Real, vd::Real, θs::Real) where T <: Real
+    jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::Real, θy::Real, θxc::T, θyc::T, vd::T, θs::T) where T <: Real
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::Real, θyc::Real, vd::Real, θs::Real) where T <: Real
+function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::Real, θy::Real, θxc::T, θyc::T, vd::T, θs::T) where T <: Real
    θE = 4π * (vd * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    θs2 = θs^2
 
@@ -137,7 +137,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::Real, θyc::
 end
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::Real, θyc::Real, vd::Real, θs::Real) where T <: ROA
+    jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::ROA, θy::ROA, θxc::T, θyc::T, vd::T, θs::T) where T <: Real
 Calculate jacobian at given coordinates for NSISMD lens and update the jacobian components 
 (ψxx, ψyy, ψxy) in place.
 
@@ -155,7 +155,7 @@ Calculate jacobian at given coordinates for NSISMD lens and update the jacobian 
 # Returns
 - `nothing`: Updates the jacobian (ψxx, ψyy, ψxy) in place.
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::Real, θyc::Real, vd::Real, θs::Real) where T <: ROA
+function jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::ROA, θy::ROA, θxc::T, θyc::T, vd::T, θs::T) where T <: Real
    θE = 4π * (vd * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    θs2 = θs^2
 

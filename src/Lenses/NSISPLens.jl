@@ -11,9 +11,9 @@ export einstein_angle
 
 
 """
-    potential!(ψ::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real) where T <: Real
+    potential!(ψ::Real, θx::Real, θy::Real, θxc::T, θyc::T, v_d::T, θs::T) where T <: Real
 """
-function potential!(ψ::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real) where T <: Real
+function potential!(ψ::Real, θx::Real, θy::Real, θxc::T, θyc::T, v_d::T, θs::T) where T <: Real
    θE = 4π * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    θs2 = θs^2
 
@@ -25,7 +25,7 @@ function potential!(ψ::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θ
 end
 
 """
-    potential!(ψ::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real) where T <: ROA
+    potential!(ψ::ROA, θx::ROA, θy::ROA, θxc::T, θyc::T, v_d::T, θs::T) where T <: Real
 Calculate potential at given coordinates for NSISP lens and update the potential (ψ) in place.
 The lensing potential is given as,
 
@@ -47,7 +47,7 @@ The lensing potential is given as,
 # Returns
 - `nothing`: Updates the potential (ψ) in place.
 """
-function potential!(ψ::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real) where T <: ROA
+function potential!(ψ::ROA, θx::ROA, θy::ROA, θxc::T, θyc::T, v_d::T, θs::T) where T <: Real
    θE = 4π * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    θs2 = θs^2
 
@@ -64,9 +64,9 @@ end
 
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real) where T <: Real
+    deflection!(ψx::Real, ψy::Real, θx::Real, θy::Real, θxc::T, θyc::T, v_d::T, θs::T) where T <: Real
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real) where T <: Real
+function deflection!(ψx::Real, ψy::Real, θx::Real, θy::Real, θxc::T, θyc::T, v_d::T, θs::T) where T <: Real
    θE = 4π * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    θs2 = θs^2
 
@@ -80,7 +80,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real) where T <: ROA
+    deflection!(ψx::ROA, ψy::ROA, θx::ROA, θy::ROA, θxc::T, θyc::T, v_d::T, θs::T) where T <: Real
 Calculate deflection at given coordinates for NSISP lens and update the deflection components
 (ψx, ψy) in place.
 
@@ -97,7 +97,7 @@ Calculate deflection at given coordinates for NSISP lens and update the deflecti
 # Returns
 - `nothing`: Updates the deflection (ψx, ψy) in place.
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real) where T <: ROA
+function deflection!(ψx::ROA, ψy::ROA, θx::ROA, θy::ROA, θxc::T, θyc::T, v_d::T, θs::T) where T <: Real
    θE = 4π * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    θs2 = θs^2
 
@@ -117,9 +117,9 @@ end
 
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real) where T <: Real
+    jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::Real, θy::Real, θxc::T, θyc::T, v_d::T, θs::T) where T <: Real
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real) where T <: Real
+function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::Real, θy::Real, θxc::T, θyc::T, v_d::T, θs::T) where T <: Real
    θE = 4π * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    θs2 = θs^2
    
@@ -135,7 +135,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::Real, θyc::
 end
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real) where T <: ROA
+    jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::ROA, θy::ROA, θxc::T, θyc::T, v_d::T, θs::T) where T <: Real
 Calculate jacobian at given coordinates for NSISP lens and and update the jacobian components 
 (ψxx, ψyy, ψxy) in place.
 
@@ -153,7 +153,7 @@ Calculate jacobian at given coordinates for NSISP lens and and update the jacobi
 # Returns
 - `nothing`: Updates the jacobian (ψxx, ψyy, ψxy) in place.
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real) where T <: ROA
+function jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::ROA, θy::ROA, θxc::T, θyc::T, v_d::T, θs::T) where T <: Real
    θE = 4π * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    θs2 = θs^2
    
@@ -175,7 +175,7 @@ end
 
 
 """
-    einstein_angle(;D_ds::Real=NaN, D_s::Real=NaN, v_d::Real=NaN, x_s::Real=NaN)
+    einstein_angle(; D_ds::Real=NaN, D_s::Real=NaN, v_d::Real=NaN, x_s::Real=NaN)
 Calculate the Einstein angle for NSIS lens,
 ```math
 \\theta_E = \\sqrt{\\left[4 \\pi \\frac{D_{ds}}{D_s} \\left( \\frac{v_d}{{\\rm c}} \\right)^2 \\right]^2 - x_s^2}.
