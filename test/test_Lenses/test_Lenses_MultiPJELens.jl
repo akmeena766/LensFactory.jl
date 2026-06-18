@@ -11,7 +11,7 @@
    mag11 = Lenses.get_magnification_image(lens1, xt1, yt1, adis)
 
    lens2 = Lenses.init_MultiPJELens(x_c=[xc1, xc2], y_c=[yc1, yc2], v_d=[vd1, vd2], x_s=[xs1, xs2], 
-                                    x_t=[xt1, xt2], eps=[eps1, eps2], pa=[pa1, pa2], n=2)
+                                    x_t=[xt1, xt2], eps=[eps1, eps2], pa=[pa1, pa2])
    pot21 = adis  * Lenses.get_potential(lens2, xt1, yt1)
    dex21 = adis .* Lenses.get_deflection(lens2, xt1, yt1)
    jac21 = adis .* Lenses.get_jacobian(lens2, xt1, yt1)

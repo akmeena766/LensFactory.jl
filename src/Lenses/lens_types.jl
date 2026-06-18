@@ -37,14 +37,18 @@ Initialize a point lens with the given parameters.
 - `y_c::Real = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `mass::Real= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
 """
-@kwdef struct init_PointLens <: AbstractLens
-   _lens_::Symbol = :PointLens
-   D_d::Real  = NaN
-   x_c::Real  = 0.0
-   y_c::Real  = 0.0
-   mass::Real = NaN
+struct init_PointLens{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   D_d::T
+   x_c::T
+   y_c::T
+   mass::T
 end
-
+function init_PointLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN)
+   D_d, x_c, y_c, mass = promote(D_d, x_c, y_c, mass)
+   T = typeof(D_d)
+   return init_PointLens{T}(:PointLens, D_d, x_c, y_c, mass)
+end
 
 """
     init_PlummerLens(D_d::Real  = NaN, 
@@ -61,14 +65,20 @@ Initialize a Plummer lens with the given parameters.
 - `mass::Real= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
 - `x_s::Real = NaN`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
 """
-@kwdef struct init_PlummerLens <: AbstractLens
-   _lens_::Symbol = :PlummerLens
-   D_d::Real  = NaN
-   x_c::Real  = 0.0
-   y_c::Real  = 0.0
-   mass::Real = NaN
-   x_s::Real  = NaN
+struct init_PlummerLens{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   D_d::T
+   x_c::T
+   y_c::T
+   mass::T
+   x_s::T
 end
+function init_PlummerLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_s::Real=NaN)
+   D_d, x_c, y_c, mass, x_s = promote(D_d, x_c, y_c, mass, x_s)
+   T = typeof(D_d)
+   return init_PlummerLens{T}(:PlummerLens, D_d, x_c, y_c, mass, x_s)
+end
+
 
 
 """
@@ -82,11 +92,16 @@ Initialize a Singular Isothermal Sphere (SIS) lens with the given parameters.
 - `y_c::Real = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `v_d::Real = NaN`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
 """
-@kwdef struct init_SISLens <: AbstractLens
-   _lens_::Symbol = :SISLens
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   v_d::Real = NaN
+struct init_SISLens{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   x_c::T
+   y_c::T
+   v_d::T
+end
+function init_SISLens(; x_c::Real=0.0, y_c::Real=0.0, v_d::Real=NaN)
+   x_c, y_c, v_d = promote(x_c, y_c, v_d)
+   T = typeof(x_c)
+   return init_SISLens{T}(:SISLens, x_c, y_c, v_d)
 end
 
 
@@ -103,12 +118,17 @@ Initialize a Non-Singular Isothermal Sphere Potential (NSISP) lens with the give
 - `v_d::Real = NaN`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
 - `x_s::Real = NaN`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
 """
-@kwdef struct init_NSISPLens <: AbstractLens
-   _lens_::Symbol = :NSISPLens
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   v_d::Real = NaN
-   x_s::Real = NaN
+struct init_NSISPLens{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   x_c::T
+   y_c::T
+   v_d::T
+   x_s::T
+end
+function init_NSISPLens(; x_c::Real=0.0, y_c::Real=0.0, v_d::Real=NaN, x_s::Real=NaN)
+   x_c, y_c, v_d, x_s = promote(x_c, y_c, v_d, x_s)
+   T = typeof(x_c)
+   return init_NSISPLens{T}(:NSISPLens, x_c, y_c, v_d, x_s)
 end
 
 
@@ -125,12 +145,17 @@ Initialize a Non-Singular Isothermal Sphere Mass Distribution (NSISMD) lens with
 - `v_d::Real = NaN`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
 - `x_s::Real = NaN`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
 """
-@kwdef struct init_NSISMDLens <: AbstractLens
-   _lens_::Symbol = :NSISMDLens
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   v_d::Real = NaN
-   x_s::Real = NaN
+struct init_NSISMDLens{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   x_c::T
+   y_c::T
+   v_d::T
+   x_s::T
+end
+function init_NSISMDLens(; x_c::Real=0.0, y_c::Real=0.0, v_d::Real=NaN, x_s::Real=NaN)
+   x_c, y_c, v_d, x_s = promote(x_c, y_c, v_d, x_s)
+   T = typeof(x_c)
+   return init_NSISMDLens{T}(:NSISMDLens, x_c, y_c, v_d, x_s)
 end
 
 
@@ -149,13 +174,18 @@ Initialize a Gaussian lens with the given parameters.
 - `mass::Real= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
 - `x_s::Real = NaN`: Scale radius, i.e., standard deviation of the Gaussian (in ``\\rm \\mathbf{arcseconds}``).
 """
-@kwdef struct init_GaussianLens <: AbstractLens
-   _lens_::Symbol = :GaussianLens
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   mass::Real= NaN
-   x_s::Real = NaN
+struct init_GaussianLens{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   D_d::T
+   x_c::T
+   y_c::T
+   mass::T
+   x_s::T
+end
+function init_GaussianLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_s::Real=NaN)
+   D_d, x_c, y_c, mass, x_s = promote(D_d, x_c, y_c, mass, x_s)
+   T = typeof(D_d)
+   return init_GaussianLens{T}(:GaussianLens, D_d, x_c, y_c, mass, x_s)
 end
 
 
@@ -176,14 +206,19 @@ Initialize a Sersic lens with the given parameters.
 - `x_e::Real = NaN`: Half-mass radius (in ``\\rm \\mathbf{arcseconds}``).
 - `n::Real = 4.0`: Sersic index.
 """
-@kwdef struct init_SersicLens <: AbstractLens
-   _lens_::Symbol = :SersicLens
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   mass::Real= NaN
-   x_e::Real = NaN
-   n::Real   = 4.0
+struct init_SersicLens{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   D_d::T
+   x_c::T
+   y_c::T
+   mass::T
+   x_e::T
+   n::T
+end
+function init_SersicLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_e::Real=NaN, n::Real=4.0)
+   D_d, x_c, y_c, mass, x_e, n = promote(D_d, x_c, y_c, mass, x_e, n)
+   T = typeof(D_d)
+   return init_SersicLens{T}(:SersicLens, D_d, x_c, y_c, mass, x_e, n)
 end
 
 
@@ -198,11 +233,16 @@ Initialize constant external effects with the given parameters.
 - `gamma::Real = NaN`: Shear amplitude (dimensionless).
 - `angle::Real = NaN`: Shear angle (in ``\\rm \\mathbf{degrees}``).
 """
-@kwdef struct init_ExternalEffects <: AbstractLens
-   _lens_::Symbol = :ExternalEffects
-   kappa::Real = NaN
-   gamma::Real = NaN
-   angle::Real = NaN
+struct init_ExternalEffects{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   kappa::T
+   gamma::T
+   angle::T
+end
+function init_ExternalEffects(; kappa::Real=NaN, gamma::Real=NaN, angle::Real=NaN)
+   kappa, gamma, angle = promote(kappa, gamma, angle)
+   T = typeof(kappa)
+   return init_ExternalEffects{T}(:ExternalEffects, kappa, gamma, angle)
 end
 
 
@@ -215,10 +255,15 @@ Initialize "restricted" third order perturbations assuming SIS as our perturber.
 - `delta::Real = NaN`: Amplitude of third order perturbations (dimensionless).
 - `angle::Real = NaN`: Direction of the perturbation (in ``\\rm \\mathbf{degrees}``).
 """
-@kwdef struct init_ExternalEffects3 <: AbstractLens
-   _lens_::Symbol = :ExternalEffects3
-   delta::Real = NaN
-   angle::Real = NaN
+struct init_ExternalEffects3{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   delta::T
+   angle::T
+end
+function init_ExternalEffects3(; delta::Real=NaN, angle::Real=NaN)
+   delta, angle = promote(delta, angle)
+   T = typeof(delta)
+   return init_ExternalEffects3{T}(:ExternalEffects3, delta, angle)
 end
 
 
@@ -240,12 +285,17 @@ Initialize multipole perturbations of order ``m''.
 
 - `n::Real = 2.0`: Controls perturbation scaling with radius.
 """
-@kwdef struct init_Multipole <: AbstractLens
-   _lens_::Symbol = :Multipole
-   delta::Real = NaN
-   angle::Real = NaN
-   m::Int64 = 2
-   n::Real = 2.0
+struct init_Multipole{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   delta::T
+   angle::T
+   m::Int64
+   n::T
+end
+function init_Multipole(; delta::Real=NaN, angle::Real=NaN, m::Int64=2, n::Real=2.0)
+   delta, angle, n = promote(delta, angle, n)
+   T = typeof(delta)
+   return init_Multipole{T}(:Multipole, delta, angle, m, n)
 end
 
 
@@ -266,14 +316,19 @@ Initialize pseudo isothermal elliptical potential (PIEP) lens with the given par
 - `eps::Real = NaN`: Ellipticity (dimensionless).
 - `pa::Real = NaN`: Position angle (in ``\\rm \\mathbf{radians}``).
 """
-@kwdef struct init_PIEPLens <: AbstractLens
-   _lens_::Symbol = :PIEPLens
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   v_d::Real = NaN
-   x_s::Real = NaN
-   eps::Real = NaN
-   pa::Real  = NaN
+struct init_PIEPLens{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   x_c::T
+   y_c::T
+   v_d::T
+   x_s::T
+   eps::T
+   pa::T
+end
+function init_PIEPLens(; x_c::Real=0.0, y_c::Real=0.0, v_d::Real=NaN, x_s::Real=NaN, eps::Real=NaN, pa::Real=NaN)
+   x_c, y_c, v_d, x_s, eps, pa = promote(x_c, y_c, v_d, x_s, eps, pa)
+   T = typeof(x_c)
+   return init_PIEPLens{T}(:PIEPLens, x_c, y_c, v_d, x_s, eps, pa)
 end
 
 
@@ -294,14 +349,19 @@ Initialize singular isothermal ellipsoid (SIE) lens with the given parameters.
 - `eps::Real = NaN`: Ellipticity (dimensionless).
 - `pa::Real = NaN`: Position angle (in ``\\rm \\mathbf{radians}``).
 """
-@kwdef struct init_SIELens <: AbstractLens
-   _lens_::Symbol = :SIELens
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   v_d::Real = NaN
-   x_s::Real = NaN
-   eps::Real = NaN
-   pa::Real  = NaN
+struct init_SIELens{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   x_c::T
+   y_c::T
+   v_d::T
+   x_s::T
+   eps::T
+   pa::T
+end
+function init_SIELens(; x_c::Real=0.0, y_c::Real=0.0, v_d::Real=NaN, x_s::Real=NaN, eps::Real=NaN, pa::Real=NaN)
+   x_c, y_c, v_d, x_s, eps, pa = promote(x_c, y_c, v_d, x_s, eps, pa)
+   T = typeof(x_c)
+   return init_SIELens{T}(:SIELens, x_c, y_c, v_d, x_s, eps, pa)
 end
 
 
@@ -324,15 +384,20 @@ Initialize Pseudo-Jaffe Ellipsoid (PJE) lens with the given parameters.
 - `eps::Real = NaN`: Ellipticity (dimensionless).
 - `pa::Real = NaN`: Position angle (in ``\\rm \\mathbf{radians}``).
 """
-@kwdef struct init_PJELens <: AbstractLens
-   _lens_::Symbol = :PJELens
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   v_d::Real = NaN
-   x_s::Real = NaN
-   x_t::Real = NaN
-   eps::Real = NaN
-   pa::Real  = NaN
+struct init_PJELens{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   x_c::T
+   y_c::T
+   v_d::T
+   x_s::T
+   x_t::T
+   eps::T
+   pa::T
+end
+function init_PJELens(; x_c::Real=0.0, y_c::Real=0.0, v_d::Real=NaN, x_s::Real=NaN, x_t::Real=NaN, eps::Real=NaN, pa::Real=NaN)
+   x_c, y_c, v_d, x_s, x_t, eps, pa = promote(x_c, y_c, v_d, x_s, x_t, eps, pa)
+   T = typeof(x_c)
+   return init_PJELens{T}(:PJELens, x_c, y_c, v_d, x_s, x_t, eps, pa)
 end
 
 
@@ -351,13 +416,18 @@ Initialize a Hernquist lens with the given parameters.
 - `mass::Real= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
 - `x_s::Real = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
 """
-@kwdef struct init_HernquistLens <: AbstractLens
-   _lens_::Symbol = :HernquistLens
-   D_d::Real  = NaN
-   x_c::Real  = 0.0
-   y_c::Real  = 0.0
-   mass::Real = NaN
-   x_s::Real  = NaN
+struct init_HernquistLens{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   D_d::T
+   x_c::T
+   y_c::T
+   mass::T
+   x_s::T
+end
+function init_HernquistLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_s::Real=NaN)
+   D_d, x_c, y_c, mass, x_s = promote(D_d, x_c, y_c, mass, x_s)
+   T = typeof(D_d)
+   return init_HernquistLens{T}(:HernquistLens, D_d, x_c, y_c, mass, x_s)
 end
 
 
@@ -381,15 +451,20 @@ parameters.
 - `eps::Real = NaN`: Ellipticity.
 - `pa::Real = NaN`: Position angle (in ``\\rm \\mathbf{radians}``).
 """
-@kwdef struct init_eHernquistMDLens <: AbstractLens
-   _lens_::Symbol = :eHernquistMDLens
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   mass::Real= NaN
-   x_s::Real = NaN
-   eps::Real = NaN
-   pa::Real  = NaN
+struct init_eHernquistMDLens{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   D_d::T
+   x_c::T
+   y_c::T
+   mass::T
+   x_s::T
+   eps::T
+   pa::T
+end
+function init_eHernquistMDLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_s::Real=NaN, eps::Real=NaN, pa::Real=NaN)
+   D_d, x_c, y_c, mass, x_s, eps, pa = promote(D_d, x_c, y_c, mass, x_s, eps, pa)
+   T = typeof(D_d)
+   return init_eHernquistMDLens{T}(:eHernquistMDLens, D_d, x_c, y_c, mass, x_s, eps, pa)
 end
 
 
@@ -413,111 +488,23 @@ Initialize an approximate Hernquist lens (aHernquistLens) with the given paramet
 - `eps::Real = NaN`: Ellipticity.
 - `pa::Real = NaN`: Position angle (in ``\\rm \\mathbf{radians}``).
 """
-@kwdef struct init_aHernquistLens <: AbstractLens
-   _lens_::Symbol = :aHernquistLens
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   mass::Real = NaN
-   x_s::Real  = NaN
-   eps::Real  = NaN
-   pa::Real   = NaN
+struct init_aHernquistLens{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   D_d::T
+   x_c::T
+   y_c::T
+   mass::T
+   x_s::T
+   eps::T
+   pa::T
+end
+function init_aHernquistLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_s::Real=NaN, eps::Real=NaN, pa::Real=NaN)
+   D_d, x_c, y_c, mass, x_s, eps, pa = promote(D_d, x_c, y_c, mass, x_s, eps, pa)
+   T = typeof(D_d)
+   return init_aHernquistLens{T}(:aHernquistLens, D_d, x_c, y_c, mass, x_s, eps, pa)
 end
 
 
-"""
-    init_MultiPlummerLens(n::Int64  = NaN, 
-                          D_d::Real = NaN, 
-                          x_c  = Vector{<:Real}, 
-                          y_c  = Vector{<:Real}, 
-                          mass = Vector{<:Real}, 
-                          x_s  = Vector{<:Real})
-Initialize a Multi-component Plummer lens with the given parameters.
-
-# Keyword Arguments
-- `n::Int64 = NaN`: Number of components.
-- `D_d::Real = NaN`: Angular diameter distance to the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `x_c = Vector{<:Real}()`: Vector of x-coordinates (in ``\\rm \\mathbf{arcseconds}``).
-- `y_c = Vector{<:Real}()`: Vector of y-coordinates (in ``\\rm \\mathbf{arcseconds}``).
-- `mass= Vector{<:Real}()`: Vector of masses (in ``\\rm \\mathbf{M_\\odot}``).
-- `x_s = Vector{<:Real}()`: Vector of scale radii (in ``\\rm \\mathbf{arcseconds}``).
-"""
-@kwdef struct init_MultiPlummerLens <: AbstractLens
-   _lens_::Symbol = :MultiPlummerLens
-   D_d::Real  = NaN
-   n::Int64 = NaN
-   x_c  = Vector{Real}()
-   y_c  = Vector{Real}() 
-   mass = Vector{Real}()
-   x_s  = Vector{Real}()
-end
-
-
-"""
-    init_MultiGaussianLens(n::Int64  = NaN, 
-                           D_d::Real = NaN, 
-                           x_c  = Vector{<:Real}, 
-                           y_c  = Vector{<:Real}, 
-                           mass = Vector{<:Real}, 
-                           x_s  = Vector{<:Real})
-Initialize a Multi-component Gaussian lens with the given parameters.
-
-# Keyword Arguments
-- `n::Int64 = NaN`: Number of components.
-- `D_d::Real = NaN`: Angular diameter distance to the lens (in ``\\rm \\mathbf{arcseconds}``).
-- `x_c = Vector{<:Real}()`: Vector of x-coordinates (in ``\\rm \\mathbf{arcseconds}``).
-- `y_c = Vector{<:Real}()`: Vector of y-coordinates (in ``\\rm \\mathbf{arcseconds}``).
-- `mass= Vector{<:Real}()`: Vector of masses (in ``\\rm \\mathbf{M_\\odot}``).
-- `x_s = Vector{<:Real}()`: Vector of scale radii (in ``\\rm \\mathbf{arcseconds}``).
-"""
-@kwdef struct init_MultiGaussianLens <: AbstractLens
-   _lens_::Symbol = :MultiGaussianLens
-   D_d::Real  = NaN
-   n::Int64 = NaN
-   x_c  = Vector{Real}()
-   y_c  = Vector{Real}() 
-   mass = Vector{Real}()
-   x_s  = Vector{Real}()
-end
-
-
-"""
-    init_MultiPJELens(n::Int64 = NaN, 
-                      x_c = Vector{<:Real}, 
-                      y_c = Vector{<:Real}, 
-                      v_d = Vector{<:Real}, 
-                      x_s = Vector{<:Real}, 
-                      x_t = Vector{<:Real}, 
-                      eps = Vector{<:Real}, 
-                      pa  = Vector{<:Real})
-Initialize a Multi-component PJE lens with the given parameters.
-
-# Keyword Arguments
-- `n::Int64 = NaN`: Number of components.
-- `x_c = Vector{<:Real}()`: Vector of x-coordinates (in ``\\rm \\mathbf{arcseconds}``).
-- `y_c = Vector{<:Real}()`: Vector of y-coordinates (in ``\\rm \\mathbf{arcseconds}``).
-- `v_d = Vector{<:Real}()`: Vector of velocity dispersions (in ``\\rm \\mathbf{km/s}``).
-- `x_s = Vector{<:Real}()`: Vector of scale radii (in ``\\rm \\mathbf{arcseconds}``).
-- `x_t = Vector{<:Real}()`: Vector of tidal radii (in ``\\rm \\mathbf{arcseconds}``).
-- `eps = Vector{<:Real}()`: Vector of ellipticities.
-- `pa = Vector{<:Real}()`: Vector of position angles (in ``\\rm \\mathbf{radians}``).
-"""
-@kwdef struct init_MultiPJELens <: AbstractLens
-   _lens_::Symbol = :MultiPJELens
-   n::Int64 = NaN
-   x_c  = Vector{Real}()
-   y_c  = Vector{Real}() 
-   v_d  = Vector{Real}()
-   x_s  = Vector{Real}()
-   x_t  = Vector{Real}()
-   eps  = Vector{Real}()
-   pa   = Vector{Real}()
-end
-
-
-# --------------------------------------------------------------------------------------------------
-# Lens models that need constructor for various lenses
-# --------------------------------------------------------------------------------------------------
 """
     init_NFWLens(cosmology::AbstractCosmology, z_d::Real; 
                  x_c::Real  = 0.0, 
@@ -540,22 +527,26 @@ initialized with either the concentration `c` or the scale radius `x_s`. **If bo
 - `x_s::Real = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
 - `c::Real = NaN`: Concentration of the lens.
 """
-@kwdef struct init_NFWLens <: AbstractLens
-   _lens_::Symbol = :NFWLens
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   k_s::Real = NaN
-   x_s::Real = NaN
+struct init_NFWLens{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   D_d::T
+   x_c::T
+   y_c::T
+   k_s::T
+   x_s::T
 end
-
+function init_NFWLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, k_s::Real=NaN, x_s::Real=NaN)
+   D_d, x_c, y_c, k_s, x_s = promote(D_d, x_c, y_c, k_s, x_s)
+   T = typeof(D_d)
+   return init_NFWLens{T}(:NFWLens, D_d, x_c, y_c, k_s, x_s)
+end
 function init_NFWLens(cosmology::Cosmology.AbstractCosmology, z_d::Real; x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_s::Real=NaN, c::Real=NaN)
    # Overdensity value
    Δ_z = 200.0
 
    # ADD to the lens
    D_d = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
-   
+
    # Critical density at the lens redshift (in kg/m^3)
    ρ_cz = Cosmology.rho_cz(cosmology, z_d)
 
@@ -576,7 +567,7 @@ function init_NFWLens(cosmology::Cosmology.AbstractCosmology, z_d::Real; x_c::Re
    # 2D (normalized) characteristic density
    k_s = ρ_s * D_d * x_s * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
 
-   return init_NFWLens(x_c=x_c, y_c=y_c, D_d=D_d, k_s=k_s, x_s=x_s)
+   return init_NFWLens(D_d=D_d, x_c=x_c, y_c=y_c, k_s=k_s, x_s=x_s)
 end
 
 
@@ -607,17 +598,22 @@ overwritten.**
 - `eps::Real = NaN`: Ellipticity.
 - `pa::Real = NaN`: Position angle (in ``\\rm \\mathbf{radians}``).
 """
-@kwdef struct init_eNFWMDLens <: AbstractLens
-   _lens_::Symbol = :eNFWMDLens
-   D_d::Real  = NaN
-   x_c::Real  = 0.0
-   y_c::Real  = 0.0
-   k_s::Real  = NaN
-   x_s::Real  = NaN
-   eps::Real  = NaN
-   pa::Real   = NaN
+struct init_eNFWMDLens{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   D_d::T
+   x_c::T
+   y_c::T
+   k_s::T
+   x_s::T
+   eps::T
+   pa::T
 end
-
+function init_eNFWMDLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, k_s::Real=NaN, x_s::Real=NaN, eps::Real=NaN, pa::Real=NaN)
+   # promote the input arguments
+   D_d, x_c, y_c, k_s, x_s, eps, pa = promote(D_d, x_c, y_c, k_s, x_s, eps, pa)
+   T = typeof(D_d)
+   return init_eNFWMDLens{T}(:eNFWMDLens, D_d, x_c, y_c, k_s, x_s, eps, pa)
+end
 function init_eNFWMDLens(cosmology::Cosmology.AbstractCosmology, z_d::Real; x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_s::Real=NaN, c::Real=NaN, eps::Real=NaN, pa::Real=NaN)
    # Overdensity value
    Δ_z = 200.0
@@ -645,7 +641,7 @@ function init_eNFWMDLens(cosmology::Cosmology.AbstractCosmology, z_d::Real; x_c:
    # 2D (normalized) characteristic density
    k_s = ρ_s * D_d * x_s * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
 
-   return init_eNFWMDLens(x_c=x_c, y_c=y_c, D_d=D_d, k_s=k_s, x_s=x_s, eps=eps, pa=pa)
+   return init_eNFWMDLens(D_d=D_d, x_c=x_c, y_c=y_c, k_s=k_s, x_s=x_s, eps=eps, pa=pa)
 end
 
 
@@ -676,15 +672,20 @@ be initialized with either the concentration `c` or the scale radius `x_s`. **If
 - `eps::Real = NaN`: Ellipticity.
 - `pa::Real = NaN`: Position angle (in ``\\rm \\mathbf{radians}``).
 """
-@kwdef struct init_aNFWLens <: AbstractLens
-   _lens_::Symbol = :aNFWLens
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   k_s::Real = NaN
-   x_s::Real  = NaN
-   eps::Real  = NaN
-   pa::Real   = NaN
+struct init_aNFWLens{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   D_d::T
+   x_c::T
+   y_c::T
+   k_s::T
+   x_s::T
+   eps::T
+   pa::T
+end
+function init_aNFWLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, k_s::Real=NaN, x_s::Real=NaN, eps::Real=NaN, pa::Real=NaN)
+   D_d, x_c, y_c, k_s, x_s, eps, pa = promote(D_d, x_c, y_c, k_s, x_s, eps, pa)
+   T = typeof(D_d)
+   return init_aNFWLens{T}(:aNFWLens, D_d, x_c, y_c, k_s, x_s, eps, pa)
 end
 
 function init_aNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::Real; x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_s::Real=NaN, c::Real=NaN, eps::Real=NaN, pa::Real=NaN)
@@ -742,16 +743,20 @@ be initialized with either the concentration `c` or the scale radius `x_s`. **If
 - `c::Real = NaN`: Concentration of the lens.
 - `x_t::Real = NaN`: Truncation radius (in ``\\rm \\mathbf{arcseconds}``).
 """
-@kwdef struct init_tNFWLens <: AbstractLens
-   _lens_::Symbol = :tNFWLens
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   k_s::Real = NaN
-   x_s::Real = NaN
-   x_t::Real = NaN
+struct init_tNFWLens{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   D_d::T
+   x_c::T
+   y_c::T
+   k_s::T
+   x_s::T
+   x_t::T
 end
-
+function init_tNFWLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, k_s::Real=NaN, x_s::Real=NaN, x_t::Real=NaN)
+   D_d, x_c, y_c, k_s, x_s, x_t = promote(D_d, x_c, y_c, k_s, x_s, x_t)
+   T = typeof(D_d)
+   return init_tNFWLens{T}(:tNFWLens, D_d, x_c, y_c, k_s, x_s, x_t)
+end
 function init_tNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::Real; x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_s::Real=NaN, c::Real=NaN, x_t::Real=NaN)
    # Overdensity value
    Δ_z = 200.0
@@ -808,16 +813,24 @@ defines the slope of the density profile.
 - `c::Real = NaN`: Concentration of the lens.
 - `n::Real = 1.0`: Slope parameter of the lens.
 """
-@kwdef struct init_gNFWLens <: AbstractLens
-   _lens_::Symbol = :gNFWLens
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   k_s::Real = NaN
-   x_s::Real = NaN
-   n::Real   = NaN
+struct init_gNFWLens{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   D_d::T
+   x_c::T
+   y_c::T
+   k_s::T
+   x_s::T
+   n::T
 end
+function init_gNFWLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, k_s::Real=NaN, x_s::Real=NaN, n::Real=1.0)
+   if !(0.0 < n < 2.0)
+      throw(ArgumentError("Slope parameter outside allowed range n ∈ (0, 2) in **parameter_gNFWLens**."))
+   end
 
+   D_d, x_c, y_c, k_s, x_s, n = promote(D_d, x_c, y_c, k_s, x_s, n)
+   T = typeof(D_d)
+   return init_gNFWLens{T}(:gNFWLens, D_d, x_c, y_c, k_s, x_s, n)
+end
 function init_gNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::Real; x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_s::Real=NaN, c::Real=NaN, n::Real=1.0)
    # Check for valid slope parameter
    if !(0.0 < n < 2.0)
@@ -885,16 +898,20 @@ the density profile.
 - `c::Real = NaN`: Concentration of the lens.
 - `n::Real = 0.2`: Slope parameter of the lens.
 """
-@kwdef struct init_EinastoLens <: AbstractLens
-   _lens_::Symbol = :EinastoLens
-   D_d::Real = NaN
-   x_c::Real = 0.0
-   y_c::Real = 0.0
-   k_s::Real = NaN
-   x_s::Real = NaN
-   n::Real   = 0.2
+struct init_EinastoLens{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   D_d::T
+   x_c::T
+   y_c::T
+   k_s::T
+   x_s::T
+   n::T
 end
-
+function init_EinastoLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, k_s::Real=NaN, x_s::Real=NaN, n::Real=1.0)
+   D_d, x_c, y_c, k_s, x_s, n = promote(D_d, x_c, y_c, k_s, x_s, n)
+   T = typeof(D_d)
+   return init_EinastoLens{T}(:EinastoLens, D_d, x_c, y_c, k_s, x_s, n)
+end
 function init_EinastoLens(cosmology::Cosmology.AbstractCosmology, z_d::Real; x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_s::Real=NaN, c::Real=NaN, n::Real=0.2)
    # Overdensity value
    Δ_z = 200.0
@@ -928,6 +945,141 @@ function init_EinastoLens(cosmology::Cosmology.AbstractCosmology, z_d::Real; x_c
    return init_EinastoLens(x_c=x_c, y_c=y_c, D_d=D_d, k_s=k_s, x_s=x_s, n=n)
 end
 
+
+"""
+    init_MultiPlummerLens(D_d::Real = NaN, 
+                          x_c  = Vector{<:Real}, 
+                          y_c  = Vector{<:Real}, 
+                          mass = Vector{<:Real}, 
+                          x_s  = Vector{<:Real})
+Initialize a Multi-component Plummer lens with the given parameters.
+
+# Keyword Arguments
+- `D_d::Real = NaN`: Angular diameter distance to the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `x_c = Vector{<:Real}()`: Vector of x-coordinates (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c = Vector{<:Real}()`: Vector of y-coordinates (in ``\\rm \\mathbf{arcseconds}``).
+- `mass= Vector{<:Real}()`: Vector of masses (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s = Vector{<:Real}()`: Vector of scale radii (in ``\\rm \\mathbf{arcseconds}``).
+"""
+struct init_MultiPlummerLens{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   D_d::T
+   n::Int64
+   x_c::Vector{T}
+   y_c::Vector{T}
+   mass::Vector{T}
+   x_s::Vector{T}
+end
+function init_MultiPlummerLens(; D_d::Real=NaN, x_c=Vector{<:Real}(), y_c=Vector{<:Real}(), mass=Vector{<:Real}(), x_s=Vector{<:Real}())
+   if !(length(x_c) == length(y_c) == length(mass) == length(x_s))
+      throw(ArgumentError("x_c, y_c, mass, and x_s must all have the same length (one entry per component); got $(length(x_c)), $(length(y_c)), $(length(mass)), $(length(x_s))."))
+   end
+   
+   T = promote_type(typeof(D_d), eltype(x_c), eltype(y_c), eltype(mass), eltype(x_s))
+   D_d  = convert(T, D_d)
+   x_c  = Vector{T}(x_c)
+   y_c  = Vector{T}(y_c)
+   mass = Vector{T}(mass)
+   x_s  = Vector{T}(x_s)
+   
+   n = length(x_c)
+   return init_MultiPlummerLens{T}(:MultiPlummerLens, D_d, n, x_c, y_c, mass, x_s)
+end
+
+
+"""
+    init_MultiGaussianLens(D_d::Real = NaN, 
+                           x_c  = Vector{<:Real}, 
+                           y_c  = Vector{<:Real}, 
+                           mass = Vector{<:Real}, 
+                           x_s  = Vector{<:Real})
+Initialize a Multi-component Gaussian lens with the given parameters.
+
+# Keyword Arguments
+- `D_d = NaN`: Angular diameter distance to the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `x_c = Vector{<:Real}()`: Vector of x-coordinates (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c = Vector{<:Real}()`: Vector of y-coordinates (in ``\\rm \\mathbf{arcseconds}``).
+- `mass= Vector{<:Real}()`: Vector of masses (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s = Vector{<:Real}()`: Vector of scale radii (in ``\\rm \\mathbf{arcseconds}``).
+"""
+struct init_MultiGaussianLens{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   D_d::T
+   n::Int64
+   x_c::Vector{T}
+   y_c::Vector{T}
+   mass::Vector{T}
+   x_s::Vector{T}
+end
+function init_MultiGaussianLens(; D_d::Real=NaN, x_c=Vector{<:Real}(), y_c=Vector{<:Real}(), mass=Vector{<:Real}(), x_s=Vector{<:Real}())
+   if !(length(x_c) == length(y_c) == length(mass) == length(x_s))
+      throw(ArgumentError("x_c, y_c, mass, and x_s must all have the same length (one entry per component); got $(length(x_c)), $(length(y_c)), $(length(mass)), $(length(x_s))."))
+   end
+
+   T = promote_type(typeof(D_d), eltype(x_c), eltype(y_c), eltype(mass), eltype(x_s))
+   D_d  = convert(T, D_d)
+   x_c  = Vector{T}(x_c)
+   y_c  = Vector{T}(y_c)
+   mass = Vector{T}(mass)
+   x_s  = Vector{T}(x_s)
+   
+   n = length(x_c)
+   return init_MultiGaussianLens{T}(:MultiGaussianLens, D_d, n, x_c, y_c, mass, x_s)
+end
+
+
+"""
+    init_MultiPJELens(n::Int64 = NaN, 
+                      x_c = Vector{<:Real}, 
+                      y_c = Vector{<:Real}, 
+                      v_d = Vector{<:Real}, 
+                      x_s = Vector{<:Real}, 
+                      x_t = Vector{<:Real}, 
+                      eps = Vector{<:Real}, 
+                      pa  = Vector{<:Real})
+Initialize a Multi-component PJE lens with the given parameters.
+
+# Keyword Arguments
+- `n::Int64 = NaN`: Number of components.
+- `x_c = Vector{<:Real}()`: Vector of x-coordinates (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c = Vector{<:Real}()`: Vector of y-coordinates (in ``\\rm \\mathbf{arcseconds}``).
+- `v_d = Vector{<:Real}()`: Vector of velocity dispersions (in ``\\rm \\mathbf{km/s}``).
+- `x_s = Vector{<:Real}()`: Vector of scale radii (in ``\\rm \\mathbf{arcseconds}``).
+- `x_t = Vector{<:Real}()`: Vector of tidal radii (in ``\\rm \\mathbf{arcseconds}``).
+- `eps = Vector{<:Real}()`: Vector of ellipticities.
+- `pa = Vector{<:Real}()`: Vector of position angles (in ``\\rm \\mathbf{radians}``).
+"""
+struct init_MultiPJELens{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   n::Int64
+   x_c::Vector{T}
+   y_c::Vector{T}
+   v_d::Vector{T}
+   x_s::Vector{T}
+   x_t::Vector{T}
+   eps::Vector{T}
+   pa::Vector{T}
+end
+function init_MultiPJELens(; x_c = Vector{<:Real}(), y_c = Vector{<:Real}(), v_d = Vector{<:Real}(), x_s = Vector{<:Real}(), x_t = Vector{<:Real}(), eps = Vector{<:Real}(), pa = Vector{<:Real}())
+   if !(length(x_c) == length(y_c) == length(v_d) == length(x_s) == length(x_t) == length(eps) == length(pa))
+      throw(ArgumentError("x_c, y_c, v_d, x_s, x_t, eps, and pa must all have the same length 
+                           (one entry per component); got $(length(x_c)), $(length(y_c)), 
+                           $(length(v_d)), $(length(x_s)), $(length(x_t)), $(length(eps)), 
+                           and $(length(pa))."))
+   end
+
+   T = promote_type(eltype(x_c), eltype(y_c), eltype(v_d), eltype(x_s), eltype(x_t), eltype(eps), eltype(pa))
+   x_c  = Vector{T}(x_c)
+   y_c  = Vector{T}(y_c)
+   v_d = Vector{T}(v_d)
+   x_s  = Vector{T}(x_s)
+   x_t  = Vector{T}(x_t)
+   eps  = Vector{T}(eps)
+   pa   = Vector{T}(pa)
+
+   n = length(x_c)
+   return init_MultiPJELens(:MultiPJELens, n, x_c, y_c, v_d, x_s, x_t, eps, pa)
+end
 
 # --------------------------------------------------------------------------------------------------
 # Composite and Multi-plane lens constructors
@@ -970,11 +1122,13 @@ Initialize a composite lens from a vector of lens components.
 # Returns
 - `CompositeLens`: Composite lens.
 """
-@kwdef struct init_CompositeLens <: AbstractLens
-   _lens_::Symbol = :CompositeLens
-   _components_ = Vector{AbstractLens}()
+struct init_CompositeLens <: AbstractLens
+   _lens_::Symbol
+   _components_::Vector{AbstractLens}
 end
-
+function init_CompositeLens(; _components_::Vector{<:AbstractLens}=Vector{AbstractLens}())
+   return init_CompositeLens(:CompositeLens, _components_)
+end
 function init_CompositeLens(lens::Vector{<:NamedTuple})
    # Define a compoent vector of known size
    lens_components = Vector{AbstractLens}(undef, length(lens))
@@ -994,13 +1148,16 @@ function init_CompositeLens(lens::Vector{<:NamedTuple})
 end
 
 
-@kwdef struct init_MultiPlaneLens <: AbstractLens
-   _lens_::Symbol = :MultiPlaneLens
-   n_p::Int64   = NaN
-   z_d = Vector{<:Real}()
-   _plane_ = Vector{AbstractLens}()
+struct init_MultiPlaneLens{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   n_p::Int64
+   z_d::Vector{T}
+   _plane_::Vector{AbstractLens}
 end
-
+function init_MultiPlaneLens(; n_p::Int64=0, z_d::Vector{<:Real}=Float64[], _plane_::Vector{<:AbstractLens}=AbstractLens[])
+   T = eltype(z_d)
+   return init_MultiPlaneLens{T}(:MultiPlaneLens, n_p, z_d, Vector{AbstractLens}(_plane_))
+end
 function init_MultiPlaneLens(lens::Vector{<:NamedTuple})   
    # Get sorted unique lens redshifts
    zd_unique = unique(component.z_d for component in lens)
@@ -1020,191 +1177,4 @@ function init_MultiPlaneLens(lens::Vector{<:NamedTuple})
    lens_components = AbstractLens[init_CompositeLens(lens_by_z[z]) for z in zd_unique]
 
    return init_MultiPlaneLens(n_p=length(zd_unique), z_d=zd_unique, _plane_=lens_components)
-end
-
-
-# --------------------------------------------------------------------------------------------------
-# Parameter functions for various lenses
-# --------------------------------------------------------------------------------------------------
-"""
-    parameter_NFWLens(; cosmology::Cosmology.AbstractCosmology = nothing, 
-                        z_d::Real  = NaN, 
-                        mass::Real = NaN, 
-                        x_s::Real  = NaN, 
-                        c::Real    = NaN)
-Calculate parameters for NFW lens. The function would either need the concentration `c` or the 
-scale radius `x_s`. **If both are provided, `c` will be used to calculate `x_s` and the input `x_s` 
-will be overwritten.**
-
-# Arguments
-- `cosmology::AbstractCosmology = nothing`: Cosmology object.
-- `z_d::Real = NaN`: Redshift of the lens.
-- `mass::Real= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
-- `x_s::Real = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
-- `c::Real = NaN`: Concentration of the lens.
-
-# Returns
-- `NamedTuple`: Tuple of lens parameters.
-"""
-function parameter_NFWLens(; cosmology::Cosmology.AbstractCosmology = nothing, 
-                             z_d::Real  = NaN, 
-                             mass::Real = NaN, 
-                             x_s::Real  = NaN, 
-                             c::Real    = NaN)
-   # Overdensity value
-   Δ_z = 200.0
-
-   # ADD to the lens
-   D_d = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
-   
-   # Critical density at the lens redshift (in kg/m^3)
-   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
-
-   # Virial radius of the lens (in ANGLE_ARCSEC)
-   θ_vir = (3.0 * mass * MASS_SUN / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
-
-   # Check if concentration is given
-   if isfinite(c)
-      x_s = θ_vir / c
-   elseif isfinite(x_s)
-      c = θ_vir / x_s
-   else
-      throw(ArgumentError("Provide concentration (c) or scale radius (x_s) in **parameter_NFWLens**."))
-   end
-   # 3D characteristic density
-   mass_c = log(1.0 + c) - (c / (1.0 + c))
-   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / mass_c
-
-   # 2D (normalized) characteristic density
-   k_s = ρ_s * D_d * x_s * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
-   return (mass=mass, rho_s=ρ_s, k_s=k_s, c=c, x_s=x_s)
-end
-
-
-"""
-    parameter_gNFWLens(; cosmology::Cosmology.AbstractCosmology = nothing, 
-                         z_d::Real  = NaN, 
-                         mass::Real = NaN, 
-                         x_s::Real  = NaN, 
-                         c::Real    = NaN, 
-                         n::Real    = 1.0)
-Calculate parameters for gNFW lens. The function would either need the concentration `c` or the 
-scale radius `x_s`. **If both are provided, `c` will be used to calculate `x_s` and the input `x_s` 
-will be overwritten.**
-
-# Arguments
-- `cosmology::AbstractCosmology = nothing`: Cosmology object.
-- `z_d::Real = NaN`: Redshift of the lens.
-- `mass::Real= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
-- `x_s::Real = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
-- `c::Real = NaN`: Concentration of the lens.
-- `n::Real = 1.0`: Slope parameter of the lens.
-
-# Returns
-- `NamedTuple`: Tuple of lens parameters.
-"""
-function parameter_gNFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, 
-                              z_d::Real  = NaN, 
-                              mass::Real = NaN, 
-                              x_s::Real  = NaN, 
-                              c::Real    = NaN, 
-                              n::Real    = 1.0)
-   # Check for valid slope parameter
-   if !(0.0 < n < 2.0)
-      throw(ArgumentError("Slope parameter outside allowed range n ∈ (0, 2) in **parameter_gNFWLens**."))
-   end
-
-   # Integrand function for mass calculation
-   function integrand(x::Real, α::Real)
-      return x^(2.0 - α) / (1.0 + x)^(3.0 - α)
-   end
-
-   # Overdensity value
-   Δ_z = 200.0
-
-   # ADD to the lens
-   D_d = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
-   
-   # Critical density at the lens redshift
-   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
-
-   # Virial radius of the lens (in ANGLE_ARCSEC)
-   θ_vir = (3.0 * mass * MASS_SUN / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
-
-   # Check if concentration is given
-   if isfinite(c)
-      x_s = θ_vir / c
-   elseif isfinite(x_s)
-      c = θ_vir / x_s
-   else
-      throw(ArgumentError("Provide at least c or x_s in **parameter_gNFWLens**."))
-   end
-   mass_c, _ = quadgk(x -> integrand(x, n), 0, c)
-   
-   # 3D characteristic density
-   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / mass_c
-
-   # 2D (normalized) characteristic density
-   k_s = ρ_s * D_d * x_s * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
-   return (mass=mass, rho_s=ρ_s, k_s=k_s, c=c, x_s=x_s, n=n)
-end
-
-
-"""
-    parameter_EinastoLens(; cosmology::Cosmology.AbstractCosmology=nothing, 
-                            z_d::Real  = NaN, 
-                            mass::Real = NaN, 
-                            x_s::Real  = NaN, 
-                            c::Real    = NaN, 
-                            n::Real    = 0.2)
-Calculate parameters of an Einasto lens model. The function would either need the concentration `c` 
-or the scale radius `x_s`. **If both are provided, `c` will be used to calculate `x_s` and the input 
-`x_s` will be overwritten.**
-
-# Arguments
-- `cosmology::AbstractCosmology = nothing`: Cosmology object.
-- `z_d::Real = NaN`: Redshift of the lens.
-- `mass::Real= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
-- `x_s::Real = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
-- `c::Real = NaN`: Concentration of the lens.
-- `n::Real = 0.2`: Slope parameter of the lens.
-
-# Returns
-- `NamedTuple`: Tuple of lens parameters.
-"""
-function parameter_EinastoLens(; cosmology::Cosmology.AbstractCosmology=nothing, 
-                                 z_d::Real  = NaN, 
-                                 mass::Real = NaN, 
-                                 x_s::Real  = NaN, 
-                                 c::Real    = NaN, 
-                                 n::Real    = 0.2)
-   # Overdensity value
-   Δ_z = 200.0
-
-   # ADD to the lens
-   D_d  = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
-
-   # Critical density at the lens redshift
-   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
-
-   # Virial radius of the lens (in ANGLE_ARCSEC)
-   θ_vir = (3.0 * mass * MASS_SUN / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
-
-   # Check if concentration is given
-   if isfinite(c)
-      x_s = θ_vir / c
-   elseif isfinite(x_s)
-      c = θ_vir / x_s
-   else
-      throw(ArgumentError("Provide at least c or x_s in **parameter_EinastoLens**."))
-   end
-   Pax, _ = gamma_inc(3.0 / n, (2.0 / n) * c^n)
-   mass_e = (1.0 / n) * (n / 2.0)^(3.0 / n) * gamma(3.0 / n) * Pax
-   
-   # 3D characteristic density
-   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / mass_e
-
-   # 2D (normalized) characteristic density
-   k_s = ρ_s * D_d * x_s * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
-   return (mass=mass, rho_s=ρ_s, k_s=k_s, c=c, x_s=x_s, n=n)
 end

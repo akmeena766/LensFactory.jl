@@ -10,7 +10,7 @@
    jac11 = adis .* Lenses.get_jacobian(lens1, xt1, yt1)
    mag11 = Lenses.get_magnification_image(lens1, xt1, yt1, adis)
 
-   lens2 = Lenses.init_MultiPlummerLens(D_d=Dol, x_c=[xc1, xc2], y_c=[yc1, yc2], mass=[mass1, mass2], x_s=[xs1, xs2], n=2)
+   lens2 = Lenses.init_MultiPlummerLens(D_d=Dol, x_c=[xc1, xc2], y_c=[yc1, yc2], mass=[mass1, mass2], x_s=[xs1, xs2])
    pot21 = adis  * Lenses.get_potential(lens2, xt1, yt1)
    dex21 = adis .* Lenses.get_deflection(lens2, xt1, yt1)
    jac21 = adis .* Lenses.get_jacobian(lens2, xt1, yt1)

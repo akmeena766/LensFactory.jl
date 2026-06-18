@@ -1022,6 +1022,193 @@ end
 
 
 # --------------------------------------------------------------------------------------------------
+# Parameter functions for various lenses
+# --------------------------------------------------------------------------------------------------
+"""
+    parameter_NFWLens(; cosmology::Cosmology.AbstractCosmology = nothing, 
+                        z_d::Real  = NaN, 
+                        mass::Real = NaN, 
+                        x_s::Real  = NaN, 
+                        c::Real    = NaN)
+Calculate parameters for NFW lens. The function would either need the concentration `c` or the 
+scale radius `x_s`. **If both are provided, `c` will be used to calculate `x_s` and the input `x_s` 
+will be overwritten.**
+
+# Arguments
+- `cosmology::AbstractCosmology = nothing`: Cosmology object.
+- `z_d::Real = NaN`: Redshift of the lens.
+- `mass::Real= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s::Real = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
+- `c::Real = NaN`: Concentration of the lens.
+
+# Returns
+- `NamedTuple`: Tuple of lens parameters.
+"""
+function parameter_NFWLens(; cosmology::Cosmology.AbstractCosmology = nothing, 
+                             z_d::Real  = NaN, 
+                             mass::Real = NaN, 
+                             x_s::Real  = NaN, 
+                             c::Real    = NaN)
+   # Overdensity value
+   Δ_z = 200.0
+
+   # ADD to the lens
+   D_d = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
+   
+   # Critical density at the lens redshift (in kg/m^3)
+   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
+
+   # Virial radius of the lens (in ANGLE_ARCSEC)
+   θ_vir = (3.0 * mass * MASS_SUN / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
+
+   # Check if concentration is given
+   if isfinite(c)
+      x_s = θ_vir / c
+   elseif isfinite(x_s)
+      c = θ_vir / x_s
+   else
+      throw(ArgumentError("Provide concentration (c) or scale radius (x_s) in **parameter_NFWLens**."))
+   end
+   # 3D characteristic density
+   mass_c = log(1.0 + c) - (c / (1.0 + c))
+   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / mass_c
+
+   # 2D (normalized) characteristic density
+   k_s = ρ_s * D_d * x_s * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+   return (mass=mass, rho_s=ρ_s, k_s=k_s, c=c, x_s=x_s)
+end
+
+
+"""
+    parameter_gNFWLens(; cosmology::Cosmology.AbstractCosmology = nothing, 
+                         z_d::Real  = NaN, 
+                         mass::Real = NaN, 
+                         x_s::Real  = NaN, 
+                         c::Real    = NaN, 
+                         n::Real    = 1.0)
+Calculate parameters for gNFW lens. The function would either need the concentration `c` or the 
+scale radius `x_s`. **If both are provided, `c` will be used to calculate `x_s` and the input `x_s` 
+will be overwritten.**
+
+# Arguments
+- `cosmology::AbstractCosmology = nothing`: Cosmology object.
+- `z_d::Real = NaN`: Redshift of the lens.
+- `mass::Real= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s::Real = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
+- `c::Real = NaN`: Concentration of the lens.
+- `n::Real = 1.0`: Slope parameter of the lens.
+
+# Returns
+- `NamedTuple`: Tuple of lens parameters.
+"""
+function parameter_gNFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, 
+                              z_d::Real  = NaN, 
+                              mass::Real = NaN, 
+                              x_s::Real  = NaN, 
+                              c::Real    = NaN, 
+                              n::Real    = 1.0)
+   # Check for valid slope parameter
+   if !(0.0 < n < 2.0)
+      throw(ArgumentError("Slope parameter outside allowed range n ∈ (0, 2) in **parameter_gNFWLens**."))
+   end
+
+   # Integrand function for mass calculation
+   function integrand(x::Real, α::Real)
+      return x^(2.0 - α) / (1.0 + x)^(3.0 - α)
+   end
+
+   # Overdensity value
+   Δ_z = 200.0
+
+   # ADD to the lens
+   D_d = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
+   
+   # Critical density at the lens redshift
+   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
+
+   # Virial radius of the lens (in ANGLE_ARCSEC)
+   θ_vir = (3.0 * mass * MASS_SUN / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
+
+   # Check if concentration is given
+   if isfinite(c)
+      x_s = θ_vir / c
+   elseif isfinite(x_s)
+      c = θ_vir / x_s
+   else
+      throw(ArgumentError("Provide at least c or x_s in **parameter_gNFWLens**."))
+   end
+   mass_c, _ = quadgk(x -> integrand(x, n), 0, c)
+   
+   # 3D characteristic density
+   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / mass_c
+
+   # 2D (normalized) characteristic density
+   k_s = ρ_s * D_d * x_s * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+   return (mass=mass, rho_s=ρ_s, k_s=k_s, c=c, x_s=x_s, n=n)
+end
+
+
+"""
+    parameter_EinastoLens(; cosmology::Cosmology.AbstractCosmology=nothing, 
+                            z_d::Real  = NaN, 
+                            mass::Real = NaN, 
+                            x_s::Real  = NaN, 
+                            c::Real    = NaN, 
+                            n::Real    = 0.2)
+Calculate parameters of an Einasto lens model. The function would either need the concentration `c` 
+or the scale radius `x_s`. **If both are provided, `c` will be used to calculate `x_s` and the input 
+`x_s` will be overwritten.**
+
+# Arguments
+- `cosmology::AbstractCosmology = nothing`: Cosmology object.
+- `z_d::Real = NaN`: Redshift of the lens.
+- `mass::Real= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s::Real = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
+- `c::Real = NaN`: Concentration of the lens.
+- `n::Real = 0.2`: Slope parameter of the lens.
+
+# Returns
+- `NamedTuple`: Tuple of lens parameters.
+"""
+function parameter_EinastoLens(; cosmology::Cosmology.AbstractCosmology=nothing, 
+                                 z_d::Real  = NaN, 
+                                 mass::Real = NaN, 
+                                 x_s::Real  = NaN, 
+                                 c::Real    = NaN, 
+                                 n::Real    = 0.2)
+   # Overdensity value
+   Δ_z = 200.0
+
+   # ADD to the lens
+   D_d  = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d)
+
+   # Critical density at the lens redshift
+   ρ_cz = Cosmology.rho_cz(cosmology, z_d)
+
+   # Virial radius of the lens (in ANGLE_ARCSEC)
+   θ_vir = (3.0 * mass * MASS_SUN / 4.0 / pi / Δ_z / ρ_cz)^(1.0/3.0) / D_d / ANGLE_ARCSEC
+
+   # Check if concentration is given
+   if isfinite(c)
+      x_s = θ_vir / c
+   elseif isfinite(x_s)
+      c = θ_vir / x_s
+   else
+      throw(ArgumentError("Provide at least c or x_s in **parameter_EinastoLens**."))
+   end
+   Pax, _ = gamma_inc(3.0 / n, (2.0 / n) * c^n)
+   mass_e = (1.0 / n) * (n / 2.0)^(3.0 / n) * gamma(3.0 / n) * Pax
+   
+   # 3D characteristic density
+   ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / mass_e
+
+   # 2D (normalized) characteristic density
+   k_s = ρ_s * D_d * x_s * ANGLE_ARCSEC / (CONST_C^2 / 4.0 / pi / CONST_G / D_d)
+   return (mass=mass, rho_s=ρ_s, k_s=k_s, c=c, x_s=x_s, n=n)
+end
+
+
+# --------------------------------------------------------------------------------------------------
 # -------------------- Potential functions for specific lens models --------------------------------
 # --------------------------------------------------------------------------------------------------
 @inline function potential_helper!(ψ::T, lens::init_PointLens, θx::T, θy::T) where T <: Union{Real, ROA}
