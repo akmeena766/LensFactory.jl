@@ -300,8 +300,9 @@ function get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: Union{ROA
    end
 
    # Initialize zero-valued potential array
-   ψx = zero(θx)
-   ψy = zero(θy)
+   OutT = promote_type(eltype(θx), eltype(θy), lens_eltype(lens))
+   ψx = zeros(OutT, size(θx))
+   ψy = zeros(OutT, size(θy))
 
    if lens._lens_ == :CompositeLens
       for component in lens._components_
@@ -376,9 +377,10 @@ function get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: Union{ROA, 
    end
 
    # Initialize zero-valued potential array
-   ψxx = zero(θx)
-   ψyy = zero(θy)
-   ψxy = zero(θx)
+   OutT = promote_type(eltype(θx), eltype(θy), lens_eltype(lens))
+   ψxx = zeros(OutT, size(θx))
+   ψyy = zeros(OutT, size(θy))
+   ψxy = zeros(OutT, size(θx))
 
    if lens._lens_ == :CompositeLens
       for component in lens._components_

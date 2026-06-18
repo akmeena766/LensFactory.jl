@@ -1,3 +1,4 @@
+export AbstractLens
 export init_PointLens
 export init_PlummerLens
 export init_SISLens
@@ -7,6 +8,7 @@ export init_GaussianLens
 export init_SersicLens
 export init_ExternalEffects
 export init_ExternalEffects3
+export init_Multipole
 export init_PIEPLens
 export init_SIELens
 export init_PJELens

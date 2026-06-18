@@ -14,7 +14,7 @@ export einstein_angle
     potential!(ψ::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T) where T <: Real
 """
 function potential!(ψ::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T) where T <: Real
-   θE2 = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
+   θE2 = (2 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
    
    dx = θx - θxc
    dy = θy - θyc
@@ -44,7 +44,7 @@ The lensing potential is given as,
 - `nothing`: Updates the potential (ψ) in place.
 """
 function potential!(ψ::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T) where T <: Real
-   θE2 = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
+   θE2 = (2 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
    
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -62,7 +62,7 @@ end
     deflection!(ψx::Real, ψy::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T) where T <: Real
 """
 function deflection!(ψx::Real, ψy::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T) where T <: Real
-   θE2 = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
+   θE2 = (4 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
 
    dx = θx - θxc
    dy = θy - θyc
@@ -113,7 +113,7 @@ end
     jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T) where T <: Real
 """
 function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T) where T <: Real
-   θE2 = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
+   θE2 = (4 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
 
    dx = θx - θxc
    dy = θy - θyc
@@ -148,7 +148,7 @@ Calculate jacobian at given coordinates for a point mass lens and update the jac
 - `nothing`: Updates the jacobian (ψxx, ψyy, ψxy) in place.
 """
 function jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T) where T <: Real
-   θE2 = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
+   θE2 = (4 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -188,7 +188,7 @@ Calculate the Einstein angle for a point mass lens,
 - `θE`: Einstein angle (in ``\\rm \\mathbf{arcseconds}``)
 """
 function einstein_angle(; D_d::Real=NaN, D_ds::Real=NaN, D_s::Real=NaN, mass::Real=NaN)
-  return  sqrt((4.0 * CONST_G * mass * MASS_SUN / CONST_C^2) * (D_ds / D_d / D_s)) / ANGLE_ARCSEC
+  return  sqrt((4 * CONST_G * mass * MASS_SUN / CONST_C^2) * (D_ds / D_d / D_s)) / ANGLE_ARCSEC
 end
 
 end
