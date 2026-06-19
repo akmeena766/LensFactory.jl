@@ -11,9 +11,9 @@ export einstein_angle
 
 
 """
-    potential!(ψ::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
+    potential!(ψ::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where {S<:Real, T<:Real}
 """
-function potential!(ψ::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
+function potential!(ψ::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where {S<:Real, T<:Real}
    θE2 = (2 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
    θs2 = θs^2
 
@@ -25,7 +25,7 @@ function potential!(ψ::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, ma
 end
 
 """
-    potential!(ψ::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
+    potential!(ψ::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where {S<:ROA, T<:Real}
 Calculate potential at given coordinates for a Plummer lens and update the potential (ψ) in place.
 The lensing potential is given as,
 ```math
@@ -45,7 +45,7 @@ The lensing potential is given as,
 # Returns
 - `nothing`: Updates the potential (ψ) in place.
 """
-function potential!(ψ::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
+function potential!(ψ::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where {S<:ROA, T<:Real}
    θE2 = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
    θs2 = θs^2
 
@@ -64,9 +64,9 @@ end
 
 
 """
-    deflection!(ψx::Real, ψy::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
+    deflection!(ψx::Real, ψy::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where {S<:Real, T<:Real}
 """
-function deflection!(ψx::Real, ψy::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
+function deflection!(ψx::Real, ψy::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where {S<:Real, T<:Real}
    θE2 = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
    θs2 = θs^2
 
@@ -80,7 +80,7 @@ function deflection!(ψx::Real, ψy::Real, θx::Real, θy::Real, D_d::T, θxc::T
 end
 
 """
-    deflection!(ψx::ROA, ψy::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
+    deflection!(ψx::ROA, ψy::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where {S<:ROA, T<:Real}
 Calculate deflection at given coordinates for a Plummer lens and update the deflection components
 (ψx, ψy) in place.
 
@@ -98,7 +98,7 @@ Calculate deflection at given coordinates for a Plummer lens and update the defl
 # Returns
 - `nothing`: Updates the deflection (ψx, ψy) in place.
 """
-function deflection!(ψx::ROA, ψy::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
+function deflection!(ψx::ROA, ψy::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where {S<:ROA, T<:Real}
    θE2 = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
    θs2 = θs^2
 
@@ -118,9 +118,9 @@ end
 
 
 """
-    jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
+    jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where {S<:Real, T<:Real}
 """
-function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
+function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where {S<:Real, T<:Real}
    θE2 = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
    θs2 = θs^2
 
@@ -135,7 +135,7 @@ function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::Real, θy::Real, D_d
 end
 
 """
-    jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
+    jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where {S<:ROA, T<:Real}
 Calculate jacobian at given coordinates for a Plummer lens and update the jacobian components 
 (ψxx, ψyy, ψxy) in place.
 
@@ -154,7 +154,7 @@ Calculate jacobian at given coordinates for a Plummer lens and update the jacobi
 # Returns
 - `nothing`: Updates the jacobian (ψxx, ψyy, ψxy) in place.
 """
-function jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
+function jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where {S<:ROA, T<:Real}
    θE2 = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
    θs2 = θs^2
 
@@ -185,7 +185,7 @@ Calculate the Einstein angle for a point mass lens,
 - `D_ds = NaN`: ADD from lens to source (in ``\\rm \\mathbf{meters}``).
 - `D_s  = NaN`: ADD from observer to source (in ``\\rm \\mathbf{meters}``).
 - `mass = NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
-- `x_s  = NaN`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
+- `x_s  = 0.0`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
 
 # Returns
 - `θE`: Einstein angle (in ``\\rm \\mathbf{arcseconds}``)

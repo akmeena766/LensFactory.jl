@@ -21,9 +21,9 @@ export jacobian!
 
 
 """
-    potential!(ψ::Real, θx::Real, θy::Real, δ::T, ϕ::T) where T <: Real
+    potential!(ψ::Real, θx::S, θy::S, δ::T, ϕ::T) where {S<:Real, T<:Real}
 """
-function potential!(ψ::Real, θx::Real, θy::Real, δ::T, ϕ::T) where T <: Real
+function potential!(ψ::Real, θx::S, θy::S, δ::T, ϕ::T) where {S<:Real, T<:Real}
    # Precompute angles
    ϕ = deg2rad(ϕ)
    cos_phi = cos(ϕ)
@@ -41,7 +41,7 @@ function potential!(ψ::Real, θx::Real, θy::Real, δ::T, ϕ::T) where T <: Rea
 end
 
 """
-    potential!(ψ::ROA, θx::ROA, θy::ROA, δ::T, ϕ::T) where T <: Real
+    potential!(ψ::ROA, θx::S, θy::S, δ::T, ϕ::T) where {S<:ROA, T<:Real}
 Calculate potential at given coordinates for "restricted" third order perturbations corresponding
 to SIS lens model and update the potential in place.
 
@@ -52,7 +52,7 @@ to SIS lens model and update the potential in place.
 - `δ` : Amplitude of third order perturbations.
 - `ϕ` : External Shear angle (in ``\\rm \\mathbf{degrees}``).
 """
-function potential!(ψ::ROA, θx::ROA, θy::ROA, δ::T, ϕ::T) where T <: Real
+function potential!(ψ::ROA, θx::S, θy::S, δ::T, ϕ::T) where {S<:ROA, T<:Real}
    # Precompute angles
    ϕ = deg2rad(ϕ)
    cos_phi = cos(ϕ)
@@ -77,9 +77,9 @@ end
 
 
 """
-    deflection!(ψx::Real, ψy::Real, θx::Real, θy::Real, δ::T, ϕ::T) where T <: Real
+    deflection!(ψx::Real, ψy::Real, θx::S, θy::S, δ::T, ϕ::T) where {S<:Real, T<:Real}
 """
-function deflection!(ψx::Real, ψy::Real, θx::Real, θy::Real, δ::T, ϕ::T) where T <: Real
+function deflection!(ψx::Real, ψy::Real, θx::S, θy::S, δ::T, ϕ::T) where {S<:Real, T<:Real}
    # Precompute angles
    ϕ = deg2rad(ϕ)
    cos_phi = cos(ϕ)
@@ -106,7 +106,7 @@ end
 
 
 """
-    deflection!(ψx::ROA, ψy::ROA, θx::ROA, θy::ROA, δ::T, ϕ::T) where T <: Real
+    deflection!(ψx::ROA, ψy::ROA, θx::S, θy::S, δ::T, ϕ::T) where {S<:ROA, T<:Real}
 Calculate deflection at given coordinates for "restricted" third order perturbations corresponding
 to SIS lens model and update the deflection in place.
 
@@ -118,7 +118,7 @@ to SIS lens model and update the deflection in place.
 - `δ` : Amplitude of third order perturbations.
 - `ϕ` : External Shear angle (in ``\\rm \\mathbf{degrees}``).
 """
-function deflection!(ψx::ROA, ψy::ROA, θx::ROA, θy::ROA, δ::T, ϕ::T) where T <: Real
+function deflection!(ψx::ROA, ψy::ROA, θx::S, θy::S, δ::T, ϕ::T) where {S<:ROA, T<:Real}
    # Precompute angles
    ϕ = deg2rad(ϕ)
    cos_phi = cos(ϕ)
@@ -151,9 +151,9 @@ end
 
 
 """
-    jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::Real, θy::Real, δ::T, ϕ::T) where T <: Real
+    jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::S, θy::S, δ::T, ϕ::T) where {S<:Real, T<:Real}
 """
-function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::Real, θy::Real, δ::T, ϕ::T) where T <: Real
+function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::S, θy::S, δ::T, ϕ::T) where {S<:Real, T<:Real}
    # Precompute angles
    ϕ = deg2rad(ϕ)
    cos_phi = cos(ϕ)
@@ -181,7 +181,7 @@ end
 
 
 """
-    jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::ROA, θy::ROA, δ::T, ϕ::T) where T <: Real
+    jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::S, θy::S, δ::T, ϕ::T) where {S<:ROA, T<:Real}
 Calculate jacobian at given coordinates for "restricted" third order perturbations corresponding
 to SIS lens model and update the jacobian in place.
 
@@ -194,7 +194,7 @@ to SIS lens model and update the jacobian in place.
 - `δ` : Amplitude of third order perturbations.
 - `ϕ` : External Shear angle (in ``\\rm \\mathbf{degrees}``).
 """
-function jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::ROA, θy::ROA, δ::T, ϕ::T) where T <: Real
+function jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::S, θy::S, δ::T, ϕ::T) where {S<:ROA, T<:Real}
    # Precompute angles
    ϕ = deg2rad(ϕ)
    cos_phi = cos(ϕ)

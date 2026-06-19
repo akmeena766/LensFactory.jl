@@ -9,9 +9,9 @@ export deflection!
 export jacobian!
 
 """
-    potential!(ψ::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real, θt::Real, ϵ::Real, pa::Real) where T <: Real
+    potential!(ψ::Real, θx::S, θy::S, θxc::T, θyc::T, v_d::T, θs::T, θt::T, ϵ::T, pa::T) where {S<:Real, T<:Real}
 """
-function potential!(ψ::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real, θt::Real, ϵ::Real, pa::Real) where T <: Real
+function potential!(ψ::Real, θx::S, θy::S, θxc::T, θyc::T, v_d::T, θs::T, θt::T, ϵ::T, pa::T) where {S<:Real, T<:Real}
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
@@ -48,7 +48,7 @@ function potential!(ψ::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θ
 end
 
 """
-    potential!(ψ::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real, θt::Real, ϵ::Real, pa::Real) where T <: ROA
+    potential!(ψ::ROA, θx::S, θy::S, θxc::T, θyc::T, v_d::T, θs::T, θt::T, ϵ::T, pa::T) where {S<:ROA, T<:Real}
 Calculate potential at given coordinates for PJE lens and update the potential values in-place.
 
 # Arguments
@@ -63,7 +63,7 @@ Calculate potential at given coordinates for PJE lens and update the potential v
 - `ϵ::Real`: Ellipticity of the lens.
 - `pa::Real`: Position angle of the lens (in ``\\rm \\mathbf{degrees}``).
 """
-function potential!(ψ::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real, θt::Real, ϵ::Real, pa::Real) where T <: ROA
+function potential!(ψ::ROA, θx::S, θy::S, θxc::T, θyc::T, v_d::T, θs::T, θt::T, ϵ::T, pa::T) where {S<:ROA, T<:Real}
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
@@ -105,9 +105,9 @@ end
 
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real, θt::Real, ϵ::Real, pa::Real) where T <: Real
+    deflection!(ψx::Real, ψy::Real, θx::S, θy::S, θxc::T, θyc::T, v_d::T, θs::T, θt::T, ϵ::T, pa::T) where {S<:Real, T<:Real}
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real, θt::Real, ϵ::Real, pa::Real) where T <: Real
+function deflection!(ψx::Real, ψy::Real, θx::S, θy::S, θxc::T, θyc::T, v_d::T, θs::T, θt::T, ϵ::T, pa::T) where {S<:Real, T<:Real}
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
@@ -148,7 +148,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real, θt::Real, ϵ::Real, pa::Real) where T <: ROA
+    deflection!(ψx::ROA, ψy::ROA, θx::S, θy::S, θxc::T, θyc::T, v_d::T, θs::T, θt::T, ϵ::T, pa::T) where {S<:ROA, T<:Real}
 Calculate deflection at given coordinates for PJE lens and update the deflection values in-place.
 
 # Arguments
@@ -164,7 +164,7 @@ Calculate deflection at given coordinates for PJE lens and update the deflection
 - `ϵ`  : Ellipticity of the lens.
 - `pa` : Position angle of the lens (in ``\\rm \\mathbf{degrees}``).
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real, θt::Real, ϵ::Real, pa::Real) where T <: ROA
+function deflection!(ψx::ROA, ψy::ROA, θx::S, θy::S, θxc::T, θyc::T, v_d::T, θs::T, θt::T, ϵ::T, pa::T) where {S<:ROA, T<:Real}
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
@@ -211,9 +211,9 @@ end
 
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real, θt::Real, ϵ::Real, pa::Real) where T <: Real
+    jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::S, θy::S, θxc::T, θyc::T, v_d::T, θs::T, θt::T, ϵ::T, pa::T) where {S<:Real, T<:Real}
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real, θt::Real, ϵ::Real, pa::Real) where T <: Real
+function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::S, θy::S, θxc::T, θyc::T, v_d::T, θs::T, θt::T, ϵ::T, pa::T) where {S<:Real, T<:Real}
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
@@ -262,7 +262,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::Real, θyc::
 end
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real, θt::Real, ϵ::Real, pa::Real) where T <: ROA
+    jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::S, θy::S, θxc::T, θyc::T, v_d::T, θs::T, θt::T, ϵ::T, pa::T) where {S<:ROA, T<:Real}
 Calculate Jacobian at given coordinates for PJE lens and update the Jacobian values in-place.
 
 # Arguments
@@ -279,7 +279,7 @@ Calculate Jacobian at given coordinates for PJE lens and update the Jacobian val
 - `ϵ`  : Ellipticity of the lens.
 - `pa` : Position angle of the lens (in ``\\rm \\mathbf{degrees}``).
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, θxc::Real, θyc::Real, v_d::Real, θs::Real, θt::Real, ϵ::Real, pa::Real) where T <: ROA
+function jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::S, θy::S, θxc::T, θyc::T, v_d::T, θs::T, θt::T, ϵ::T, pa::T) where {S<:ROA, T<:Real}
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
 

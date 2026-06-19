@@ -24,9 +24,9 @@ end
 
 
 """
-    potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θe::Real, n::Real) where T <: Real
+    potential!(ψ::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θe::T, n::T) where {S<:Real, T<:Real}
 """
-function potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θe::Real, n::Real) where T <: Real
+function potential!(ψ::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θe::T, n::T) where {S<:Real, T<:Real}
    bn = b_n(n)
    θs = θe / bn^n
    κs = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
@@ -41,7 +41,7 @@ function potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, ma
 end
 
 """
-    potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θe::Real, n::Real) where T <: ROA
+    potential!(ψ::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θe::T, n::T) where {S<:ROA, T<:Real}
 Calculate potential at given coordinates for a Sersic lens and update the potential in place.
 
 # Arguments
@@ -55,7 +55,7 @@ Calculate potential at given coordinates for a Sersic lens and update the potent
 - `θe`  : Half-light radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `n`   : Sersic index of the lens.
 """
-function potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θe::Real, n::Real) where T <: ROA
+function potential!(ψ::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θe::T, n::T) where {S<:ROA, T<:Real}
    bn = b_n(n)
    θs = θe / bn^n
    κs = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
@@ -73,9 +73,9 @@ function potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, ma
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θe::Real, n::Real) where T <: Real
+    deflection!(ψx::Real, ψy::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θe::T, n::T) where {S<:Real, T<:Real}
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θe::Real, n::Real) where T <: Real
+function deflection!(ψx::Real, ψy::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θe::T, n::T) where {S<:Real, T<:Real}
    bn = b_n(n)
    θs = θe / bn^n
    κs = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
@@ -92,7 +92,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θe::Real, n::Real) where T <: ROA
+    deflection!(ψx::ROA, ψy::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θe::T, n::T) where {S<:ROA, T<:Real}
 Calculate deflection at given coordinates for a Sersic lens and update the deflection in place.
 
 # Arguments
@@ -107,7 +107,7 @@ Calculate deflection at given coordinates for a Sersic lens and update the defle
 - `θe`  : Half-light radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `n`   : Sersic index of the lens.
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θe::Real, n::Real) where T <: ROA
+function deflection!(ψx::ROA, ψy::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θe::T, n::T) where {S<:ROA, T<:Real}
    bn = b_n(n)
    θs = θe / bn^n
    κs = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
@@ -128,9 +128,9 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc
 end
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θe::Real, n::Real) where T <: Real
+    jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θe::T, n::T) where {S<:Real, T<:Real}
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θe::Real, n::Real) where T <: Real
+function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θe::T, n::T) where {S<:Real, T<:Real}
    bn = b_n(n)
    θs = θe / bn^n
    κs = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)
@@ -150,7 +150,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::R
 end
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θe::Real, n::Real) where T <: ROA
+    jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θe::T, n::T) where {S<:ROA, T<:Real}
 Calculate Jacobian of the deflection at given coordinates for a Sersic lens and update the Jacobian in place.
 
 # Arguments
@@ -166,7 +166,7 @@ Calculate Jacobian of the deflection at given coordinates for a Sersic lens and 
 - `θe`  : Half-light radius of the lens (in ``\\rm \\mathbf{arcseconds}``).
 - `n`   : Sersic index of the lens.
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θe::Real, n::Real) where T <: ROA
+function jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θe::T, n::T) where {S<:ROA, T<:Real}
    bn = b_n(n)
    θs = θe / bn^n
    κs = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * gamma(2*n+1) * ANGLE_ARCSEC^2)

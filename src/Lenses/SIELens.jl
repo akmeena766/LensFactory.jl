@@ -10,9 +10,9 @@ export jacobian!
 
 
 """
-    potential!(ψ::Real, θx::Real, θy::Real, θxc::T, θyc::T, v_d::T, θs::T, ϵ::T, pa::T) where T <: Real
+    potential!(ψ::Real, θx::S, θy::S, θxc::T, θyc::T, v_d::T, θs::T, ϵ::T, pa::T) where {S<:Real, T<:Real}
 """
-function potential!(ψ::Real, θx::Real, θy::Real, θxc::T, θyc::T, v_d::T, θs::T, ϵ::T, pa::T) where T <: Real
+function potential!(ψ::Real, θx::S, θy::S, θxc::T, θyc::T, v_d::T, θs::T, ϵ::T, pa::T) where {S<:Real, T<:Real}
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
@@ -42,7 +42,7 @@ function potential!(ψ::Real, θx::Real, θy::Real, θxc::T, θyc::T, v_d::T, θ
 end
 
 """
-    potential!(ψ::ROA, θx::ROA, θy::ROA, θxc::T, θyc::T, v_d::T, θs::T, ϵ::T, pa::T) where T <: Real
+    potential!(ψ::ROA, θx::S, θy::S, θxc::T, θyc::T, v_d::T, θs::T, ϵ::T, pa::T) where {S<:ROA, T<:Real}
 Calculate potential at given coordinates for SIE lens and update the potential values in-place.
 
 # Arguments
@@ -56,7 +56,7 @@ Calculate potential at given coordinates for SIE lens and update the potential v
 - `ϵ::Real`: Ellipticity of the lens.
 - `pa::Real`: Position angle of the lens (in ``\\rm \\mathbf{degrees}``).
 """
-function potential!(ψ::ROA, θx::ROA, θy::ROA, θxc::T, θyc::T, v_d::T, θs::T, ϵ::T, pa::T) where T <: Real
+function potential!(ψ::ROA, θx::S, θy::S, θxc::T, θyc::T, v_d::T, θs::T, ϵ::T, pa::T) where {S<:ROA, T<:Real}
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
@@ -90,9 +90,9 @@ end
 
 
 """
-    deflection!(ψx::Real, ψy::Real, θx::Real, θy::Real, θxc::T, θyc::T, v_d::T, θs::T, ϵ::T, pa::T) where T <: Real
+    deflection!(ψx::Real, ψy::Real, θx::S, θy::S, θxc::T, θyc::T, v_d::T, θs::T, ϵ::T, pa::T) where {S<:Real, T<:Real}
 """
-function deflection!(ψx::Real, ψy::Real, θx::Real, θy::Real, θxc::T, θyc::T, v_d::T, θs::T, ϵ::T, pa::T) where T <: Real
+function deflection!(ψx::Real, ψy::Real, θx::S, θy::S, θxc::T, θyc::T, v_d::T, θs::T, ϵ::T, pa::T) where {S<:Real, T<:Real}
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
@@ -124,7 +124,7 @@ function deflection!(ψx::Real, ψy::Real, θx::Real, θy::Real, θxc::T, θyc::
 end
 
 """
-    deflection!(ψx::ROA, ψy::ROA, θx::ROA, θy::ROA, θxc::T, θyc::T, v_d::T, θs::T, ϵ::T, pa::T) where T <: Real
+    deflection!(ψx::ROA, ψy::ROA, θx::S, θy::S, θxc::T, θyc::T, v_d::T, θs::T, ϵ::T, pa::T) where {S<:ROA, T<:Real}
 Calculate deflection at given coordinates for SIE lens and update the deflection values in-place.
 
 # Arguments
@@ -139,7 +139,7 @@ Calculate deflection at given coordinates for SIE lens and update the deflection
 - `ϵ::Real`: Ellipticity of the lens.
 - `pa::Real`: Position angle of the lens (in ``\\rm \\mathbf{degrees}``).
 """
-function deflection!(ψx::ROA, ψy::ROA, θx::ROA, θy::ROA, θxc::T, θyc::T, v_d::T, θs::T, ϵ::T, pa::T) where T <: Real
+function deflection!(ψx::ROA, ψy::ROA, θx::S, θy::S, θxc::T, θyc::T, v_d::T, θs::T, ϵ::T, pa::T) where {S<:ROA, T<:Real}
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
@@ -175,9 +175,9 @@ end
 
 
 """
-    jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::Real, θy::Real, θxc::T, θyc::T, v_d::T, θs::T, ϵ::T, pa::T) where T <: Real
+    jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::S, θy::S, θxc::T, θyc::T, v_d::T, θs::T, ϵ::T, pa::T) where {S<:Real, T<:Real}
 """
-function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::Real, θy::Real, θxc::T, θyc::T, v_d::T, θs::T, ϵ::T, pa::T) where T <: Real
+function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::S, θy::S, θxc::T, θyc::T, v_d::T, θs::T, ϵ::T, pa::T) where {S<:Real, T<:Real}
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
 
@@ -216,7 +216,7 @@ function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::Real, θy::Real, θx
 end
 
 """
-    jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::ROA, θy::ROA, θxc::T, θyc::T, v_d::T, θs::T, ϵ::T, pa::T) where T <: Real
+    jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::S, θy::S, θxc::T, θyc::T, v_d::T, θs::T, ϵ::T, pa::T) where {S<:ROA, T<:Real}
 Calculate Jacobian at given coordinates for SIE lens and update the Jacobian values in-place.
 
 # Arguments
@@ -232,7 +232,7 @@ Calculate Jacobian at given coordinates for SIE lens and update the Jacobian val
 - `ϵ::Real`: Ellipticity of the lens.
 - `pa::Real`: Position angle of the lens (in ``\\rm \\mathbf{degrees}``).
 """
-function jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::ROA, θy::ROA, θxc::T, θyc::T, v_d::T, θs::T, ϵ::T, pa::T) where T <: Real
+function jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::S, θy::S, θxc::T, θyc::T, v_d::T, θs::T, ϵ::T, pa::T) where {S<:ROA, T<:Real}
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
 

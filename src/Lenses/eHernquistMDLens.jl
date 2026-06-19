@@ -72,9 +72,9 @@ end
 
 
 """
-    potential!(ψ::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T, θs::T, ϵ::T, pa::T) where T <: Real
+    potential!(ψ::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θs::T, ϵ::T, pa::T) where {S<:Real, T<:Real}
 """
-function potential!(ψ::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T, θs::T, ϵ::T, pa::T) where T <: Real
+function potential!(ψ::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θs::T, ϵ::T, pa::T) where {S<:Real, T<:Real}
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
    θs_p = θs / sqrt(q)
@@ -106,9 +106,9 @@ function potential!(ψ::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, ma
 end
 
 """
-    potential!(ψ::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T, θs::T, ϵ::T, pa::T) where T <: Real
+    potential!(ψ::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θs::T, ϵ::T, pa::T) where {S<:ROA, T<:Real}
 """
-function potential!(ψ::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T, θs::T, ϵ::T, pa::T) where T <: Real
+function potential!(ψ::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θs::T, ϵ::T, pa::T) where {S<:ROA, T<:Real}
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
    θs_p = θs / sqrt(q)
@@ -144,9 +144,9 @@ function potential!(ψ::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass:
 end
 
 """
-    deflection!(ψx::Real, ψy::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T, θs::T, ϵ::T, pa::T) where T <: Real
+    deflection!(ψx::Real, ψy::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θs::T, ϵ::T, pa::T) where {S<:Real, T<:Real}
 """
-function deflection!(ψx::Real, ψy::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T, θs::T, ϵ::T, pa::T) where T <: Real
+function deflection!(ψx::Real, ψy::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θs::T, ϵ::T, pa::T) where {S<:Real, T<:Real}
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
    θs_p = θs / sqrt(q)
@@ -184,9 +184,9 @@ function deflection!(ψx::Real, ψy::Real, θx::Real, θy::Real, D_d::T, θxc::T
 end
 
 """
-   deflection!(ψx::ROA, ψy::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T, θs::T, ϵ::T, pa::T) where T <: Real
+   deflection!(ψx::ROA, ψy::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θs::T, ϵ::T, pa::T) where {S<:ROA, T<:Real}
 """
-function deflection!(ψx::ROA, ψy::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T, θs::T, ϵ::T, pa::T) where T <: Real
+function deflection!(ψx::ROA, ψy::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θs::T, ϵ::T, pa::T) where {S<:ROA, T<:Real}
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
    θs_p = θs / sqrt(q)
@@ -228,9 +228,9 @@ function deflection!(ψx::ROA, ψy::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θ
 end
 
 """
-    jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T, θs::T, ϵ::T, pa::T) where T <: Real
+    jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θs::T, ϵ::T, pa::T) where {S<:Real, T<:Real}
 """
-function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T, θs::T, ϵ::T, pa::T) where T <: Real
+function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θs::T, ϵ::T, pa::T) where {S<:Real, T<:Real}
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
    θs_p = θs / sqrt(q)
@@ -274,9 +274,9 @@ function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::Real, θy::Real, D_d
 end
 
 """
-    jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T, θs::T, ϵ::T, pa::T) where T <: Real
+    jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θs::T, ϵ::T, pa::T) where {S<:ROA, T<:Real}
 """
-function jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T, θs::T, ϵ::T, pa::T) where T <: Real
+function jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θs::T, ϵ::T, pa::T) where {S<:ROA, T<:Real}
    # Get axis-ratio
    q = (1.0 - ϵ) / (1.0 + ϵ)
    θs_p = θs / sqrt(q)
