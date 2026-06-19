@@ -25,9 +25,9 @@ export jacobian!
 end
 
 """
-    potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: Real
+    potential!(ψ::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
 """
-function potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: Real
+function potential!(ψ::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
    κs = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
 
    dx = (θx - θxc) / θs + eps()
@@ -39,7 +39,7 @@ function potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, ma
 end
 
 """
-    potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: ROA
+    potential!(ψ::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
 Calculate potential at given coordinates for Hernquist lens and update the potential values in-place.
 
 # Arguments
@@ -52,7 +52,7 @@ Calculate potential at given coordinates for Hernquist lens and update the poten
 - `mass`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
 - `θs`  : Scale radius i.e., standard deviation of the Gaussian (in ``\\rm \\mathbf{arcseconds}``).
 """
-function potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: ROA
+function potential!(ψ::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
    κs = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
@@ -68,9 +68,9 @@ end
 
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: Real
+    deflection!(ψx::Real, ψy::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: Real
+function deflection!(ψx::Real, ψy::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
    κs = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
 
    dx = (θx - θxc) / θs + eps()
@@ -85,7 +85,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: ROA
+    deflection!(ψx::ROA, ψy::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
 Calculate deflection at given coordinates for Hernquist lens and update the deflection values in-place.
 
 # Arguments
@@ -99,7 +99,7 @@ Calculate deflection at given coordinates for Hernquist lens and update the defl
 - `mass`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
 - `θs`  : Scale radius i.e., standard deviation of the Gaussian (in ``\\rm \\mathbf{arcseconds}``).
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: ROA
+function deflection!(ψx::ROA, ψy::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
    κs = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
    
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
@@ -119,9 +119,9 @@ end
 
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: Real
+    jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: Real
+function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
    κs = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
    
    dx = (θx - θxc) / θs + eps()
@@ -139,7 +139,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::R
 end
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: ROA
+    jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
 Calculate Jacobian at given coordinates for Hernquist lens and update the Jacobian values in-place.
 
 # Arguments
@@ -154,7 +154,7 @@ Calculate Jacobian at given coordinates for Hernquist lens and update the Jacobi
 - `mass`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
 - `θs`  : Scale radius i.e., standard deviation of the Gaussian (in ``\\rm \\mathbf{arcseconds}``).
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: ROA
+function jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
    κs = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
    
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
