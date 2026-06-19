@@ -12,9 +12,9 @@ export deflection!
 export jacobian!
 
 """
-    potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: Real
+    potential!(ψ::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
 """
-function potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: Real
+function potential!(ψ::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
    κs = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
    κs = κs * θs^2
 
@@ -27,7 +27,7 @@ function potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, ma
 end
 
 """
-    potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: ROA
+    potential!(ψ::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
 Calculate potential at given coordinates for a Gaussian lens and update the potential (ψ) in place.
 The lensing potential is given as,
 ```math
@@ -49,7 +49,7 @@ where ``\\mathrm{Ei}(x)`` is the exponential integral function.
 # Returns
 - `nothing`: Updates the potential (ψ) in place.
 """
-function potential!(ψ::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: ROA
+function potential!(ψ::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
    κs = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
    κs = κs * θs^2
 
@@ -67,9 +67,9 @@ end
 
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: Real
+    deflection!(ψx::Real, ψy::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: Real
+function deflection!(ψx::Real, ψy::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
    κs = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
    κs = 2.0 * κs * θs
 
@@ -83,7 +83,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: ROA
+    deflection!(ψx::ROA, ψy::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
 Calculate deflection at given coordinates for a Gaussian lens and update the deflection components
 (ψx, ψy) in place.
 
@@ -101,7 +101,7 @@ Calculate deflection at given coordinates for a Gaussian lens and update the def
 # Returns
 - `nothing`: Updates the deflection (ψx, ψy) in place.
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: ROA
+function deflection!(ψx::ROA, ψy::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
    κs = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
    κs = 2.0 * κs * θs
 
@@ -120,9 +120,9 @@ end
 
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: Real
+    jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: Real
+function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::Real, θy::Real, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
    κs = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
    
    dx = (θx - θxc) / θs
@@ -144,7 +144,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::R
 end
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: ROA
+    jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
 Calculate Jacobian at given coordinates for a Gaussian lens and update the jacobian components 
 (ψxx, ψyy, ψxy) in place. The jacobian components are given as.
 
@@ -164,7 +164,7 @@ Calculate Jacobian at given coordinates for a Gaussian lens and update the jacob
 # Returns
 - `nothing`: Updates the jacobian (ψxx, ψyy, ψxy) in place.
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, D_d::Real, θxc::Real, θyc::Real, mass::Real, θs::Real) where T <: ROA
+function jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::ROA, θy::ROA, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where T <: Real
    κs = (2.0 * CONST_G * mass * MASS_SUN / CONST_C^2) / (D_d * θs^2 * ANGLE_ARCSEC^2)
    
    ax1, ax2 = axes(θx, 1), axes(θx, 2)

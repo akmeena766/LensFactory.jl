@@ -20,9 +20,9 @@ export deflection!
 export jacobian!
 
 """
-    potential!(ψ::T, θx::T, θy::T, κ::Real, γ::Real, ϕ::Real) where T <: Real
+    potential!(ψ::Real, θx::Real, θy::Real, kappa::T, gamma::T, angle::T) where T <: Real
 """
-function potential!(ψ::T, θx::T, θy::T, kappa::Real, gamma::Real, angle::Real) where T <: Real
+function potential!(ψ::Real, θx::Real, θy::Real, kappa::T, gamma::T, angle::T) where T <: Real
    angle = deg2rad(angle)
    gamma1 = gamma * cos(2.0 * angle)
    gamma2 = gamma * sin(2.0 * angle)
@@ -35,7 +35,7 @@ function potential!(ψ::T, θx::T, θy::T, kappa::Real, gamma::Real, angle::Real
 end
 
 """
-    potential!(ψ::T, θx::T, θy::T, κ::Real, γ::Real, ϕ::Real) where T <: ROA
+    potential!(ψ::ROA, θx::ROA, θy::ROA, kappa::T, gamma::T, angle::T) where T <: Real
 Calculate potential at given coordinates for constant external convergence and shear and update the 
 potential in place.
 
@@ -47,7 +47,7 @@ potential in place.
 - `γ` : External shear value.
 - `ϕ` : External Shear angle (in ``\\rm \\mathbf{degrees}``).
 """
-function potential!(ψ::T, θx::T, θy::T, kappa::Real, gamma::Real, angle::Real) where T <: ROA
+function potential!(ψ::ROA, θx::ROA, θy::ROA, kappa::T, gamma::T, angle::T) where T <: Real
    angle = deg2rad(angle)
    gamma1 = gamma * cos(2.0 * angle)
    gamma2 = gamma * sin(2.0 * angle)
@@ -65,9 +65,9 @@ end
 
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, κ::Real, γ::Real, ϕ::Real) where T <: Real
+    deflection!(ψx::Real, ψy::Real, θx::Real, θy::Real, kappa::T, gamma::T, angle::T) where T <: Real
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::Real, gamma::Real, angle::Real) where T <: Real
+function deflection!(ψx::Real, ψy::Real, θx::Real, θy::Real, kappa::T, gamma::T, angle::T) where T <: Real
    angle = deg2rad(angle)
    gamma1 = gamma * cos(2.0 * angle)
    gamma2 = gamma * sin(2.0 * angle)
@@ -81,7 +81,7 @@ function deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::Real, gamma::Real, a
 end
 
 """
-    deflection!(ψx::T, ψy::T, θx::T, θy::T, κ::Real, γ::Real, ϕ::Real) where T <: ROA
+    deflection!(ψx::ROA, ψy::ROA, θx::ROA, θy::ROA, kappa::T, gamma::T, angle::T) where T <: Real
 Calculate deflection at given coordinates for constant external convergence and shear and update 
 the deflection in place.
 
@@ -94,7 +94,7 @@ the deflection in place.
 - `γ` : External shear value.
 - `ϕ` : External Shear angle (in ``\\rm \\mathbf{degrees}``).
 """
-function deflection!(ψx::T, ψy::T, θx::T, θy::T, kappa::Real, gamma::Real, angle::Real) where T <: ROA
+function deflection!(ψx::ROA, ψy::ROA, θx::ROA, θy::ROA, kappa::T, gamma::T, angle::T) where T <: Real
    angle = deg2rad(angle)
    gamma1 = gamma * cos(2.0 * angle)
    gamma2 = gamma * sin(2.0 * angle)
@@ -113,9 +113,9 @@ end
 
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, κ::Real, γ::Real, ϕ::Real) where T <: Real
+    jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::Real, θy::Real, kappa::T, gamma::T, angle::T) where T <: Real
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::Real, gamma::Real, angle::Real) where T <: Real
+function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::Real, θy::Real, kappa::T, gamma::T, angle::T) where T <: Real
    angle = deg2rad(angle)
    gamma1 = gamma * cos(2.0 * angle)
    gamma2 = gamma * sin(2.0 * angle)
@@ -130,7 +130,7 @@ function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::Real, gamma
 end
 
 """
-    jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, κ::Real, γ::Real, ϕ::Real) where T <: ROA
+    jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::ROA, θy::ROA, kappa::T, gamma::T, angle::T) where T <: Real
 Calculate Jacobian at given coordinates for constant external convergence and shear and update the 
 Jacobian in place.
 
@@ -144,7 +144,7 @@ Jacobian in place.
 - `γ`  : External shear value.
 - `ϕ`  : External Shear angle (in ``\\rm \\mathbf{degrees}``).
 """
-function jacobian!(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T, kappa::Real, gamma::Real, angle::Real) where T <: ROA
+function jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::ROA, θy::ROA, kappa::T, gamma::T, angle::T) where T <: Real
    angle = deg2rad(angle)
    gamma1 = gamma * cos(2.0 * angle)
    gamma2 = gamma * sin(2.0 * angle)
