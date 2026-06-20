@@ -64,15 +64,27 @@ user will be used and the universe will not necessarily be **spatially flat**.
 # Returns
 - `init_cosmology::AbstractCosmology`: Cosmology object.
 """
-@kwdef struct init_cosmology <: AbstractCosmology
-   H0::Real = 70.0
-   w::Real = -1.0
-   Omega_m0::Real = 0.3
-   Omega_r0::Real = 0.0
-   Omega_w0::Real = 0.7
-   Omega_k0::Real = round(1.0 - Omega_m0 - Omega_r0 - Omega_w0, digits=6)
+struct init_cosmology{T<:Real} <: AbstractCosmology
+   H0::T
+   w::T
+   Omega_m0::T
+   Omega_r0::T
+   Omega_w0::T
+   Omega_k0::T
 end
-
+function init_cosmology(; H0::Real                      = 70.0, 
+                          w::Real                       = -1.0, 
+                          Omega_m0::Real                = 0.3, 
+                          Omega_r0::Real                = 0.0, 
+                          Omega_w0::Real                = 0.7,
+                          Omega_k0::Union{Real,Nothing} = nothing)
+   if isnothing(Omega_k0)
+      Omega_k0_computed = 1.0 - Omega_m0 - Omega_r0 - Omega_w0
+      Omega_k0 = Omega_k0_computed isa Float64 ? round(Omega_k0_computed, digits=6) : Omega_k0_computed
+   end
+   H0, w, Omega_m0, Omega_r0, Omega_w0, Omega_k0 = promote(H0, w, Omega_m0, Omega_r0, Omega_w0, Omega_k0)
+   return init_cosmology(H0, w, Omega_m0, Omega_r0, Omega_w0, Omega_k0)
+end
 
 """ 
     scale_factor(z::Real)
