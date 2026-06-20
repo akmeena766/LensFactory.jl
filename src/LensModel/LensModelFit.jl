@@ -37,7 +37,7 @@ export _fit_model
 # --------------------------------------------------------------------------------------------------
 # Log-likelihood
 # --------------------------------------------------------------------------------------------------
-function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tuple{Symbol,Symbol}, Float64})
+function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real})
    # Merge θ (free parameters) with param_ref (fixed parameters)
    pvals = LensModelUtils.param_dict(model, θ, param_ref)
 
@@ -91,7 +91,7 @@ end
 # --------------------------------------------------------------------------------------------------
 # Posterior (may return -Inf)
 # --------------------------------------------------------------------------------------------------
-function log_posterior(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tuple{Symbol,Symbol}, Float64})
+function log_posterior(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real})
    # Calculate log-prior (returns -Inf if any parameter is out of bounds)
    lp = log_prior(model, θ)
    if lp == -Inf
@@ -109,7 +109,7 @@ end
 # --------------------------------------------------------------------------------------------------
 # Optimizer-safe objective (finite value)
 # --------------------------------------------------------------------------------------------------
-function objective(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tuple{Symbol,Symbol}, Float64})
+function objective(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real})
    # Calculate log-prior (returns a large negative value if any parameter is out of bounds)
    lp = log_prior(model, θ)
    if lp == -Inf
@@ -127,9 +127,10 @@ end
 # --------------------------------------------------------------------------------------------------
 # Run Optimizer
 # --------------------------------------------------------------------------------------------------
-function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol}, Float64}, opt::OptimizerConfig, cfg::NMConfig, verbose::Bool)
+function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real}, opt::OptimizerConfig, cfg::NMConfig, verbose::Bool)
    # Initialize free parameter vector
-   θ_initial = θ_initializer(model)
+   θ_initial = θ_initializer(model; run_mode=opt.run_mode, max_runs=opt.max_runs)
+
 
    # Number of runs
    n_runs = length(θ_initial)
@@ -215,14 +216,8 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
 end
 
 # Main optimizer function (wrapper to use multiple dispatch)
-function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},Float64}, verbose::Bool)
+function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real}, verbose::Bool)
    opt = model.sampler.optimizer
-
-   opt === nothing && return nothing
-
-   # Initial vectors in free-parameter space
-   θ_initial = LensModelUtils.θ_initializer(model)
-
    return run_optimizer(model, param_ref, opt, opt.config, verbose)
 end
 
@@ -284,15 +279,15 @@ function get_best_seeds(results::Vector{@NamedTuple{θ::Vector{Float64}, f::Floa
     return seeds
 end
 
-function run_mcmc(model::ModelConfig, mcmc_config::MHConfig, param_ref::Dict{Tuple{Symbol,Symbol},Float64}, θ_start::Vector{Vector{Float64}}, verbose::Bool)
+function run_mcmc(model::ModelConfig, mcmc_config::MHConfig, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real}, θ_start::Vector{Vector{Float64}}, verbose::Bool)
    return MH.mh_runner(x -> log_posterior(model, x, param_ref), θ_start, mcmc_config.n_steps, mcmc_config.n_adapt, verbose)
 end
 
-function run_mcmc(model::ModelConfig, mcmc_config::AIESConfig, param_ref::Dict{Tuple{Symbol,Symbol},Float64}, θ_start::Vector{Vector{Float64}}, verbose::Bool)
+function run_mcmc(model::ModelConfig, mcmc_config::AIESConfig, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real}, θ_start::Vector{Vector{Float64}}, verbose::Bool)
    return AIES.aies_runner(x -> log_posterior(model, x, param_ref), θ_start, mcmc_config.n_steps; a=mcmc_config.a)
 end
 
-function run_mcmc(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},Float64}, θ_start::Union{Nothing, Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}}, verbose::Bool)   
+function run_mcmc(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real}, θ_start::Union{Nothing, Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}}, verbose::Bool)   
    if verbose
       println("\nRunning MCMC...")
    end

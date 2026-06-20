@@ -36,7 +36,7 @@ const PARAM_TRANSFORM = Dict{Symbol,Function}(
    :mass => x -> 10^x,
 )
 
-function transform_params!(pvals::Dict{Tuple{Symbol,Symbol}, Float64})
+function transform_params!(pvals::Dict{Tuple{Symbol,Symbol}, <:Real})
    for key in collect(keys(pvals))
       name = key[2]
       if haskey(PARAM_TRANSFORM, name)
@@ -111,12 +111,7 @@ function θ_lhs(model::ModelConfig, max_runs::Int64)
    return [vec(lhs_matrix[i, :]) for i in 1:max_runs]
 end
 
-function θ_initializer(model::ModelConfig)
-   opt = model.sampler.optimizer
-
-   run_mode = opt.run_mode
-   max_runs = opt.max_runs
-
+function θ_initializer(model::ModelConfig; run_mode::Symbol=:random, max_runs::Int64=1)
    if run_mode === :reference
       return [θ_reference(model) for _ in 1:max_runs]
    elseif run_mode === :jitter
@@ -130,13 +125,14 @@ function θ_initializer(model::ModelConfig)
    else
       error("Unknown run_mode: $run_mode")
    end
+
 end
 
 
 # --------------------------------------------------------------------------------------------------
 # Parameter dictionary (θ -> pvals)
 # --------------------------------------------------------------------------------------------------
-function param_dict(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tuple{Symbol,Symbol}, Float64})
+function param_dict(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real})
    # Make a copy of the reference dictionary
    pvals = copy(param_ref)
 
@@ -152,7 +148,7 @@ end
 # --------------------------------------------------------------------------------------------------
 # Angular-diameter distance (pvals -> adis)
 # --------------------------------------------------------------------------------------------------
-function adis_current(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol},Float64})
+function adis_current(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, <:Real})
    nsrc = length(model.source_config.sources)
    adis = Vector{Float64}(undef, nsrc)
 
@@ -169,7 +165,7 @@ end
 # --------------------------------------------------------------------------------------------------
 REQUIRE_COSMO = Set([:NFWLens, :eNFWMDLens, :aNFWLens, :tNFWLens, :gNFWLens, :EinastoLens])
 REQUIRE_SCALING = Set([:MultiPJELens])
-function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, Float64})
+function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, <:Real})
    # Update scaling if it has free parameters
    scaling_params = Dict{Symbol, Any}() 
    for (k, v) in pvals

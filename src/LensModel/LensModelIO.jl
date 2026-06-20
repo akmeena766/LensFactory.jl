@@ -60,10 +60,10 @@ end
 @kwdef struct Parameter <: AbstractLensConfig
    owner::Symbol
    name::Symbol
-   refer::Float64
-   lower::Float64
-   upper::Float64
-   key::Tuple{Symbol,Symbol} = (owner, name)
+   refer::Real
+   lower::Real
+   upper::Real
+   key::Tuple{Symbol, Symbol} = (owner, name)
 end
 
 # --------------------------------------------------------------------------------------------------
@@ -273,23 +273,23 @@ function _infer_method(dict::Dict, meta_keys::Set{Symbol})
 end
 
 # Extract parameter values
-function _extract_param_range(x::Union{Int64,Float64,Dict})::Tuple{Float64,Float64,Float64}
+function _extract_param_range(x::Union{Int64, Float64, Dict})::Tuple{Real, Real, Real}
    # Extract parameter values in case of Int64 or Float64
    if x isa Union{Int64,Float64}
-      val = Float64(x)
+      val = x
       return val, val, val
    elseif x isa Dict
       # Make sure that value key exists
       haskey(x, :value) || error("Missing required key ** value ** in parameter definition.")
 
       # Extract reference value
-      refer = Float64(x[:value])
+      refer = x[:value]
 
       # Extract bounds (avoid repeated haskey calls)
       if haskey(x, :range)
          range = x[:range]
-         lower = Float64(range[1])
-         upper = Float64(range[2])
+         lower = range[1]
+         upper = range[2]
       else
          lower = refer
          upper = refer
