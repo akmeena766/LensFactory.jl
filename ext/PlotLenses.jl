@@ -51,8 +51,8 @@ function LensFactory.Lenses.plot_sky(θx::RV, θy::RV;
                                      resolution::Int64          = 2, 
                                      figure_padding::Int64      = 15,
                                      fontsize::Int64            = 20,
-                                     xlabel::AbstractString     = L"θ_x \text{(in arcseconds)}",
-                                     ylabel::AbstractString     = L"θ_y \text{(in arcseconds)}"
+                                     xlabel::AbstractString     = L"θ_x~\text{(in arcseconds)}",
+                                     ylabel::AbstractString     = L"θ_y~\text{(in arcseconds)}"
                                     )
    # Initialize empty figure
    fig = Figure(size=figure_size, figure_padding=figure_padding, fontsize=fontsize, fonts=(; regular="Times New Roman"))
