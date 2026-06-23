@@ -111,7 +111,8 @@ function _d4points(nd4::Int64, rd4::Matrix{Float64}, ddf::Array{Float64,3})
       end
    end
 
-   # Remove duplicates
+   # Remove duplicates and out of box points
+   (nx, ny) = size(ddf[1, :, :])
    @inbounds for i in 1:ntemp
       k1 = 0
       @inbounds for j in i+1:ntemp
@@ -124,9 +125,10 @@ function _d4points(nd4::Int64, rd4::Matrix{Float64}, ddf::Array{Float64,3})
          end
       end
       if k1 == 0
-         nd4 = nd4 + 1
-         for l in 1:2
-            rd4[l, nd4] = rtemp[l, i]
+         if 1 < rtemp[1, i] < nx && 1 < rtemp[2, i] < ny
+            nd4 = nd4 + 1
+            rd4[1, nd4] = rtemp[1, i]
+            rd4[2, nd4] = rtemp[2, i]
          end
       end
    end

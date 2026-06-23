@@ -6,7 +6,7 @@ Below is the full list of various constants available in `LensFactory`.
 
 ### Typed constants
 ```julia
-RV = Union{Int64, Float64}
+RV = Real
 ROA = Union{Vector{T}, Matrix{T}} where T <: Float64
 ```
 

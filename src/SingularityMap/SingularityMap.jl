@@ -64,8 +64,8 @@ function _common(ddf::Array{Float64, 3}, θx::T, θy::T;
    na32::Int64 = 0
    ra31 = zeros(Float64, 2, round(Int64, nx*ny/8))
    ra32 = zeros(Float64, 2, round(Int64, nx*ny/8))
-   na31 = _a3lines!(na31, ra31, e1, de1, q1)
-   na32 = _a3lines!(na32, ra32, e2, de2, q2)
+   na31 = _a3lines!(na31, ra31, e1, de1, q1; buffer=buffer)
+   na32 = _a3lines!(na32, ra32, e2, de2, q2; buffer=buffer)
 
    # -----------------------------------------------------------------------------------------------
    # Get A4-points
@@ -236,7 +236,6 @@ function from_lens(lens::Lenses.AbstractLens, θx::T, θy::T;
                    D4::Bool            = false) where T<:Matrix{Float64}
    # Dimensions
    nx, ny = size(θx)
-   pixel_size = θx[1, 2] - θx[1, 1]
 
    # Get jacobian using lens
    ψxx, ψyy, ψxy = Lenses.get_jacobian(lens, θx, θy)
@@ -248,7 +247,7 @@ function from_lens(lens::Lenses.AbstractLens, θx::T, θy::T;
    ddf[3, :, :] = ψxy
 
    # Pass jacobian map to from_jacobian function
-   return _common(ddf, θx, θy; adis=adis, buffer=buffer)
+   return _common(ddf, θx, θy; adis=adis, buffer=buffer, A4=A4, D4=D4)
 end
 
 

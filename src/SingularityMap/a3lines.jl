@@ -1,12 +1,9 @@
-function _a3lines!(na3::Int64, ra3::T, e::T, de::S, q::S) where {T <: Matrix{Float64}, S <: Array{Float64,3}}
-   # Local variables
-   nx, ny = size(e)
-
+function _a3lines!(na3::Int64, ra3::T, e::T, de::S, q::S; buffer::Int64=10) where {T <: Matrix{Float64}, S <: Array{Float64,3}}
    dot1::Float64 = 0.0
    dot2::Float64 = 0.0
    sign::Float64 = 0.0
 
-   ax1, ax2 = axes(e, 1)[10:end-9], axes(e, 2)[10:end-9]
+   ax1, ax2 = axes(e, 1)[buffer+1:end-buffer], axes(e, 2)[buffer+1:end-buffer]
    @inbounds for j in ax2
       @inbounds for i in ax1
          k = i + 1
