@@ -37,8 +37,8 @@ include("./d4points.jl")
 function _common(ddf::Array{Float64, 3}, θx::T, θy::T; 
                  adis::Float64 = 1.0, 
                  buffer::Int64 = 10,
-                 A4::Bool=true,
-                 D4::Bool=true) where T<:Matrix{Float64}
+                 A4::Bool      = false,
+                 D4::Bool      = false) where T<:Matrix{Float64}
    # -----------------------------------------------------------------------------------------------
    # Common qunatities
    # -----------------------------------------------------------------------------------------------
@@ -216,7 +216,7 @@ function from_jacobian(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T;
    ddf[3, :, :] = ψxy
 
    # Get singularity map
-   return _common(ddf, θx, θy; adis=adis, buffer=buffer)
+   return _common(ddf, θx, θy; adis=adis, buffer=buffer, A4=A4, D4=D4)
 end
 
 
