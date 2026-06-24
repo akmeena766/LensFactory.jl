@@ -4,7 +4,7 @@ The lensing by a given point mass lens is characterized by two parameters: its m
 source position ($\boldsymbol{\beta}$). The corresponding lens potential is given by
 ```math
 \begin{equation*}
-ψ(\pmb{θ}) = \frac{4{\rm G} M} {\rm c^2} \frac{1}{D_d} \ln |\pmb{θ} - \pmb{θ}_c|,
+ψ(\pmb{θ}) = \frac{4{\rm G} M} {\rm c^2} \frac{1}{D_d} \ln \left|\pmb{θ} - \pmb{θ}_c\right|,
 \end{equation*}
 ```
 where $\pmb{θ}_c$ represents the point mass lens center. In `LensFactory`, to define a point lens, 

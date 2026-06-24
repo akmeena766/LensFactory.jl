@@ -27,10 +27,6 @@ end
 """
     potential!(ψ::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T, θs::T) where {S<:ROA, T<:Real}
 Calculate potential at given coordinates for a Plummer lens and update the potential (ψ) in place.
-The lensing potential is given as,
-```math
-ψ(θ_x, θ_y) = \\frac{2 \\, \\rm{G} \\, M}{\\rm{c}^2} \\frac{1}{D_d} \\ln [|θ_s^2 + \\pmb{θ} - \\pmb{θ}_c|^2]
-```
 
 # Arguments
 - `ψ`   : Potential at given coordinates
@@ -174,18 +170,22 @@ end
 
 
 """
-    einstein_angle(; D_d::Real=NaN, D_ds::Real=NaN, D_s::Real=NaN, mass::Real=NaN, x_s::Real=NaN)
+    einstein_angle(; D_d::Real  = NaN, 
+                     D_ds::Real = NaN, 
+                     D_s::Real  = NaN, 
+                     mass::Real = NaN, 
+                     x_s::Real  = NaN)
 Calculate the Einstein angle for a point mass lens,
 ```math
 \\theta_E = \\sqrt{\\frac{4 \\, \\rm{G} \\, M}{\\rm{c}^2} \\frac{D_{ds}}{D_d D_s} - x_s^2}.
 ```
 
 # Keyword Arguments
-- `D_d  = NaN`: ADD from observer to lens (in ``\\rm \\mathbf{meters}``).
-- `D_ds = NaN`: ADD from lens to source (in ``\\rm \\mathbf{meters}``).
-- `D_s  = NaN`: ADD from observer to source (in ``\\rm \\mathbf{meters}``).
-- `mass = NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
-- `x_s  = 0.0`: Core radius (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d` : ADD from observer to lens (in ``\\rm \\mathbf{meters}``).
+- `D_ds`: ADD from lens to source (in ``\\rm \\mathbf{meters}``).
+- `D_s` : ADD from observer to source (in ``\\rm \\mathbf{meters}``).
+- `mass`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s` : Core radius (in ``\\rm \\mathbf{arcseconds}``).
 
 # Returns
 - `θE`: Einstein angle (in ``\\rm \\mathbf{arcseconds}``)

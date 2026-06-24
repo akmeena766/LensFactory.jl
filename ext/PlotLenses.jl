@@ -24,22 +24,28 @@ end
 
 
 """
-    LensFactory.Lenses.plot_sky(θx::RV, θy::RV)
+    LensFactory.Lenses.plot_sky(θx::Real, θy::Real;
+                                figure_size:: NTuple{2, Real} = (500, 500),
+                                figure_padding::Int64         = 15,
+                                fontsize::Int64               = 20,
+                                xlabel::String                = L"θ_x \\text{(in arcseconds)}",
+                                ylabel::String                = L"θ_y \\text{(in arcseconds)}"
+                                )
 This function initializes a blank sky plot with specified axis labels and limits. The user can then 
 add additional elements to the plot as needed. The function returns the `figure` and `axis` objects 
 for further customization.
 
 # Arguments
-- `θx::RV` -- x-coordinates half size
-- `θy::RV` -- y-coordinates half size
+- `θx` -- x-coordinates half size
+- `θy` -- y-coordinates half size
 
 # Keyword Arguments
-- `figure_size::NTuple{2, RV} = (500, 400)` -- Figure size
-- `resolution::Int64          = 2` -- Resolution of the plot
-- `figure_padding::Int64      = 15` -- Padding around the plot
-- `fontsize::Int64            = 20` -- Font size for the plot
-- `xlabel::String             = L"θ_x \\text{(in arcseconds)}"` -- X-axis label
-- `ylabel::String             = L"θ_y \\text{(in arcseconds)}"` -- Y-axis label
+- `figure_size     = (500, 400)` -- Figure size
+- `resolution      = 2` -- Resolution of the plot
+- `figure_padding  = 15` -- Padding around the plot
+- `fontsize        = 20` -- Font size for the plot
+- `xlabel          = L"θ_x \\text{(in arcseconds)}"` -- X-axis label
+- `ylabel          = L"θ_y \\text{(in arcseconds)}"` -- Y-axis label
 
 
 # Returns
@@ -47,54 +53,96 @@ for further customization.
 - `ax`: The axis object of the plot for further customization.
 """
 function LensFactory.Lenses.plot_sky(θx::RV, θy::RV; 
+                                     two_panel::Bool            = false,
                                      figure_size::NTuple{2, RV} = (500, 500), 
-                                     resolution::Int64          = 2, 
                                      figure_padding::Int64      = 15,
                                      fontsize::Int64            = 20,
                                      xlabel::AbstractString     = L"θ_x~\text{(in arcseconds)}",
-                                     ylabel::AbstractString     = L"θ_y~\text{(in arcseconds)}"
-                                    )
+                                     ylabel::AbstractString     = L"θ_y~\text{(in arcseconds)}")
    # Initialize empty figure
    fig = Figure(size=figure_size, figure_padding=figure_padding, fontsize=fontsize, fonts=(; regular="Times New Roman"))
 
-   # create axis for the plot
-   ax = Axis(fig[1, 1])
+   # Create axis
+   if two_panel
+      ax1 = Axis(fig[1, 1])
+      ax2 = Axis(fig[1, 2])
 
-   # Set plot keywords
-   LensFactory.Lenses.set_plotKws!(ax)
+      # Set plot keywords
+      LensFactory.Lenses.set_plotKws!(ax1)
+      LensFactory.Lenses.set_plotKws!(ax2)
 
-   # Set axis labels
-   ax.xlabel = xlabel
-   ax.ylabel = ylabel
+      # Set axis labels and limits
+      ax1.xlabel = xlabel
+      ax1.ylabel = ylabel
 
-   # Set axis limits
-   xlims!(-θx, +θx)
-   ylims!(-θy, +θy)
+      ax2.xlabel = xlabel
+      ax2.ylabel = ylabel
 
-   return fig, ax
+      xlims!(ax1, -θx, +θx)
+      ylims!(ax1, -θy, +θy)
+
+      xlims!(ax2, -θx, +θx)
+      ylims!(ax2, -θy, +θy)
+      return fig, (ax1, ax2)
+   else
+      ax = Axis(fig[1, 1])
+      
+      # Set plot keywords
+      LensFactory.Lenses.set_plotKws!(ax)
+
+      # Set axis labels
+      ax.xlabel = xlabel
+      ax.ylabel = ylabel
+
+      # Set axis limits
+      xlims!(-θx, +θx)
+      ylims!(-θy, +θy)
+      return fig, ax
+   end
 end
 
 
 """
-    LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Matrix{<:RV}, θy::Matrix{<:RV}, adis::Float64)
+    LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Matrix{<:RV}, θy::Matrix{<:RV}, adis::Float64;
+                                        two_panel::Bool               = false,
+                                        plot_critical::Bool           = true,
+                                        critical_tan_kws::NamedTuple  = (color=:red, linewidth=2, linestyle=:solid),
+                                        critical_rad_kws::NamedTuple  = (color=:red, linewidth=2, linestyle=:dash),
+                                        plot_caustic::Bool            = true,
+                                        caustic_tan_kws::NamedTuple   = (color=:green, linewidth=2, linestyle=:solid),
+                                        caustic_rad_kws::NamedTuple   = (color=:green, linewidth=2, linestyle=:dash),
+                                        source::Union{Nothing, NTuple{2, RV}, Matrix{<:RV}} = nothing,
+                                        source_kws::NamedTuple        = (color=:red, markersize=10, marker=:star5, heatmap=cgrad([:white, :blue])),
+                                        image_kws::NamedTuple         = (color=:blue, markersize=10, marker=:star5, heatmap=cgrad([:white, :red])),
+                                        save_plot::Bool               = false,
+                                        plot_name::String             = "image_plane.png",
+                                        resolution::Int64             = 2,
+                                        fontsize::Int64               = 20,
+                                        figure_size::NTuple{2, Int64} = (800, 400),
+                                        figure_padding::Int64         = 15,
+                                        xlabel::AbstractString        = L"θ_x~\text{(in arcseconds)}",
+                                        ylabel::AbstractString        = L"θ_y~\text{(in arcseconds)}")
 
 # Arguments
-- `lens::Lenses.AbstractLens` -- The lens model to plot
-- `θx::Matrix{<:RV}` -- x-coordinates grid
-- `θy::Matrix{<:RV}` -- y-coordinates grid
-- `adis::Float64` --  Distance ratio (``D_{ds}/D_s``) for the lens system
+- `lens` -- The lens model to plot
+- `θx`   -- x-coordinates grid
+- `θy`   -- y-coordinates grid
+- `adis` --  Distance ratio (``D_{ds}/D_s``) for the lens system
 
 # Keyword arguments
-- `two_panel::Bool = false` -- Whether to create a two-panel plot with source plane on the left and image plane on the right
-- `plot_critical::Bool = true`
-   - `critical_tan_kws::NamedTuple = (color=:red, linewidth=2, linestyle=:solid)`
-   - `critical_rad_kws::NamedTuple = (color=:red, linewidth=2, linestyle=:dash)`
-- `plot_caustic::Bool = true`
-   - `caustic_tan_kws::NamedTuple = (color=:green, linewidth=2, linestyle=:solid)`
-   - `caustic_rad_kws::NamedTuple = (color=:green, linewidth=2, linestyle=:dash)`
-- `source::Union{Nothing, NTuple{2, RV}, Matrix{<:RV}} = nothing`
-   - `source_kws::NamedTuple = (color=:red, markersize=10, marker=:star5, heatmap=cgrad([:white, :blue]))`
-   - `image_kws::NamedTuple = (color=:blue, markersize=10, marker=:star5, heatmap=cgrad([:white, :red]))`
+- `two_panel     = false` -- Whether to create a two-panel plot with source plane on the left and image plane on the right
+- `plot_critical = true`  -- Whether to plot the critical curves
+   - `critical_tan_kws = (color=:red, linewidth=2, linestyle=:solid)` -- Keywords for tangential critical curve
+   - `critical_rad_kws = (color=:red, linewidth=2, linestyle=:dash)`  -- Keywords for radial critical curve
+- `plot_caustic = true`   -- Whether to plot the caustics
+   - `caustic_tan_kws = (color=:green, linewidth=2, linestyle=:solid)` -- Keywords for tangential caustic
+   - `caustic_rad_kws = (color=:green, linewidth=2, linestyle=:dash)`  -- Keywords for radial caustic
+- `source = nothing` -- Whether to plot source.
+   - `nothing` -- No source to plot
+   - `(x, y)`  -- Postion of a point source (in arcseconds)
+   - `Matrix`  -- Extendes source profile
+   - `source_kws::NamedTuple = (color=:red, markersize=10, marker=:star5, heatmap=cgrad([:white, :blue]))` -- Keywords for source plot
+   - `image_kws::NamedTuple = (color=:blue, markersize=10, marker=:star5, heatmap=cgrad([:white, :red]))` -- Keywords for image plot
 - `save_plot::Bool = false`
    - `plot_name::String = "image_plane.png"`
    - `resolution::Int = 2`
@@ -104,26 +152,25 @@ end
 - `ax`: The axis object of the plot for further customization.
 """
 function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Matrix{<:RV}, θy::Matrix{<:RV}, adis::Float64;
-                           two_panel::Bool=false,
-                           plot_critical::Bool=true,
-                           critical_tan_kws::NamedTuple=(color=:red, linewidth=2, linestyle=:solid),
-                           critical_rad_kws::NamedTuple=(color=:red, linewidth=2, linestyle=:dash),
-                           plot_caustic::Bool=true,
-                           caustic_tan_kws::NamedTuple=(color=:green, linewidth=2, linestyle=:solid),
-                           caustic_rad_kws::NamedTuple=(color=:green, linewidth=2, linestyle=:dash),
-                           source::Union{Nothing, NTuple{2, RV}, Matrix{<:RV}} = nothing,
-                           source_kws::NamedTuple=(color=:red, markersize=10, marker=:star5, heatmap=cgrad([:white, :blue])),
-                           image_kws::NamedTuple=(color=:blue, markersize=10, marker=:star5, heatmap=cgrad([:white, :red])),
-                           save_plot::Bool=false,
-                           plot_name::String="image_plane.png",
-                           resolution::Int64=2)
-
+                           two_panel::Bool              = false,
+                           figure_size::NTuple{2, Real} = (500, 500),
+                           figure_padding::Int64        = 15,
+                           fontsize::Int64              = 20,
+                           plot_critical::Bool          = true,
+                           critical_tan_kws::NamedTuple = (color=:red, linewidth=2, linestyle=:solid),
+                           critical_rad_kws::NamedTuple = (color=:red, linewidth=2, linestyle=:dash),
+                           plot_caustic::Bool           = true,
+                           caustic_tan_kws::NamedTuple  = (color=:green, linewidth=2, linestyle=:solid),
+                           caustic_rad_kws::NamedTuple  = (color=:green, linewidth=2, linestyle=:dash),
+                           source::Union{Nothing, NTuple{2, Real}, Matrix{<:Real}} = nothing,
+                           source_kws::NamedTuple       = (color=:red, markersize=10, marker=:star5, heatmap=cgrad([:white, :blue])),
+                           image_kws::NamedTuple        = (color=:blue, markersize=10, marker=:star5, heatmap=cgrad([:white, :red])),
+                           save_plot::Bool              = false,
+                           plot_name::String            = "image_plane.png",
+                           resolution::Int64            = 2)
    if two_panel
-      # Initialize empty figure
-      fig = Figure(size=(800, 400), figure_padding=15, fontsize=20, fonts=(; regular="Times New Roman"))
-
-      # Axis for source plane
-      ax1 = Axis(fig[1, 1])
+      # Get empty figure
+      fig, (ax1, ax2) = plot_sky(1, 1; figure_size=figure_size, figure_padding=figure_padding, fontsize=fontsize)
 
       # Plot source and its images
       if source !== nothing
@@ -132,7 +179,7 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Mat
          elseif isa(source, Matrix{<:RV})
             heatmap!(ax1, θx[:,1], θy[1,:], source, colormap=source_kws.heatmap)
          else
-            error("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}.")
+            ArgumentError("Invalid source type: $(typeof(source)). Must be NTuple{2, Real} or Matrix{<:Real}.")
          end
       end
 
@@ -152,17 +199,9 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Mat
          end
       end
    
-      # Set plot keywords
-      LensFactory.Lenses.set_plotKws!(ax1)
-
-      # Set axis labels and limits
-      ax1.xlabel = L"\theta_1~\text{(in arcseconds)}"
-      ax1.ylabel = L"\theta_2~\text{(in arcseconds)}"
-      xlims!(minimum(θx), maximum(θx))
-      ylims!(minimum(θy), maximum(θy))
-
-      # Axis for image plane
-      ax2 = Axis(fig[1, 2])
+      # limits
+      xlims!(ax1, minimum(θx), maximum(θx))
+      ylims!(ax1, minimum(θy), maximum(θy))
 
       # Plot source and its images
       if source !== nothing
@@ -193,27 +232,20 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Mat
          end
       end
 
-      # Set plot keywords
-      LensFactory.Lenses.set_plotKws!(ax2)
-
       # Set axis labels and limits
-      ax2.xlabel = L"\theta_1~\text{(in arcseconds)}"
-      ax2.ylabel = L"\theta_2~\text{(in arcseconds)}"
-      xlims!(minimum(θx), maximum(θx))
-      ylims!(minimum(θy), maximum(θy))
+      xlims!(ax2, minimum(θx), maximum(θx))
+      ylims!(ax2, minimum(θy), maximum(θy))
 
       # Save plot
       if save_plot
          save(plot_name, fig, px_per_unit=resolution)
       end
-      return fig, [ax1, ax2]
+      return fig, (ax1, ax2)
    else
       # Initialize empty figure
-      fig = Figure(size=(400, 400), figure_padding=15, fontsize=20, fonts=(; regular="Times New Roman"))
+      fig, ax = plot_sky(1, 1; figure_size=figure_size, figure_padding=figure_padding, fontsize=fontsize)
       
       # Plot source + image plane
-      ax = Axis(fig[1, 1])
-
       if source !== nothing
          # Get the image positions
          image = Lenses.get_image(lens, θx, θy, adis, source)
@@ -225,7 +257,7 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Mat
             heatmap!(ax, θx[:,1], θy[1,:], source, colormap=source_kws.heatmap, alpha=1.0)                                       
             heatmap!(ax, θx[:,1], θy[1,:], image, colormap=image_kws.heatmap, alpha=0.8)
          else
-            error("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}.")
+            ArgumentError("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}.")
          end
       end
 
@@ -259,13 +291,7 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Mat
          end
       end
 
-
-      # Set plot keywords
-      LensFactory.Lenses.set_plotKws!(ax)
-
       # Set axis labels and limits
-      ax.xlabel = L"\theta_1~\text{(in arcseconds)}"
-      ax.ylabel = L"\theta_2~\text{(in arcseconds)}"
       xlims!(minimum(θx), maximum(θx))
       ylims!(minimum(θy), maximum(θy))
 

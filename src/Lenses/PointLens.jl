@@ -11,9 +11,9 @@ export einstein_angle
 
 
 """
-    potential!(ψ::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T) where {S<:Real, T <: Real}
+    potential!(ψ::U, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T) where {U<:Real, S<:Real, T <: Real}
 """
-function potential!(ψ::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T) where {S<:Real, T<:Real}
+function potential!(ψ::U, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T) where {U<:Real, S<:Real, T<:Real}
    θE2 = (2 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
    
    dx = θx - θxc
@@ -24,12 +24,8 @@ function potential!(ψ::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T)
 end
 
 """
-    potential!(ψ::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T) where {S<:ROA, T<:Real}
+    potential!(ψ::U, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T) where {U<:ROA, S<:ROA, T<:Real}
 Calculate potential at given coordinates for a point mass lens and update the potential (ψ) in place.
-The lensing potential is given as,
-```math
-\\psi(θ_x, θ_y) = \\frac{4 \\, \\rm{G} \\, M}{\\rm{c}^2} \\frac{1}{D_d} \\ln |\\pmb{θ} - \\pmb{θ}_c|.
-```
 
 # Arguments
 - `ψ`   : Potential at given coordinates
@@ -43,7 +39,7 @@ The lensing potential is given as,
 # Returns
 - `nothing`: Updates the potential (ψ) in place.
 """
-function potential!(ψ::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T) where {S<:ROA, T<:Real}
+function potential!(ψ::U, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T) where {U<:ROA, S<:ROA, T<:Real}
    θE2 = (2 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
    
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
@@ -59,9 +55,9 @@ end
 
 
 """
-    deflection!(ψx::Real, ψy::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T) where {S<:Real, T<:Real}
+    deflection!(ψx::U, ψy::U, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T) where {U<:Real, S<:Real, T<:Real}
 """
-function deflection!(ψx::Real, ψy::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T) where {S<:Real, T<:Real}
+function deflection!(ψx::U, ψy::U, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T) where {U<:Real, S<:Real, T<:Real}
    θE2 = (4 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
 
    dx = θx - θxc
@@ -74,7 +70,7 @@ function deflection!(ψx::Real, ψy::Real, θx::S, θy::S, D_d::T, θxc::T, θyc
 end
 
 """
-    deflection!(ψx::ROA, ψy::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T) where {S<:ROA, T<:Real}
+    deflection!(ψx::U, ψy::U, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T) where {U<:ROA, S<:ROA, T<:Real}
 Calculate deflection at given coordinates for a point mass lens and update the deflection components
 (ψx, ψy) in place.
 
@@ -91,7 +87,7 @@ Calculate deflection at given coordinates for a point mass lens and update the d
 # Returns
 - `nothing`: Updates the deflection (ψx, ψy) in place.
 """
-function deflection!(ψx::ROA, ψy::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T) where {S<:ROA, T<:Real}
+function deflection!(ψx::U, ψy::U, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T) where {U<:ROA, S<:ROA, T<:Real}
    θE2 = (4.0 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
    
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
@@ -110,9 +106,9 @@ end
 
 
 """
-    jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T) where {S<:Real, T<:Real}
+    jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T) where {U<:Real, S<:Real, T<:Real}
 """
-function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T) where {S<:Real, T<:Real}
+function jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T) where {U<:Real, S<:Real, T<:Real}
    θE2 = (4 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
 
    dx = θx - θxc
@@ -129,7 +125,7 @@ function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::S, θy::S, D_d::T, �
 end
 
 """
-    jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T) where {S<:ROA, T<:Real}
+    jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T) where {U<:ROA, S<:ROA, T<:Real}
 Calculate jacobian at given coordinates for a point mass lens and update the jacobian components 
 (ψxx, ψyy, ψxy) in place.
 
@@ -147,7 +143,7 @@ Calculate jacobian at given coordinates for a point mass lens and update the jac
 # Returns
 - `nothing`: Updates the jacobian (ψxx, ψyy, ψxy) in place.
 """
-function jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T) where {S<:ROA, T<:Real}
+function jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, D_d::T, θxc::T, θyc::T, mass::T) where {U<:ROA, S<:ROA, T<:Real}
    θE2 = (4 * CONST_G * mass * MASS_SUN / CONST_C^2 / D_d) / ANGLE_ARCSEC^2
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
