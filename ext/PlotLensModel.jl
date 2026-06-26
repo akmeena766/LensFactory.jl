@@ -1,3 +1,4 @@
+# --------------------------------------------------------------------------------------------------
 # Calculate the density threshold values corresponding to specific cumulative 
 # probability contours (quantiles).
 #
@@ -9,14 +10,16 @@
 # probabilities. 
 #
 # Returns
-# - `Vector{Float64}`: The threshold density values for each requested quantile, 
-# ordered the same as `quantiles`.
+# - `Vector{Float64}`: The threshold density values for each requested quantile, ordered the same 
+# as `quantiles`
+# --------------------------------------------------------------------------------------------------
 function _get_levels(dens; quantiles=[0.393, 0.865, 0.989])
    sorted_dens = sort(vec(dens), rev=true)
    cumulative_dens = cumsum(sorted_dens) ./ sum(sorted_dens)
    return [sorted_dens[findfirst(x -> x >= q, cumulative_dens)] for q in quantiles]
 end
 
+# --------------------------------------------------------------------------------------------------
 # Turns the user-facing `param_indices` argument into a concrete vector of
 # integer positions into `free_parameter_names` / the third dimension of `chains`.
 #
@@ -33,7 +36,8 @@ end
 #   - `Vector{Int64}`:                 direct positions, e.g. [1, 3, 5]
 #
 # Returns
-# - `Vector{Int64}`: indices corresponding to `free_parameter_names` based on `param_ids`.
+# - `Vector{Int64}`: indices corresponding to `free_parameter_names` based on `param_ids`
+# --------------------------------------------------------------------------------------------------
 function _resolve_param_indices(free_parameter_names::AbstractVector{Tuple{Symbol, Symbol}}, 
                                 param_ids::Union{Nothing, 
                                                  Symbol, 
@@ -91,9 +95,9 @@ PARAM_NAME = Dict{Symbol, String}(:lens1 => "L1", :lens2 => "L2", :lens3 => "L3"
 
 """
     LensFactory.LensModel.plot_corner(chains, logL; free_parameter_names=nothing,
-                                                    burn_in::Float64 = 0.3,
-                                                    thinning::Int64  = 100,
-                                                    save_plot::Bool  = true,
+                                                    burn_in::Float64  = 0.3,
+                                                    thin::Int64       = 100,
+                                                    save_plot::Bool   = true,
                                                     plot_name::String = "./corner.png",
                                                     resolution::Int64 = 2)
 Generates a corner plot for the given MCMC chains and log-likelihood values.
@@ -105,7 +109,7 @@ Generates a corner plot for the given MCMC chains and log-likelihood values.
 # Keyword arguments
 - `free_parameter_names=nothing`: Optional list of parameter names for labeling the axes.
 - `burn_in::Float64 = 0.3`: Fraction of the initial samples to discard as burn-in.
-- `thinning::Int64  = 100`: Interval for thinning the chains to reduce autocorrelation.
+- `thinn::Int64     = 100`: Interval for thinning the chains to reduce autocorrelation.
 - `save_plot::Bool  = true`: Whether to save the plot as "corner.png".
    - `plot_name::String = "./corner.png"`: Filename for saving the plot.
    - `resolution::Int64 = 2`: Resolution for saving the plot.
@@ -249,7 +253,7 @@ Generates trace plots for the given MCMC chains.
 # Keyword arguments
 - `free_parameter_names = nothing`: Optional list of parameter names for labeling the axes.
 - `burn_in::Float64 = 0.0`: Fraction of the initial samples to discard as burn-in.
-- `thinning::Int64 = 1`: Interval for thinning the chains to reduce autocorrelation.
+- `thin::Int64 = 1`: Interval for thinning the chains to reduce autocorrelation.
 - `save_plot::Bool = true`: Whether to save the plot as "corner_optimizer.png".
    - `plot_name::String = "./trace.png"`: Filename for saving the plot.
    - `resolution::Int64 = 2`: Resolution for saving the plot.
