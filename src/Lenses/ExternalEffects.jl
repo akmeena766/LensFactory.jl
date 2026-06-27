@@ -20,9 +20,9 @@ export deflection!
 export jacobian!
 
 """
-    potential!(ψ::Real, θx::S, θy::S, kappa::T, gamma::T, angle::T) where {S<:Real, T<:Real}
+    potential!(ψ::U, θx::S, θy::S, kappa::T, gamma::T, angle::T) where {U<:Real, S<:Real, T<:Real}
 """
-function potential!(ψ::Real, θx::S, θy::S, kappa::T, gamma::T, angle::T) where {S<:Real, T<:Real}
+function potential!(ψ::U, θx::S, θy::S, kappa::T, gamma::T, angle::T) where {U<:Real, S<:Real, T<:Real}
    angle = deg2rad(angle)
    gamma1 = gamma * cos(2.0 * angle)
    gamma2 = gamma * sin(2.0 * angle)
@@ -35,7 +35,7 @@ function potential!(ψ::Real, θx::S, θy::S, kappa::T, gamma::T, angle::T) wher
 end
 
 """
-    potential!(ψ::ROA, θx::S, θy::S, kappa::T, gamma::T, angle::T) where {S<:ROA, T<:Real}
+    potential!(ψ::U, θx::S, θy::S, kappa::T, gamma::T, angle::T) where {U<:ROA, S<:ROA, T<:Real}
 Calculate potential at given coordinates for constant external convergence and shear and update the 
 potential in place.
 
@@ -47,7 +47,7 @@ potential in place.
 - `γ` : External shear value.
 - `ϕ` : External Shear angle (in ``\\rm \\mathbf{degrees}``).
 """
-function potential!(ψ::ROA, θx::S, θy::S, kappa::T, gamma::T, angle::T) where {S<:ROA, T<:Real}
+function potential!(ψ::U, θx::S, θy::S, kappa::T, gamma::T, angle::T) where {U<:ROA, S<:ROA, T<:Real}
    angle = deg2rad(angle)
    gamma1 = gamma * cos(2.0 * angle)
    gamma2 = gamma * sin(2.0 * angle)
@@ -65,9 +65,9 @@ end
 
 
 """
-    deflection!(ψx::Real, ψy::Real, θx::S, θy::S, kappa::T, gamma::T, angle::T) where {S<:Real, T<:Real}
+    deflection!(ψx::U, ψy::U, θx::S, θy::S, kappa::T, gamma::T, angle::T) where {U<:Real, S<:Real, T<:Real}
 """
-function deflection!(ψx::Real, ψy::Real, θx::S, θy::S, kappa::T, gamma::T, angle::T) where {S<:Real, T<:Real}
+function deflection!(ψx::U, ψy::U, θx::S, θy::S, kappa::T, gamma::T, angle::T) where {U<:Real, S<:Real, T<:Real}
    angle = deg2rad(angle)
    gamma1 = gamma * cos(2.0 * angle)
    gamma2 = gamma * sin(2.0 * angle)
@@ -81,7 +81,7 @@ function deflection!(ψx::Real, ψy::Real, θx::S, θy::S, kappa::T, gamma::T, a
 end
 
 """
-    deflection!(ψx::ROA, ψy::ROA, θx::S, θy::S, kappa::T, gamma::T, angle::T) where {S<:ROA, T<:Real}
+    deflection!(ψx::U, ψy::U, θx::S, θy::S, kappa::T, gamma::T, angle::T) where {U<:ROA, S<:ROA, T<:Real}
 Calculate deflection at given coordinates for constant external convergence and shear and update 
 the deflection in place.
 
@@ -94,7 +94,7 @@ the deflection in place.
 - `γ` : External shear value.
 - `ϕ` : External Shear angle (in ``\\rm \\mathbf{degrees}``).
 """
-function deflection!(ψx::ROA, ψy::ROA, θx::S, θy::S, kappa::T, gamma::T, angle::T) where {S<:ROA, T<:Real}
+function deflection!(ψx::U, ψy::U, θx::S, θy::S, kappa::T, gamma::T, angle::T) where {U<:ROA, S<:ROA, T<:Real}
    angle = deg2rad(angle)
    gamma1 = gamma * cos(2.0 * angle)
    gamma2 = gamma * sin(2.0 * angle)
@@ -113,9 +113,9 @@ end
 
 
 """
-    jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::S, θy::S, kappa::T, gamma::T, angle::T) where {S<:Real, T<:Real}
+    jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, kappa::T, gamma::T, angle::T) where {U<:Real, S<:Real, T<:Real}
 """
-function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::S, θy::S, kappa::T, gamma::T, angle::T) where {S<:Real, T<:Real}
+function jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, kappa::T, gamma::T, angle::T) where {U<:Real, S<:Real, T<:Real}
    angle = deg2rad(angle)
    gamma1 = gamma * cos(2.0 * angle)
    gamma2 = gamma * sin(2.0 * angle)
@@ -130,7 +130,7 @@ function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::S, θy::S, kappa::T,
 end
 
 """
-    jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::S, θy::S, kappa::T, gamma::T, angle::T) where {S<:ROA, T<:Real}
+    jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, kappa::T, gamma::T, angle::T) where {S<:ROA, T<:Real}
 Calculate Jacobian at given coordinates for constant external convergence and shear and update the 
 Jacobian in place.
 
@@ -144,7 +144,7 @@ Jacobian in place.
 - `γ`  : External shear value.
 - `ϕ`  : External Shear angle (in ``\\rm \\mathbf{degrees}``).
 """
-function jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::S, θy::S, kappa::T, gamma::T, angle::T) where {S<:ROA, T<:Real}
+function jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, kappa::T, gamma::T, angle::T) where {U<:ROA, S<:ROA, T<:Real}
    angle = deg2rad(angle)
    gamma1 = gamma * cos(2.0 * angle)
    gamma2 = gamma * sin(2.0 * angle)
