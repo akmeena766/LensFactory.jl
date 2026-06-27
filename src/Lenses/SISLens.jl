@@ -11,9 +11,9 @@ export einstein_angle
 
 
 """
-    potential!(ψ::Real, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {S<:Real, T<:Real}
+    potential!(ψ::U, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {U<:Real, S<:Real, T<:Real}
 """
-function potential!(ψ::Real, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {S<:Real, T<:Real}
+function potential!(ψ::U, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {U<:Real, S<:Real, T<:Real}
    θE = 4π * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    
    dx = θx - θxc
@@ -24,7 +24,7 @@ function potential!(ψ::Real, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {S
 end
 
 """
-    potential!(ψ::ROA, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {S<:ROA, T<:Real}
+    potential!(ψ::U, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {U<:ROA, S<:ROA, T<:Real}
 Calculate potential at given coordinates for a SIS lens and update the potential (ψ) in place. The
 lensing potential is given as,
 ```math
@@ -42,7 +42,7 @@ lensing potential is given as,
 # Returns
 - `nothing`: Updates the potential (ψ) in place.
 """
-function potential!(ψ::ROA, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {S<:ROA, T<:Real}
+function potential!(ψ::U, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {U<:ROA, S<:ROA, T<:Real}
    θE = 4π * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
@@ -59,9 +59,9 @@ end
 
 
 """
-    deflection!(ψx::Real, ψy::Real, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {S<:Real, T<:Real}
+    deflection!(ψx::U, ψy::U, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {U<:Real, S<:Real, T<:Real}
 """
-function deflection!(ψx::Real, ψy::Real, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {S<:Real, T<:Real}
+function deflection!(ψx::U, ψy::U, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {U<:Real, S<:Real, T<:Real}
    θE = 4π * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
 
    dx = θx - θxc
@@ -74,7 +74,7 @@ function deflection!(ψx::Real, ψy::Real, θx::S, θy::S, θxc::T, θyc::T, v_d
 end
 
 """
-    deflection!(ψx::ROA, ψy::ROA, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {S<:ROA, T<:Real}
+    deflection!(ψx::U, ψy::U, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {U<:ROA, S<:ROA, T<:Real}
 Calculate deflection at given coordinates for a SIS lens and update the deflection components 
 (ψx, ψy) in place.
 
@@ -90,7 +90,7 @@ Calculate deflection at given coordinates for a SIS lens and update the deflecti
 # Returns
 - `nothing`: Updates the deflection (ψx, ψy) in place.
 """
-function deflection!(ψx::ROA, ψy::ROA, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {S<:ROA, T<:Real}
+function deflection!(ψx::U, ψy::U, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {U<:ROA, S<:ROA, T<:Real}
    θE = 4π * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
@@ -109,9 +109,9 @@ end
 
 
 """
-    jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {S<:Real, T<:Real}
+    jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {U<:Real, S<:Real, T<:Real}
 """
-function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {S<:Real, T<:Real}
+function jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {U<:Real, S<:Real, T<:Real}
    θE = 4π * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    
    dx = θx - θxc
@@ -126,7 +126,7 @@ function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::S, θy::S, θxc::T, 
 end
 
 """
-    jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {S<:ROA, T<:Real}
+    jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {U<:ROA, S<:ROA, T<:Real}
 Calculate jacobian at given coordinates for a SIS lens and update the jacobian components 
 (ψxx, ψyy, ψxy) in place.
 
@@ -143,7 +143,7 @@ Calculate jacobian at given coordinates for a SIS lens and update the jacobian c
 # Returns
 - `nothing`: Updates the jacobian (ψxx, ψyy, ψxy) in place.
 """
-function jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {S<:ROA, T<:Real}
+function jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {U<:ROA, S<:ROA, T<:Real}
    θE = 4π * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
    
    ax1, ax2 = axes(θx, 1), axes(θx, 2)

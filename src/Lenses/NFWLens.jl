@@ -25,9 +25,9 @@ export jacobian!
 end
 
 """
-    potential!(ψ::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, k_s::T, θs::T) where {S<:Real, T<:Real}
+    potential!(ψ::U, θx::S, θy::S, D_d::T, θxc::T, θyc::T, k_s::T, θs::T) where {U<:Real, S<:Real, T<:Real}
 """
-function potential!(ψ::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, k_s::T, θs::T) where {S<:Real, T<:Real}
+function potential!(ψ::U, θx::S, θy::S, D_d::T, θxc::T, θyc::T, k_s::T, θs::T) where {U<:Real, S<:Real, T<:Real}
    κs = 4.0 * k_s
    κs = κs * θs^2 * 0.5
 
@@ -40,9 +40,9 @@ function potential!(ψ::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, k_s::T, 
 end
 
 """
-    potential!(ψ::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, k_s::T, θs::T) where {S<:ROA, T<:Real}
+    potential!(ψ::U, θx::S, θy::S, D_d::T, θxc::T, θyc::T, k_s::T, θs::T) where {U<:ROA, S<:ROA, T<:Real}
 """
-function potential!(ψ::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, k_s::T, θs::T) where {S<:ROA, T<:Real}
+function potential!(ψ::U, θx::S, θy::S, D_d::T, θxc::T, θyc::T, k_s::T, θs::T) where {U<:ROA, S<:ROA, T<:Real}
    κs = 4.0 * k_s
    κs = κs * θs^2 * 0.5
 
@@ -59,9 +59,9 @@ end
 
 
 """
-    deflection!(ψx::Real, ψy::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, k_s::T, θs::T) where {S<:Real, T<:Real}
+    deflection!(ψx::U, ψy::U, θx::S, θy::S, D_d::T, θxc::T, θyc::T, k_s::T, θs::T) where {U<:Real, S<:Real, T<:Real}
 """
-function deflection!(ψx::Real, ψy::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, k_s::T, θs::T) where {S<:Real, T<:Real}
+function deflection!(ψx::U, ψy::U, θx::S, θy::S, D_d::T, θxc::T, θyc::T, k_s::T, θs::T) where {U<:Real, S<:Real, T<:Real}
    κs = 4.0 * k_s
    κs = κs * θs
 
@@ -77,9 +77,9 @@ function deflection!(ψx::Real, ψy::Real, θx::S, θy::S, D_d::T, θxc::T, θyc
 end
 
 """
-    deflection!(ψx::ROA, ψy::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, k_s::T, θs::T) where {S<:ROA, T<:Real}
+    deflection!(ψx::U, ψy::U, θx::S, θy::S, D_d::T, θxc::T, θyc::T, k_s::T, θs::T) where {U<:ROA, S<:ROA, T<:Real}
 """
-function deflection!(ψx::ROA, ψy::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, k_s::T, θs::T) where {S<:ROA, T<:Real}
+function deflection!(ψx::U, ψy::U, θx::S, θy::S, D_d::T, θxc::T, θyc::T, k_s::T, θs::T) where {U<:ROA, S<:ROA, T<:Real}
    κs = 4.0 * k_s
    κs = κs * θs
 
@@ -100,9 +100,9 @@ end
 
 
 """
-    jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, k_s:: T, θs::T) where {S<:Real, T<:Real}
+    jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, D_d::T, θxc::T, θyc::T, k_s:: T, θs::T) where {U<:Real, S<:Real, T<:Real}
 """
-function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::S, θy::S, D_d::T, θxc::T, θyc::T, k_s:: T, θs::T) where {S<:Real, T<:Real}
+function jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, D_d::T, θxc::T, θyc::T, k_s:: T, θs::T) where {U<:Real, S<:Real, T<:Real}
    κs = 4.0 * k_s
    
    dx = (θx - θxc) / θs
@@ -119,9 +119,9 @@ function jacobian!(ψxx::Real, ψyy::Real, ψxy::Real, θx::S, θy::S, D_d::T, �
 end
 
 """
-    jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, k_s::T, θs::T) where {S<:ROA, T<:Real}
+    jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, D_d::T, θxc::T, θyc::T, k_s::T, θs::T) where {U<:ROA, S<:ROA, T<:Real}
 """
-function jacobian!(ψxx::ROA, ψyy::ROA, ψxy::ROA, θx::S, θy::S, D_d::T, θxc::T, θyc::T, k_s::T, θs::T) where {S<:ROA, T<:Real}
+function jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, D_d::T, θxc::T, θyc::T, k_s::T, θs::T) where {U<:ROA, S<:ROA, T<:Real}
    κs = 4.0 * k_s
 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
