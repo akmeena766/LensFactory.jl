@@ -202,4 +202,6 @@ LensModel.predict_image
 LensModel.save_best_fits
 LensModel.check_parity
 LensModel.get_best_fit_rms
+LensModel.get_AIC
+LensModel.get_BIC
 ```

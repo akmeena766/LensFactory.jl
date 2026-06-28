@@ -54,7 +54,7 @@ export get_jacobian
 export predict_image
 export check_parity
 export save_best_fits
-
+export get_AIC
 
 # --------------------------------------------------------------------------------------------------
 # Plotting functions (see ../../ext folder for functions)
@@ -186,19 +186,25 @@ function get_best_fit_parameters(results::Union{Vector{@NamedTuple{θ::Vector{Fl
       # Get chain details 
       n_steps, n_chains, n_params = size(chains)
 
-      # Remove Burn-in
-      start_idx      = Int(floor(n_steps * burn_in)) + 1
-      thinned_chains = chains[start_idx:thin:end, :, :]
-      thinned_logL   = results[start_idx:thin:end, :]
+      # Remove Burn-in only
+      start_idx     = Int(floor(n_steps * burn_in)) + 1
+      burnin_chains = chains[start_idx:end, :, :]
+      burnin_logL   = results[start_idx:end, :]
 
       # Get (step, chain) of the best logL by finding the index of the maximum value in the logL matrix
-      best_idx        = argmax(thinned_logL)
+      best_idx        = argmax(burnin_logL)
       step, chain_num = best_idx[1], best_idx[2]
-      
-      best_θ    = thinned_chains[step, chain_num, :]
-      best_logL = thinned_logL[step, chain_num]
+      best_θ          = burnin_chains[step, chain_num, :]
+      best_logL       = burnin_logL[step, chain_num]
 
       if with_errors
+         # Apply thinning to the chains if requested
+         if thin > 1
+            thinned_chains = burnin_chains[1:thin:end, :, :]
+         else 
+            thinned_chains = burnin_chains
+         end
+
          # Reshape the thinned chain into a flat array
          flat_chain = reshape(thinned_chains, :, n_params)
 
@@ -1056,5 +1062,63 @@ function check_parity(data_jld2::JLD2.JLDFile)
    return nothing
 end
 
+
+# --------------------------------------------------------------------------------------------------
+# Model comparison diagnostics
+# --------------------------------------------------------------------------------------------------
+"""
+    get_AIC(model::ModelConfig, chains::Array{Float64,3}, logL::Matrix{Float64};
+            burn_in::Float64 = 0.2)
+Compute the Akaike Information Criterion (AIC) for a fitted LensFactory model.
+```math
+   \\rm{AIC} = -2 \\ln L + 2 k
+```
+# Arguments
+- `model`   : ModelConfig from `read_input`
+- `logL`    : Log-likelihood matrix of shape (n_steps, n_chains) from `fit_model`
+
+# Keyword Arguments
+- `burn_in` : Fraction of chain to discard as burn-in
+
+# Returns
+- `Float64`: The AIC value for the model.
+"""
+function get_AIC(model::ModelConfig, logL::Matrix{Float64}; burn_in::Float64 = 0.2)
+   # Get total number of free parameters
+   k = length(free_parameter_names(model))
+
+   n_steps     = size(logL, 1)
+   start_idx   = Int(floor(n_steps * burn_in)) + 1
+   burnin_logL = logL[start_idx:end, :]
+   best_logL   = maximum(burnin_logL)
+
+   return -2.0 * best_logL + 2.0 * k
+end
+
+"""
+    get_BIC(model::ModelConfig, chains::Array{Float64,3}, logL::Matrix{Float64}, n_data::Int; 
+            burn_in::Float64 = 0.2)
+Compute the Bayesian Information Criterion (BIC) for a fitted LensFactory model.
+```math
+   \\rm{BIC} = -2 \\ln L + k \\ln(n)
+```
+
+# Arguments
+- `model`   : ModelConfig from `read_input`
+- `logL`    : Log-likelihood matrix of shape (n_steps, n_chains) from `fit_model`
+- `n_data`  : Total number of observed constraints
+- `burn_in` : Fraction of chain to discard as burn-in (default 0.2)
+"""
+function get_BIC(model::ModelConfig, logL::Matrix{Float64}, n_data::Int; burn_in::Float64 = 0.2)
+   # Get total number of free parameters
+   k = length(free_parameter_names(model))
+
+   n_steps           = size(logL, 1)
+   start_idx         = Int(floor(n_steps * burn_in)) + 1
+   burnin_logL       = logL[start_idx:end, :]
+   best_logL         = maximum(burnin_logL)
+
+   return -2.0 * best_logL + k * log(n_data)
+end
 
 end
