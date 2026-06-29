@@ -44,7 +44,7 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
 
    # Build lens model
    lens_model = LensModelUtils.build_lens(model, pvals)
-   
+  
    # Get angular-diameter distance ratios
    adis = LensModelUtils.adis_current(model, pvals)
 
@@ -56,11 +56,12 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
 
       # Calculate position likelihood
       logL_position = Likelihood.logL_sourceplane(model, adis, αx_all, αy_all, A_all)
-
+      logL = logL + logL_position
+      
       # Calculate parity likelihood
       if model.source_config.use_parity
          logL_parity = Likelihood.logL_sourceplane_parity(model, adis, A_all)
-         logL = logL_position + logL_parity
+         logL = logL + logL_parity
       end      
    elseif model.sampler.scheme == :ImagePlane
       error("Image plane sampling is not implemented yet.")
@@ -71,7 +72,6 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
    else
       error("Unsupported sampling scheme: $(model.sampler.scheme)")
    end
-   
    return logL
 end
 
