@@ -39,12 +39,8 @@ end
 # - `Vector{Int64}`: indices corresponding to `free_parameter_names` based on `param_ids`
 # --------------------------------------------------------------------------------------------------
 function _resolve_param_indices(free_parameter_names::AbstractVector{Tuple{Symbol, Symbol}}, 
-                                param_ids::Union{Nothing, 
-                                                 Symbol, 
-                                                 AbstractVector{Symbol}, 
-                                                 AbstractVector{Int64}, 
-                                                 AbstractVector{Tuple{Symbol, Symbol}}}
-                                )
+                                param_ids::Union{Nothing, Symbol, AbstractVector{Symbol}, 
+                                                 AbstractVector{Int64}, AbstractVector{Tuple{Symbol, Symbol}}})
    # Get total number of free parameters
    n_total = length(free_parameter_names)
    
@@ -93,6 +89,34 @@ PARAM_NAME = Dict{Symbol, String}(:lens1 => "L1", :lens2 => "L2", :lens3 => "L3"
                                   :ref_core => "\\theta_{c,\\star}", 
                                   :ref_cut => "\\theta_{t,\\star}")
 
+function get_param_name(key::Symbol)
+   # Check static dictionary first
+   haskey(PARAM_NAME, key) && return PARAM_NAME[key]
+   
+   # Match :lensN pattern
+   m = match(r"^lens(\d+)$", string(key))
+   if m !== nothing
+      n = m.captures[1]
+      return "L$n"
+   end
+
+   # Match :sourceN pattern
+   m = match(r"^source(\d+)$", string(key))
+   if m !== nothing
+      n = m.captures[1]
+      return "S$n"
+   end
+
+   # Match :adisN pattern
+   m = match(r"^adis(\d+)$", string(key))
+   if m !== nothing
+      n = m.captures[1]
+      return "a_{dis}"
+   end
+   
+   error("Unknown parameter name: $key")
+end
+
 """
     LensFactory.LensModel.plot_corner(chains, logL; free_parameter_names=nothing,
                                                     burn_in::Float64  = 0.3,
@@ -133,12 +157,11 @@ function LensFactory.LensModel.plot_corner(chains, logL;
    n_params = length(plot_idx)
    
    # Get best-fit parameter and errors
-   best_θ_all, _, lower_err_all, upper_err_all = 
-      LensFactory.LensModel.get_best_fit_parameters(logL; 
-                                                    chains=chains, 
-                                                    with_errors=true, 
-                                                    burn_in=burn_in, 
-                                                    thin=thin)
+   best_θ_all, _, lower_err_all, upper_err_all = LensFactory.LensModel.get_best_fit_parameters(logL; 
+                                                   chains       = chains, 
+                                                    with_errors = true, 
+                                                    burn_in     = burn_in, 
+                                                    thin        = thin)
 
    # Get best-fit and errors for selected parameters
    best_θ    = best_θ_all[plot_idx]
@@ -170,15 +193,19 @@ function LensFactory.LensModel.plot_corner(chains, logL;
                fonts=(; regular="Times New Roman"))
    
    for i in 1:n_params
-      # Get parameter labels
-      p_name = PARAM_NAME[free_parameter_names[i][2]]
-
       # Marginal Stats for Title
       title_str = L"%$(round(best_θ[i], digits=2))^{+ %$(round(upper_err[i], digits=2))}_{%$(round(lower_err[i], digits=2))}"
       
       for j in 1:i
-         p_name_i = L"%$(PARAM_NAME[free_parameter_names[i][1]]): %$(PARAM_NAME[free_parameter_names[i][2]])"
-         p_name_j = L"%$(PARAM_NAME[free_parameter_names[j][1]]): %$(PARAM_NAME[free_parameter_names[j][2]])"
+         owner_i = get_param_name(free_parameter_names[i][1])
+         param_i = get_param_name(free_parameter_names[i][2])
+
+         owner_j = get_param_name(free_parameter_names[j][1])
+         param_j = get_param_name(free_parameter_names[j][2])
+
+         p_name_i = LaTeXString("\$$owner_i: $param_i\$")
+         p_name_j = LaTeXString("\$$owner_j: $param_j\$")
+
          ax = Axis(fig[i, j];
                   xtickalign = 1, ytickalign = 1,
                   xticksize = 2, yticksize = 2,

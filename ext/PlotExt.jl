@@ -5,6 +5,7 @@ module PlotExt
 # Julia inbuilt functions to import
 # --------------------------------------------------------------------------------------------------
 using Makie
+using LaTeXStrings
 using StatsBase
 using KernelDensity
 
