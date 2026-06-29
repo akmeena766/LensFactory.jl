@@ -9,6 +9,7 @@ using ProgressMeter
 using JLD2
 using Dates
 
+
 # --------------------------------------------------------------------------------------------------
 # LensFactory modules to use
 # --------------------------------------------------------------------------------------------------
@@ -48,14 +49,23 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
    adis = LensModelUtils.adis_current(model, pvals)
 
    # Calculate position likelihood
-   logL_position = 0.0
+   logL = 0.0
    if model.sampler.scheme == :SourcePlane
       # Calculate deflection at image positions
-      _, αx_all, αy_all, A_all = LensModelUtils.lens_quantities(model, lens_model)
+      ψ_all, αx_all, αy_all, A_all = LensModelUtils.lens_quantities(model, lens_model)
 
       # Calculate position likelihood
-      logL_position = Likelihood.loglike_sourceplane(model, adis, αx_all, αy_all, A_all)
-   elseif model.sampler.scheme == :ImagePlane_Fast
+      logL_position = Likelihood.logL_sourceplane(model, adis, αx_all, αy_all, A_all)
+
+      # Calculate parity likelihood
+      logL_parity = 0.0
+      if model.source_config.use_parity
+         logL_parity = Likelihood.logL_parity(model, adis, A_all)
+      end
+      
+      # Total log-likelihood
+      logL = logL_position + logL_parity
+   elseif model.sampler.scheme == :ImagePlane
       error("Image plane sampling is not implemented yet.")
       
       # Calculate deflection at image positions
@@ -65,14 +75,6 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
       error("Unsupported sampling scheme: $(model.sampler.scheme)")
    end
    
-   # Calculate parity likelihood
-   logL_parity = 0.0
-   if model.source_config.use_parity
-      logL_parity = Likelihood.loglike_parity(model, adis, A_all)
-   end
-   
-   # Total log-likelihood
-   logL = logL_position + logL_parity
    return logL
 end
 

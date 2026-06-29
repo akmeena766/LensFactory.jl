@@ -1,5 +1,6 @@
 module Likelihood
 
+
 # --------------------------------------------------------------------------------------------------
 # Julia inbuilt functions to import
 # --------------------------------------------------------------------------------------------------
@@ -12,14 +13,16 @@ using ..LensModelIO
 using ..Constants
 using ..Lenses
 
+
 # --------------------------------------------------------------------------------------------------
 # Functions to export
 # --------------------------------------------------------------------------------------------------
-export loglike_sourceplane
-export loglike_imageplane_fast
-export loglike_flux
-export loglike_timedelay
-export loglike_parity
+export logL_sourceplane
+export logL_sourceplane_flux
+export logL_sourceplane_timedelay
+export logL_sourceplane_parity
+export logL_imageplane
+
 
 # --------------------------------------------------------------------------------------------------
 # Functions
@@ -57,8 +60,7 @@ end
 @inline function _weighted_position(βx::Vector{Float64}, βy::Vector{Float64}, 
                                     A::NTuple{4, Vector{Float64}}, 
                                     σx::Vector{Float64}, σy::Vector{Float64}, 
-                                    θ::Vector{Float64}, 
-                                    n::Int64)
+                                    θ::Vector{Float64}, n::Int64)
    # Weight matrix: W = Σᵢ μᵢᵀ * Sᵢ⁻¹ * μᵢ
    sumW11 = 0.0
    sumW12 = 0.0
@@ -120,9 +122,12 @@ end
 end
 
 
-function loglike_sourceplane(model::ModelConfig, adis::Vector{Float64}, 
-                             αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, 
-                             A_all::Vector{NTuple{4, Vector{Float64}}})
+# --------------------------------------------------------------------------------------------------
+# Source plane likelihood functions
+# --------------------------------------------------------------------------------------------------
+function logL_sourceplane(model::ModelConfig, adis::Vector{Float64}, 
+                          αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, 
+                          A_all::Vector{NTuple{4, Vector{Float64}}})
    # Initialize chi2 for position
    χ2_total = 0.0
 
@@ -183,80 +188,7 @@ function loglike_sourceplane(model::ModelConfig, adis::Vector{Float64},
    return -0.5 * χ2_total
 end
 
-
-function loglike_imageplane_fast(model::ModelConfig, 
-                                 adis::Vector{Float64}, 
-                                 αx_all::Vector{Vector{Float64}}, 
-                                 αy_all::Vector{Vector{Float64}}, 
-                                 A_all::Vector{NTuple{4, Vector{Float64}}})
-   # Initialize chi2 for parity
-   χ2_total = 0.0
-
-   # Identity tuple
-   I4 = (1.0, 0.0, 0.0, 1.0)
-
-   # Calculate chi2 for position
-   sid = 1
-   kid = 1
-   for src in model.source_config.sources
-      # Distance ratio for this source
-      adis_value = adis[sid]
-      
-      for knot in src.knots
-         # Knot positions and measurement errors
-         x  = knot.x
-         y  = knot.y
-         σx = knot.σx
-         σy = knot.σy
-         σθ = knot.σθ         
-         n  = length(x)
-         
-         # Deflection vector at the knot positions
-         αx = @. adis_value * αx_all[kid]
-         αy = @. adis_value * αy_all[kid]
-
-         # Deformation tensor at the knot positions
-         A = @. adis_value * A_all[kid]
-         for i in eachindex(A)
-            @. A[i] = I4[i] - A[i]
-         end
-
-         # Individual source positions using broadcasting
-         βx_ind = @. x - αx
-         βy_ind = @. y - αy
-
-         # Get weighted source position (Section 4.1 in https://arxiv.org/pdf/astro-ph/0102340)
-         βx_model, βy_model, _, iS_all = _weighted_position(βx_ind, βy_ind, A, σx, σy, σθ, n)
-         
-         # Predict image positions
-         # TODO: Calculate chi2 for position
-         
-         # Calculate knot χ2
-         χ2_knot = 0.0
-         for i in 1:n
-            δθx = x[i] - θx_model[i]
-            δθy = y[i] - θy_model[i]
-            
-            # Read inverse covariance matrix components
-            iS11, iS12, iS21, iS22 = iS_all[i]
-
-            # χ² = δθᵀ * S⁻¹ * δθ
-            χ2_knot = χ2_knot + δθx * (iS11 * δθx + iS12 * δθy) + δθy * (iS21 * δθx + iS22 * δθy)
-         end
-         χ2_total = χ2_total + χ2_knot
-         
-         kid = kid + 1
-      end
-      sid = sid + 1
-   end
-
-   return -0.5 * χ2_total
-end
-
-
-function loglike_flux(model::ModelConfig, 
-                      adis::Vector{Float64}, 
-                      A_all::Vector{NTuple{4, Vector{Float64}}})
+function logL_sourceplane_flux(model::ModelConfig, adis::Vector{Float64}, A_all::Vector{NTuple{4, Vector{Float64}}})
    # Initialize chi2 for parity
    χ2_total = 0.0
 
@@ -306,7 +238,7 @@ function loglike_flux(model::ModelConfig,
    return -0.5 * χ2_total
 end
 
-function loglike_timedelay(model::ModelConfig, lens_model::Lenses.AbstractLens, 
+function logL_sourceplane_timedelay(model::ModelConfig, lens_model::Lenses.AbstractLens, 
                            adis::Vector{Float64}, 
                            z_d::Float64, 
                            D_d::Float64, 
@@ -384,10 +316,7 @@ function loglike_timedelay(model::ModelConfig, lens_model::Lenses.AbstractLens,
    return -0.5 * χ2_total
 end
 
-
-function loglike_parity(model::ModelConfig, 
-                        adis::Vector{Float64}, 
-                        A_all::Vector{NTuple{4, Vector{Float64}}})
+function logL_sourceplane_parity(model::ModelConfig, adis::Vector{Float64}, A_all::Vector{NTuple{4, Vector{Float64}}})
    # Initialize chi2 for parity
    χ2_total = 0.0
    
@@ -425,6 +354,76 @@ function loglike_parity(model::ModelConfig,
          end   
          kid = kid + 1
       end      
+      sid = sid + 1
+   end
+   return -0.5 * χ2_total
+end
+
+
+# --------------------------------------------------------------------------------------------------
+# Image plane likelihood functions
+# --------------------------------------------------------------------------------------------------
+function logL_imageplane(model::ModelConfig, adis::Vector{Float64}, 
+                         αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, 
+                         A_all::Vector{NTuple{4, Vector{Float64}}})
+   # Initialize chi2 for parity
+   χ2_total = 0.0
+
+   # Identity tuple
+   I4 = (1.0, 0.0, 0.0, 1.0)
+
+   # Calculate chi2 for position
+   sid = 1
+   kid = 1
+   for src in model.source_config.sources
+      # Distance ratio for this source
+      adis_value = adis[sid]
+      
+      for knot in src.knots
+         # Knot positions and measurement errors
+         x  = knot.x
+         y  = knot.y
+         σx = knot.σx
+         σy = knot.σy
+         σθ = knot.σθ         
+         n  = length(x)
+         
+         # Deflection vector at the knot positions
+         αx = @. adis_value * αx_all[kid]
+         αy = @. adis_value * αy_all[kid]
+
+         # Deformation tensor at the knot positions
+         A = @. adis_value * A_all[kid]
+         for i in eachindex(A)
+            @. A[i] = I4[i] - A[i]
+         end
+
+         # Individual source positions using broadcasting
+         βx_ind = @. x - αx
+         βy_ind = @. y - αy
+
+         # Get weighted source position (Section 4.1 in https://arxiv.org/pdf/astro-ph/0102340)
+         βx_model, βy_model, _, iS_all = _weighted_position(βx_ind, βy_ind, A, σx, σy, σθ, n)
+         
+         # Predict image positions
+         # TODO: Calculate chi2 for position
+         
+         # Calculate knot χ2
+         χ2_knot = 0.0
+         for i in 1:n
+            δθx = x[i] - θx_model[i]
+            δθy = y[i] - θy_model[i]
+            
+            # Read inverse covariance matrix components
+            iS11, iS12, iS21, iS22 = iS_all[i]
+
+            # χ² = δθᵀ * S⁻¹ * δθ
+            χ2_knot = χ2_knot + δθx * (iS11 * δθx + iS12 * δθy) + δθy * (iS21 * δθx + iS22 * δθy)
+         end
+         χ2_total = χ2_total + χ2_knot
+         
+         kid = kid + 1
+      end
       sid = sid + 1
    end
    return -0.5 * χ2_total
