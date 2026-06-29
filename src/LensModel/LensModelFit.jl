@@ -58,13 +58,10 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
       logL_position = Likelihood.logL_sourceplane(model, adis, αx_all, αy_all, A_all)
 
       # Calculate parity likelihood
-      logL_parity = 0.0
       if model.source_config.use_parity
-         logL_parity = Likelihood.logL_parity(model, adis, A_all)
-      end
-      
-      # Total log-likelihood
-      logL = logL_position + logL_parity
+         logL_parity = Likelihood.logL_sourceplane_parity(model, adis, A_all)
+         logL = logL_position + logL_parity
+      end      
    elseif model.sampler.scheme == :ImagePlane
       error("Image plane sampling is not implemented yet.")
       
