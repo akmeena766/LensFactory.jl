@@ -217,8 +217,8 @@ function get_best_fit_parameters(results::Union{Vector{@NamedTuple{θ::Vector{Fl
          upper_err2 = zeros(n_params)
          for i in 1:n_params
             # Get 16th and 84th percentiles of the posterior
-            q16, q84 = StatsBase.quantile(flat_chain[:, i], [0.16, 0.84])
-            q2p30, q97p7 = StatsBase.quantile(flat_chain[:, i], [0.023, 0.977])
+            q16, q84     = StatsBase.quantile(flat_chain[:, i], [0.1584, 0.8413])
+            q2p30, q97p7 = StatsBase.quantile(flat_chain[:, i], [0.0228, 0.9772])
         
             # Asymmetric error: distance from best-fit to the quantiles
             lower_err[i] = q16 - best_θ[i]
@@ -1069,7 +1069,7 @@ end
 # Extract posterior samples and best-fit from MCMC chain → JLD2
 # --------------------------------------------------------------------------------------------------
 function error_models(data_jld2::JLD2.JLDFile; 
-                      n_sample:: Int64 = 1000,
+                      n_samples:: Int64 = 1000,
                       burn_in::Float64 = 0.2,
                       out_file::String = "")
    # Load data from the JLD2 file
@@ -1106,12 +1106,12 @@ function error_models(data_jld2::JLD2.JLDFile;
    best_fit = flat_chains[argmax(flat_logL), :]
 
    # Default output file
-   if isempty(outfile)
-      outfile = "$(model.observation.lens)_$(data_jld2["Date"])_samples.jld2"
+   if isempty(out_file)
+      out_file = "$(model.observation.lens)_$(data_jld2["Date"])_samples.jld2"
    end
  
-   # ── 7. Save to JLD2 ───────────────────────────────────────────────────────
-   jldsave(outfile;
+   # Save to JLD2 
+   jldsave(out_file;
       Date     = data_jld2["Date"],
       Time     = data_jld2["Time"],
       model    = model,
