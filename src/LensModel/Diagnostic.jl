@@ -7,6 +7,7 @@ module Diagnostic
 using StatsBase
 using Printf
 
+
 # --------------------------------------------------------------------------------------------------
 # LensFactory modules to use
 # --------------------------------------------------------------------------------------------------
@@ -17,80 +18,33 @@ using Printf
 # --------------------------------------------------------------------------------------------------
 export calculate_gr
 export print_gr_report
-export time_series_diagnostics
-export acceptance_diagnostics
-
-
-# --------------------------------------------------------------------------------------------------
-# Optimizer convergence
-# --------------------------------------------------------------------------------------------------
-function optimizer_convergence(optimizer::Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}; tolerance::Float64=0.01, verbose::Bool=true)
-   # Best parameter vector and chi2
-   best_θ = converged_results[1].θ
-   best_val = converged_results[1].f
-
-   for result in converged_results
-      # Calculate relative difference for parameters (avoiding division by zero)
-      # Using 1e-8 as a floor to handle parameters that are exactly 0.0
-      rel_diff_θ = abs.(result.θ .- best_θ) ./ (max.(abs.(best_θ), abs.(result.θ)) .+ 1e-8)
-    
-      # Calculate relative difference for the chi2 (objective value)
-      rel_diff_f = abs(result.f - best_val) / (abs(best_val) + 1e-8)
-
-      # Check if all parameters are within percentage tolerance (e.g., 0.1% = 0.001)
-      if all(rel_diff_θ .< opt.tolerance) && (rel_diff_f < opt.tolerance)
-         same_best_count += 1
-      end
-   end
-
-   # Calculate the percentage
-   conv_rate = (total_converged / total_runs) * 100
-   stability_rate = (same_best_count / total_converged) * 100
-
-   # Print statistics
-   if verbose
-      w = 12
-      # Expanded table to include the stability percentage
-      col_h = 
-         "| " * rpad("Total", 8) * 
-         "| " * rpad("Convergence (%)", 12) * 
-         "| " * rpad("Stability (%)", 12) * 
-         "| " * rpad("Best χ²", w) * 
-         "|"
-      
-      val_r = 
-         "| " * rpad(total_runs, 8) * 
-         "| " * rpad("$(round(conv_rate, digits=1))%", 15) * 
-         "| " * rpad("$(round(stability_rate, digits=1))%", 13) * 
-         "| " * rpad(round(-best_val, digits=4), w) * 
-         "|"
-   
-      line = "-" ^ length(col_h)
-      println(line); println(col_h); println(line); println(val_r); println(line)
-   end
-end
+export autocorrelation
+export acceptance_rate
 
 
 # --------------------------------------------------------------------------------------------------
 # Gelman-Rubin diagnostic
 # --------------------------------------------------------------------------------------------------
 function calculate_gr(chains::Array{Float64, 3}; burn_in::Float64=0.2)
+   # Dimensions
    n_steps, n_chains, n_params = size(chains)
    
+   # Check number of chains
    if n_chains < 2
       error("At least 2 chains are required for Gelman-Rubin diagnostic.")
    end
 
-   # Remove burn-in (the adaptation blocks)
-   start_idx = Int(floor(burn_in * n_steps))
-   samples = chains[start_idx:end, :, :]
+   # Remove burn-in
+   start_idx = Int(floor(burn_in * n_steps)) + 1
+   samples   = chains[start_idx:end, :, :]
 
-   n = n_steps - start_idx + 1
-   m = n_chains
-   r_hats = zeros(Float64, n_params)
+   # Post burn in size
+   n     = size(samples, 1)
+   m     = n_chains
+   R_hat = zeros(Float64, n_params)
 
    for p in 1:n_params
-      @views param_samples = samples[start_idx:end, :, p]
+      @views param_samples = samples[:, :, p]
         
       # W: Within-chain variance
       chain_vars = StatsBase.var(param_samples, dims=1)
@@ -103,9 +57,9 @@ function calculate_gr(chains::Array{Float64, 3}; burn_in::Float64=0.2)
         
       # V_hat: Pooled variance estimate
       V_hat = ((n - 1) / n) * W + (1 / n) * B
-      r_hats[p] = sqrt(V_hat / W)
+      R_hat[p] = sqrt(V_hat / W)
    end
-   return r_hats
+   return R_hat
 end
 
 function print_gr_report(chains::Array{Float64, 3}; param_names=nothing, burn_in=0.2)
@@ -113,36 +67,29 @@ function print_gr_report(chains::Array{Float64, 3}; param_names=nothing, burn_in
    r_hats = calculate_gr(chains, burn_in=burn_in)
    n_params = length(r_hats)
 
-   # Handle missing names
-   if param_names === nothing
-      # Generate names: ["θ₁", "θ₂", ...]
-      display_names = ["theta_" * string(i) for i in 1:n_params]
-   else
-      display_names = param_names
-   end
-
    # Table Formatting
-    w_owner = 15
-    w_param = 15
-    w_rhat  = 10
-    w_stat  = 12
+   w_owner = 15
+   w_param = 15
+   w_rhat  = 10
+   w_stat  = 12
 
-    # Build Header
-    header = "| " * rpad("Owner", w_owner) * " | " * rpad("Parameter", w_param) * " | " * rpad("R-hat", w_rhat) * " | " * rpad("Status", w_stat) * " |"
-    border = "-"^length(header)
+   # Build Header
+   header = "| " * rpad("Owner", w_owner) * " | " * rpad("Parameter", w_param) * " | " * rpad("R-hat", w_rhat) * " | " * rpad("Status", w_stat) * " |"
+   border = "-"^length(header)
 
-    total_inner_width = w_owner + w_param + w_rhat + w_stat + (3 * 3)
-    title = "GELMAN-RUBIN CONVERGENCE DIAGNOSTIC"
-    padding = total_inner_width - length(title)
-    left_pad = div(padding, 2)
-    right_pad = padding - left_pad + 2
-    centered_title = " "^left_pad * title * " "^right_pad
+   total_inner_width = w_owner + w_param + w_rhat + w_stat + (3 * 3)
+   title = "GELMAN-RUBIN CONVERGENCE DIAGNOSTIC"
+   padding = total_inner_width - length(title)
+   left_pad = div(padding, 2)
+   right_pad = padding - left_pad + 2
+   centered_title = " "^left_pad * title * " "^right_pad
 
-    println("\n" * border)
-    println("|" * centered_title * "|")
-    println(border)
-    println(header)
-    println(border)
+   # -- Printing the UI ----------------------------------------------------------------------------
+   println("\n" * border)
+   println("|" * centered_title * "|")
+   println(border)
+   println(header)
+   println(border)
 
    for i in 1:n_params
         # Extract metadata from the parameter object
@@ -227,8 +174,13 @@ function autocorrelation(chains::Array{Float64, 3};
    n_steps, n_walkers, n_params = size(chains)
 
    # Calculate burn-in offset
-   start_idx     = max(1, Int(floor(n_steps * burn_in)) + 1)
-   total_samples = (n_steps - start_idx + 1) * n_walkers
+   start_idx         = max(1, Int(floor(n_steps * burn_in)) + 1)
+   post_burnin_steps = n_steps - start_idx + 1
+   total_samples     = post_burnin_steps * n_walkers
+
+   # Store IAT and ESS
+   avg_taus = zeros(Float64, n_params)
+   ess_vals = zeros(Float64, n_params)
 
    # -- Printing the UI ----------------------------------------------------------------------------
    println("\n" * "-"^77)
@@ -238,7 +190,7 @@ function autocorrelation(chains::Array{Float64, 3};
    for i in 1:n_params
       tau_total = 0.0
       
-      # Calculate Tau per chain to avoid artificial "jumps" from flattening
+      # Calculate τ per chain to avoid artificial "jumps" from flattening
       for w in 1:n_walkers
          @views chain_data = chains[start_idx:end, w, i]
          
@@ -247,7 +199,7 @@ function autocorrelation(chains::Array{Float64, 3};
          max_lag = min(length(chain_data) ÷ 5, 2000)
          ac      = autocor(chain_data, 0:max_lag)
          
-         # Integrated Autocorrelation Time (IAT or τ)
+         # Integrated Autocorrelation Time (IAT)
          # Truncate at the first negative lag to avoid noise inflation.
          # Note: for very noisy chains this may truncate early; a full
          # automated-windowing estimator (Sokal 1989) can be added later.
@@ -255,7 +207,12 @@ function autocorrelation(chains::Array{Float64, 3};
          stop_at = isnothing(idx) ? length(ac) : idx - 1
          
          # Tau formula: 1 + 2 * sum(autocorrelations)
-         tau_total += 1.0 + 2.0 * sum(@view ac[2:stop_at])
+         if stop_at < 2
+            tau_w = 1.0
+         else
+            tau_w = 1.0 + 2.0 * sum(@view ac[2:stop_at])
+         end
+         tau_total += tau_w
       end
       
       avg_tau = tau_total / n_walkers
@@ -266,10 +223,11 @@ function autocorrelation(chains::Array{Float64, 3};
       owner  = (param_names !== nothing && i <= length(param_names)) ? string(param_names[i][1]) : "Lens"
       p_name = (param_names !== nothing && i <= length(param_names)) ? string(param_names[i][2]) : "theta_$i"
       
-      # 4. Print Row
+      # Print Row
       @printf("| %-14s | %-16s | %-12.1f | %-12d | %-9.2f%% | \n", owner, p_name, avg_tau, round(Int, ess), ess_per)
    end
    println("-"^77 * "\n")
+   return nothing
 end
 
 
@@ -356,7 +314,7 @@ function acceptance_rate(chains::Array{Float64, 3}; burn_in::Float64=0.2)
    # Guidance Logic
    println("─"^60)
    @printf(" Status: ")
-   if avg_acc < 15.0
+   if avg_acc < 20.0
       println("⚠️  LOW (Stiff). Consider decreasing stretch parameter 'a'.")
    elseif avg_acc > 50.0
       println("⚠️  HIGH (Baby steps). Consider increasing stretch parameter 'a'.")
@@ -364,6 +322,7 @@ function acceptance_rate(chains::Array{Float64, 3}; burn_in::Float64=0.2)
       println("✅ HEALTHY. The sampler is mixing well.")
    end
    println("─"^60 * "\n")
+   return nothing
 end
 
 end
