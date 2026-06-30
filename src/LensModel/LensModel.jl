@@ -55,6 +55,8 @@ export predict_image
 export check_parity
 export save_best_fits
 export get_AIC
+export get_BIC
+export error_models
 
 # --------------------------------------------------------------------------------------------------
 # Plotting functions (see ../../ext folder for functions)
@@ -1059,6 +1061,62 @@ function check_parity(data_jld2::JLD2.JLDFile)
       end
       sid = sid + 1
    end
+   return nothing
+end
+
+
+# --------------------------------------------------------------------------------------------------
+# Extract posterior samples and best-fit from MCMC chain → JLD2
+# --------------------------------------------------------------------------------------------------
+function error_models(data_jld2::JLD2.JLDFile; 
+                      n_sample:: Int64 = 1000,
+                      burn_in::Float64 = 0.2,
+                      out_file::String = "")
+   # Load data from the JLD2 file
+   Date   = data_jld2["Date"]
+   Time   = data_jld2["Time"]
+   model  = data_jld2["model"]
+   chains = data_jld2["chains"]  # (n_steps, n_chains, n_params)
+   logL   = data_jld2["logL"]    # (n_steps, n_chains)
+
+   n_steps, n_chains, n_params = size(chains)
+
+   # Discard burn-in
+   start_idx   = Int(floor(n_steps * burn_in)) + 1
+   post_chains = chains[start_idx:end, :, :]   # (post_steps, n_chains, n_params)
+   post_logL   = logL[start_idx:end, :]        # (post_steps, n_chains)
+
+   # Flatten across all chains
+   flat_chains = reshape(post_chains, :, n_params)
+   flat_logL   = vec(post_logL)
+   total_draws = size(flat_chains, 1)
+
+   # Unlikely but warn if the asked samples is larger than chain size
+   if n_samples > total_draws
+      @warn "Requested $n_samples samples but only $total_draws post-burn-in samples " *
+            "are available. Saving all $total_draws."
+      n_samples = total_draws
+   end
+
+   # Random draw without replacement
+   draw_idx = sort(StatsBase.sample(1:total_draws, n_samples; replace=false))
+   samples  = flat_chains[draw_idx, :]   # (n_samples, n_params)
+
+   # Best-fit
+   best_fit = flat_chains[argmax(flat_logL), :]
+
+   # Default output file
+   if isempty(outfile)
+      outfile = "$(model.observation.lens)_$(data_jld2["Date"])_samples.jld2"
+   end
+ 
+   # ── 7. Save to JLD2 ───────────────────────────────────────────────────────
+   jldsave(outfile;
+      Date     = data_jld2["Date"],
+      Time     = data_jld2["Time"],
+      model    = model,
+      best_fit = best_fit,
+      samples  = samples)
    return nothing
 end
 
