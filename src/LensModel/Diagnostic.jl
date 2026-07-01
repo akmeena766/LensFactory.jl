@@ -62,7 +62,7 @@ function calculate_gr(chains::Array{Float64, 3}; burn_in::Float64=0.2)
    return R_hat
 end
 
-function print_gr_report(chains::Array{Float64, 3}; param_names=nothing, burn_in=0.2)
+function print_gr_report(chains::Array{Float64, 3}; free_param_names=nothing, burn_in=0.2)
    # Calculate R̂
    r_hats = calculate_gr(chains, burn_in=burn_in)
    n_params = length(r_hats)
@@ -93,9 +93,9 @@ function print_gr_report(chains::Array{Float64, 3}; param_names=nothing, burn_in
 
    for i in 1:n_params
         # Extract metadata from the parameter object
-        if param_names !== nothing
-            owner = string(param_names[i][1])
-            param = string(param_names[i][2])
+        if free_param_names !== nothing
+            owner = string(free_param_names[i][1])
+            param = string(free_param_names[i][2])
         else
             owner = "Unknown"
             param = "theta_$i"
@@ -168,8 +168,8 @@ end
 #   chain needs more steps or the sampler is poorly mixed.
 # """
 function autocorrelation(chains::Array{Float64, 3}; 
-                         param_names :: Union{Vector{Tuple{Symbol, Symbol}}, Nothing} = nothing, 
-                         burn_in     :: Float64                                       = 0.2)
+                         free_param_names::Union{Vector{Tuple{Symbol, Symbol}}, Nothing} = nothing, 
+                         burn_in::Float64                                                = 0.2)
    # Dimension
    n_steps, n_walkers, n_params = size(chains)
 
@@ -183,9 +183,9 @@ function autocorrelation(chains::Array{Float64, 3};
    ess_vals = zeros(Float64, n_params)
 
    # -- Printing the UI ----------------------------------------------------------------------------
-   println("\n" * "-"^77)
-   @printf("| %-14s | %-16s | %-12s | %-12s | %-10s  |\n", "Owner", "Parameter", "Tau (τ)", "ESS", "ESS %")
-   println("-"^77 * "\n")
+   println("\n" * "-"^78)
+   @printf("| %-14s | %-16s | %-12s | %-12s | %-8s |\n", "Owner", "Parameter", "Tau (τ)", "ESS", "ESS [%]")
+   println("-"^78)
 
    for i in 1:n_params
       tau_total = 0.0
@@ -220,13 +220,14 @@ function autocorrelation(chains::Array{Float64, 3};
       ess_per = (ess / total_samples) * 100
       
       # Identify parameter labels
-      owner  = (param_names !== nothing && i <= length(param_names)) ? string(param_names[i][1]) : "Lens"
-      p_name = (param_names !== nothing && i <= length(param_names)) ? string(param_names[i][2]) : "theta_$i"
+      owner  = (free_param_names !== nothing && i <= length(free_param_names)) ? string(free_param_names[i][1]) : "Lens"
+      p_name = (free_param_names !== nothing && i <= length(free_param_names)) ? string(free_param_names[i][2]) : "theta_$i"
       
       # Print Row
-      @printf("| %-14s | %-16s | %-12.1f | %-12d | %-9.2f%% | \n", owner, p_name, avg_tau, round(Int, ess), ess_per)
+      ess_str = @sprintf("%.2f %%", ess_per)
+      @printf("| %-14s | %-16s | %-12.1f | %-12d | %-8s | \n", owner, p_name, avg_tau, round(Int, ess), ess_str)
    end
-   println("-"^77 * "\n")
+   println("-"^78 * "\n")
    return nothing
 end
 
@@ -292,14 +293,20 @@ function acceptance_rate(chains::Array{Float64, 3}; burn_in::Float64=0.2)
    max_acc = maximum(walker_rates)
 
    # --Printing the UI -----------------------------------------------------------------------------
-   println("\n" * "─"^60)
-   println(" ACCEPTANCE RATE DIAGNOSTICS")
-   println("─"^60)
+   title = "ACCEPTANCE RATE DIAGNOSTICS"
+   padding = 78 - length(title)
+   left_pad = div(padding, 2)
+   right_pad = padding - left_pad + 2
+   centered_title = " "^left_pad * title * " "^right_pad
+   
+   println("\n" * "-"^78)
+   println(centered_title)
+   println("-"^78)
 
    @printf("%-22s %6.2f%%\n", " Overall Average Rate:", avg_acc)
    @printf("%-22s %6.2f%%\n", " Lowest Chain Rate:",    min_acc)
    @printf("%-22s %6.2f%%\n", " Highest Chain Rate:",   max_acc)
-   println("─"^60)
+   println("-"^78)
 
    # Visual Sparkline
    print(" Ensemble Spread: [")
@@ -312,7 +319,7 @@ function acceptance_rate(chains::Array{Float64, 3}; burn_in::Float64=0.2)
    println("]")
 
    # Guidance Logic
-   println("─"^60)
+   println("-"^78)
    @printf(" Status: ")
    if avg_acc < 20.0
       println("⚠️  LOW (Stiff). Consider decreasing stretch parameter 'a'.")
@@ -321,7 +328,7 @@ function acceptance_rate(chains::Array{Float64, 3}; burn_in::Float64=0.2)
    else
       println("✅ HEALTHY. The sampler is mixing well.")
    end
-   println("─"^60 * "\n")
+   println("-"^78 * "\n")
    return nothing
 end
 
