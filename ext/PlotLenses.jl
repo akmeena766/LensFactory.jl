@@ -170,11 +170,11 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Mat
                            resolution::Int64            = 2)
    if two_panel
       # Get empty figure
-      fig, (ax1, ax2) = plot_sky(1, 1; figure_size=figure_size, figure_padding=figure_padding, fontsize=fontsize)
+      fig, (ax1, ax2) = Lenses.plot_sky(1, 1; two_panel=true, figure_size=figure_size, figure_padding=figure_padding, fontsize=fontsize)
 
       # Plot source and its images
       if source !== nothing
-         if isa(source, NTuple{2, RV})
+         if isa(source, NTuple{2, Real})
             scatter!(ax1, source[1], source[2], color=source_kws.color, markersize=source_kws.markersize, marker=source_kws.marker)
          elseif isa(source, Matrix{<:RV})
             heatmap!(ax1, θx[:,1], θy[1,:], source, colormap=source_kws.heatmap)
@@ -243,7 +243,7 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Mat
       return fig, (ax1, ax2)
    else
       # Initialize empty figure
-      fig, ax = plot_sky(1, 1; figure_size=figure_size, figure_padding=figure_padding, fontsize=fontsize)
+      fig, ax = Lenses.plot_sky(1, 1; figure_size=figure_size, figure_padding=figure_padding, fontsize=fontsize)
       
       # Plot source + image plane
       if source !== nothing
