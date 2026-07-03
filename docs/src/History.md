@@ -1,5 +1,6 @@
 | Date       | Version  | Comments |
 | :-------   | :------: | :------- |
+| 03/07/2026 | 0.0.9    | Updated and tested support for lens modelling. |
 | 28/04/2026 | 0.0.8    | Fixed bugs in `init_CompositeLens` and `LensModel`. Added new `Multipole` lens model. |
 | 09/04/2026 | 0.0.7    | Changed default mass input from ``\mathbf{\rm{kg}}`` to ``\mathbf{\rm{M_\odot}}`` and velocity dispersion input from ``\mathbf{\rm{m/s}}`` to ``\mathbf{\rm{km/s}}`` in various lens models. |
 | 09/03/2026 | 0.0.6    | Fixed bugs in `init_CompositeLens`. Added basic support for lens modelling. |
