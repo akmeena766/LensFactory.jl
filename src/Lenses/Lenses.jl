@@ -88,18 +88,18 @@ function plot_magnification_profile end
 
 
 """
-    get_meshgrid(θx::Real, θy::Real, dθ::Real)
+    get_meshgrid(θx::Real, θy::Real, dθ::Real) --> Tuple(Matrix{<:Real}, Matrix{<:Real})
 Generate a meshgrid of coordinates on which various quantities can be evaluated. At present, this 
 function only generates square pixels.
 
 # Arguments
-   - `θx`: Half-size of the grid in x-direction (in ``\\rm \\mathbf{arcseconds}``)
-   - `θy`: Half-size of the grid in y-direction (in ``\\rm \\mathbf{arcseconds}``)
-   - `dθ`: Pixel size (in ``\\rm \\mathbf{arcseconds}``)
+- `θx`: Half-size of the grid in x-direction (in ``\\rm \\mathbf{arcseconds}``)
+- `θy`: Half-size of the grid in y-direction (in ``\\rm \\mathbf{arcseconds}``)
+- `dθ`: Pixel size (in ``\\rm \\mathbf{arcseconds}``)
 
 # Returns
-   - `grid_x::Matrix{Float64}`: x-coordinates of the grid (in ``\\rm \\mathbf{arcseconds}``)
-   - `grid_y::Matrix{Float64}`: y-coordinates of the grid (in ``\\rm \\mathbf{arcseconds}``)
+- `grid_x`: x-coordinates of the grid (in ``\\rm \\mathbf{arcseconds}``)
+- `grid_y`: y-coordinates of the grid (in ``\\rm \\mathbf{arcseconds}``)
 """
 function get_meshgrid(θx::Real, θy::Real, dθ::Real)
    # Promote to common type
@@ -132,25 +132,26 @@ end
 
 
 """
-    get_critical_density(D_d::Real, D_ds::Real, D_s::Real; unit::Symbol=:kg_m2)
+    get_critical_density(D_d::Real, D_ds::Real, D_s::Real; 
+                         unit::Symbol=:kg_m2) --> Real
 Calculate the critical surface density,
 ```math
 Σ_{\\rm cr} = \\frac{c^2}{4 π {\\rm G}} \\frac{D_s}{D_d D_{ds}}.
 ``` 
 
 # Arguments
-   - `D_d::Real`: Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``)
-   - `D_ds::Real`: Angular diameter distance to the source (in ``\\rm \\mathbf{meters}``)
-   - `D_s::Real`: Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``)
+- `D_d` : Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``)
+- `D_ds`: Angular diameter distance to the source (in ``\\rm \\mathbf{meters}``)
+- `D_s` : Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``)
 
-   # Keyword Arguments
-   - `unit::Symbol = :kg_m2`: Output units of the critical surface density.
-      - `:kg_m2` ``\\Rightarrow{\\rm \\mathbf{kg/m^2}}``
-      - `:msun_pc2` ``\\Rightarrow{\\rm \\mathbf{M_⊙/pc^2}}``
-      - `:msun_arcsec2` ``\\Rightarrow{\\rm \\mathbf{M_⊙/arcsec^2}}``
+# Keyword Arguments
+- `unit = :kg_m2`: Output units of the critical surface density.
+   - `:kg_m2` ``\\Rightarrow{\\rm \\mathbf{kg/m^2}}``
+   - `:msun_pc2` ``\\Rightarrow{\\rm \\mathbf{M_⊙/pc^2}}``
+   - `:msun_arcsec2` ``\\Rightarrow{\\rm \\mathbf{M_⊙/arcsec^2}}``
 
 # Returns
-   - `Σ_cr::Real`: Critical surface density in the requested unit
+- `Σ_cr::Real`: Critical surface density in the requested unit
 """
 function get_critical_density(D_d::Real, D_ds::Real, D_s::Real; unit::Symbol=:kg_m2)
    # Calculate Σ_cr in kg/m^2 based type of input parameters
@@ -182,7 +183,7 @@ lens_eltype(lens::init_MultiPlaneLens) = mapreduce(lens_eltype, promote_type, le
 # 
 # --------------------------------------------------------------------------------------------------
 """
-    get_potential(lens::AbstractLens, θx::T, θy::T) where T <: Real
+    get_potential(lens::AbstractLens, θx::T, θy::T) where T <: Real --> Real
 """
 function get_potential(lens::AbstractLens, θx::Real, θy::Real)
    # Promote to common type
@@ -204,19 +205,19 @@ function get_potential(lens::AbstractLens, θx::Real, θy::Real)
 end
 
 """
-    get_potential(lens::AbstractLens, θx::T, θy::T) where T <: ROA
+    get_potential(lens::AbstractLens, θx::T, θy::T) where T <: ROA --> ROA
 Calculate lensing potential at the given angular coordinates for the given lens model,
 ```math
 ψ(\\pmb{θ}) = \\frac{4{\\rm G}}{\\rm c^2} \\frac{1}{D_d} \\int d^2 \\pmb{θ}' \\, Σ(\\pmb{θ}') \\, \\ln\\left(|\\pmb{θ} - \\pmb{θ'}|\\right).
 ```
 
 # Arguments
-   - `lens::AbstractLens`: Lens model.
-   - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-   - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `lens`: Lens model.
+- `θx`  : x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 
 # Returns
-   - `ψ`: Lensing potential at the given angular coordinate(s).
+- `ψ`  : Lensing potential at the given angular coordinate(s).
 """
 function get_potential(lens::AbstractLens, θx::T, θy::T) where T <: ROA
    # Check if the input coordinates are of the same size
@@ -247,7 +248,7 @@ end
 
 
 """
-    get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: Real
+    get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: Real --> Real
 """
 function get_deflection(lens::AbstractLens, θx::Real, θy::Real)
    # Promote to common type
@@ -271,7 +272,7 @@ function get_deflection(lens::AbstractLens, θx::Real, θy::Real)
 end
 
 """
-    get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: ROA
+    get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: ROA --> Tuple{ROA, ROA}
 Calculate (vector) deflection angle at the given angular coordinate(s) for a given lens model,
 ```math
 \\pmb{α}(\\pmb{θ}) = \\pmb{∇} ψ(\\pmb{θ}) 
@@ -279,13 +280,13 @@ Calculate (vector) deflection angle at the given angular coordinate(s) for a giv
 ```
 
 # Arguments
-   - `lens::AbstractLens`: Lens model.
-   - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-   - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `lens`: Lens model.
+- `θx`  : x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 
 # Returns
-   - `αx`: x-component of the deflection angle (in ``\\rm \\mathbf{arcseconds}``).
-   - `αy`: y-component of the deflection angle (in ``\\rm \\mathbf{arcseconds}``).
+- `αx`  : x-component of the deflection angle (in ``\\rm \\mathbf{arcseconds}``).
+- `αy`  : y-component of the deflection angle (in ``\\rm \\mathbf{arcseconds}``).
 """
 function get_deflection(lens::AbstractLens, θx::T, θy::T) where T <: Union{ROA, Vector{Int64}}
    # Check if the input coordinates are of the same size
@@ -317,7 +318,7 @@ end
 
 
 """
-    get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: Real
+    get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: Real --> Tuple{Real, Real, Real}
 """
 function get_jacobian(lens::AbstractLens, θx::Real, θy::Real)
    # Promote to common type
@@ -341,7 +342,7 @@ function get_jacobian(lens::AbstractLens, θx::Real, θy::Real)
 end
 
 """
-    get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: ROA
+    get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: ROA --> Tuple(ROA, ROA, ROA)
 Calculate jacobian (i.e., deformation tensor) of the lens mapping for a given lens model,
 ```math
 \\mathcal{A}(\\pmb{θ}) = 
@@ -355,14 +356,14 @@ Since the jacobian is symmetric (for single lens plane), only three components a
 i.e., ``(ψ_{xx}, ψ_{yy}, ψ_{xy})``.
 
 # Arguments
-   - `lens::AbstractLens`: Lens model.
-   - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-   - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `lens`: Lens model.
+- `θx`  : x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
 
 # Returns
-   - `ψxx`: xx-component of the jacobian.
-   - `ψyy`: yy-component of the jacobian.
-   - `ψxy`: xy-component of the jacobian.
+- `ψxx` : xx-component of the jacobian.
+- `ψyy` : yy-component of the jacobian.
+- `ψxy` : xy-component of the jacobian.
 """
 function get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: Union{ROA, Vector{Int64}}
    # Check if the input coordinates are of the same size
@@ -398,9 +399,13 @@ end
 # 
 # --------------------------------------------------------------------------------------------------
 """
-    get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::Real, D_d::Real, β::NTuple{2, Real}) where T <: Real
+    get_time_delay(lens::AbstractLens, θx::T, θy::T, 
+                   adis::Real, 
+                   z_d::Real, 
+                   D_d::Real, 
+                   β::NTuple{2, Real}) where T <: Real --> Real
 """
-function get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::Real, D_d::Real, β::NTuple{2, Real}) where T <: Real
+function get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Real, z_d::Real, D_d::Real, β::NTuple{2, Real}) where T <: Real
    # Constant multiplicative factor
    constant_factor =  (1.0 + z_d) / CONST_C * (D_d / adis) * ANGLE_ARCSEC^2
 
@@ -413,7 +418,11 @@ function get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::
 end
 
 """
-    get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::Real, D_d::Real, β::NTuple{2, Real}) where T <: ROA
+    get_time_delay(lens::AbstractLens, θx::T, θy::T, 
+                   adis::Real, 
+                   z_d::Real, 
+                   D_d::Real, 
+                   β::NTuple{2, Real}) where T <: ROA --> ROA
 Calculate time delay for a given lens model and source position. The corresponding expression is given as,
 ```math
 t_d(\\pmb{θ}; \\pmb{β}) = \\frac{1+z_l}{\\rm c} \\frac{D_d D_s}{D_{ds}} \\theta_0^2
@@ -423,18 +432,18 @@ where ``\\theta_0`` is normalizing angular unit. Since all the angular coordinat
 for our case, ``\\mathbf{\\theta_0 = 1~\\rm \\mathbf{arcsecond}}``.
 
 # Arguments
-   - `lens::AbstractLens`: Lens model.
-   - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-   - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-   - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
-   - `z_d::Real`: Lens redshift.
-   - `D_d::Real`: Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``).
-   - `β::NTuple{2, Real}`: Source angular position (in ``\\rm \\mathbf{arcseconds}``).
+- `lens`: Lens model.
+- `θx`  : x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `adis`: Distance ratio (i.e., ``D_{ds}/D_s``).
+- `z_d` : Lens redshift.
+- `D_d` : Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``).
+- `β`   : Source angular position (in ``\\rm \\mathbf{arcseconds}``).
 
 # Returns
-   - `t_d`: Time delay at the given angular coordinate(s) (in ``\\rm \\mathbf{seconds}``).
+- `t_d`: Time delay at the given angular coordinate(s) (in ``\\rm \\mathbf{seconds}``).
 """
-function get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::Real, D_d::Real, β::NTuple{2, Real}) where T <: ROA
+function get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Real, z_d::Real, D_d::Real, β::NTuple{2, Real}) where T <: ROA
    # Constant multiplicative factor
    constant_factor =  (1.0 + z_d) / CONST_C * (D_d / adis) * ANGLE_ARCSEC^2
 
@@ -445,9 +454,10 @@ function get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Float64, z_d::
 end
 
 """
-    get_kappa_gamma(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Real
+    get_kappa_gamma(lens::AbstractLens, θx::T, θy::T, 
+                    adis::Real) where T <: Real --> Real
 """
-function get_kappa_gamma(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Real
+function get_kappa_gamma(lens::AbstractLens, θx::T, θy::T, adis::Real) where T <: Real
    # Get the jacobian components
    ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
 
@@ -465,21 +475,22 @@ function get_kappa_gamma(lens::AbstractLens, θx::T, θy::T, adis::Float64) wher
 end
 
 """
-    get_kappa_gamma(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: ROA
+    get_kappa_gamma(lens::AbstractLens, θx::T, θy::T, 
+                    adis::Real) where T <: ROA --> ROA
 Calculate convergence and shear components at the given angular coordinate(s) for a given lens model.
 
 # Arguments
-   - `lens::AbstractLens`: Lens model.
-   - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-   - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-   - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
+- `lens`: Lens model.
+- `θx`  : x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `adis`: Distance ratio (i.e., ``D_{ds}/D_s``).
 
 # Returns
-   - `κ`: Convergence at the given angular coordinate(s).
-   - `γ1`: First component of shear at the given angular coordinate(s).
-   - `γ2`: Second component of shear at the given angular coordinate(s).
+- `κ`   : Convergence at the given angular coordinate(s).
+- `γ1`  : First component of shear at the given angular coordinate(s).
+- `γ2`  : Second component of shear at the given angular coordinate(s).
 """
-function get_kappa_gamma(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: ROA
+function get_kappa_gamma(lens::AbstractLens, θx::T, θy::T, adis::Real) where T <: ROA
    # Get the jacobian components
    ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
 
@@ -498,9 +509,10 @@ end
 
 
 """
-    get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Real
+    get_magnification_image(lens::AbstractLens, θx::T, θy::T, 
+                            adis::Real) where T <: Real --> Real
 """
-function get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Real
+function get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Real) where T <: Real
    # Get the jacobian components
    ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
 
@@ -515,7 +527,8 @@ end
 
 
 """
-    get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: ROA
+    get_magnification_image(lens::AbstractLens, θx::T, θy::T, 
+                            adis::Real) where T <: ROA --> ROA
 Calculate signed magnification at the given angular coordinate(s) for a given lens model,
 ```math
 \\mu(\\pmb{θ}) = \\frac{1}{det\\left[ \\mathbb{I} - a_{\\rm dis} \\, \\mathcal{A} \\right]},
@@ -523,15 +536,15 @@ Calculate signed magnification at the given angular coordinate(s) for a given le
 where ``\\mathbb{I}`` is the identity matrix.
 
 # Arguments
-   - `lens::AbstractLens`: Lens model.
-   - `θx`: x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-   - `θy`: y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
-   - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
+- `lens`: Lens model.
+- `θx`  : x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `adis`: Distance ratio (i.e., ``D_{ds}/D_s``).
 
 # Returns
-   - `μ`: Magnification at the given angular coordinate(s).
+- `μ`   : Magnification at the given angular coordinate(s).
 """
-function get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: ROA
+function get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Real) where T <: ROA
    # Get the jacobian components
    ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
 
@@ -546,22 +559,26 @@ end
 
 
 """
-    get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Float64; rays_per_pixel::Int64=1) where T <: Matrix{<:Real}
+    get_magnification_source(lens::AbstractLens, θx::T, θy::T, 
+                             adis::Real; 
+                             rays_per_pixel::Int64 = 1) where T <: Matrix{<:Real} --> Matrix{<:Real}
 Calculates the magnification map in source plane using inverse ray shooting (IRS) for a given lens 
 model. The number of average rays per pixel can be specified using the `rays_per_pixel` keyword argument. 
 This function is not optimized for speed and is only intended to visualize the magnification map.
 
 # Arguments
-   - `lens::AbstractLens`: Lens model.
-   - `θx::Matrix{<:Real}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
-   - `θy::Matrix{<:Real}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
-   - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
-   - `rays_per_pixel::Int64 = 1`: Average number of rays per pixel.
+- `lens`: Lens model.
+- `θx`  : x-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `adis`: Distance ratio (i.e., ``D_{ds}/D_s``).
+
+# Keyword Arguments
+- `rays_per_pixel = 1`: Average number of rays per pixel.
 
 # Returns
-   - `μ_source::Matrix{<:Real}`: Magnification map in source plane.
+- `μ`   : Magnification map in source plane.
 """
-function get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Float64; 
+function get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Real; 
                                   rays_per_pixel::Int64 = 1) where T <: Matrix{<:Real}
    # Deflection field
    ψx, ψy = get_deflection(lens, θx, θy)
@@ -614,7 +631,9 @@ end
 
 
 """
-    get_image(lens::AbstractLens, θx::ROA, θy::ROA, adis::Float64, β::NTuple{2, Real})
+    get_image(lens::AbstractLens, θx::T, θy::T, 
+              adis::Real, 
+              β::NTuple{2, Real}) where T <: AbstractMatrix{<:Real} --> Vector{NTuple{2, Real}}
 Calculate image positions for a given lens model and source position. To get the image positions,
 this implementation finds the intersection points of contours corresponding to,
 ```math
@@ -649,20 +668,21 @@ function get_image(lens::AbstractLens, θx::T, θy::T, adis::Real, β::NTuple{2,
 end
 
 """
-    get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::T) where T <: Matrix{<:Real}
+    get_image(lens::AbstractLens, θx::T, θy::T, 
+              adis::Real, 
+              β::T) where T <: Matrix{<:Real} --> Matrix{<:Real}
 Calculate image map for an extended source given a lens model. This function employs inverse ray 
 shooting (IRS) to construct the image plane map.
 
 # Arguments
-   - `lens::AbstractLens`: Lens model.
-   - `θx::Matrix{<:Real}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
-   - `θy::Matrix{<:Real}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
-   - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
-   - `β::NTuple{2, Real}` or `β::Matrix{<:Real}`: Either point source position (in ``\\rm \\mathbf{arcseconds}``) 
-      or source intensity map (in ``\\rm \\mathbf{mag/arcsec^2}``).
+- `lens`: Lens model.
+- `θx`  : x-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `adis`: Distance ratio (i.e., ``D_{ds}/D_s``).
+- `β`   : Either point source position (in ``\\rm \\mathbf{arcseconds}``) or source intensity map.
 
 # Returns
-   - `image_position`: Image positions (in ``\\rm \\mathbf{arcseconds}``).
+- `img` : Image positions (in ``\\rm \\mathbf{arcseconds}``).
 """
 function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::T) where T <: Matrix{<:Real}
    # Get the potential gradient
@@ -703,19 +723,20 @@ function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::T) whe
 end
 
 """
-    get_critical_curve(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:Real}
+    get_critical_curve(lens::AbstractLens, θx::T, θy::T, 
+                       adis::Real) where T <: Matrix{<:Real} --> Tuple{Vector{Vector{Vector{Float64}}}, Vector{Vector{Vector{Float64}}}}
 Calculate critical curves for a given lens model. This function essentially runs marching squares
 algorithm to find the zero eigenvalue contours.
 
 # Arguments
-   - `lens::AbstractLens`: Lens model.
-   - `θx::Matrix{<:Real}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
-   - `θy::Matrix{<:Real}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
-   - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
+- `lens`: Lens model.
+- `θx`  : x-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `adis`: Distance ratio (i.e., ``D_{ds}/D_s``).
 
 # Returns
-   - `critical_tan::Vector{Vector{Vector{Float64}}}`: Tangential critical curve(s) (in ``\\rm \\mathbf{arcseconds}``).
-   - `critical_rad::Vector{Vector{Vector{Float64}}}`: Radial critical curve(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `crit_tan`: Tangential critical curves (in ``\\rm \\mathbf{arcseconds}``).
+- `crit_rad`: Radial critical curves (in ``\\rm \\mathbf{arcseconds}``).
 """
 function get_critical_curve(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:Real}
    # Get the jacobian components
@@ -740,19 +761,20 @@ end
 
 
 """
-    get_caustic(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:Real}
+    get_caustic(lens::AbstractLens, θx::T, θy::T, 
+                adis::Real) where T <: Matrix{<:Real} --> Tuple{Vector{Vector{Vector{Float64}}}, Vector{Vector{Vector{Float64}}}}
 Calculate caustics for a given lens model. The function first gets the critical curves and then maps
 them to the source plane using lens equation.
 
 # Arguments
-   - `lens::AbstractLens`: Lens model.
-   - `θx::Matrix{<:Real}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
-   - `θy::Matrix{<:Real}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
-   - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
+- `lens`: Lens model.
+- `θx`  : x-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `adis`: Distance ratio (i.e., ``D_{ds}/D_s``).
 
 # Returns
-   - `caustics_tan::Vector{Vector{Vector{Float64}}}`: Tangential caustic curve(s) (in ``\\rm \\mathbf{arcseconds}``).
-   - `caustics_rad::Vector{Vector{Vector{Float64}}}`: Radial caustic curve(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `caus_tan`: Tangential caustic curves (in ``\\rm \\mathbf{arcseconds}``).
+- `caus_rad`: Radial caustic curves (in ``\\rm \\mathbf{arcseconds}``).
 """
 function get_caustic(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:Real}
    # Generate critical curves
@@ -780,18 +802,19 @@ end
 
 
 """
-    get_critical_area(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:Real}
+    get_critical_area(lens::AbstractLens, θx::T, θy::T, 
+                      adis::Real) where T <: Matrix{<:Real} --> Real
 Calculate the total angular area enclosed by tangential critical curve(s). The function runs shoelace
 algorithm to calculate the area.
 
 # Arguments
-   - `lens::AbstractLens`: Lens model.
-   - `θx::Matrix{<:Real}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
-   - `θy::Matrix{<:Real}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
-   - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
+- `lens`: Lens model.
+- `θx`  : x-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `adis`: Distance ratio (i.e., ``D_{ds}/D_s``).
 
 # Returns
-   - `area::Float64`: Total angular area enclosed by tangential critical curve(s) (in ``\\rm \\mathbf{arcseconds^2}``).
+- `area`: Total angular area enclosed by tangential critical curves (in ``\\rm \\mathbf{arcseconds^2}``).
 """
 function get_critical_area(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:Real}
    # Get tangential critical curves
@@ -807,7 +830,8 @@ end
 
 
 """
-    get_einstein_angle(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:Real}
+    get_einstein_angle(lens::AbstractLens, θx::T, θy::T, 
+                       adis::Real) where T <: Matrix{<:Real} --> Real
 Calculate the Einstein radius (i.e., ``θ_E``) for an arbitrary lens model, which is defined as,
 ```math
 θ_E = \\sqrt{\\frac{A_{\\rm critical}}{π}},
@@ -815,13 +839,13 @@ Calculate the Einstein radius (i.e., ``θ_E``) for an arbitrary lens model, whic
 where ``A_{\\rm critical}`` is the total angular area enclosed by the tangential critical curve(s).
 
 # Arguments
-   - `lens::AbstractLens`: Lens model.
-   - `θx::Matrix{<:Real}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
-   - `θy::Matrix{<:Real}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
-   - `adis::Float64`: Distance ratio (i.e., ``D_{ds}/D_s``).
+- `lens`: Lens model.
+- `θx`  : x-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `adis`: Distance ratio (i.e., ``D_{ds}/D_s``).
 
 # Returns
-   - `θ_E::Float64`: Einstein radius (i.e., ``θ_E``) (in ``\\rm \\mathbf{arcseconds}``).
+- `θ_E` : Einstein angle (in ``\\rm \\mathbf{arcseconds}``).
 """
 function get_einstein_angle(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:Real}
    return sqrt(get_critical_area(lens, θx, θy, adis) / π)
@@ -829,31 +853,33 @@ end
 
 
 """
-    get_radial_profile(kappa::T, θx::T, θy::T; origin::Union{Tuple{Float64, Float64}, Nothing}=nothing, 
-                                               n_bin::Int64=50, 
-                                               bin_type::Symbol=:log)
+    get_radial_profile(kappa::T, θx::T, θy::T; 
+                       origin::Union{Tuple{Float64, Float64}, Nothing} = nothing, 
+                       n_bin::Int64     = 50, 
+                       bin_type::Symbol = :log) --> Tuple(Vector{Real}, Vector{Real}, Vector{Real})
 Calculate the radial convergence profile. To convert it into physicsal units, multiply it by the 
 critical density ``Σ_{\\rm cr}``.
 
 
 # Arguments
-   - `kappa::Matrix{<:Real}`: Convergence map.
-   - `θx::Matrix{<:Real}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
-   - `θy::Matrix{<:Real}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
-   
+- `kappa`: Convergence map.
+- `θx`   : x-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`   : y-grid (in ``\\rm \\mathbf{arcseconds}``).
+
 # Keyword Arguments
-   - `origin::Union{Tuple{Float64, Float64}, Nothing}=nothing`: Center (in ``\\rm \\mathbf{arcseconds}``).
-   - `n_bin::Int64=50`: Number of radial bins.
-   - `bin_type::Symbol=:log`: Type of radial binning (i.e., ``:log`` or ``:linear``).
+- `origin   = nothing`: Center (in ``\\rm \\mathbf{arcseconds}``).
+- `n_bin    = 50`: Number of radial bins.
+- `bin_type = :log`: Type of radial binning (i.e., ``:log`` or ``:linear``).
 
 # Returns
-   - `centers::Vector{Float64}`: Radial bin centers (in ``\\rm \\mathbf{arcseconds}``).
-   - `profile::Vector{Float64}`: Radial profile (in ``\\rm \\mathbf{arcseconds}``).
-   - `edges::Vector{Float64}`: Radial bin edges (in ``\\rm \\mathbf{arcseconds}``).
+- `centers`: Radial bin centers (in ``\\rm \\mathbf{arcseconds}``).
+- `profile`: Radial profile (in ``\\rm \\mathbf{arcseconds}``).
+- `edges`  : Radial bin edges (in ``\\rm \\mathbf{arcseconds}``).
 """
-function get_radial_profile(kappa::T, θx::T, θy::T; origin::Union{Tuple{Float64, Float64}, Nothing}=nothing, 
-                                                   n_bin::Int64=50, 
-                                                   bin_type::Symbol=:log) where T <: Matrix{<:Real}
+function get_radial_profile(kappa::T, θx::T, θy::T; 
+                            origin::Union{Tuple{Float64, Float64}, Nothing} = nothing, 
+                            n_bin::Int64     = 50, 
+                            bin_type::Symbol = :log) where T <: Matrix{<:Real}
    # Get the radial 1D grid based the input 2D grid and origin. If origin is not provided, then the 
    # largest value pixel will be chosen as the center.
    if origin === nothing
@@ -893,36 +919,37 @@ end
 
 
 """
-    get_mass_profile(kappa::T, θx::T, θy::T, D_d; 
-                     origin::Union{Tuple{Float64, Float64}, Nothing}=nothing, 
-                     n_bin::Int64=50, 
-                     bin_type::Symbol=:log) where T <: Matrix{<:Real}
+    get_mass_profile(kappa::T, θx::T, θy::T, 
+                     D_d::Real; 
+                     origin::Union{Tuple{Float64, Float64}, Nothing} = nothing, 
+                     n_bin::Int64     = 50, 
+                     bin_type::Symbol = :log) where T <: Matrix{<:Real} --> Tuple{Vector{Float64}, Vector{Float64}}
 Calculate the cumulative mass enclosed within a given radius ``θ`` for a given lens model. While 
 converting the input convergence map into the physical units, it is assumed that source is at infinity 
 (i.e., ``a_{\\rm dis} = 1``). Hence, if the input convergence is for any finite source redshift, then
 divide the output mass values by ``a_{\\rm dis}``.
 
 # Arguments
-- `kappa::Matrix{<:Real}`: Convergence map.
-- `θx::Matrix{<:Real}`: x-grid (in ``\\rm \\mathbf{arcseconds}``).
-- `θy::Matrix{<:Real}`: y-grid (in ``\\rm \\mathbf{arcseconds}``).
-- `D_d::Float64`: Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``).
+- `kappa`: Convergence map.
+- `θx`   : x-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`   : y-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `D_d`  : Angular diameter distance to the lens (in ``\\rm \\mathbf{meters}``).
 
 # Keyword Arguments
-- `origin::Union{Tuple{Float64, Float64}, Nothing}=nothing`: Center (in ``\\rm \\mathbf{arcseconds}``).
+- `origin   = nothing`: Center (in ``\\rm \\mathbf{arcseconds}``).
    - If ``\\rm \\mathbf{nothing}``, then the center is set to be the location of the maximum value 
       of the convergence map.
-- `n_bin::Int64=50`: Number of radial bins.
-- `bin_type::Symbol=:log`: Type of radial binning (i.e., `:log` or `:linear`).
+- `n_bin    = 50`: Number of radial bins.
+- `bin_type = :log`: Type of radial binning (i.e., `:log` or `:linear`).
 
 # Returns
-   - `centers::Vector{Float64}`: Radial centers (in ``\\rm \\mathbf{arcseconds}``).
-   - `mass::Vector{Float64}`: Cumulative mass (in ``\\rm \\mathbf{M_\\odot}``).
+- `centers`: Radial centers (in ``\\rm \\mathbf{arcseconds}``).
+- `mass`   : Cumulative mass (in ``\\rm \\mathbf{M_\\odot}``).
 """
 function get_mass_profile(kappa::T, θx::T, θy::T, D_d::Float64; 
-                          origin::Union{Tuple{Float64, Float64}, Nothing}=nothing, 
-                          n_bin::Int64=50, 
-                          bin_type::Symbol=:log) where T <: Matrix{<:Real}
+                          origin::Union{Tuple{Float64, Float64}, Nothing} = nothing, 
+                          n_bin::Int64     = 50, 
+                          bin_type::Symbol = :log) where T <: Matrix{<:Real}
    # Calculate convergence radial profile (in units of Σ_cr)
    centers, profile, edges = get_radial_profile(kappa, θx, θy; origin=origin, n_bin=n_bin, bin_type=bin_type)
 
@@ -944,7 +971,7 @@ end
 
 
 """
-    shear_cartesian2polar(γ1::Real, γ2::Real)
+    shear_cartesian2polar(γ1::Real, γ2::Real) --> Tuple{Real, Real}
 Converts the Cartesian components of the shear (i.e., ``γ_1`` and ``γ_2``) to polar components
 (i.e., ``γ`` and ``φ``) using the relations,
 ```math
@@ -955,12 +982,12 @@ Converts the Cartesian components of the shear (i.e., ``γ_1`` and ``γ_2``) to 
 ```
 
 # Arguments
-   - `γ1`: Cartesian component of the shear (i.e., ``γ_1``).
-   - `γ2`: Cartesian component of the shear (i.e., ``γ_2``).
+- `γ1`: Cartesian component of the shear (i.e., ``γ_1``).
+- `γ2`: Cartesian component of the shear (i.e., ``γ_2``).
 
 # Returns
-   - `γ`: Polar component of the shear (i.e., ``γ``).
-   - `φ`: Polar component of the shear (i.e., ``φ`` in ``\\rm \\mathbf{degrees}``).
+- `γ` : Polar component of the shear (i.e., ``γ``).
+- `φ` : Polar component of the shear (i.e., ``φ`` in ``\\rm \\mathbf{degrees}``).
 """
 function shear_cartesian2polar(γ1::Real, γ2::Real)
    return hypot(γ1, γ2), 0.5 * rad2deg(atan(γ2, γ1))
@@ -968,7 +995,7 @@ end
 
 
 """
-    shear_polar2cartesian(γ::Real, phi::Real)
+    shear_polar2cartesian(γ::Real, phi::Real) --> Tuple{Real, Real}
 Converts the polar components of the shear (i.e., ``γ`` and ``φ``) to Cartesian components
 (i.e., ``γ_1`` and ``γ_2``) using the relations,
 ```math
@@ -979,12 +1006,12 @@ Converts the polar components of the shear (i.e., ``γ`` and ``φ``) to Cartesia
 ```
 
 # Arguments
-   - `γ`: Polar component of the shear (i.e., ``γ``).
-   - `φ`: Polar component of the shear (i.e., ``φ`` in ``\\rm \\mathbf{degrees}``).
+- `γ` : Polar component of the shear (i.e., ``γ``).
+- `φ` : Polar component of the shear (i.e., ``φ`` in ``\\rm \\mathbf{degrees}``).
 
 # Returns
-   - `γ1`: Cartesian component of the shear (i.e., ``γ_1``).
-   - `γ2`: Cartesian component of the shear (i.e., ``γ_2``).
+- `γ1`: Cartesian component of the shear (i.e., ``γ_1``).
+- `γ2`: Cartesian component of the shear (i.e., ``γ_2``).
 """
 function shear_polar2cartesian(γ::Real, phi::Real)
    return γ * cos(2.0 * deg2rad(phi)), γ * sin(2.0 * deg2rad(phi))
@@ -992,7 +1019,7 @@ end
 
 
 """
-    ellipticity_cartesian2polar(e1::Real, e2::Real)
+    ellipticity_cartesian2polar(e1::Real, e2::Real) --> Tuple{Real, Real}
 Converts the Cartesian components of the ellipticity (i.e., ``e_1`` and ``e_2``) to polar components
 (i.e., ``e`` and ``φ``) using the relations,
 ```math
@@ -1003,12 +1030,12 @@ e &= \\sqrt{e_1^2 + e_2^2}, \\\\
 ```
 
 # Arguments
-   - `e1::T`: Cartesian component of the ellipticity (i.e., ``e_1``).
-   - `e2::T`: Cartesian component of the ellipticity (i.e., ``e_2``).
+- `e1`: Cartesian component of the ellipticity (i.e., ``e_1``).
+- `e2`: Cartesian component of the ellipticity (i.e., ``e_2``).
 
 # Returns
-   - `e::Float64`: Polar component of the ellipticity (i.e., ``e``).
-   - `φ::Float64`: Polar component of the ellipticity (i.e., ``φ`` in ``\\rm \\mathbf{degrees}``).
+- `e` : Polar component of the ellipticity (i.e., ``e``).
+- `φ` : Polar component of the ellipticity (i.e., ``φ`` in ``\\rm \\mathbf{degrees}``).
 """
 function ellipticity_cartesian2polar(e1::Real, e2::Real)
    return hypot(e1, e2), 0.5 * rad2deg(atan(e2, e1))
@@ -1016,7 +1043,7 @@ end
 
 
 """
-    ellipticity_polar2cartesian(e::Real, phi::Real)
+    ellipticity_polar2cartesian(e::Real, phi::Real) --> Tuple{Real, Real}
 Converts the polar components of the ellipticity (i.e., ``e`` and ``φ``) to Cartesian components
 (i.e., ``e_1`` and ``e_2``) using the relations,
 ```math
@@ -1027,12 +1054,12 @@ e_2 &= e \\sin(2φ).
 ```
 
 # Arguments
-   - `e`: Polar component of the ellipticity (i.e., ``e``).
-   - `φ`: Polar component of the ellipticity (i.e., ``φ`` in ``\\rm \\mathbf{degrees}``).
+- `e` : Polar component of the ellipticity (i.e., ``e``).
+- `φ` : Polar component of the ellipticity (i.e., ``φ`` in ``\\rm \\mathbf{degrees}``).
 
 # Returns
-   - `e1`: Cartesian component of the ellipticity (i.e., ``e_1``).
-   - `e2`: Cartesian component of the ellipticity (i.e., ``e_2``).
+- `e1`: Cartesian component of the ellipticity (i.e., ``e_1``).
+- `e2`: Cartesian component of the ellipticity (i.e., ``e_2``).
 """
 function ellipticity_polar2cartesian(e::Real, phi::Real)
    return e * cos(2.0 * deg2rad(phi)), e * sin(2.0 * deg2rad(phi))
@@ -1047,20 +1074,20 @@ end
                         z_d::Real  = NaN, 
                         mass::Real = NaN, 
                         x_s::Real  = NaN, 
-                        c::Real    = NaN)
+                        c::Real    = NaN) --> NamedTuple
 Calculate parameters for NFW lens. The function would either need the concentration `c` or the 
 scale radius `x_s`. **If both are provided, `c` will be used to calculate `x_s` and the input `x_s` 
 will be overwritten.**
 
-# Arguments
-- `cosmology::AbstractCosmology = nothing`: Cosmology object.
-- `z_d::Real = NaN`: Redshift of the lens.
-- `mass::Real= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
-- `x_s::Real = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
-- `c::Real = NaN`: Concentration of the lens.
+# Keyword Arguments
+- `cosmology = nothing`: Cosmology object.
+- `z_d       = NaN`: Redshift of the lens.
+- `mass      = NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s       = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
+- `c         = NaN`: Concentration of the lens.
 
 # Returns
-- `NamedTuple`: Tuple of lens parameters.
+- Named tuple of NFW lens parameters.
 """
 function parameter_NFWLens(; cosmology::Cosmology.AbstractCosmology = nothing, 
                              z_d::Real  = NaN, 
@@ -1103,21 +1130,21 @@ end
                          mass::Real = NaN, 
                          x_s::Real  = NaN, 
                          c::Real    = NaN, 
-                         n::Real    = 1.0)
+                         n::Real    = 1.0) --> NamedTuple
 Calculate parameters for gNFW lens. The function would either need the concentration `c` or the 
 scale radius `x_s`. **If both are provided, `c` will be used to calculate `x_s` and the input `x_s` 
 will be overwritten.**
 
-# Arguments
-- `cosmology::AbstractCosmology = nothing`: Cosmology object.
-- `z_d::Real = NaN`: Redshift of the lens.
-- `mass::Real= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
-- `x_s::Real = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
-- `c::Real = NaN`: Concentration of the lens.
-- `n::Real = 1.0`: Slope parameter of the lens.
+# Keyword Arguments
+- `cosmology = nothing`: Cosmology object.
+- `z_d       = NaN`: Redshift of the lens.
+- `mass      = NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s       = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
+- `c         = NaN`: Concentration of the lens.
+- `n         = 1.0`: Slope parameter of the lens.
 
 # Returns
-- `NamedTuple`: Tuple of lens parameters.
+- Named tuple of gNFW lens parameters.
 """
 function parameter_gNFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, 
                               z_d::Real  = NaN, 
@@ -1172,21 +1199,21 @@ end
                             mass::Real = NaN, 
                             x_s::Real  = NaN, 
                             c::Real    = NaN, 
-                            n::Real    = 0.2)
+                            n::Real    = 0.2) --> NamedTuple
 Calculate parameters of an Einasto lens model. The function would either need the concentration `c` 
 or the scale radius `x_s`. **If both are provided, `c` will be used to calculate `x_s` and the input 
 `x_s` will be overwritten.**
 
-# Arguments
-- `cosmology::AbstractCosmology = nothing`: Cosmology object.
-- `z_d::Real = NaN`: Redshift of the lens.
-- `mass::Real= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
-- `x_s::Real = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
-- `c::Real = NaN`: Concentration of the lens.
-- `n::Real = 0.2`: Slope parameter of the lens.
+# Keyword Arguments
+- `cosmology = nothing`: Cosmology object.
+- `z_d       = NaN`: Redshift of the lens.
+- `mass      = NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
+- `x_s       = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
+- `c         = NaN`: Concentration of the lens.
+- `n         = 0.2`: Slope parameter of the lens.
 
 # Returns
-- `NamedTuple`: Tuple of lens parameters.
+- Named tuple of Einasto lens parameters.
 """
 function parameter_EinastoLens(; cosmology::Cosmology.AbstractCosmology=nothing, 
                                  z_d::Real  = NaN, 
