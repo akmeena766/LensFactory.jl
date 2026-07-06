@@ -242,7 +242,9 @@ function logL_sourceplane_timedelay(model::ModelConfig, lens_model::Lenses.Abstr
                            adis::Vector{Float64}, 
                            z_d::Float64, 
                            D_d::Float64, 
-                           αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, 
+                           ψ_all::Vector{Vector{Float64}},
+                           αx_all::Vector{Vector{Float64}}, 
+                           αy_all::Vector{Vector{Float64}}, 
                            A_all::Vector{NTuple{4, Vector{Float64}}})
    # Initialize chi2
    χ2_total = 0.0
@@ -264,17 +266,20 @@ function logL_sourceplane_timedelay(model::ModelConfig, lens_model::Lenses.Abstr
          # Knot positions values
          x  = knot.x
          y  = knot.y
+         σx = knot.σx
+         σy = knot.σy
+         σθ = knot.σθ
 
          # Knot time delay values and errors
          Δt_obs  = knot.td
-         σ_Δt = knot.σ_td
+         σ_Δt    = knot.σ_td
          n = length(Δt_obs)
 
-         # Deflection vector at the knot positions
+         # Scaled deflections at the observed positions
          αx = @. adis_value * αx_all[kid]
          αy = @. adis_value * αy_all[kid]
 
-         # Deformation tensor at the knot positions
+         # Deformation tensor A = I − adis * ψ_ij
          A = @. adis_value * A_all[kid]
          for i in eachindex(A)
             @. A[i] = I4[i] - A[i]
@@ -285,24 +290,31 @@ function logL_sourceplane_timedelay(model::ModelConfig, lens_model::Lenses.Abstr
          βy_ind = @. y - αy
 
          # Get weighted source position (Section 4.1 in https://arxiv.org/pdf/astro-ph/0102340)
-         βx_model, βy_model, _ = _weighted_position(βx_ind, βy_ind, A, σx, σy, σθ, n)
+         βx_model, βy_model, _, _ = _weighted_position(βx_ind, βy_ind, A, σx, σy, σθ, n)
 
          # Get time delay (in days) for observed image position with best-fit source position
-         td_fit = Lenses.get_time_delay(lens_model, x, y, adis_value, z_d, D_d, (βx_model, βy_model))
+         ψ = ψ_all[kid]
 
          # Best-fit time delay value
          Δt_0 = 0.0
+         wsum = 0.0
          td_fit_approx = Vector{Float64}(undef, n)
+         pref = constant_factor / adis_value / DAY2SECOND
          for i in 1:n
-            dot_product = (βx_ind[i] - x[i]) * (βx_model - βx_ind[i]) + 
-                          (βy_ind[i] - y[i]) * (βy_model - βy_ind[i])
-            
-            td_fit_approx[i] = td_fit[i] + (constant_factor / adis_value / DAY2SECOND) * dot_product
-            Δt_0 = Δt_0 + (Δt_obs[i] - td_fit_approx[i]) / σ_Δt[i]^2
-         end
-         Δt_0 = Δt_0 / sum(1.0 / σ_Δt[i]^2 for i in 1:n)
+            δβx = βx_model - βx_ind[i]
+            δβy = βy_model - βy_ind[i]
 
-         # Calculate knot chi2 for absolute time delay
+            ϕ_i = 0.5 * (αx[i]^2 + αy[i]^2) - adis_value * ψ[i] - (αx[i] * δβx + αy[i] * δβy)
+
+            td_fit_approx[i] = pref * ϕ_i
+
+            w = 1.0 / σ_Δt[i]^2
+            Δt_0 = Δt_0 + (Δt_obs[i] - td_fit_approx[i]) * w
+            wsum = wsum + w
+         end
+         Δt_0 = Δt_0 / wsum
+
+         # Chi2 for this knot, with the zero-point Δt_0 profiled out
          χ2_knot = 0.0
          for i in 1:n
             χ2_knot = χ2_knot + (Δt_obs[i] - td_fit_approx[i] - Δt_0)^2 / σ_Δt[i]^2
