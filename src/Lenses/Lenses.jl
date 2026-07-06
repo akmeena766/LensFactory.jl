@@ -966,7 +966,7 @@ function get_mass_profile(kappa::T, θx::T, θy::T, D_d::Float64;
 
    # Cumulative mass sum
    mass = cumsum(profile .* bin_areas)
-   return centers, mass
+   return edges[2:end], mass
 end
 
 
