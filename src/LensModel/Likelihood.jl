@@ -244,7 +244,7 @@ function logL_sourceplane_timedelay(model::ModelConfig, lens_model::Lenses.Abstr
                            D_d::Float64, 
                            αx_all::Vector{Vector{Float64}}, αy_all::Vector{Vector{Float64}}, 
                            A_all::Vector{NTuple{4, Vector{Float64}}})
-   # Initialize chi2 for parity
+   # Initialize chi2
    χ2_total = 0.0
 
    # Multipicative constant
@@ -253,7 +253,7 @@ function logL_sourceplane_timedelay(model::ModelConfig, lens_model::Lenses.Abstr
    # Identity tuple
    I4 = (1.0, 0.0, 0.0, 1.0)
 
-   # Calculate chi2 for position
+   # Calculate chi2
    sid = 1
    kid = 1
    for src in model.source_config.sources
