@@ -1092,10 +1092,10 @@ function error_models(data_jld2::JLD2.JLDFile;
    total_draws = size(flat_chains, 1)
 
    # Unlikely but warn if the asked samples is larger than chain size
-   if n_samples > total_draws
+   if n_samples > total_draws - 1
       @warn "Requested $n_samples samples but only $total_draws post-burn-in samples " *
             "are available. Saving all $total_draws."
-      n_samples = total_draws
+      n_samples = total_draws - 1
    end
 
    # Best-fit
@@ -1104,13 +1104,11 @@ function error_models(data_jld2::JLD2.JLDFile;
 
    # Random draw without replacement
    other_idx = setdiff(1:total_draws, best_idx)
-   draw_idx = sort(vcat(best_idx, StatsBase.sample(other_idx, n_samples - 1; replace=false)))
+   draw_idx = sort(vcat(best_idx, StatsBase.sample(other_idx, n_samples; replace=false)))
    
    # Keep the same layout as the input: a single chain
-   out_chains = reshape(flat_chains[draw_idx, :], n_samples, 1, n_params)  # (n_samples, 1, n_params)
-   out_logL   = reshape(flat_logL[draw_idx], n_samples, 1)                 # (n_samples, 1)
-
-
+   out_chains = reshape(flat_chains[draw_idx, :], n_samples + 1, 1, n_params)  # (n_samples + 1, 1, n_params)
+   out_logL   = reshape(flat_logL[draw_idx],      n_samples + 1, 1)            # (n_samples + 1, 1)
 
    # Default output file
    if isempty(out_file)
