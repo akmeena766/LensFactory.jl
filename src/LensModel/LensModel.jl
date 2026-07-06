@@ -1098,12 +1098,19 @@ function error_models(data_jld2::JLD2.JLDFile;
       n_samples = total_draws
    end
 
-   # Random draw without replacement
-   draw_idx = sort(StatsBase.sample(1:total_draws, n_samples; replace=false))
-   samples  = flat_chains[draw_idx, :]   # (n_samples, n_params)
-
    # Best-fit
-   best_fit = flat_chains[argmax(flat_logL), :]
+   best_idx = argmax(flat_logL)
+   best_fit = flat_chains[best_idx, :]
+
+   # Random draw without replacement
+   other_idx = setdiff(1:total_draws, best_idx)
+   draw_idx = sort(vcat(best_idx, StatsBase.sample(other_idx, n_samples - 1; replace=false)))
+   
+   # Keep the same layout as the input: a single chain
+   out_chains = reshape(flat_chains[draw_idx, :], n_samples, 1, n_params)  # (n_samples, 1, n_params)
+   out_logL   = reshape(flat_logL[draw_idx], n_samples, 1)                 # (n_samples, 1)
+
+
 
    # Default output file
    if isempty(out_file)
@@ -1112,11 +1119,11 @@ function error_models(data_jld2::JLD2.JLDFile;
  
    # Save to JLD2 
    jldsave(out_file;
-      Date     = data_jld2["Date"],
-      Time     = data_jld2["Time"],
-      model    = model,
-      best_fit = best_fit,
-      samples  = samples)
+           Date   = Date,
+           Time   = Time,
+           model  = model,
+           chains = out_chains,
+           logL   = out_logL)
    return nothing
 end
 
