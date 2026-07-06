@@ -217,7 +217,7 @@ function get_best_fit_parameters(results::Union{Vector{@NamedTuple{θ::Vector{Fl
          upper_err2 = zeros(n_params)
          for i in 1:n_params
             # Get 16th and 84th percentiles of the posterior
-            q16, q84     = StatsBase.quantile(flat_chain[:, i], [0.1584, 0.8413])
+            q16, q84     = StatsBase.quantile(flat_chain[:, i], [0.1587, 0.8413])
             q2p30, q97p7 = StatsBase.quantile(flat_chain[:, i], [0.0228, 0.9772])
         
             # Asymmetric error: distance from best-fit to the quantiles
