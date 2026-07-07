@@ -6,8 +6,12 @@
 
 ---
 ## Introduction
-`LensFactory` is a gravitational lensing package developed in Julia. At present it has support for 
-basic lensing and as we go along it is expected to have more features.
+`LensFactory` is an efficient, open-source, general-purpose **strong gravitational lens modeling** 
+package written in [Julia](https://julialang.org/). 
+It supports single- and multi-plane lensing with a wide range of analytic lens profiles, and 
+reconstructs lens mass distributions from multiple-image constraints — scaling from galaxy-scale 
+lenses up to full galaxy-cluster reconstructions.
+
 
 ---
 ## Installation
@@ -20,6 +24,33 @@ To use the `LensFactory` package in your current Julia session, type:
 julia> using LensFactory
 ```
 
+
+---
+## Quick start
+
+```julia
+using LensFactory
+
+# Initialize the default cosmology
+cosmo = Cosmology.init_cosmology()
+
+# Lens and source redshifts
+zl = 0.5
+zs = 1.5
+
+# Angular diameter distances and distance ratio
+Dol = Cosmology.angular_diameter_distance(cosmo, 0., zl)
+Dls = Cosmology.angular_diameter_distance(cosmo, zl, zs)
+Dos = Cosmology.angular_diameter_distance(cosmo, 0., zs)
+adis = Dls/Dos
+
+# Initialize a point mass lens of mass 10^12 Solar mass
+lens = Lenses.init_PointLens(D_d=Dol, mass=1E12)
+
+# Get scaled deflection component at (1", 1")
+dx, dy = Lenses.get_deflection(lens, x, y)
+```
+
 ---
 ## Examples
 To understand the use of various modules and functions in `LensFactory`, readers are encouraged to
@@ -27,12 +58,16 @@ go through the examples here: [LensFactory-Examples](https://github.com/akmeena7
 Please keep in mind that `LensFactory` is in **heavy** developement and examples are validated with the 
 current **dev** version. If any of the examples are not working, please let me know.
 
----
-## Feedback
-Bug reports and feature requests are welcome via [GitHub issues](https://github.com/akmeena766/LensFactory.jl/issues).
-For questions, suggestions, or comments, feel free to email
-[akm@iisc.ac.in](mailto:akm@iisc.ac.in) or
-[ashishmeena766@gmail.com](mailto:ashishmeena766@gmail.com).
 
 ---
 ## Citation
+If you use `LensFactory.jl` in your research, please cite:
+
+
+---
+## Feedback
+Bug reports and feature requests are welcome via 
+[GitHub issues](https://github.com/akmeena766/LensFactory.jl/issues).
+For questions, suggestions, or comments, feel free to email
+[akm@iisc.ac.in](mailto:akm@iisc.ac.in) or
+[ashishmeena766@gmail.com](mailto:ashishmeena766@gmail.com).
