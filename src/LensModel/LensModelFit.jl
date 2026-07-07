@@ -59,15 +59,18 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
       logL = logL + logL_position
       
       # Calculate flux likelihood
-      # if model.image_config.flux_measured
-      #    logL_flux = Likelihood.logL_sourceplane_flux(model,
-                                                      # adis,
-                                                      # β_ind, 
-                                                      # β_mod,
-                                                      # A_all,
-                                                      # )
-      #    logL = logL + logL_flux
-      # end      
+      if model.source_config.use_flux
+         logL_flux = Likelihood.logL_sourceplane_flux(model, adis, β_ind, β_mod, A_all)
+         logL = logL + logL_flux
+      end
+      
+      # Calculate time delay likelihood
+      # if model.source_config.use_time_delay
+      z_d = model.Observation.z_d
+      
+      #    logL_td = Likelihood.logL_sourceplane_timedelay(model, adis, z_d, D_d, β_ind, β_mod, ψ_all, αx_all, αy_all)
+      #    logL = logL + logL_td
+      # end
    elseif model.sampler.scheme == :ImagePlane
       error("Image plane sampling is not implemented yet.")
       
