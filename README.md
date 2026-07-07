@@ -62,7 +62,11 @@ current **dev** version. If any of the examples are not working, please let me k
 ---
 ## Citation
 If you use `LensFactory.jl` in your research, please cite:
+```bibtex
+@article{LensFactory.jl,
 
+}
+```
 
 ---
 ## Feedback
