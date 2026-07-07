@@ -55,14 +55,19 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
       ψ_all, αx_all, αy_all, A_all = LensModelUtils.lens_quantities(model, lens_model)
 
       # Calculate position likelihood
-      logL_position = Likelihood.logL_sourceplane(model, adis, αx_all, αy_all, A_all)
+      logL_position, β_ind, β_mod = Likelihood.logL_sourceplane(model, adis, αx_all, αy_all, A_all)
       logL = logL + logL_position
       
-      # Calculate parity likelihood
-      if model.source_config.use_parity
-         logL_parity = Likelihood.logL_sourceplane_parity(model, adis, A_all)
-         logL = logL + logL_parity
-      end      
+      # Calculate flux likelihood
+      # if model.image_config.flux_measured
+      #    logL_flux = Likelihood.logL_sourceplane_flux(model,
+                                                      # adis,
+                                                      # β_ind, 
+                                                      # β_mod,
+                                                      # A_all,
+                                                      # )
+      #    logL = logL + logL_flux
+      # end      
    elseif model.sampler.scheme == :ImagePlane
       error("Image plane sampling is not implemented yet.")
       
