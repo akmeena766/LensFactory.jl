@@ -366,11 +366,11 @@ function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::M
          end
 
          # Individual source positions using broadcasting
-         βx_ind = @. x - αx
-         βy_ind = @. y - αy
+         β_ind = @. tuple(x - αx, y - αy)
 
          # Get weighted source position (Section 4.1 in https://arxiv.org/pdf/astro-ph/0102340)
-         βx_model, βy_model, _ = Likelihood._weighted_position(βx_ind, βy_ind, A, σx, σy, σθ, n)
+         β_model, _, _ = Likelihood._weighted_position(β_ind, A, σx, σy, σθ, n)
+         βx_model, βy_model = β_model
 
          # Get image positions
          predicted_image = Lenses.get_image(best_model, x_grid, y_grid, adis_value, (βx_model, βy_model))

@@ -75,8 +75,10 @@ end
 
 @inline function _weighted_position(β_ind::Vector{NTuple{2, Float64}},
                                     A::NTuple{4, Vector{Float64}}, 
-                                    σx::Vector{Float64}, σy::Vector{Float64}, 
-                                    θ::Vector{Float64}, n::Int64)
+                                    σx::Vector{Float64}, 
+                                    σy::Vector{Float64}, 
+                                    θ::Vector{Float64}, 
+                                    n::Int64)
    # Weight matrix: W = Σᵢ μᵢᵀ * Sᵢ⁻¹ * μᵢ
    sumW11 = 0.0
    sumW12 = 0.0
