@@ -26,22 +26,52 @@ export get_time_delay
 # Plotting functions (see ../../ext folder for functions)
 # --------------------------------------------------------------------------------------------------
 export plot_image_plane
-# export plot_surface_density
 # export plot_magnification_map
 # export plot_magnification_profile
 
 function plot_image_plane end
-# function plot_surface_density end
 # function plot_magnification_map end
 # function plot_magnification_profile end
+
+
+# --------------------------------------------------------------------------------------------------
+# Helper functions
+# --------------------------------------------------------------------------------------------------
+function _distances(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, zs::Real)
+   # Vector of all redshift (including observer and source)
+   z_all = [0; lens.z_d; zs]
+   
+   # Pre-compute distance ratios
+   n_p = lens.n_p
+   D_ij = zeros(n_p+2, n_p+2)
+   adis_ij = Matrix{Float64}(undef, n_p, n_p)
+   adis_is = Vector{Float64}(undef, n_p)
+
+   # Fill empty distance matrix
+   for i in 1:n_p+2
+      for j in i+1:n_p+2
+         D_ij[i, j] = Cosmology.angular_diameter_distance(cosmology, z_all[i], z_all[j])
+      end
+   end
+
+   # Fill distance ratio matrix and vector
+   for ni in 1:n_p
+      for nj in 1:ni-1
+         adis_ij[nj, ni] = D_ij[nj+1, ni+1] / D_ij[1, ni+1]
+      end
+      adis_is[ni] = D_ij[ni+1, n_p+2] / D_ij[1, n_p+2]
+   end
+   return D_ij, adis_ij, adis_is
+end
+
 
 
 """
     get_potential(cosmology::Cosmology.AbstractCosmology, 
                   lens::Lenses.AbstractLens, 
-                  θx::T, θy::T, zs::RV) where T <: RV
+                  θx::T, θy::T, zs::Real) where T <: Real
 """
-function get_potential(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: RV
+function get_potential(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::Real) where T <: Real
    # Initialize zero potential value
    ψ = 0.0
 
@@ -81,22 +111,22 @@ end
 """
     get_potential(cosmology::Cosmology.AbstractCosmology, 
                   lens::Lenses.AbstractLens, 
-                  θx::T, θy::T, zs::RV) where T <: ROA
+                  θx::T, θy::T, zs::Real) where T <: ROA
 Calculate potential at the given angular coordinate(s) for a given multi-plane lens system with 
 cosmology and source redshift. The function is designed to handle both single coordinate and array 
-of coordinates as input via multiple dispatch, depending on the type of `T (ROA or RV)`. 
+of coordinates as input via multiple dispatch, depending on the type of `T (ROA or Real)`. 
 
 # Arguments
 - `cosmology::Cosmology.AbstractCosmology`: Cosmology model.
 - `lens::Lenses.AbstractLens`: Multi-plane lens model.
-- `θx::Union{RV, ROA}`: The x-coordinate(s) (in arcseconds).
-- `θy::Union{RV, ROA}`: The y-coordinate(s) (in arcseconds).
-- `zs::RV`: The redshift of the source plane.
+- `θx::Union{Real, ROA}`: The x-coordinate(s) (in arcseconds).
+- `θy::Union{Real, ROA}`: The y-coordinate(s) (in arcseconds).
+- `zs::Real`: The redshift of the source plane.
 
 # Returns
 - `ψ`: The potential at the given coordinates.
 """
-function get_potential(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: ROA
+function get_potential(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::Real) where T <: ROA
    # Initialize zero-valued potential 2D array
    ψ = zero(θx)
 
@@ -142,9 +172,9 @@ end
 """
     get_deflection(cosmology::Cosmology.AbstractCosmology, 
                    lens::Lenses.AbstractLens, 
-                   θx::T, θy::T, zs::RV) where T <: RV
+                   θx::T, θy::T, zs::Real) where T <: Real
 """
-function get_deflection(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: RV
+function get_deflection(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::Real) where T <: Real
    # Initialize zero-valued deflection components
    ψx = 0.0
    ψy = 0.0
@@ -182,23 +212,23 @@ end
 """
     get_deflection(cosmology::Cosmology.AbstractCosmology, 
                    lens::Lenses.AbstractLens, 
-                   θx::T, θy::T, zs::RV) where T <: ROA
+                   θx::T, θy::T, zs::Real) where T <: ROA
 Calculate deflection angle at the given angular coordinate(s) for a given multi-plane lens system 
 with cosmology and source redshift. The function is designed to handle both single coordinate and 
-array of coordinates as input via multiple dispatch, depending on the type of `T (ROA or RV)`.
+array of coordinates as input via multiple dispatch, depending on the type of `T (ROA or Real)`.
 
 # Arguments
 - `cosmology::Cosmology.AbstractCosmology`: Cosmology model.
 - `lens::Lenses.AbstractLens`: Multi-plane lens model.
-- `θx::Union{RV, ROA}`: The x-coordinate(s) (in arcseconds).
-- `θy::Union{RV, ROA}`: The y-coordinate(s) (in arcseconds).
-- `zs::RV`: The redshift of the source plane.
+- `θx::Union{Real, ROA}`: The x-coordinate(s) (in arcseconds).
+- `θy::Union{Real, ROA}`: The y-coordinate(s) (in arcseconds).
+- `zs::Real`: The redshift of the source plane.
 
 # Returns
 - `ψx`: The x-component of the deflection angle at the given coordinates.
 - `ψy`: The y-component of the deflection angle at the given coordinates.
 """
-function get_deflection(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: ROA
+function get_deflection(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::Real) where T <: ROA
    # Initialize zero-valued deflection components
    ψx = zero(θx)
    ψy = zero(θx)
@@ -243,9 +273,9 @@ end
 """
     get_jacobian(cosmology::Cosmology.AbstractCosmology, 
                  lens::Lenses.AbstractLens, 
-                 θx::T, θy::T, zs::RV) where T <: RV
+                 θx::T, θy::T, zs::Real) where T <: Real
 """
-function get_jacobian(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: RV
+function get_jacobian(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::Real) where T <: Real
    # Initialize zero valued deformation tensor components
    ψrr = zeros(2, 2)
 
@@ -290,18 +320,18 @@ end
 """
     get_jacobian(cosmology::Cosmology.AbstractCosmology, 
                  lens::Lenses.AbstractLens, 
-                 θx::T, θy::T, zs::RV) where T <: ROA
+                 θx::T, θy::T, zs::Real) where T <: ROA
 Calculate jacobian (i.e., deformation tensor) of the lens mapping at the given angular coordinate(s)
 for a given multi-plane lens system with cosmology and source redshift. The function is designed to 
 handle both single coordinate and array of coordinates as input via multiple dispatch, depending on 
-the type of `T (ROA or RV)`.
+the type of `T (ROA or Real)`.
 
 # Arguments
 - `cosmology::Cosmology.AbstractCosmology`: Cosmology model.
 - `lens::Lenses.AbstractLens`: Multi-plane lens model.
-- `θx::Union{RV, ROA}`: The x-coordinate(s) (in arcseconds).
-- `θy::Union{RV, ROA}`: The y-coordinate(s) (in arcseconds).
-- `zs::RV`: The redshift of the source plane.
+- `θx::Union{Real, ROA}`: The x-coordinate(s) (in arcseconds).
+- `θy::Union{Real, ROA}`: The y-coordinate(s) (in arcseconds).
+- `zs::Real`: The redshift of the source plane.
 
 # Returns
 - `ψxx`: xx-component of the jacobian.
@@ -309,7 +339,7 @@ the type of `T (ROA or RV)`.
 - `ψxy`: xy-component of the jacobian.
 - `ψyx`: yx-component of the jacobian.
 """
-function get_jacobian(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: ROA
+function get_jacobian(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::Real) where T <: ROA
    # Initialize zero valued deformation tensor components
    ψrr = zeros(size(θx,1), size(θx,2), 4)
 
@@ -366,9 +396,9 @@ end
 """
     get_time_delay(cosmology::Cosmology.AbstractCosmology, 
                    lens::Lenses.AbstractLens, 
-                   θx::T, θy::T, zs::RV, β::NTuple{2, RV}) where T <: RV
+                   θx::T, θy::T, zs::Real, β::NTuple{2, <:Real}) where T <: Real
 """
-function get_time_delay(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV, β::NTuple{2, RV}) where T <: RV
+function get_time_delay(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::Real, β::NTuple{2, <:Real}) where T <: Real
    # Initialize zero-valued time delay function
    ϕ = 0.0
 
@@ -413,6 +443,7 @@ function get_time_delay(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abs
          θx_j = β[1]
          θy_j = β[2]
       end
+      
       # Time delay factor (without a reference point)
       ϕ += constant_factor[ni] * (0.5 * ((θx_i-θx_j)^2 + (θy_i-θy_j)^2) - (D_ij[ni+1, ni+2] / D_ij[1, ni+2]) * ψ[1])
    end
@@ -423,23 +454,24 @@ end
 """
     get_time_delay(cosmology::Cosmology.AbstractCosmology, 
                    lens::Lenses.AbstractLens, 
-                   θx::T, θy::T, zs::RV, β::NTuple{2, RV}) where T <: ROA
+                   θx::T, θy::T, zs::Real, 
+                   β::NTuple{2, <:Real}) where T <: ROA
 Calculate time delay at the given angular coordinate(s) for a given multi-plane lens system with 
 cosmology and source redshift. The function is designed to handle both single coordinate and array
-of coordinates as input via multiple dispatch, depending on the type of `T (ROA or RV)`.
+of coordinates as input via multiple dispatch, depending on the type of `T (ROA or Real)`.
 
 # Arguments
 - `cosmology::Cosmology.AbstractCosmology`: Cosmology model.
 - `lens::Lenses.AbstractLens`: Multi-plane lens model.
-- `θx::Union{RV, ROA}`: The x-coordinate(s) (in arcseconds).
-- `θy::Union{RV, ROA}`: The y-coordinate(s) (in arcseconds).
-- `zs::RV`: The redshift of the source plane.
-- `β::NTuple{2, RV}`: The source plane position (in arcseconds) as a tuple (βx, βy).
+- `θx::Union{Real, ROA}`: The x-coordinate(s) (in arcseconds).
+- `θy::Union{Real, ROA}`: The y-coordinate(s) (in arcseconds).
+- `zs::Real`: The redshift of the source plane.
+- `β::NTuple{2, Real}`: The source plane position (in arcseconds) as a tuple (βx, βy).
 
 # Returns
 - `t_d`: The time delay at the given coordinates (in days).
 """
-function get_time_delay(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV, β::NTuple{2, RV}) where T <: ROA
+function get_time_delay(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::Real, β::NTuple{2, <:Real}) where T <: ROA
    # Initialize zero-valued time delay function
    ϕ = zero(θx)
 
@@ -447,7 +479,7 @@ function get_time_delay(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abs
    n_p = lens.n_p
 
    # Get distance matrix
-   D_ij = _distances(cosmology, lens, zs)
+   D_ij, adis_ij, adis_is = _distances(cosmology, lens, zs)
 
    # Temporary deflection vector for each lens plane
    ψ_vec = zeros(2, n_p)
@@ -470,8 +502,8 @@ function get_time_delay(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abs
 
             # Get the position vector in i-th plane
             for nj in 1:ni-1
-               θx_i = θx_i - (D_ij[nj+1, ni+1] / D_ij[1, ni+1]) * ψ_vec[1, nj]
-               θy_i = θy_i - (D_ij[nj+1, ni+1] / D_ij[1, ni+1]) * ψ_vec[2, nj]            
+               θx_i = θx_i - adis_ij[nj, ni] * ψ_vec[1, nj]
+               θy_i = θy_i - adis_ij[nj, ni] * ψ_vec[2, nj]            
             end   
 
             # Potential value at (θ_xi, θ_yi) in i-th plane
@@ -482,12 +514,13 @@ function get_time_delay(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abs
 
             # Get the position vector in i+1-th plane
             if ni < n_p
-               θx_j = θx_i -  (D_ij[ni+1, ni+2] / D_ij[1, ni+2]) * ψ_vec[1, ni]
-               θy_j = θy_i -  (D_ij[ni+1, ni+2] / D_ij[1, ni+2]) * ψ_vec[2, ni]
+               θx_j = θx_i -  adis_is[ni] * ψ_vec[1, ni]
+               θy_j = θy_i -  adis_is[ni] * ψ_vec[2, ni]
             else
                θx_j = β[1]
                θy_j = β[2]
             end
+            
             # Time delay factor (without a reference point)
             ϕ[i, j] += constant_factor[ni] * (0.5 * ((θx_i-θx_j)^2 + (θy_i-θy_j)^2) - (D_ij[ni+1, ni+2] / D_ij[1, ni+2]) * ψ[1])
          end
@@ -500,23 +533,23 @@ end
 """
     get_magnification_image(cosmology::Cosmology.AbstractCosmology, 
                             lens::Lenses.AbstractLens, 
-                            θx::T, θy::T, zs::RV) where T <: RV
+                            θx::T, θy::T, zs::Real) where T <: Real
 Calculate magnification at the given angular coordinate(s) in the image plane for a given 
 multi-plane lens system with cosmology and source redshift. The function is designed to handle both 
 single coordinate and array of coordinates as input via multiple dispatch, depending on the type 
-of `T (ROA or RV)`.
+of `T (ROA or Real)`.
 
 # Arguments
 - `cosmology::Cosmology.AbstractCosmology`: Cosmology model.
 - `lens::Lenses.AbstractLens`: Multi-plane lens model.
-- `θx::Union{RV, ROA}`: The x-coordinate(s) (in arcseconds).
-- `θy::Union{RV, ROA}`: The y-coordinate(s) (in arcseconds).
-- `zs::RV`: The redshift of the source plane.
+- `θx::Union{Real, ROA}`: The x-coordinate(s) (in arcseconds).
+- `θy::Union{Real, ROA}`: The y-coordinate(s) (in arcseconds).
+- `zs::Real`: The redshift of the source plane.
 
 # Returns
 - `μ_image`: The magnification at the given coordinates.
 """
-function get_magnification_image(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: Union{RV, ROA}
+function get_magnification_image(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::Real) where T <: Union{Real, ROA}
    # Get the deformation tensor components
    ψxx, ψyy, ψxy, ψyx = get_jacobian(cosmology, lens, θx, θy, zs)
 
@@ -528,8 +561,8 @@ end
 """
     get_magnification_source(cosmology::Cosmology.AbstractCosmology, 
                              lens::Lenses.AbstractLens, 
-                             θx::T, θy::T, zs::RV; 
-                             rays_per_pixel::Int64=1) where T <: Matrix{<:RV}
+                             θx::T, θy::T, zs::Real; 
+                             rays_per_pixel::Int64=1) where T <: Matrix{<:Real}
 Calculate magnification map in the source plane for a given multi-plane lens system with cosmology 
 and source redshift. The function uses a ray-shooting method to compute the magnification map in the
 source plane. The `rays_per_pixel` parameter controls the number of rays to shoot per pixel in the 
@@ -538,9 +571,9 @@ image plane, which can be increased for higher accuracy at the cost of increased
 # Arguments
 - `cosmology::Cosmology.AbstractCosmology`: Cosmology model.
 - `lens::Lenses.AbstractLens`: Multi-plane lens model.
-- `θx::Matrix{<:RV}`: The x-coordinate grid (in arcseconds).
-- `θy::Matrix{<:RV}`: The y-coordinate grid (in arcseconds).
-- `zs::RV`: The redshift of the source plane.
+- `θx::Matrix{<:Real}`: The x-coordinate grid (in arcseconds).
+- `θy::Matrix{<:Real}`: The y-coordinate grid (in arcseconds).
+- `zs::Real`: The redshift of the source plane.
 
 # Keyword Arguments
 - `rays_per_pixel::Int64=1`: The average number of rays to shoot per pixel.
@@ -548,7 +581,7 @@ image plane, which can be increased for higher accuracy at the cost of increased
 # Returns
 - `μ_source`: The magnification map in the source plane.
 """
-function get_magnification_source(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV; rays_per_pixel::Int64=1) where T <: Matrix{<:RV}
+function get_magnification_source(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::Real; rays_per_pixel::Int64=1) where T <: Matrix{<:Real}
    # Deflection field
    ψx, ψy = get_deflection(cosmology, lens, θx, θy, zs)
 
@@ -592,7 +625,7 @@ end
 """
     get_image(cosmology::Cosmology.AbstractCosmology, 
               lens::Lenses.AbstractLens, 
-              θx::T, θy::T, zs::RV, β::NTuple{2, RV}) where T <: Matrix{<:RV}
+              θx::T, θy::T, zs::Real, β::NTuple{2, Real}) where T <: Matrix{<:Real}
 Calculate image positions for a given source position in the source plane for a given multi-plane 
 lens system with cosmology and source redshift. The function uses a contour-finding method to 
 compute the image positions by finding the intersection of contours corresponding to the lens 
@@ -601,15 +634,15 @@ equation in the image plane.
 # Arguments
 - `cosmology::Cosmology.AbstractCosmology`: Cosmology model.
 - `lens::Lenses.AbstractLens`: Multi-plane lens model.
-- `θx::Matrix{<:RV}`: The x-coordinate grid (in arcseconds).
-- `θy::Matrix{<:RV}`: The y-coordinate grid (in arcseconds).
-- `zs::RV`: The redshift of the source plane.
-- `β::NTuple{2, RV}`: The source plane position (in arcseconds) as a tuple (βx, βy).
+- `θx::Matrix{<:Real}`: The x-coordinate grid (in arcseconds).
+- `θy::Matrix{<:Real}`: The y-coordinate grid (in arcseconds).
+- `zs::Real`: The redshift of the source plane.
+- `β::NTuple{2, Real}`: The source plane position (in arcseconds) as a tuple (βx, βy).
 
 # Returns
 - `image_position`: A vector of tuples containing the image positions (in arcseconds).
 """
-function get_image(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV, β::NTuple{2, RV}) where T <: Matrix{<:RV}
+function get_image(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::Real, β::NTuple{2, <:Real}) where T <: Matrix{<:Real}
    # Get the potential gradient
    ψx, ψy = get_deflection(cosmology, lens, θx, θy, zs)
 
@@ -618,7 +651,7 @@ function get_image(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abstract
    RYC = ContourFinder.get_contour(θx, θy, β[2] .- θy .+ ψy, 0.0)
 
    # Initialize empty Vector of tuples to store image positions
-   image_position::Vector{NTuple{2, RV}} = []
+   image_position::Vector{NTuple{2, Real}} = []
    for contour_1 in RXC
       for contour_2 in RYC
          # Find the intersection points
@@ -638,22 +671,22 @@ end
 """
     get_image(cosmology::Cosmology.AbstractCosmology, 
               lens::Lenses.AbstractLens, 
-              θx::T, θy::T, zs::RV, β::T) where T <: Matrix{<:RV}
+              θx::T, θy::T, zs::Real, β::T) where T <: Matrix{<:Real}
 Calculate image plane map for a given extended source in the source plane for a given multi-plane lens 
 system with cosmology and source redshift.
 
 # Arguments
 - `cosmology::Cosmology.AbstractCosmology`: Cosmology model.
 - `lens::Lenses.AbstractLens`: Multi-plane lens model.
-- `θx::Matrix{<:RV}`: The x-coordinate grid (in arcseconds).
-- `θy::Matrix{<:RV}`: The y-coordinate grid (in arcseconds).
-- `zs::RV`: The redshift of the source plane.
-- `β::Matrix{<:RV}`: The source plane brightness distribution.
+- `θx::Matrix{<:Real}`: The x-coordinate grid (in arcseconds).
+- `θy::Matrix{<:Real}`: The y-coordinate grid (in arcseconds).
+- `zs::Real`: The redshift of the source plane.
+- `β::Matrix{<:Real}`: The source plane brightness distribution.
 
 # Returns
 - `image_map`: The image plane map corresponding to the given extended source.
 """
-function get_image(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV, β::T) where T <: Matrix{<:RV}
+function get_image(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::Real, β::T) where T <: Matrix{<:Real}
    # Get the potential gradient
    ψx, ψy = get_deflection(cosmology, lens, θx, θy, zs)
 
@@ -695,7 +728,7 @@ end
 """
     get_critical_curve(cosmology::Cosmology.AbstractCosmology, 
                        lens::Lenses.AbstractLens, 
-                       θx::T, θy::T, zs::RV) where T <: Matrix{<:RV}
+                       θx::T, θy::T, zs::Real) where T <: Matrix{<:Real}
 Calculate critical curves in the image plane for a given multi-plane lens system with cosmology and
 source redshift. The function uses a contour-finding method to compute the critical curves by 
 finding ``det(A) = 0`` contours in the image plane, where ``A`` is the jacobian matrix of the lens 
@@ -704,14 +737,14 @@ mapping.
 # Arguments
 - `cosmology::Cosmology.AbstractCosmology`: Cosmology model.
 - `lens::Lenses.AbstractLens`: Multi-plane lens model.
-- `θx::Matrix{<:RV}`: The x-coordinate grid (in arcseconds).
-- `θy::Matrix{<:RV}`: The y-coordinate grid (in arcseconds).
-- `zs::RV`: The redshift of the source plane.
+- `θx::Matrix{<:Real}`: The x-coordinate grid (in arcseconds).
+- `θy::Matrix{<:Real}`: The y-coordinate grid (in arcseconds).
+- `zs::Real`: The redshift of the source plane.
 
 # Returns
 - `critical_curve`: A vector of vectors containing the critical curve coordinates (in arcseconds).
 """
-function get_critical_curve(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: Matrix{<:RV}
+function get_critical_curve(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::Real) where T <: Matrix{<:Real}
    # Get the jacobian components
    ψxx, ψyy, ψxy, ψyx = get_jacobian(cosmology, lens, θx, θy, zs)
 
@@ -728,7 +761,7 @@ end
 """
     get_caustic(cosmology::Cosmology.AbstractCosmology, 
                 lens::Lenses.AbstractLens, 
-                θx::T, θy::T, zs::RV) where T <: Matrix{<:RV}
+                θx::T, θy::T, zs::Real) where T <: Matrix{<:Real}
 Calculate caustics in the source plane for a given multi-plane lens system with cosmology and source
 redshift. The function first computes the critical curves in the image plane and then maps them to 
 the source plane using the lens equation to obtain the caustics.
@@ -736,14 +769,14 @@ the source plane using the lens equation to obtain the caustics.
 # Arguments
 - `cosmology::Cosmology.AbstractCosmology`: Cosmology model.
 - `lens::Lenses.AbstractLens`: Multi-plane lens model.
-- `θx::Matrix{<:RV}`: The x-coordinate grid (in arcseconds).
-- `θy::Matrix{<:RV}`: The y-coordinate grid (in arcseconds).
-- `zs::RV`: The redshift of the source plane.
+- `θx::Matrix{<:Real}`: The x-coordinate grid (in arcseconds).
+- `θy::Matrix{<:Real}`: The y-coordinate grid (in arcseconds).
+- `zs::Real`: The redshift of the source plane.
 
 # Returns
 - `caustics_curve`: A vector of vectors containing the caustic curve coordinates (in arcseconds).
 """
-function get_caustic(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::RV) where T <: Matrix{<:RV}
+function get_caustic(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, zs::Real) where T <: Matrix{<:Real}
    # Generate critical curves
    critical_curve = get_critical_curve(cosmology, lens, θx, θy, zs)
 
@@ -757,34 +790,6 @@ function get_caustic(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abstra
    end
 
    return caustics_curve
-end
-
-
-function _distances(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, zs::RV)
-   # Vector of all redshift (including observer and source)
-   z_all = [0; lens.z_d; zs]
-   
-   # Pre-compute distance ratios
-   n_p = lens.n_p
-   D_ij = zeros(n_p+2, n_p+2)
-   adis_ij = Matrix{Float64}(undef, n_p, n_p)
-   adis_is = Vector{Float64}(undef, n_p)
-
-   # Fill empty distance matrix
-   for i in 1:n_p+2
-      for j in i+1:n_p+2
-         D_ij[i, j] = Cosmology.angular_diameter_distance(cosmology, z_all[i], z_all[j])
-      end
-   end
-
-   # Fill distance ratio matrix and vector
-   for ni in 1:n_p
-      for nj in 1:ni-1
-         adis_ij[nj, ni] = D_ij[nj+1, ni+1] / D_ij[1, ni+1]
-      end
-      adis_is[ni] = D_ij[ni+1, n_p+2] / D_ij[1, n_p+2]
-   end
-   return D_ij, adis_ij, adis_is
 end
 
 end
