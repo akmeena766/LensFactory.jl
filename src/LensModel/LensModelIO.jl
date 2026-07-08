@@ -852,7 +852,7 @@ function _source_direct!(dict::Dict, cosmo::Cosmology.AbstractCosmology, observa
 end
 
 
-function _source_from_file!(dict::Dict, cosmo::Cosmology.AbstractCosmology, observation::Observation, params::Vector{Parameter})
+function _source_from_file!(dict::Dict, cosmo::Cosmology.AbstractCosmology, observation::Observation, params::Vector{Parameter}, sample_z::Symbol)
    # Get source dictionary from the full dictionary
    source_dict = dict[:source]
 
