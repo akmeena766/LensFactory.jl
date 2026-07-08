@@ -279,6 +279,12 @@ function logL_sourceplane_flux(model::ModelConfig,
          wsum  = 0.0
          dm = Vector{Float64}(undef, n)
          for i in 1:n
+            # Skip unmeasured images (marked with sigma <= 0)
+            if σm[i] <= 0.0
+               dm[i] = 0.0   # Placeholder, never used
+               continue
+            end
+
             d0 = detA[i]
 
             if abs(d0) < DETA_MIN
@@ -324,6 +330,10 @@ function logL_sourceplane_flux(model::ModelConfig,
          # Chi2 for this knot, with the source magnitude m_src profiled out
          χ2_knot = 0.0
          for i in 1:n
+            # Skip unmeasured images
+            if σm[i] <= 0.0
+               continue
+            end
             χ2_knot = χ2_knot + (dm[i] - m_src)^2 / σm[i]^2
          end
          χ2_total = χ2_total + χ2_knot
@@ -385,6 +395,12 @@ function logL_sourceplane_timedelay(model::ModelConfig,
          td_fit_approx = Vector{Float64}(undef, n)
          pref = constant_factor / adis_value
          for i in 1:n
+            # Skip unmeasured images (marked with sigma <= 0)
+            if σ_Δt[i] <= 0.0
+               td_fit_approx[i] = 0.0   # Placeholder, never used
+               continue
+            end
+
             βx_i, βy_i = β_ind[i]
             δβx = βx_model - βx_i
             δβy = βy_model - βy_i
@@ -401,6 +417,10 @@ function logL_sourceplane_timedelay(model::ModelConfig,
          # Chi2 for this knot, with the zero-point Δt_0 profiled out
          χ2_knot = 0.0
          for i in 1:n
+            # Skip unmeasured images
+            if σ_Δt[i] <= 0.0
+               continue
+            end
             χ2_knot = χ2_knot + (Δt_obs[i] - td_fit_approx[i] - Δt_0)^2 / σ_Δt[i]^2
          end
          χ2_total = χ2_total + χ2_knot

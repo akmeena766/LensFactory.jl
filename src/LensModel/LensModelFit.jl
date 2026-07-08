@@ -23,6 +23,7 @@ include("./AIES.jl")
 using .AIES
 
 using ..Constants
+using ..Cosmology
 using ..Lenses
 using ..LensModelIO
 using ..LensModelUtils
@@ -60,23 +61,27 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
       
       # Calculate flux likelihood
       if model.source_config.use_flux
-         logL_flux = Likelihood.logL_sourceplane_flux(model, adis, β_ind, β_mod, A_all)
+         # Deformation tensors at finite-difference shifted positions (for the magnification gradient)
+         A_xp_all, A_xm_all, A_yp_all, A_ym_all = LensModelUtils.lens_quantities_fd(model, lens_model)
+
+         logL_flux = Likelihood.logL_sourceplane_flux(model, adis, β_ind, β_mod, A_all,
+                                                      A_xp_all, A_xm_all, A_yp_all, A_ym_all,
+                                                      model.source_config.pixel_fd)
          logL = logL + logL_flux
       end
       
       # Calculate time delay likelihood
-      # if model.source_config.use_time_delay
-      z_d = model.Observation.z_d
-      
-      #    logL_td = Likelihood.logL_sourceplane_timedelay(model, adis, z_d, D_d, β_ind, β_mod, ψ_all, αx_all, αy_all)
-      #    logL = logL + logL_td
-      # end
+      if model.source_config.use_time_delay
+         # Lens redshift and angular-diameter distance, cached in Observation
+         # (cosmological parameters are always fixed - enforced at input reading)
+         z_d = model.observation.z_d
+         D_d = model.observation.D_d
+         
+         logL_td = Likelihood.logL_sourceplane_timedelay(model, adis, z_d, D_d, β_ind, β_mod, ψ_all, αx_all, αy_all)
+         logL = logL + logL_td
+      end
    elseif model.sampler.scheme == :ImagePlane
-      error("Image plane sampling is not implemented yet.")
-      
-      # Calculate deflection at image positions
-      _, αx_all, αy_all, A_all = LensModelUtils.lens_quantities(model, lens_model)
-      
+      error("Image plane sampling is not implemented yet.")      
    else
       error("Unsupported sampling scheme: $(model.sampler.scheme)")
    end
@@ -232,7 +237,7 @@ end
 # --------------------------------------------------------------------------------------------------
 # Run MCMC
 # --------------------------------------------------------------------------------------------------
-function get_unique_seeds(results::Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, n_chains::Int64, tol::Float64=1E-2)
+function get_unique_seeds(results::Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, n_walkers::Int64, tol::Float64=1E-2)
    # Sort by log-posterior (highest/best first)
    # results should be a vector of structs/objects with .θ and .f (log-posterior)
    sorted_res = sort(results, by = x -> x.f, rev = true)
@@ -256,11 +261,13 @@ function get_unique_seeds(results::Vector{@NamedTuple{θ::Vector{Float64}, f::Fl
       end
 
       # Exit if we have reached the required number of chains
-      length(seeds) >= n_chains && break
+      if length(seeds) >= n_walkers
+         break
+      end
    end
 
    # Jitter fill if we are short on unique peaks
-   while length(seeds) < n_chains
+   while length(seeds) < n_walkers
       push!(seeds, seeds[1] .+ (abs.(seeds[1]) .* 1e-3 .+ 1e-5) .* randn(length(seeds[1])))
    end
 
@@ -268,7 +275,7 @@ function get_unique_seeds(results::Vector{@NamedTuple{θ::Vector{Float64}, f::Fl
    return seeds
 end
 
-function get_best_seeds(results::Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, n_chains::Int64; jitter::Float64=0.001)
+function get_best_seeds(results::Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, n_walkers::Int64; jitter::Float64=0.001)
    # Sort by log-posterior (highest/best first)
    # results should be a vector of structs/objects with .θ and .f (log-posterior)
    sorted_res = sort(results, by = x -> x.f, rev = true)
@@ -280,7 +287,7 @@ function get_best_seeds(results::Vector{@NamedTuple{θ::Vector{Float64}, f::Floa
     # large absolute values (like v_d ≈ 250) get scaled appropriately.
     seeds = [
         sorted_res[1].θ .+ (jitter .* abs.(sorted_res[1].θ) .* randn(n_params)) 
-        for _ in 1:n_chains
+        for _ in 1:n_walkers
     ]
     
     return seeds
@@ -303,10 +310,11 @@ function run_mcmc(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol}, <:Re
    mcmc = model.sampler.mcmc
 
    # Initialize seeds (No optimizer → random initial parameters)
+   n_walkers = mcmc.config.n_walkers
    seeds = if θ_start !== nothing
-      get_best_seeds(θ_start, mcmc.n_chains)
+      get_best_seeds(θ_start, n_walkers)
    else
-      [LensModelUtils.θ_random(model) for _ in 1:mcmc.n_chains]
+      [LensModelUtils.θ_random(model) for _ in 1:n_walkers]
    end
 
    return run_mcmc(model, mcmc.config, param_ref, seeds, verbose)

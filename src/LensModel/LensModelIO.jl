@@ -43,12 +43,18 @@ abstract type AbstractMCMCConfig <: AbstractLensConfig end
 
 
 # --------------------------------------------------------------------------------------------------
+# NOTE: Structs use @kwdef for keyword construction but carry NO input defaults - every field is a
+# required keyword. All default values are defined in the IO reader functions below (via get(...)).
+# --------------------------------------------------------------------------------------------------
+
+# --------------------------------------------------------------------------------------------------
 # Abstract type: Observation
 # --------------------------------------------------------------------------------------------------
 @kwdef struct Observation <: AbstractLensConfig
    modeler::String
    lens::String
    z_d::Float64
+   D_d::Float64
    reference::NTuple{2,Float64}
    pixel_scale::Float64
    FOV::NTuple{2,Float64}
@@ -95,21 +101,24 @@ end
 
 @kwdef struct LensConfig <: AbstractLensConfig
    components::Vector{LensComponent}
-   galaxies::Union{Nothing, GalaxyComponent} = nothing
-   scaling::Union{Nothing, ScalingRelation}  = nothing
+   galaxies::Union{Nothing, GalaxyComponent}
+   scaling::Union{Nothing, ScalingRelation}
 end
 
 # --------------------------------------------------------------------------------------------------
 # Abstract type: Source model
 # --------------------------------------------------------------------------------------------------
 @kwdef struct Knot <: AbstractLensConfig
-   x::Vector{Float64}
-   y::Vector{Float64}
-   σx::Vector{Float64}
-   σy::Vector{Float64}
-   σθ::Vector{Float64}
-   use_parity::Bool = false
-   parity::Vector{Int64} = []
+   x::Vector{Float64}    # Measured x-position
+   y::Vector{Float64}    # Measured y-position
+   σx::Vector{Float64}   # Positional error along semi-major axis
+   σy::Vector{Float64}   # Positional error along semi-minor axis
+   σθ::Vector{Float64}   # Positional error ellipse PA (CCW wrt x-axis)
+   parity::Vector{Int64} # Parity vector
+   m::Vector{Float64}    # Observed image magnitudes
+   σm::Vector{Float64}   # Magnitude errors
+   td::Vector{Float64}   # Observed time delays (days; arbitrary zero-point)
+   σ_td::Vector{Float64} # Time-delay errors (days)
 end
 
 @kwdef struct Source <: AbstractLensConfig
@@ -118,8 +127,11 @@ end
 
 @kwdef struct SourceConfig <: AbstractLensConfig
    sources::Vector{Source}
-   use_parity::Bool      = false
-   parity_force::Float64 = 0.0
+   use_parity::Bool
+   parity_force::Float64
+   use_flux::Bool
+   use_time_delay::Bool
+   pixel_fd::Float64
 end
 
 
@@ -127,22 +139,22 @@ end
 # Abstract type: Optimizer
 # --------------------------------------------------------------------------------------------------
 @kwdef struct NMConfig <: AbstractOptimizerConfig
-   max_iter::Int64    = 10000
-   tolerance::Float64 = 1e-6
+   max_iter::Int64
+   tolerance::Float64
 end
 
 @kwdef struct GDConfig <: AbstractOptimizerConfig
-   max_iter::Int64        = 10000
-   learning_rate::Float64 = 0.1
-   tolerance::Float64     = 1e-6
+   max_iter::Int64
+   learning_rate::Float64
+   tolerance::Float64
 end
 
 @kwdef struct OptimizerConfig <: AbstractOptimizerConfig
-   method::Symbol     = :NM
-   run_mode::Symbol   = :random
-   max_runs::Int64    = 100
-   tolerance::Float64 = 1e-3
-   config::AbstractOptimizerConfig = NMConfig()
+   method::Symbol
+   run_mode::Symbol
+   max_runs::Int64
+   tolerance::Float64
+   config::AbstractOptimizerConfig
 end
 
 
@@ -151,27 +163,28 @@ end
 # --------------------------------------------------------------------------------------------------
 # Metropolis-Hastings (MH) sampler
 @kwdef struct MHConfig <: AbstractMCMCConfig
-   n_steps::Int = 10000
-   n_adapt::Int = div(n_steps, 10)
+   n_walkers::Int64
+   n_steps::Int64
+   n_adapt::Int64
 end
 
 # Affine-Invariant Ensemble Sampler (AIES)
 @kwdef struct AIESConfig <: AbstractMCMCConfig
-   n_steps::Int64 = 100000
-   a::Float64     = 2.0
+   n_walkers::Int64
+   n_steps::Int64
+   a::Float64
 end
 
 @kwdef struct MCMCConfig <: AbstractMCMCConfig
-   method::Symbol  = :AIES
-   n_chains::Int64 = 1
-   config::AbstractMCMCConfig = MHConfig()
+   method::Symbol
+   config::AbstractMCMCConfig
 end
 
 @kwdef struct SamplerConfig <: AbstractLensConfig
-   scheme::Symbol = :SourcePlane
-   verbose::Bool  = true
-   optimizer::Union{Nothing, AbstractOptimizerConfig} = nothing
-   mcmc::Union{Nothing, AbstractMCMCConfig}           = nothing
+   scheme::Symbol
+   verbose::Bool
+   optimizer::Union{Nothing, AbstractOptimizerConfig}
+   mcmc::Union{Nothing, AbstractMCMCConfig}
 end
 
 
@@ -256,22 +269,6 @@ function _zs_to_adis(cosmo::Cosmology.AbstractCosmology, z_d::RV, r::RV, l::RV, 
    return adis_r, adis_l, adis_u
 end
 
-# Infer method
-function _infer_method(dict::Dict, meta_keys::Set{Symbol})
-   found = nothing
-   for k in keys(dict)
-      k in meta_keys && continue
-      if found !== nothing 
-         error("Multiple modeling methods found. Please clarify.")
-      end
-      found = k
-   end
-   if found === nothing
-      error("No modeling method found.")
-   end
-   return found
-end
-
 # Extract parameter values
 function _extract_param_range(x::Union{Int64, Float64, Dict})::Tuple{Real, Real, Real}
    # Extract parameter values in case of Int64 or Float64
@@ -305,7 +302,7 @@ end
 # --------------------------------------------------------------------------------------------------
 # ---------------- Read Observation ----------------------------------------------------------------
 # --------------------------------------------------------------------------------------------------
-function _observation(dict::Dict)
+function _observation(dict::Dict,  cosmo::Cosmology.AbstractCosmology)
    # Read observation dict
    obs_dict = dict[:observation]
 
@@ -330,11 +327,15 @@ function _observation(dict::Dict)
       error("Unknown type of FOV. Allowed types are Int64, Float64, Vector.")
    end
 
+   # Angular diameter distance to the lens - computed once here so it is not recalculated
+   D_d = Cosmology.angular_diameter_distance(cosmo, 0.0, Float64(obs_dict[:z_d]))
+
    # Construct struct with the given inputs
    obs = Observation(
       modeler     = get(obs_dict, :modeler, "LensFactory"),
       lens        = get(obs_dict, :lens, "WhoKnows"),
       z_d         = obs_dict[:z_d],
+      D_d         = D_d,
       reference   = ref,
       pixel_scale = obs_dict[:pixel_scale],
       FOV         = FOV
@@ -358,6 +359,14 @@ function _cosmology!(input_dict::Dict, params::Vector{Parameter})
       for param in cosmo_params
          if haskey(cosmo_dict, param)
             r, l, u = _extract_param_range(cosmo_dict[param])
+
+            # Free cosmological parameters are not supported (yet): distances cached in
+            # Observation and lens D_d / cosmology objects are fixed at the reference cosmology,
+            # so freeing them would give an inconsistent model.
+            if l != u
+               error("Cosmological parameter ** $param ** cannot be free (range given). " *
+                     "Free cosmological parameters are not supported yet.")
+            end
          else
             # Use default cosmology value
             default_value = getfield(cosmology, param)
@@ -386,7 +395,7 @@ const REQUIRE_ADD     = Set([:PointLens, :PlummerLens, :GaussianLens, :SersicLen
                              :aNFWLens, :eHernquistMDLens, :eNFWMDLens, 
                              :MultiPlummerLens, :MultiGaussianLens])
 const REQUIRE_SCALING = Set([:MultiPJELens])
-function _lensmodel!(dict::Dict, params::Vector{Parameter}, observation::Observation, Dol_ref::Float64)
+function _lensmodel!(dict::Dict, params::Vector{Parameter}, observation::Observation)
    lens_dict = dict[:lens_model]
 
    # Make sure that total number of lenses is greater than zero
@@ -419,7 +428,11 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter}, observation::Observa
 
          # Add distance parameters
          if name ∈ REQUIRE_ADD
-            push!(params, Parameter(owner=lens_id, name=:D_d, refer=Dol_ref, lower=Dol_ref, upper=Dol_ref))
+            push!(params, Parameter(owner = lens_id, 
+                                    name  = :D_d, 
+                                    refer = observation.D_d, 
+                                    lower = observation.D_d, 
+                                    upper = observation.D_d))
          end
 
          if name ∉ REQUIRE_SCALING
@@ -456,7 +469,7 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter}, observation::Observa
             file_name = indi_lens_dict[:galaxy_file]
 
             # Load catalog and create the GalaxyComponent
-            catalog_data = readdlm(file_name)
+            catalog_data = readdlm(file_name, comments=true, comment_char='#')
             catalog_data = Float64.(catalog_data)
 
             # Check if a valid (RA, Dec) is provided as reference or (0, 0) is used
@@ -513,6 +526,54 @@ end
 # --------------------------------------------------------------------------------------------------
 # ---------------- Read Source Model ---------------------------------------------------------------
 # --------------------------------------------------------------------------------------------------  
+# Convert a YAML list entry into a Vector{Float64} / Vector{Int64}. Scalars are deliberately
+# rejected: measurements and errors must be fully specified, one entry per image, even if identical.
+@inline _as_float_vec(x::AbstractVector) = Float64.(x)
+@inline _as_float_vec(x::Any) = error("Expected a list with one entry per image, got: ** $x **")
+
+@inline _as_int_vec(x::AbstractVector) = Int64.(x)
+@inline _as_int_vec(x::Any) = error("Expected a list with one entry per image, got: ** $x **")
+
+# Read an optional per-knot measurement (value + error), e.g. flux (magnitudes) or time delays.
+# Both quantities are RELATIVE measurements (the source magnitude / delay zero-point is profiled
+# out in the likelihood), therefore:
+#   - One entry per image is required, aligned with the image order of (x, y).
+#   - Images without a measurement are marked with error <= 0 (their value entry is ignored).
+#   - At least two measured images are required; a single measurement carries no information
+#     and the knot is treated as having no measurement (with a warning).
+# Returns a pair of empty vectors when the measurement is absent or uninformative.
+function _knot_measurement(knot_dict::Dict, val_key::Symbol, err_key::Symbol, n_img::Int64, i::Int64, k::Int64)
+   # Measurement not provided --> return empty vectors
+   if !haskey(knot_dict, val_key)
+      return Float64[], Float64[]
+   end
+
+   # Error entry is required whenever the value entry is present
+   if !haskey(knot_dict, err_key)
+      error("Missing ** $err_key ** for ** $val_key ** in source-$i, knot-$k")
+   end
+
+   v = _as_float_vec(knot_dict[val_key])
+   σ = _as_float_vec(knot_dict[err_key])
+
+   # One entry per image, always
+   if length(v) != n_img || length(σ) != n_img
+      error("** $val_key / $err_key ** must have one entry per image ($n_img) in source-$i, knot-$k. " *
+            "Mark images without a measurement using $err_key <= 0.")
+   end
+
+   # Count measured images (error > 0)
+   n_meas = count(>(0.0), σ)
+   if n_meas == 0
+      return Float64[], Float64[]
+   elseif n_meas == 1
+      @warn "Only one measured image for ** $val_key ** in source-$i, knot-$k. Relative " *
+            "measurements need at least two measured images - this knot will be ignored."
+      return Float64[], Float64[]
+   end
+   return v, σ
+end
+
 function _source_direct!(dict::Dict, cosmo::Cosmology.AbstractCosmology, observation::Observation, params::Vector{Parameter})
    # Get source dictionary from the full dictionary
    source_dict = dict[:source]
@@ -523,18 +584,16 @@ function _source_direct!(dict::Dict, cosmo::Cosmology.AbstractCosmology, observa
       error("Total number of sources must be greater than zero.")
    end
 
-   # Check if parity is enforced
-   use_parity = get!(source_dict, :use_parity, false)
-   parity_force = 0.0
-   if use_parity
-      parity_force = source_dict[:parity_force]
-   end
-
    # Get number of sources
    n_source = source_dict[:total_sources]
 
    # Get reference lens redshift
    z_d = dict[:observation][:z_d]
+
+   # Track whether any knot carries flux / time-delay measurements
+   any_parity = false
+   any_flux   = false
+   any_td     = false
 
    # Run over sources
    sources = Vector{Source}(undef, n_source)
@@ -548,8 +607,12 @@ function _source_direct!(dict::Dict, cosmo::Cosmology.AbstractCosmology, observa
       # Convert redshift to adis
       adis_r, adis_l, adis_u = _zs_to_adis(cosmo, z_d, r, l, u)
 
-      # Add redshift parameter to the reference, lower, and upper vectors
-      push!(params, Parameter(owner=source_id, name=Symbol(:adis, i), refer=adis_r, lower=adis_l, upper=adis_u))
+      # Add adis parameter to the reference, lower, and upper vectors
+      push!(params, Parameter(owner = source_id, 
+                              name  = Symbol(:adis, i), 
+                              refer = adis_r, 
+                              lower = adis_l, 
+                              upper = adis_u))
 
       # Run over knots
       n_knot = indi_source_dict[:total_knots]
@@ -584,34 +647,98 @@ function _source_direct!(dict::Dict, cosmo::Cosmology.AbstractCosmology, observa
             error("Inconsistent knot position and error dimensions in source-$i, knot-$k")
          end
 
-         # Read knot parity if use_parity is true and parity is present
-         if use_parity && haskey(indi_source_dict[knot_id], :parity)
+         # Read optional parity values: one entry per image, +1 / -1, with 0 marking images
+         # without parity information. Parity is an absolute per-image quantity, so a single
+         # measured image is already informative (no minimum count).
+         p = zeros(Int64, length(x))
+         if haskey(indi_source_dict[knot_id], :parity)
             p_temp = indi_source_dict[knot_id][:parity]
             if length(p_temp) != length(x)
-               error("Inconsistent knot parity dimensions in source-$i, knot-$k")
+               error("** parity ** must have one entry per image ($(length(x))) in source-$i, knot-$k. " *
+                     "Mark images without parity information with 0.")
             end
-
-            # Check if all values are 1 or -1. otherwise set knot_parity to false
-            if all(abs.(p_temp) .== 1)
-               knot_parity = true
-               p = p_temp
-            else
-               knot_parity = false
-               p = 0 .* p_temp
+            if !all(v -> v in (-1, 0, 1), p_temp)
+               error("** parity ** values must be +1, -1, or 0 (no information) in source-$i, knot-$k")
             end
-         else
-            knot_parity = false
-            p = 0 .* x
+            p = p_temp
+         end
+         if any(!=(0), p)
+            any_parity = true
          end
 
+         # Read optional flux measurements (magnitudes) and their errors
+         m, σm = _knot_measurement(indi_source_dict[knot_id], :mag, :sigma_mag, length(x), i, k)
+         if !isempty(m)
+            any_flux = true
+         end
+
+         # Read optional time-delay measurements (days, arbitrary zero-point) and their errors
+         td, σ_td = _knot_measurement(indi_source_dict[knot_id], :td, :sigma_td, length(x), i, k)
+         if !isempty(td)
+            any_td = true
+         end
 
          # Convert to arcsec if reference is not (0, 0)
          x_arcsec, y_arcsec = _to_arcsec(observation, x, y)
-         knots[k] = Knot(x=x_arcsec, σx=σx, y=y_arcsec, σy=σy, σθ=deg2rad.(σθ), use_parity=knot_parity, parity=p)
+         knots[k] = Knot(x      = x_arcsec, 
+                         σx     = σx, 
+                         y      = y_arcsec, 
+                         σy     = σy, 
+                         σθ     = deg2rad.(σθ), 
+                         parity = p,
+                         m      = m, 
+                         σm     = σm, 
+                         td     = td, 
+                         σ_td   = σ_td)
       end
       sources[i] = Source(knots=knots)
    end
-   return SourceConfig(sources=sources, use_parity=use_parity, parity_force=parity_force)
+   # Enable parity / flux / time-delay terms if data is present, unless explicitly disabled in the input.
+   # Parity
+   if get(source_dict, :use_parity, false)
+      use_parity = any_parity
+   else
+      use_parity = false
+   end
+
+   # Flux
+   if get(source_dict, :use_flux, false)
+      use_flux = any_flux
+   else
+      use_flux = false
+   end
+
+   # Time Delay
+   if get(source_dict, :use_time_delay, false)
+      use_td = any_td
+   else
+      use_td = false
+   end
+
+   if get(source_dict, :use_parity, false) === true && !any_parity
+      @warn "use_parity is set but no knot provides ** parity ** values - parity term disabled."
+   end
+
+   if get(source_dict, :use_flux, false) === true && !any_flux
+      @warn "use_flux is set but no knot provides ** mag / sigma_mag ** - flux chi2 disabled."
+   end
+
+   if get(source_dict, :use_time_delay, false) === true && !any_td
+      @warn "use_time_delay is set but no knot provides ** td / sigma_td ** - time-delay chi2 disabled."
+   end
+
+   # Parity penalty strength (default defined here, override with parity_force in the source section)
+   parity_force = Float64(get(source_dict, :parity_force, 1000.0))
+
+   # Finite-difference step (arcsec) used in the flux chi2 magnification correction
+   pixel_fd = Float64(get(source_dict, :pixel_fd, observation.pixel_scale))
+
+   return SourceConfig(sources        = sources, 
+                       use_parity     = use_parity, 
+                       parity_force   = parity_force,
+                       use_flux       = use_flux, 
+                       use_time_delay = use_td, 
+                       pixel_fd       = pixel_fd)
 end
 
 
@@ -621,23 +748,36 @@ function _source_from_file!(dict::Dict, cosmo::Cosmology.AbstractCosmology, obse
 
    # Get file name
    file_name = source_dict[:source_file]
-
-   file_data = readdlm(file_name)
+   file_data = readdlm(file_name, comments=true, comment_char='#')
    file_data = Float64.(file_data)
 
    # --- Parameters directly read from the YAML file -----------------------------------------------
    # Get total number of sources from first column in file
    n_source = Int64(maximum(file_data[:, 1]))
 
-   # Check if parity is enforced
-   use_parity = get!(source_dict, :use_parity, false)
-   parity_force = 0.0
-   if use_parity
-      parity_force = source_dict[:parity_force]
-   end
-
    # Get reference lens redshift
    z_d = dict[:observation][:z_d]
+
+   # Number of columns in the source file
+   # Column 1 : source id, 
+   # Column 2 : knot id
+   # Column 3 : x
+   # Column 4 : y
+   # Column 5 : z_s
+   # Column 6 : sigma_x
+   # Column 7 : sigma_y
+   # Column 8 : sigma_theta
+   # Column 9 : (optional) parity (parity: +1 / -1, with 0 marking images without parity information)
+   # Column 10: (optional) magnitude
+   # Column 11: (optional) sigma_mag (sigma_mag <= 0 --> no flux data for knot)
+   # Column 12: (optional) td
+   # Column 13: (optional) sigma_td (sigma_td  <= 0 --> no time-delay data for knot)
+   n_col = size(file_data, 2)
+
+   # Track whether any knot carries parity / flux / time-delay measurements
+   any_parity = false
+   any_flux   = false
+   any_td     = false
 
    # --- Parameters read from the source file ------------------------------------------------------
    sources = Vector{Source}(undef, n_source)
@@ -661,14 +801,22 @@ function _source_from_file!(dict::Dict, cosmo::Cosmology.AbstractCosmology, obse
          adis_r, adis_l, adis_u = _zs_to_adis(cosmo, z_d, r, l, u)
 
          # Add redshift parameter to the reference, lower, and upper vectors
-         push!(params, Parameter(owner=source_id, name=Symbol(:adis, i), refer=adis_r, lower=adis_l, upper=adis_u))
+         push!(params, Parameter(owner = source_id, 
+                                 name  = Symbol(:adis, i), 
+                                 refer = adis_r, 
+                                 lower = adis_l, 
+                                 upper = adis_u))
       else
          # Get the source redshift from the file; treat it as fixed (lower == upper == refer)
          z_s = source_data[1, 5]
          adis_r, adis_l, adis_u = _zs_to_adis(cosmo, z_d, z_s, z_s, z_s)
 
          # Add redshift parameter to the reference, lower, and upper vectors
-         push!(params, Parameter(owner=source_id, name=Symbol(:adis, i), refer=adis_r, lower=adis_l, upper=adis_u))
+         push!(params, Parameter(owner = source_id, 
+                                 name  = Symbol(:adis, i), 
+                                 refer = adis_r, 
+                                 lower = adis_l, 
+                                 upper = adis_u))
       end
 
       # Run over knots
@@ -690,30 +838,112 @@ function _source_from_file!(dict::Dict, cosmo::Cosmology.AbstractCosmology, obse
          σy = knot_data[:, 7]
          σθ = knot_data[:, 8]
 
-         # Read knot parity if use_parity is true otherwise assign zero
-         if use_parity
-            # Get parity values from file
+         # Read optional parity values from column 9: +1 / -1, with 0 marking images without
+         # parity information. A single measured image is already informative (absolute quantity).
+         p = zeros(Int64, length(x))
+         if n_col >= 9
             p_temp = knot_data[:, 9]
-            # Check if all values are 1 or -1. otherwise set knot_parity to false
-            if all(abs.(p_temp) .== 1)
-               knot_parity = true
-               p = p_temp
-            else
-               knot_parity = false
-               p = 0 .* p_temp
+            if !all(v -> v in (-1.0, 0.0, 1.0), p_temp)
+               error("** parity ** values (column 9) must be +1, -1, or 0 (no information) in source-$i, knot-$k")
             end
-         else
-            knot_parity = false
-            p = 0 .* x
+            p = Int64.(p_temp)
+         end
+         if any(!=(0), p)
+            any_parity = true
+         end
+         
+         # Read optional flux measurements (magnitudes). sigma <= 0 marks unmeasured images;
+         # at least two measured images are required (relative measurement).
+         m  = Float64[]
+         σm = Float64[]
+         if n_col >= 11
+            σm_temp = knot_data[:, 11]
+            n_meas  = count(>(0.0), σm_temp)
+            if n_meas >= 2
+               m  = knot_data[:, 10]
+               σm = σm_temp
+               any_flux = true
+            elseif n_meas == 1
+               @warn "Only one measured image for ** mag ** in source-$i, knot-$k - ignored (needs >= 2)."
+            end
+         end
+
+         # Read optional time-delay measurements (days). Same rules as flux above.
+         td   = Float64[]
+         σ_td = Float64[]
+         if n_col >= 13
+            σtd_temp = knot_data[:, 13]
+            n_meas   = count(>(0.0), σtd_temp)
+            if n_meas >= 2
+               td   = knot_data[:, 12]
+               σ_td = σtd_temp
+               any_td = true
+            elseif n_meas == 1
+               @warn "Only one measured image for ** td ** in source-$i, knot-$k - ignored (needs >= 2)."
+            end
          end
 
          # Convert to arcsec if reference is not (0, 0)
          x_arcsec, y_arcsec = _to_arcsec(observation, x, y)
-         knots[k] = Knot(x=x_arcsec, σx=σx, y=y_arcsec, σy=σy, σθ=deg2rad.(σθ), use_parity=knot_parity, parity=p)
+         knots[k] = Knot(x      = x_arcsec, 
+                         σx     = σx, 
+                         y      = y_arcsec, 
+                         σy     = σy, 
+                         σθ     = deg2rad.(σθ), 
+                         parity = p,
+                         m      = m, 
+                         σm     = σm, 
+                         td     = td, 
+                         σ_td   = σ_td)
       end
       sources[i] = Source(knots=knots)
    end
-   return SourceConfig(sources=sources, use_parity=use_parity, parity_force=parity_force)
+   # Enable parity / flux / time-delay terms if data is present, unless explicitly disabled in the input.
+   # Parity
+   if get(source_dict, :use_parity, false)
+      use_parity = any_parity
+   else
+      use_parity = false
+   end
+
+   # Flux
+   if get(source_dict, :use_flux, false)
+      use_flux = any_flux
+   else
+      use_flux = false
+   end
+
+   # Time Delay
+   if get(source_dict, :use_time_delay, false)
+      use_time_delay = any_td
+   else
+      use_time_delay = false
+   end
+
+   if get(source_dict, :use_parity, false) === true && !any_parity
+      @warn "use_parity is set but no knot provides ** parity ** values - parity term disabled."
+   end
+
+   if get(source_dict, :use_flux, false) === true && !any_flux
+      @warn "use_flux is set but no knot provides ** mag / sigma_mag ** - flux chi2 disabled."
+   end
+
+   if get(source_dict, :use_time_delay, false) === true && !any_td
+      @warn "use_time_delay is set but no knot provides ** td / sigma_td ** - time-delay chi2 disabled."
+   end
+
+   # Parity penalty strength (default defined here, override with parity_force in the source section)
+   parity_force = Float64(get(source_dict, :parity_force, 1000.0))
+
+   # Finite-difference step (arcsec) used in the flux chi2 magnification correction
+   pixel_fd = Float64(get(source_dict, :pixel_fd, observation.pixel_scale))
+
+   return SourceConfig(sources        = sources, 
+                       use_parity     = use_parity, 
+                       parity_force   = parity_force,
+                       use_flux       = use_flux, 
+                       use_time_delay = use_time_delay, 
+                       pixel_fd       = pixel_fd)
 end
 
 function _source!(dict::Dict, cosmo::Cosmology.AbstractCosmology, observation::Observation, params::Vector{Parameter})
@@ -735,6 +965,23 @@ end
 # ---------------- Read Optimizer ------------------------------------------------------------------
 # --------------------------------------------------------------------------------------------------
 const OPTIMIZER_META_KEYS = Set([:enabled, :convergence])
+
+# Infer method
+function _infer_method(dict::Dict, meta_keys::Set{Symbol})
+   found = nothing
+   for k in keys(dict)
+      k in meta_keys && continue
+      if found !== nothing 
+         error("Multiple modeling methods found. Please clarify.")
+      end
+      found = k
+   end
+   if found === nothing
+      error("No modeling method found.")
+   end
+   return found
+end
+
 function _optimizer!(sampling_dict::Dict)
    optimizer = get(sampling_dict, :optimizer, nothing)
 
@@ -745,30 +992,54 @@ function _optimizer!(sampling_dict::Dict)
 
    # Infer optimizer method from keys
    method = _infer_method(optimizer, OPTIMIZER_META_KEYS)
+
+   # Method section may be empty (e.g. "NM:" with nothing below it) --> use all defaults
    config = optimizer[method]
+   if config === nothing 
+      config = Dict{Symbol,Any}()
+   end
 
    algorithm_config =
       if method == :NM
-         NMConfig(; config...)
+         NMConfig(
+            max_iter  = Int64(get(config, :max_iter, 10000)),
+            tolerance = Float64(get(config, :tolerance, 1e-6))
+         )
       elseif method == :GD
-         GDConfig(; config...)
+         GDConfig(
+            max_iter      = Int64(get(config, :max_iter, 10000)),
+            learning_rate = Float64(get(config, :learning_rate, 0.1)),
+            tolerance     = Float64(get(config, :tolerance, 1e-6))
+         )
       else
          error("Unknown optimizer method: $method")
       end
    
-   # Convergence parameters
+   # Convergence parameters (defaults defined here)
    convergence = get(optimizer, :convergence, Dict{Symbol,Any}())
+   if convergence === nothing
+      convergence = Dict{Symbol,Any}()
+   end
+
    if haskey(convergence, :run_mode)
       convergence[:run_mode] = Symbol(convergence[:run_mode])
    end
 
-   return OptimizerConfig(; method = method, config=algorithm_config, convergence...)
+   run_mode  = Symbol(get(convergence, :run_mode, :random))
+   max_runs  = Int64(get(convergence, :max_runs, 100))
+   tolerance = Float64(get(convergence, :tolerance, 1e-3))
+
+   return OptimizerConfig(method    = method, 
+                          run_mode  = run_mode,
+                          max_runs  = max_runs,
+                          tolerance = tolerance,
+                          config    = algorithm_config)
 end
 
 # --------------------------------------------------------------------------------------------------
 # ---------------- Read MCMC -----------------------------------------------------------------------
 # --------------------------------------------------------------------------------------------------
-const MCMC_META_KEYS = Set([:enabled, :n_chains])
+const MCMC_META_KEYS = Set([:enabled])
 function _mcmc!(sampling_dict::Dict)
    mcmc = get(sampling_dict, :mcmc, nothing)
 
@@ -779,25 +1050,36 @@ function _mcmc!(sampling_dict::Dict)
 
    # Infer mcmc method from keys
    method = _infer_method(mcmc, MCMC_META_KEYS)
+   
+   # Method section may be empty (e.g. "AIES:" with nothing below it) --> use all defaults
    config = mcmc[method]
+   if config === nothing
+      config = Dict{Symbol,Any}()
+   end
 
    algorithm_config =
       if method == :MH
-         MHConfig(; config...)
+         n_steps = Int64(get(config, :n_steps, 10000))
+         MHConfig(
+            n_walkers = Int64(get(config, :n_walkers, 1)),
+            n_steps   = n_steps,
+            n_adapt   = Int64(get(config, :n_adapt, div(n_steps, 10)))
+         )
       elseif method == :AIES
-         AIESConfig(; config...)
+         AIESConfig(
+            n_walkers = Int64(get(config, :n_walkers, 100)),
+            n_steps   = Int64(get(config, :n_steps, 100000)),
+            a         = Float64(get(config, :a, 2.0))
+         )
       else
          error("Unknown MCMC method: $method")
       end
    
-   extra = Dict{Symbol,Any}()
-   haskey(mcmc, :n_chains) && (extra[:n_chains] = mcmc[:n_chains])
-
-   return MCMCConfig(; method = method, config = algorithm_config, extra...)
+   return MCMCConfig(method = method, config = algorithm_config)
 end
 
 # Internal function: Process Lens Model section
-const SAMPLING_SCHEMES = Set([:SourcePlane, :ImagePlane_Fast])
+const SAMPLING_SCHEMES = Set([:SourcePlane, :ImagePlane])
 function _sampling!(dict::Dict)
    sampling_dict = dict[:sampling]
 
@@ -837,17 +1119,14 @@ function _read_input(filename::AbstractString)
    # Define reference, lower, and upper vectors
    params = Parameter[]
 
-   # Get basic observation details
-   observation = _observation(dict)
-
    # Get cosmology and its parameters
    cosmology = _cosmology!(dict, params)
 
-   # Calculate reference angular diameter distance
-   Dol_ref = Cosmology.angular_diameter_distance(cosmology, 0.0, observation.z_d)
+   # Get basic observation details
+   observation = _observation(dict, cosmology)
 
    # Get lens model and its parameters
-   lens_config = _lensmodel!(dict, params, observation, Dol_ref)
+   lens_config = _lensmodel!(dict, params, observation)
 
    # Get source model and its parameters
    source_config = _source!(dict, cosmology, observation, params)

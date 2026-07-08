@@ -26,6 +26,7 @@ export param_dict
 export adis_current
 export build_lens
 export lens_quantities
+export lens_quantities_fd
 
 
 # --------------------------------------------------------------------------------------------------
@@ -283,6 +284,64 @@ function lens_quantities(model::ModelConfig, lens::Lenses.AbstractLens)
       end
    end
    return ψ_all, αx_all, αy_all, A_all
+end
+
+
+# --------------------------------------------------------------------------------------------------
+# Deformation tensors at finite-difference shifted positions (needed for the flux chi2)
+# Computed only for knots that carry flux measurements; other entries hold empty vectors.
+# --------------------------------------------------------------------------------------------------
+function lens_quantities_fd(model::ModelConfig, lens::Lenses.AbstractLens)
+   # Count the total number of knots in the lens model
+   n_knots = sum(length(s.knots) for s in model.source_config.sources)
+
+   # Finite-difference step (arcsec)
+   h_fd = model.source_config.pixel_fd
+
+   # Allocate outputs
+   A_xp_all = Vector{NTuple{4, Vector{Float64}}}(undef, n_knots)
+   A_xm_all = Vector{NTuple{4, Vector{Float64}}}(undef, n_knots)
+   A_yp_all = Vector{NTuple{4, Vector{Float64}}}(undef, n_knots)
+   A_ym_all = Vector{NTuple{4, Vector{Float64}}}(undef, n_knots)
+
+   # Placeholder for knots without flux measurements
+   empty_A = (Float64[], Float64[], Float64[], Float64[])
+
+   kid = 1
+   for src in model.source_config.sources
+      for knot in src.knots
+         # Skip knots without flux measurements (kid must still advance)
+         if isempty(knot.m)
+            A_xp_all[kid] = empty_A
+            A_xm_all[kid] = empty_A
+            A_yp_all[kid] = empty_A
+            A_ym_all[kid] = empty_A
+            kid = kid + 1
+            continue
+         end
+
+         # One image system knot positions
+         x = knot.x
+         y = knot.y
+
+         # Deformation tensors at the four shifted positions
+         ψxx, ψyy, ψxy = Lenses.get_jacobian(lens, x .+ h_fd, y)
+         A_xp_all[kid] = (ψxx, ψxy, copy(ψxy), ψyy)
+
+         ψxx, ψyy, ψxy = Lenses.get_jacobian(lens, x .- h_fd, y)
+         A_xm_all[kid] = (ψxx, ψxy, copy(ψxy), ψyy)
+
+         ψxx, ψyy, ψxy = Lenses.get_jacobian(lens, x, y .+ h_fd)
+         A_yp_all[kid] = (ψxx, ψxy, copy(ψxy), ψyy)
+
+         ψxx, ψyy, ψxy = Lenses.get_jacobian(lens, x, y .- h_fd)
+         A_ym_all[kid] = (ψxx, ψxy, copy(ψxy), ψyy)
+
+         # Increment
+         kid = kid + 1
+      end
+   end
+   return A_xp_all, A_xm_all, A_yp_all, A_ym_all
 end
 
 end
