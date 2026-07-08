@@ -711,7 +711,7 @@ function _knot_measurement(knot_dict::Dict, val_key::Symbol, err_key::Symbol, n_
    return v, σ
 end
 
-function _source_direct!(dict::Dict, cosmo::Cosmology.AbstractCosmology, observation::Observation, params::Vector{Parameter})
+function _source_direct!(dict::Dict, cosmo::Cosmology.AbstractCosmology, observation::Observation, params::Vector{Parameter}, sample_z::Symbol)
    # Get source dictionary from the full dictionary
    source_dict = dict[:source]
 
@@ -904,20 +904,24 @@ function _source_from_file!(dict::Dict, cosmo::Cosmology.AbstractCosmology, obse
 
          # Extract parameter values and bounds
          r, l, u = _extract_param_range(indi_source_dict[:z_s])
-
-         # Convert redshift to adis
-         adis_r, adis_l, adis_u = _zs_to_adis(cosmo, z_d, r, l, u)
-
-         # Add redshift parameter to the reference, lower, and upper vectors
-         push!(params, Parameter(owner = source_id, 
-                                 name  = Symbol(:adis, i), 
-                                 refer = adis_r, 
-                                 lower = adis_l, 
-                                 upper = adis_u))
       else
          # Get the source redshift from the file; treat it as fixed (lower == upper == refer)
-         z_s = source_data[1, 5]
-         adis_r, adis_l, adis_u = _zs_to_adis(cosmo, z_d, z_s, z_s, z_s)
+         r = source_data[1, 5]
+         l = r
+         u = r
+      end
+
+      if sample_z == :zs
+         # Source-distance parameter is the redshift itself
+         push!(params, Parameter(owner = source_id, 
+                                 name  = Symbol(:zs, i), 
+                                 refer = r, 
+                                 lower = l, 
+                                 upper = u))
+      else
+         # Source-distance parameter is the distance ratio: convert redshift to adis
+         # (uniform prior in adis - see _resolve_sample_z)
+         adis_r, adis_l, adis_u = _zs_to_adis(cosmo, z_d, r, l, u)
 
          # Add redshift parameter to the reference, lower, and upper vectors
          push!(params, Parameter(owner = source_id, 
