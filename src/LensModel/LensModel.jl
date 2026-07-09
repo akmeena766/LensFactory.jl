@@ -597,7 +597,7 @@ function get_deflection(data_jld2::JLD2.JLDFile, θx::T, θy::T; unit::Symbol=:R
 
    RA_REF  = model.observation.reference[1]
    DEC_REF = model.observation.reference[2]
-   return get_deflection(best_model, θx::T, θy::T; reference=(RA_REF, DEC_REF))
+   return get_deflection(best_model, θx, θy; reference=(RA_REF, DEC_REF))
 end
 
 """
@@ -656,7 +656,7 @@ function get_jacobian(data_jld2::JLD2.JLDFile, θx::T, θy::T) where T <: Union{
 
    RA_REF  = model.observation.reference[1]
    DEC_REF = model.observation.reference[2]
-   return get_jacobian(best_model, θx::T, θy::T; reference=(RA_REF, DEC_REF))
+   return get_jacobian(best_model, θx, θy; reference=(RA_REF, DEC_REF))
 end
 
 
