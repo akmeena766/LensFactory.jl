@@ -613,10 +613,10 @@ Valid for flat, open, and closed models and any `w`.
 """
 function zs2adis(cosmology::AbstractCosmology, z_d::Real, z_s::Real; 
                  dC::Union{Nothing, Real} = nothing, 
-                 atol::Float64 = DIST_ATOL, rtol::Float64 = DIST_RTO)
+                 atol::Float64 = DIST_ATOL, rtol::Float64 = DIST_RTOL)
    # Check z_s > zd
-   if z_s < z_d
-      error("zs2adis requires zs > z_d (got zs = $zs, z_d = $z_d).")
+   if z_s <= z_d
+      error("zs2adis requires z_s > z_d (got zs = $z_s, z_d = $z_d).")
    end
 
    # Comoving radial distance to the lens (if not provided)
@@ -628,9 +628,9 @@ function zs2adis(cosmology::AbstractCosmology, z_d::Real, z_s::Real;
    end
 
    # Comving radial distance to the source
-   χ_s = comoving_distance_radial(cosmology, 0.0, zs; atol=atol, rtol=rtol)
+   χ_s = comoving_distance_radial(cosmology, 0.0, z_s; atol=atol, rtol=rtol)
 
-   # D_M(0,  zs) and D_M(z_d, zs)
+   # D_M(0,  z_s) and D_M(z_d, z_s)
    dM_s  = _transverse_from_radial(cosmology, χ_s)
    dM_ds = _transverse_from_radial(cosmology, χ_s - χ_d)
 

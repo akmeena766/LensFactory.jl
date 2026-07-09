@@ -221,7 +221,7 @@ function _scaling_from_pvals(pvals::Dict{Tuple{Symbol, Symbol}, <:Real}, i::Int6
    return ScalingRelation(; vals...)
 end
 
-function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, <:Real})
+function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, <:Real}, cosmo::Cosmology.AbstractCosmology)
    # Determine the number of components from the lens model container
    n_lens     = length(model.lens_config.components)
    components = model.lens_config.components
@@ -263,7 +263,7 @@ function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, <:Real
 
       # Cosmology-dependent profiles need the cosmology object and the lens redshift
       if lens_params[:lens] ∈ REQUIRE_COSMO
-         lens_params[:cosmology] = model.cosmology
+         lens_params[:cosmology] = cosmo
          lens_params[:z_d]       = z_d
       end
 

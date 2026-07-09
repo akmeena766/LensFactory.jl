@@ -643,7 +643,6 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter}, observation::Observa
 
       return LensConfig(components = lens_name, 
                         galaxies   = galaxies, 
-                        scaling    = scaling,
                         multiplane = true,
                         z_lenses   = z_lenses)
    end
@@ -1280,7 +1279,7 @@ function _read_input(filename::AbstractString)
    #                        the cached d_C.
    # static_ADD == false ⇒ cosmology is free: the cosmology object and all distances (D_d, d_C,
    #                        adis) are rebuilt from the sampled parameters each step.
-   static_ADD = free_cosmo
+   static_ADD = !free_cosmo
 
    # Get source model and its parameters
    source_config = _source!(dict, cosmology, observation, params, sample_z)
