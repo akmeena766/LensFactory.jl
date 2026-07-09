@@ -52,7 +52,6 @@ export get_potential
 export get_deflection
 export get_jacobian
 export predict_image
-export check_parity
 export save_best_fits
 export get_AIC
 export get_BIC
@@ -260,11 +259,9 @@ end
 # Calculate RMS for the best-fit model
 # --------------------------------------------------------------------------------------------------
 """
-    get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64}; check_parity::Bool=false, burn_in::Float64=0.2)
+    get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64}; burn_in::Float64=0.2)
 Calculate the RMS of the best-fit model based on the MCMC results stored in `chains` and `logL`. The
 function prints a table showing the RMS for each knot image, as well as a global total RMS. If 
-`check_parity` is set to true, the function will also check the parity of each knot image and 
-print a warning if any parity does not match.
 
 # Arguments
 - `model::ModelConfig`: The lens model configuration used for the MCMC fit.
@@ -274,14 +271,13 @@ print a warning if any parity does not match.
    dimensions should be (n_steps, n_steps).
 
 # Keyword Arguments
-- `check_parity::Bool=false`: Whether to check the parity of each knot image against the input parity.
 - `burn_in::Float64=0.2`: The fraction of MCMC chains to discard as burn-in while determining 
    best-fit lens model.
 
 # Returns
 - `nothing`: Prints a table to the console with the RMS for each knot image, as well as total RMS.
 """
-function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64}; check_parity::Bool=false, burn_in::Float64=0.2)
+function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64}; burn_in::Float64=0.2)
    # Get the best parameters based on minimum logL
    best_θ, _ = get_best_fit_parameters(logL; chains=chains, burn_in=burn_in)
 
@@ -291,11 +287,14 @@ function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::M
    # Replace free parameter values by best-fit values
    pvals = LensModelUtils.param_dict(model, best_θ, param_ref)
 
+   # Update cosmology
+   cosmo = LensModelUtils.current_cosmology(model, pvals)
+
    # Get best-fit model
-   best_model = LensModelUtils.build_lens(model, pvals)
+   best_model = LensModelUtils.build_lens(model, pvals, cosmo)
 
    # Get angular-diameter distance ratios
-   adis = LensModelUtils.adis_current(model, pvals)
+   adis = LensModelUtils.adis_current(model, pvals, cosmo)
 
    # Generate grid
    FOV = model.observation.FOV
@@ -483,7 +482,10 @@ function get_best_model(model::ModelConfig;
    # Replace free parameter values by best-fit values
    pvals = LensModelUtils.param_dict(model, best_θ, param_ref)
    
-   return LensModelUtils.build_lens(model, pvals), best_logL
+   # Update cosmology
+   cosmo = LensModelUtils.current_cosmology(model, pvals)
+
+   return LensModelUtils.build_lens(model, pvals, cosmo), best_logL
 end
 
 
@@ -694,8 +696,11 @@ function predict_image(data_jld2::JLD2.JLDFile, θx::T, θy::T, z_s::Float64; un
    pixel_scale = model.observation.pixel_scale
    x_grid, y_grid = Lenses.get_meshgrid(0.5 * FOV[1], 0.5 * FOV[2], pixel_scale)
 
-      # Get cosmology
-   cosmo = model.cosmology
+   # Get (best-fit) cosmology
+   best_θ, _ = get_best_fit_parameters(logL; chains=chains)
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+   pvals     = LensModelUtils.param_dict(model, best_θ, param_ref)
+   cosmo     = LensModelUtils.current_cosmology(model, pvals)
       
    # ADDs
    z_d = model.observation.z_d
@@ -940,126 +945,6 @@ function save_best_fits(data_jld2::JLD2.JLDFile;
          _write_fits_header!(hdu, model; date, time)      
          close(f)
       end
-   end
-   return nothing
-end
-
-
-# --------------------------------------------------------------------------------------------------
-# Check parity of the best-fit model against input parities
-# --------------------------------------------------------------------------------------------------
-"""
-    check_parity(model::ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64})
-Check the parity of the best-fit model against the input parities for each knot image. This function 
-assumes that parity was enforced during the modelling (i.e., `model.source_config.use_parity = true`). 
-If parity was not enforced, an error is thrown. The function prints a table comparing the input 
-parity and the best-fit model parity for each knot image, along with a status indicating whether the
-parity matches or not.
-
-# Arguments
-- `data_jld2::JLD2.JLDFile`: JLD2 data file containing the fit results. 
-
-# Returns
-- `nothing`: Prints a table to the console with input and best-fit model parities for each knot image.
-"""
-function check_parity(data_jld2::JLD2.JLDFile)
-   # Check if parity was enforced during modelling
-   if model.source_config.use_parity === false
-      error("Parity was not enforced during modelling. Please set model.use_parity = true.")
-   end
-
-   # Load the chains and log-likelihood from the file
-   model  = data_jld2["model"]
-   chains = data_jld2["chains"]
-   logL   = data_jld2["logL"]
-
-   # Get the best parameters based on log-likelihood
-   best_θ, _ = get_best_fit_parameters(logL, chains)
-
-   # Get list of parameters for the lens model
-   param_ref = Dict(p.key => p.refer for p in model.parameters)
-   
-   # Replace free parameter values by best-fit values
-   pvals = LensModelUtils.param_dict(model, best_θ, param_ref)
-
-   # Get best-fit model
-   best_model = LensModelUtils.build_lens(model, pvals)
-
-   # Get angular-diameter distance ratios
-   adis = LensModelUtils.adis_current(model, pvals)
-
-   # Calculate deformation at all image positions
-   _, _, _, A_all = LensModelUtils.lens_quantities(model, best_model)
-   
-   # Print Table Header using string padding for alignment
-   header = string(
-      "| ", rpad("Source", 8), 
-      "| ", rpad("Knot", 6), 
-      "| ", rpad("Image", 6), 
-      "| ", rpad("Input Parity", 10), 
-      "| ", rpad("Best Parity", 10), 
-      "| ", "Status",
-      " |"
-   )
-
-   println("─"^length(header))
-   println(header)
-   println("─"^length(header))
-   
-   # Identity tuple
-   I4 = (1.0, 0.0, 0.0, 1.0)
-
-   # Compare parity for each source
-   sid = 1
-   kid = 1
-   for src in model.source_config.sources
-      # Distance ratio for this source
-      adis_value = adis[sid]
-
-      # Generate source id
-      src_id = Symbol(:src, sid)
-   
-      for knot in src.knots
-         # Generate knot id
-         knot_id = Symbol(:knot, kid)
-
-         # Input knot image parities
-         parity_input = knot.parity
-
-         # Deformation tensor at the knot positions
-         A = @. adis_value * A_all[kid]
-         for i in eachindex(A)
-            @. A[i] = I4[i] - A[i]
-         end
-
-         # Model parity of knot images
-         parity_model = @. Int64(sign(A[1] * A[4] - A[2] * A[3]))
-
-         # Parity logL
-         for i in eachindex(parity_input)
-            # Check if parity is correct
-            status = (parity_input[i] == parity_model[i]) ? "✅" : "❌"
-
-            # Manually formatting the sign for the parities
-            input_str = parity_input[i] >= 0 ? "+$(parity_input[i])" : "$(parity_input[i])"
-            best_str  = parity_model[i] >= 0 ? "+$(parity_model[i])" : "$(parity_model[i])"
-
-            # Format the row using rpad (Right Pad)
-            row = string(
-               "| ", rpad(src_id, 8), 
-               "| ", rpad(knot_id, 6), 
-               "| ", rpad(i, 6), 
-               "| ", rpad(input_str, 12), 
-               "| ", rpad(best_str,  11), 
-               "| ", status,
-               "     |"
-            )
-            println(row)
-         end
-         kid = kid + 1
-         println("─"^length(header))
-      end
-      sid = sid + 1
    end
    return nothing
 end
