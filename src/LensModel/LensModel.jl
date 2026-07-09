@@ -539,7 +539,7 @@ function get_potential(data_jld2::JLD2.JLDFile, θx::T, θy::T) where T <: Union
 
    RA_REF  = model.observation.reference[1]
    DEC_REF = model.observation.reference[2]
-   return get_potential(best_model, θx, θy::T; reference=(RA_REF, DEC_REF))
+   return get_potential(best_model, θx, θy; reference=(RA_REF, DEC_REF))
 end
 
 
