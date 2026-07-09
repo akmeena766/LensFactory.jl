@@ -537,7 +537,9 @@ function get_potential(data_jld2::JLD2.JLDFile, θx::T, θy::T) where T <: Union
    # Get best-fit lens model
    best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_logL=logL)
 
-   return get_potential(best_model, θx, θy::T; reference=(model.observation.RA_REF, model.observation.DEC_REF))
+   RA_REF  = model.observation.reference[1]
+   DEC_REF = model.observation.reference[2]
+   return get_potential(best_model, θx, θy::T; reference=(RA_REF, DEC_REF))
 end
 
 
@@ -593,7 +595,9 @@ function get_deflection(data_jld2::JLD2.JLDFile, θx::T, θy::T; unit::Symbol=:R
    # Get best-fit lens model
    best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_logL=logL)
 
-   return get_deflection(best_model, θx::T, θy::T; reference=(model.observation.RA_REF, model.observation.DEC_REF))
+   RA_REF  = model.observation.reference[1]
+   DEC_REF = model.observation.reference[2]
+   return get_deflection(best_model, θx::T, θy::T; reference=(RA_REF, DEC_REF))
 end
 
 """
@@ -650,7 +654,9 @@ function get_jacobian(data_jld2::JLD2.JLDFile, θx::T, θy::T) where T <: Union{
    # Get best-fit lens model
    best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_logL=logL)
 
-   return get_jacobian(best_model, θx::T, θy::T; reference=(model.observation.RA_REF, model.observation.DEC_REF))
+   RA_REF  = model.observation.reference[1]
+   DEC_REF = model.observation.reference[2]
+   return get_jacobian(best_model, θx::T, θy::T; reference=(RA_REF, DEC_REF))
 end
 
 
