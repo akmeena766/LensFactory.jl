@@ -43,11 +43,14 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
    # Merge θ (free parameters) with param_ref (fixed parameters)
    pvals = LensModelUtils.param_dict(model, θ, param_ref)
 
+   # Current cosmology (cached reference object if fixed, rebuilt from θ if free).
+   cosmo = LensModelUtils.current_cosmology(model, pvals)
+   
    # Build lens model
-   lens_model = LensModelUtils.build_lens(model, pvals)
+   lens_model = LensModelUtils.build_lens(model, pvals, cosmo)
   
    # Get angular-diameter distance ratios
-   adis = LensModelUtils.adis_current(model, pvals)
+   adis = LensModelUtils.adis_current(model, pvals, cosmo)
 
    # Calculate position likelihood
    logL = 0.0
@@ -75,7 +78,11 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
          # Lens redshift and angular-diameter distance, cached in Observation
          # (cosmological parameters are always fixed - enforced at input reading)
          z_d = model.observation.z_d
-         D_d = model.observation.D_d
+         if model.static_ADD
+            D_d = model.observation.D_d
+         else
+            D_d = Cosmology.angular_diameter_distance(cosmo, 0.0, z_d)
+         end
          
          logL_td = Likelihood.logL_sourceplane_timedelay(model, adis, z_d, D_d, β_ind, β_mod, ψ_all, αx_all, αy_all)
          logL = logL + logL_td
@@ -162,7 +169,7 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
 
       # Write to the specific memory slot reserved for individual run
       if converged
-         results[i] = (θ=copy(θ_opt), f=fmax)
+         results[i] = (θ = Vector{Float64}(θ_opt), f = Float64(fmax))
       end
       
       # Update progress bar
@@ -170,7 +177,7 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
    end
 
    # Filter out the 'nothing' entries (failed convergences) and collect
-   converged_results = collect(skipmissing([r === nothing ? missing : r for r in results]))
+   converged_results = @NamedTuple{θ::Vector{Float64}, f::Float64}[r for r in results if r !== nothing]
    if isempty(converged_results)
       error("No optimization runs converged.")
    end

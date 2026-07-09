@@ -48,7 +48,8 @@ abstract type AbstractMCMCConfig <: AbstractLensConfig end
    modeler::String
    lens::String
    z_d::Float64
-   D_d::Float64
+   D_d::Float64                  # Angular-diameter distance to the lens (reference cosmology)
+   d_C::Float64                  # Radial comoving distance to the lens (reference cosmology)
    reference::NTuple{2,Float64}
    pixel_scale::Float64
    FOV::NTuple{2,Float64}
@@ -96,7 +97,6 @@ end
 @kwdef struct LensConfig <: AbstractLensConfig
    components::Vector{LensComponent}
    galaxies::Dict{Symbol, GalaxyComponent}   # Galaxy catalogs, keyed by the owning lens id
-   scaling::Dict{Symbol, ScalingRelation}    # Scaling relations, keyed by the owning lens id
    multiplane::Bool                          # Multi-plane lensing flag
    z_lenses::Vector{Float64}                 # Per-component lens redshift (multi-plane only, else empty)
 end
@@ -176,6 +176,17 @@ end
 
 
 # --------------------------------------------------------------------------------------------------
+# Abstract type: Multi-plane distances
+# --------------------------------------------------------------------------------------------------
+@kwdef struct MultiPlaneDistances <: AbstractLensConfig
+   z_plane::Vector{Float64}          # Sorted unique plane redshifts
+   adis_ij::Matrix{Float64}           # Plane-plane distance ratios (source independent)
+   adis_is::Vector{Vector{Float64}}   # Per source: plane-source ratios (0 for planes behind the source)
+   D_ij_td::Vector{Matrix{Float64}}   # Per source: distance matrix truncated to planes in front (time delays)
+end
+
+
+# --------------------------------------------------------------------------------------------------
 # Abstract type: Final Model Configuration
 # --------------------------------------------------------------------------------------------------
 @kwdef struct ModelConfig <: AbstractLensConfig
@@ -186,6 +197,9 @@ end
    parameters::Vector{Parameter}
    free_param_idxs::Vector{Int64}
    sampler::SamplerConfig
+   sample_z::Symbol
+   static_ADD::Bool
+   mp_distance::Union{Nothing, MultiPlaneDistances}
 end
 
 
@@ -267,6 +281,60 @@ function _extract_param_range(x::Union{Int64, Float64, Dict})::Tuple{Real, Real,
 end
 
 
+# Build all multi-plane distance (ratio) matrices - for static_ADD case
+function _multiplane_ADD(cosmo::Cosmology.AbstractCosmology, z_d::Vector{Float64}, z_s::Vector{Float64})
+   # Sorted unique plane redshifts (must match the grouping in Lenses.init_MultiPlaneLens)
+   z_p = sort(unique(z_d))
+   n_p = length(z_p)
+   n_s = length(z_s)
+
+   # Plane-plane distance ratios (source independent)
+   adis_ij = zeros(n_p, n_p)
+   for ni in 1:n_p
+      for nj in 1:ni-1
+         D_ji = Cosmology.angular_diameter_distance(cosmo, z_p[nj], z_p[ni])
+         D_oi = Cosmology.angular_diameter_distance(cosmo, 0.0,     z_p[ni])
+         adis_ij[nj, ni] = D_ji / D_oi
+      end
+   end
+
+   # Per-source quantities
+   adis_is = Vector{Vector{Float64}}(undef, n_s)
+   D_ij_td = Vector{Matrix{Float64}}(undef, n_s)
+   for si in 1:n_s
+      zs = z_s[si]
+      D_os = Cosmology.angular_diameter_distance(cosmo, 0.0, zs)
+
+      # Plane-source distance ratios (planes at or behind the source do not deflect it)
+      v = zeros(n_p)
+      for ni in 1:n_p
+         if z_p[ni] < zs
+            v[ni] = Cosmology.angular_diameter_distance(cosmo, z_p[ni], zs) / D_os
+         end
+      end
+      adis_is[si] = v
+
+      # Distance matrix truncated to the planes in front of this source (time-delay core
+      # infers the number of planes from the matrix size)
+      m = count(z -> z < zs, z_p)
+      z_all = [0.0; z_p[1:m]; zs]
+      D = zeros(m + 2, m + 2)
+      for i in 1:m+2
+         for j in i+1:m+2
+            D[i, j] = Cosmology.angular_diameter_distance(cosmo, z_all[i], z_all[j])
+         end
+      end
+      D_ij_td[si] = D
+   end
+
+   return MultiPlaneDistances(z_plane = z_p, 
+                              adis_ij = adis_ij, 
+                              adis_is = adis_is, 
+                              D_ij_td = D_ij_td)
+end
+
+
+
 # --------------------------------------------------------------------------------------------------
 # ---------------- Read Observation ----------------------------------------------------------------
 # --------------------------------------------------------------------------------------------------
@@ -296,7 +364,9 @@ function _observation(dict::Dict,  cosmo::Cosmology.AbstractCosmology)
    end
 
    # Angular diameter distance to the lens - computed once here so it is not recalculated
-   D_d = Cosmology.angular_diameter_distance(cosmo, 0.0, Float64(obs_dict[:z_d]))
+   z_d = Float64(obs_dict[:z_d])
+   D_d = Cosmology.angular_diameter_distance(cosmo, 0.0, z_d)
+   d_C = Cosmology.comoving_distance_radial(cosmo, 0.0, z_d)
 
    # Construct struct with the given inputs
    obs = Observation(
@@ -304,6 +374,7 @@ function _observation(dict::Dict,  cosmo::Cosmology.AbstractCosmology)
       lens        = get(obs_dict, :lens, "WhoKnows"),
       z_d         = obs_dict[:z_d],
       D_d         = D_d,
+      d_C         = d_C,
       reference   = ref,
       pixel_scale = obs_dict[:pixel_scale],
       FOV         = FOV
@@ -316,45 +387,44 @@ end
 # --------------------------------------------------------------------------------------------------
 function _cosmology!(input_dict::Dict, params::Vector{Parameter})
    # Manual tuple of symbols for cosmology part
-   cosmo_params = (:H0, :w, :Omega_m0, :Omega_r0, :Omega_w0, :Omega_k0)
+   cosmo_params = (:H0, :w, :Omega_m0, :Omega_r0, :Omega_w0)
 
-   # Get default cosmology
-   cosmology = Cosmology.init_cosmology()
-
+   # Reference values passed to init_cosmology, and (lower, upper) bounds keyed by name.
+   cosmo_input = Dict{Symbol,Float64}()
+   cosmo_bound = Dict{Symbol,Tuple{Float64,Float64}}()
+   
    # Check if cosmology section exists otherwise throw a warning and fall back to default cosmology
    if haskey(input_dict, :cosmology)
       cosmo_dict = input_dict[:cosmology]
+
+      # Omega_k0 is derived, not an input parameter
+      if haskey(cosmo_dict, :Omega_k0)
+         error("Omega_k0 is a derived quantity (Omega_k0 = 1 - Omega_m0 - Omega_r0 - Omega_w0) " * 
+               "and must not be set in the input. Adjust Omega_m0 / Omega_r0 / Omega_w0 instead.")
+      end
+      
       for param in cosmo_params
          if haskey(cosmo_dict, param)
             r, l, u = _extract_param_range(cosmo_dict[param])
-
-            # Free cosmological parameters are not supported (yet): distances cached in
-            # Observation and lens D_d / cosmology objects are fixed at the reference cosmology,
-            # so freeing them would give an inconsistent model.
-            if l != u
-               error("Cosmological parameter ** $param ** cannot be free (range given). " *
-                     "Free cosmological parameters are not supported yet.")
-            end
-         else
-            # Use default cosmology value
-            default_value = getfield(cosmology, param)
-            r = l = u = default_value
+            cosmo_input[param] = Float64(r)
+            cosmo_bound[param] = (Float64(l), Float64(u))
          end
-         push!(params, Parameter(owner=:cosmology, name=param, refer=r, lower=l, upper=u))
       end
    else
-      @warn "Cosmology missing in input - using default values. 
+      @warn "Cosmology missing in input - using default values.
       See example input file here: https://github.com/akmeena766/LensFactory_Examples."
-      # Add default cosmology parameters
-      @inbounds for param in cosmo_params
-         default_value = getfield(cosmology, param)
-         push!(params, Parameter(owner = :cosmology, 
-                                 name  = param, 
-                                 refer = default_value, 
-                                 lower = default_value, 
-                                 upper = default_value))
-      end
    end
+
+   # Build the reference cosmology from the input values
+   cosmology = Cosmology.init_cosmology(; cosmo_input...)
+
+   # Push a Parameter for every cosmological parameter.
+   for param in cosmo_params
+      refer = Float64(getfield(cosmology, param))
+      l, u  = get(cosmo_bound, param, (refer, refer))
+      push!(params, Parameter(owner=:cosmology, name=param, refer=refer, lower=l, upper=u))
+   end
+
    return cosmology
 end
 
@@ -396,16 +466,11 @@ end
 # Read one scaling-relation dictionary; parameters are pushed with the given owner so that
 # each galaxy-cluster plane can have its own (possibly free) scaling relations
 function _read_scaling_relation!(scaling_dict::Dict, owner::Symbol, params::Vector{Parameter})
-   # Reference values, keyed by parameter name, used to build the ScalingRelation struct
-   refer_values = Dict{Symbol,Float64}()
-
    for param in SCALING_PARAMS
       r, l, u = _extract_param_range(scaling_dict[param])
-      refer_values[param] = r
       push!(params, Parameter(owner=owner, name=param, refer=r, lower=l, upper=u))
    end
-
-   return ScalingRelation(; refer_values...)
+   return nothing
 end
 
 
@@ -427,7 +492,6 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter}, observation::Observa
 
    # Initialize galaxy component and scaling flag
    galaxies = Dict{Symbol, GalaxyComponent}()
-   scaling  = Dict{Symbol, ScalingRelation}()
 
    # Single plane vs. multiplane lensing
    multiplane = get!(lens_dict, :multiplane, false)
@@ -487,14 +551,13 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter}, observation::Observa
             # Scaling relations for THIS lens: nested subsection inside the lens block, with
             # parameter owner :scaling<i> (the scaling relation is part of the lens)
             _require(indi_lens_dict, :scaling_relation)
-            scaling[lens_id] = _read_scaling_relation!(indi_lens_dict[:scaling_relation], Symbol(:scaling, i), params)
+            _read_scaling_relation!(indi_lens_dict[:scaling_relation], Symbol(:scaling, i), params)
          end
       end
 
       return LensConfig(
          components = lens_name, 
-         galaxies   = galaxy_comp, 
-         scaling    = scaling_obj,
+         galaxies   = galaxies, 
          multiplane = false,
          z_lenses   = Float64[]
       )
@@ -569,7 +632,7 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter}, observation::Observa
             # Scaling relations for THIS plane: nested subsection inside the lens block, with
             # parameter owner :scaling<i> so each plane can be sampled independently
             _require(indi_lens_dict, :scaling_relation)
-            scaling[lens_id] = _read_scaling_relation!(indi_lens_dict[:scaling_relation], Symbol(:scaling, i), params)
+            _read_scaling_relation!(indi_lens_dict[:scaling_relation], Symbol(:scaling, i), params)
          end
       end
 
@@ -954,11 +1017,11 @@ function _source_from_file!(dict::Dict, cosmo::Cosmology.AbstractCosmology, obse
          # at least two measured images are required (relative measurement).
          m  = Float64[]
          σm = Float64[]
-         if n_col >= 11
-            σm_temp = knot_data[:, 11]
+         if n_col >= 10
+            σm_temp = knot_data[:, 10]
             n_meas  = count(>(0.0), σm_temp)
             if n_meas >= 2
-               m  = knot_data[:, 10]
+               m  = knot_data[:, 9]
                σm = σm_temp
                any_flux = true
             elseif n_meas == 1
@@ -969,11 +1032,11 @@ function _source_from_file!(dict::Dict, cosmo::Cosmology.AbstractCosmology, obse
          # Read optional time-delay measurements (days). Same rules as flux above.
          td   = Float64[]
          σ_td = Float64[]
-         if n_col >= 13
-            σtd_temp = knot_data[:, 13]
+         if n_col >= 12
+            σtd_temp = knot_data[:, 12]
             n_meas   = count(>(0.0), σtd_temp)
             if n_meas >= 2
-               td   = knot_data[:, 12]
+               td   = knot_data[:, 11]
                σ_td = σtd_temp
                any_td = true
             elseif n_meas == 1
@@ -1188,6 +1251,7 @@ end
 # Read the input YAML file and construct the ModelConfig struct
 # --------------------------------------------------------------------------------------------------
 function _read_input(filename::AbstractString)
+   # Read input YAML and convet keys from String to Symbol
    dict = YAML.load_file(filename)
    _symbolize!(dict)
 
@@ -1201,10 +1265,42 @@ function _read_input(filename::AbstractString)
    observation = _observation(dict, cosmology)
 
    # Get lens model and its parameters
-   lens_config = _lensmodel!(dict, params, observation)
+   lens_config = _lensmodel!(dict, params, observation, cosmology)
+
+   # ---------------- Resolve the z-sampling mode --------------------------------------------------
+   # Detect free cosmological parameters
+   free_cosmo = any(p -> p.owner == :cosmology && p.lower != p.upper, params)
+
+   # Decide the source-distance parameter kind (:adis or :zs) and detect free source redshifts
+   sample_z, free_zs = _resolve_sample_z(dict, lens_config.multiplane, free_cosmo)
+
+   # static_ADD == true  ⇒ the cosmology is fixed, so the lens distances (D_d, d_C) cached in
+   #                        Observation are valid and reused every step. adis may still vary when
+   #                        sampling zs, but it is recomputed cheaply via Cosmology.zs2adis using
+   #                        the cached d_C.
+   # static_ADD == false ⇒ cosmology is free: the cosmology object and all distances (D_d, d_C,
+   #                        adis) are rebuilt from the sampled parameters each step.
+   static_ADD = free_cosmo
 
    # Get source model and its parameters
-   source_config = _source!(dict, cosmology, observation, params)
+   source_config = _source!(dict, cosmology, observation, params, sample_z)
+
+   # ---------------- Multi-plane distances --------------------------------------------------------
+   # Precompute all multi-plane distance matrices (static mode --> built once)
+   mp_dist = nothing
+   if lens_config.multiplane
+      # Collect the (fixed) source redshifts from the zs parameters
+      n_src  = length(source_config.sources)
+      zs_all = Vector{Float64}(undef, n_src)
+
+      for i in 1:n_src
+         idx = findfirst(p -> p.owner == Symbol(:source, i) && p.name == Symbol(:zs, i), params)
+         idx === nothing && error("Missing ** zs ** parameter for source-$i.")
+         zs_all[i] = Float64(params[idx].refer)
+      end
+
+      mp_dist = _multiplane_ADD(cosmology, lens_config.z_lenses, zs_all)
+   end
 
    # Get sampling details
    sampler = _sampling!(dict)
@@ -1219,7 +1315,10 @@ function _read_input(filename::AbstractString)
       source_config   = source_config,
       parameters      = params,
       free_param_idxs = free_param_idxs,
-      sampler         = sampler
+      sampler         = sampler,
+      sample_z        = sample_z,
+      static_ADD      = static_ADD,
+      mp_distance     = mp_dist
    )
 end
 

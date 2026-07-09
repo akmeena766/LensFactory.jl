@@ -17,12 +17,14 @@ using ..LFUtils
 using ..LensModelIO
 using ..Likelihood
 
+
 # --------------------------------------------------------------------------------------------------
 # Functions to export
 # --------------------------------------------------------------------------------------------------
 export free_parameters
 export θ_initializer
 export param_dict
+export current_cosmology
 export adis_current
 export build_lens
 export lens_quantities
@@ -147,15 +149,48 @@ end
 
 
 # --------------------------------------------------------------------------------------------------
+# Parameter dictionary (θ -> pvals)
+# --------------------------------------------------------------------------------------------------
+function current_cosmology(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, <:Real})
+   # Cosmology fixed -> return the cached reference object (no rebuild, no allocation)
+   if model.static_ADD
+      return model.cosmology
+   end
+
+   # Cosmology free -> rebuild from the sampled parameters.
+   kw = Dict{Symbol,Float64}()
+   for (k, v) in pvals
+      if k[1] === :cosmology
+         kw[k[2]] = Float64(v)
+      end
+   end
+   return Cosmology.init_cosmology(; kw...)
+end
+
+
+# --------------------------------------------------------------------------------------------------
 # Angular-diameter distance (pvals -> adis)
 # --------------------------------------------------------------------------------------------------
-function adis_current(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, <:Real})
+function adis_current(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, <:Real}, cosmo::Cosmology.AbstractCosmology)
    nsrc = length(model.source_config.sources)
    adis = Vector{Float64}(undef, nsrc)
 
-   @inbounds for i in 1:nsrc
-      key = (Symbol(:source, i), Symbol(:adis, i))
-      adis[i] = pvals[key]
+   if model.sample_z == :adis
+      @inbounds for i in 1:nsrc
+         adis[i] = pvals[(Symbol(:source, i), Symbol(:adis, i))]
+      end
+   else
+      z_d   = model.observation.z_d
+      if model.static_ADD
+         d_C = model.observation.d_C
+      else
+         d_C = Cosmology.comoving_distance_radial(cosmo, 0.0, z_d)
+      end
+
+      @inbounds for i in 1:nsrc
+         zs      = Float64(pvals[(Symbol(:source, i), Symbol(:zs, i))])
+         adis[i] = Cosmology.zs2adis(cosmo, z_d, zs; dC = d_C)
+      end
    end
    return adis
 end
@@ -164,84 +199,95 @@ end
 # --------------------------------------------------------------------------------------------------
 # Build lens model from physical paramerters
 # --------------------------------------------------------------------------------------------------
-REQUIRE_COSMO = Set([:NFWLens, :eNFWMDLens, :aNFWLens, :tNFWLens, :gNFWLens, :EinastoLens])
-REQUIRE_SCALING = Set([:MultiPJELens])
+# Lens models that need cosmology + lens redshift passed through to the constructor.
+const REQUIRE_COSMO = Set([:NFWLens, :eNFWMDLens, :aNFWLens, :tNFWLens, :gNFWLens, :EinastoLens])
+
+# Lens models whose parameters are generated from a galaxy catalog + scaling relations.
+const REQUIRE_SCALING = Set([:MultiPJELens])
+
+# Names of all scaling-relation parameters. Must match LensModelIO.SCALING_PARAMS and the
+# field names of LensModelIO.ScalingRelation (construction is by keyword, so order is irrelevant).
+const SCALING_PARAMS = (:ref_mag, :ref_sigma, :ref_core, :ref_cut, :slope_sigma, :slope_core, :slope_cut)
+
+# Rebuild the ScalingRelation for lens component i from pvals.
+function _scaling_from_pvals(pvals::Dict{Tuple{Symbol, Symbol}, <:Real}, i::Int64)
+   owner = Symbol(:scaling, i)
+   vals  = Dict{Symbol,Float64}()
+   for name in SCALING_PARAMS
+      key = (owner, name)
+      haskey(pvals, key) || error("Missing scaling parameter $(key) for lens-$(i) while building lens.")
+      vals[name] = Float64(pvals[key])
+   end
+   return ScalingRelation(; vals...)
+end
+
 function build_lens(model::ModelConfig, pvals::Dict{Tuple{Symbol,Symbol}, <:Real})
-   # Update scaling if it has free parameters
-   scaling_params = Dict{Symbol, Any}() 
-   for (k, v) in pvals
-      if k[1] == :scaling
-         scaling_params[k[2]] = v
-      end
-   end
-   
-   if !isempty(scaling_params)
-      updated_scaling = ScalingRelation(; scaling_params...)
-   else
-      updated_scaling = model.lens_config.scaling
-   end
-   
    # Determine the number of components from the lens model container
-   n_lens = length(model.lens_config.components)
+   n_lens     = length(model.lens_config.components)
+   components = model.lens_config.components
+   galaxies   = model.lens_config.galaxies   # Dict{Symbol, GalaxyComponent}, keyed by lens id
+
+   # Lens ADD consistent with the current cosmology
+   z_d     = model.observation.z_d
+   if model.static_ADD
+      D_d_dyn = model.observation.D_d
+   else
+      D_d_dyn = Cosmology.angular_diameter_distance(cosmo, 0.0, z_d)
+   end
 
    # Transform parameters
    transform_params!(pvals)
-
+   
    # Initialize an empty vector to store lens parameters
    lens_vector = NamedTuple[]
-
-   # Iterate over each lens component
-   components = model.lens_config.components
 
    for i in 1:n_lens
       lens_id = Symbol(:lens, i)
       lens_params = Dict{Symbol, Union{Symbol, Int64, Float64, Vector{Float64}, Cosmology.AbstractCosmology}}()
       
-      # Get lens name and add it to the lens_params dictionary
-      for (k, v) in enumerate(components)
-         if v.owner == lens_id
-            lens_params[:lens] = v.name
-         end
-      end
+      # Lens name. components[i] corresponds to lens i (built in order in LensModelIO).
+      name = components[i].name
+      lens_params[:lens] = name
 
-      # Get other lens parameters and add it to the lens_params dictionary
+      # Collect the parameters owned by this lens component
       for (k, v) in pvals
          if k[1] == lens_id
             lens_params[k[2]] = v
          end
       end
 
-      # Check if this lens model requires cosmology and lens redshift
-      if lens_params[:lens] ∈ REQUIRE_COSMO
-         lens_params[:cosmology] = model.cosmology
-         lens_params[:z_d]       = model.observation.z_d
+      # Keep a cosmology-dependent lens distance in sync with a free cosmology
+      if !model.static_ADD && haskey(lens_params, :D_d)
+         lens_params[:D_d] = D_d_dyn
       end
 
-      # Check if this lens model requires galaxy component
+      # Cosmology-dependent profiles need the cosmology object and the lens redshift
+      if lens_params[:lens] ∈ REQUIRE_COSMO
+         lens_params[:cosmology] = model.cosmology
+         lens_params[:z_d]       = z_d
+      end
+
+      # Galaxy-cluster member lens: expand the scaling relation over the galaxy catalog
       if lens_params[:lens] ∈ REQUIRE_SCALING
-         # Lens parameters from file
-         lens_params[:x_c] = model.lens_config.galaxies.x_c
-         lens_params[:y_c] = model.lens_config.galaxies.y_c
-         lens_params[:eps] = model.lens_config.galaxies.eps
-         lens_params[:pa]  = model.lens_config.galaxies.pa
+         galaxy = galaxies[lens_id]
 
-         # Observed magnitudes (vector)
-         obs_mag = model.lens_config.galaxies.obs_mag
+         # Rebuild the (possibly updated) scaling relation for THIS lens from pvals
+         relation = _scaling_from_pvals(pvals, i)
 
-         # Reference magnitude
-         ref_mag = updated_scaling.ref_mag
+         # Per-galaxy geometric parameters straight from the catalog
+         lens_params[:x_c] = galaxy.x_c
+         lens_params[:y_c] = galaxy.y_c
+         lens_params[:eps] = galaxy.eps
+         lens_params[:pa]  = galaxy.pa
 
-         # L/L⋆ (vector)
-         l_lstar = @. 10.0^(-0.4 * (obs_mag - ref_mag))
+         # Luminosity ratio L/L⋆ from observed magnitudes (vector)
+         obs_mag = galaxy.obs_mag
+         l_lstar = @. 10.0^(-0.4 * (obs_mag - relation.ref_mag))
 
-         # Velocity dispersion (vector)
-         lens_params[:v_d] = @. updated_scaling.ref_sigma * l_lstar^updated_scaling.slope_sigma
-         
-         # Core radius (vector)
-         lens_params[:x_s] = @. updated_scaling.ref_core * l_lstar^updated_scaling.slope_core
-
-         # Truncation radius (vector)
-         lens_params[:x_t] = @. updated_scaling.ref_cut * l_lstar^updated_scaling.slope_cut
+         # Scaling relations: velocity dispersion, core radius, truncation radius (vectors)
+         lens_params[:v_d] = @. relation.ref_sigma * l_lstar^relation.slope_sigma
+         lens_params[:x_s] = @. relation.ref_core  * l_lstar^relation.slope_core
+         lens_params[:x_t] = @. relation.ref_cut   * l_lstar^relation.slope_cut
       end
       push!(lens_vector, (; lens_params...))
    end

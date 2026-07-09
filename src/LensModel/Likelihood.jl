@@ -441,67 +441,26 @@ function logL_imageplane(model::ModelConfig,
                          αx_all::Vector{Vector{Float64}}, 
                          αy_all::Vector{Vector{Float64}}, 
                          A_all::Vector{NTuple{4, Vector{Float64}}})
-   # Initialize chi2 for parity
-   χ2_total = 0.0
+# NOT IMPLEMENTED YET.
+   #
+   # Image-plane sampling is gated off in LensModelFit.log_likelihood, so this function is
+   # currently dead code. The previous draft below referenced undefined variables
+   # (θx_model / θy_model) and called _weighted_position with the OLD signature
+   # (βx_ind, βy_ind, ...) that no longer exists - both would throw at runtime the moment
+   # image-plane sampling was switched on. It is stubbed cleanly here so that turning the
+   # feature on fails with a clear message rather than an UndefVarError / MethodError.
+   error("Image-plane likelihood (logL_imageplane) is not implemented yet.")
 
-   # Identity tuple
-   I4 = (1.0, 0.0, 0.0, 1.0)
-
-   # Calculate chi2 for position
-   sid = 1
-   kid = 1
-   for src in model.source_config.sources
-      # Distance ratio for this source
-      adis_value = adis[sid]
-      
-      for knot in src.knots
-         # Knot positions and measurement errors
-         x  = knot.x
-         y  = knot.y
-         σx = knot.σx
-         σy = knot.σy
-         σθ = knot.σθ         
-         n  = length(x)
-         
-         # Deflection vector at the knot positions
-         αx = @. adis_value * αx_all[kid]
-         αy = @. adis_value * αy_all[kid]
-
-         # Deformation tensor at the knot positions
-         A = @. adis_value * A_all[kid]
-         for i in eachindex(A)
-            @. A[i] = I4[i] - A[i]
-         end
-
-         # Individual source positions using broadcasting
-         βx_ind = @. x - αx
-         βy_ind = @. y - αy
-
-         # Get weighted source position (Section 4.1 in https://arxiv.org/pdf/astro-ph/0102340)
-         βx_model, βy_model, _, iS_all = _weighted_position(βx_ind, βy_ind, A, σx, σy, σθ, n)
-         
-         # Predict image positions
-         # TODO: Calculate chi2 for position
-         
-         # Calculate knot χ2
-         χ2_knot = 0.0
-         for i in 1:n
-            δθx = x[i] - θx_model[i]
-            δθy = y[i] - θy_model[i]
-            
-            # Read inverse covariance matrix components
-            iS11, iS12, iS21, iS22 = iS_all[i]
-
-            # χ² = δθᵀ * S⁻¹ * δθ
-            χ2_knot = χ2_knot + δθx * (iS11 * δθx + iS12 * δθy) + δθy * (iS21 * δθx + iS22 * δθy)
-         end
-         χ2_total = χ2_total + χ2_knot
-         
-         kid = kid + 1
-      end
-      sid = sid + 1
-   end
-   return -0.5 * χ2_total
+   # ------------------------------------------------------------------------------------------
+   # Reference sketch for the future implementation (kept for convenience, NOT executed):
+   #
+   #   For each knot:
+   #     1. Solve for the source position β_model in the source plane
+   #        (β_model, _, iS_all) = _weighted_position(β_ind, A, σx, σy, σθ, n)
+   #     2. Map β_model back to the image plane to get predicted image positions
+   #        θ_model[i] (this is the missing step - needs an image-plane solver).
+   #     3. χ² = Σ_i δθᵀ · S⁻¹ · δθ,  with δθ = θ_obs - θ_model  and S⁻¹ from iS_all.
+   # ------------------------------------------------------------------------------------------
 end
 
 end

@@ -29,6 +29,7 @@ export angular_diameter_distance
 export luminosity_distance
 export distance_modulus, angular_scale
 export comoving_volume_element, comoving_volume
+export zs2adis
 export adis2zs
 
 
@@ -36,6 +37,11 @@ export adis2zs
 # Initialize an abstract type for cosmology
 # --------------------------------------------------------------------------------------------------
 abstract type AbstractCosmology end
+
+
+# Default quadrature tolerances for the comoving-distance integrals.
+const DIST_ATOL = 1E-7
+const DIST_RTOL = 1E-7
 
 
 """
@@ -183,11 +189,11 @@ t_{\\rm age}(z) = \\int_z^\\infty \\frac{1}{(1+z')H(z')} dz'.
 # Returns
 - `t_age`    : Age of the Universe (in ``{\\rm \\mathbf{Gyr}}``).
 """
-function age(cosmology::AbstractCosmology, z::Real)
+function age(cosmology::AbstractCosmology, z::Real; atol=DIST_ATOL, rtol=DIST_RTOL)
    # Hubble time (in years)
    tH = hubble_time(cosmology.H0)
 
-   tC, _ = quadgk(x -> _time_integrand(cosmology, x), z, Inf, atol=1E-10, rtol=1E-10)
+   tC, _ = quadgk(x -> _time_integrand(cosmology, x), z, Inf; atol=atol, rtol=rtol)
    return tH * tC
 end
 
@@ -206,11 +212,12 @@ t_L(z) = \\int_0^z \\frac{1}{(1+z')H(z')} dz'.
 # Returns
 - `t_lookback` : Lookback time (in ``{\\rm \\mathbf{Gyr}}``).
 """
-function lookback_time(cosmology::AbstractCosmology, z::Real)
+function lookback_time(cosmology::AbstractCosmology, z::Real; 
+                       atol=DIST_ATOL, rtol=DIST_RTOL)
    # Hubble time (in years)
    tH = hubble_time(cosmology.H0)
 
-   tC, _ = quadgk(x -> _time_integrand(cosmology, x), 0, z, atol=1E-10, rtol=1E-10)
+   tC, _ = quadgk(x -> _time_integrand(cosmology, x), 0, z; atol=atol, rtol=rtol)
    return tH * tC
 end
 
@@ -361,11 +368,12 @@ D_C = D_H \\int_{z_1}^{z_2} \\frac{dz'}{E(z')}.
 # Returns
 - `D_C`      : Comoving radial distance in ``{\\rm \\mathbf{meters}}``.
 """
-function comoving_distance_radial(cosmology::AbstractCosmology, z1::Real, z2::Real)
+function comoving_distance_radial(cosmology::AbstractCosmology, z1::Real, z2::Real;
+                                  atol=DIST_ATOL, rtol=DIST_RTOL)
    # Hubble distance
    dH = hubble_distance(cosmology.H0)
 
-   dC, _ = quadgk(x -> _distance_integrand(cosmology, x), z1, z2, atol=1E-10, rtol=1E-10)
+   dC, _ = quadgk(x -> _distance_integrand(cosmology, x), z1, z2; atol=atol, rtol=rtol)
    return dH * dC
 end
 
@@ -390,25 +398,22 @@ D_H \\frac{1}{\\sqrt{|\\Omega_k|}}  \\sin \\left[ \\sqrt{|\\Omega_k|} \\: D_C / 
 - `D_M`      : Comoving radial distance in ``{\\rm \\mathbf{meters}}``.
 """
 function comoving_distance_transverse(cosmology::AbstractCosmology, z1::Real, z2::Real)
-   # Get the Hubble distance
-   dH = hubble_distance(cosmology.H0)
-
    # Get the comoving distance (radial)
    dC = comoving_distance_radial(cosmology, z1, z2)
 
    # Get the comoving distance (transverse)
-   dM = 0.0
-   if abs(cosmology.Omega_k0) > 1E-6
-      Ωχ = sqrt(abs(cosmology.Omega_k0)) * dC/dH
-      if cosmology.Omega_k0 > 0
-         dM = dH * sinh(Ωχ) / sqrt(abs(cosmology.Omega_k0))
+   Ωk = cosmology.Omega_k0
+   if abs(Ωk) > 1E-6
+      dH = hubble_distance(cosmology.H0)
+      Ωχ = sqrt(abs(Ωk)) * dC/dH
+      if Ωk > 0
+         return dH * sinh(Ωχ) / sqrt(abs(Ωk))
       else
-         dM =  dH * sin(Ωχ) / sqrt(abs(cosmology.Omega_k0))
+         return dH * sin(Ωχ)  / sqrt(abs(Ωk))
       end
    else
-      dM = dC
+      return dC
    end
-   return dM
 end
 
 
@@ -539,26 +544,97 @@ V_C = \\begin{cases}
 - `com_vol`  : Comving volume up to redshift ``z`` (in ``{\\rm \\mathbf{Gpc^3}}``).
 """
 function comoving_volume(cosmology::AbstractCosmology, z::Real)
-   # Get the Hubble distance
-   dH = hubble_distance(cosmology.H0)
-
    # Get the comoving distance (radial)
    dM = comoving_distance_transverse(cosmology, 0.0, z)
 
    # Get the comoving volume up to redshift z
+   Ωk = cosmology.Omega_k0
    com_vol = 0.0
-   if abs(cosmology.Omega_k0) > 1E-6
-      term1 = 4.0 * π * dH^3 / 2.0 / cosmology.Omega_k0
-      term2 = (dM/dH) * sqrt(1.0 + cosmology.Omega_k0 * (dM / dH)^2)
-      if cosmology.Omega_k0 > 0.0
-         com_vol = term1 * (term2 - asinh(sqrt(abs(cosmology.Omega_k0)) * dM/dH ) / sqrt(abs(cosmology.Omega_k0)))
+   if abs(Ωk) > 1E-6
+      # Get the Hubble distance
+      dH = hubble_distance(cosmology.H0)
+
+      term1 = 4.0 * π * dH^3 / 2.0 / Ωk
+      term2 = (dM/dH) * sqrt(1.0 + Ωk * (dM / dH)^2)
+      if Ωk > 0.0
+         com_vol = term1 * (term2 - asinh(sqrt(abs(Ωk)) * dM/dH ) / sqrt(abs(Ωk)))
       else
-         com_vol = term1 * (term2 -  asin(sqrt(abs(cosmology.Omega_k0)) * dM/dH ) / sqrt(abs(cosmology.Omega_k0)))
+         com_vol = term1 * (term2 -  asin(sqrt(abs(Ωk)) * dM/dH ) / sqrt(abs(Ωk)))
       end
    else
       com_vol = (4.0 * π / 3) * dM^3
    end
    return com_vol / DIST_GPC^3
+end
+
+
+# --------------------------------------------------------------------------------------------------
+# Redshifts ⟺ Distance ratio
+# --------------------------------------------------------------------------------------------------
+@inline function _transverse_from_radial(cosmology::AbstractCosmology, dC::Real)
+   Ωk = cosmology.Omega_k0
+   if abs(Ωk) > 1E-6
+      dH = hubble_distance(cosmology.H0)
+      Ωχ = sqrt(abs(Ωk)) * dC / dH
+      if Ωk > 0 
+         return dH * sinh(Ωχ) / sqrt(abs(Ωk))
+      else
+         return dH * sin(Ωχ)  / sqrt(abs(Ωk))
+      end
+   else
+      return dC
+   end
+end
+
+
+"""
+    zs2adis(cosmology::AbstractCosmology, z_d::Real, zs::Real;
+            dC = nothing, atol = DIST_ATOL, rtol = DIST_RTOL) --> Real
+
+Distance ratio ``a_{\\rm dis} = D_{ds}/D_s = D_A(z_d, zs) / D_A(0, zs)`` — the forward map that
+`adis2zs` inverts. The ``(1+z_s)`` factors cancel, so ``a_{\\rm dis} = D_M(z_d, zs) / D_M(0, zs)``,
+built from the radial comoving distances via ``χ(z_d, zs) = χ(zs) - χ(z_d)``. Only two 1-D
+integrals are needed, and ``χ(z_d)`` is constant for a fixed cosmology + lens redshift — pass it
+as `dC` (radial comoving distance to the lens, meters) to cut each call to a single integral.
+Valid for flat, open, and closed models and any `w`.
+
+# Arguments
+- `cosmology`: Cosmology object.
+- `z_d`      : Lens redshift.
+- `zs`       : Source redshift (must satisfy `zs > z_d`).
+
+# Keyword Arguments
+- `dC = nothing`: Precomputed radial comoving distance ``χ(z_d)`` (meters).
+- `atol = DIST_ATOL`, 
+- `rtol = DIST_RTOL`: Quadrature tolerances.
+
+# Returns
+- `a_dis`    : Dimensionless distance ratio ``D_{ds}/D_s``.
+"""
+function zs2adis(cosmology::AbstractCosmology, z_d::Real, z_s::Real; 
+                 dC::Union{Nothing, Real} = nothing, 
+                 atol::Float64 = DIST_ATOL, rtol::Float64 = DIST_RTO)
+   # Check z_s > zd
+   if z_s < z_d
+      error("zs2adis requires zs > z_d (got zs = $zs, z_d = $z_d).")
+   end
+
+   # Comoving radial distance to the lens (if not provided)
+   χ_d = 0.0
+   if dC === nothing
+      χ_d = comoving_distance_radial(cosmology, 0.0, z_d; atol=atol, rtol=rtol)
+   else
+      χ_d = dC
+   end
+
+   # Comving radial distance to the source
+   χ_s = comoving_distance_radial(cosmology, 0.0, zs; atol=atol, rtol=rtol)
+
+   # D_M(0,  zs) and D_M(z_d, zs)
+   dM_s  = _transverse_from_radial(cosmology, χ_s)
+   dM_ds = _transverse_from_radial(cosmology, χ_s - χ_d)
+
+   return dM_ds / dM_s
 end
 
 
