@@ -498,12 +498,12 @@ end
 # --------------------------------------------------------------------------------------------------
 # Image plane likelihood functions
 # --------------------------------------------------------------------------------------------------
-function logL_imageplane_fast_flux(model::ModelConfig, 
-                                   lens::AbstractLens,
-                                   adis::Vector{Float64}, 
-                                   αx_all::Vector{Vector{Float64}}, 
-                                   αy_all::Vector{Vector{Float64}}, 
-                                   A_all::Vector{NTuple{4, Vector{Float64}}})
+function logL_imageplane_fast(model::ModelConfig, 
+                              lens::AbstractLens,
+                              adis::Vector{Float64}, 
+                              αx_all::Vector{Vector{Float64}}, 
+                              αy_all::Vector{Vector{Float64}}, 
+                              A_all::Vector{NTuple{4, Vector{Float64}}})
    # Initialize chi2 for position
    χ2_total = 0.0
 
