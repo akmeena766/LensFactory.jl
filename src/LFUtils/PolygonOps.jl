@@ -4,6 +4,7 @@ module PolygonOps
 # --------------------------------------------------------------------------------------------------
 # Julia inbuilt functions to import
 # --------------------------------------------------------------------------------------------------
+using StatsBase
 using LinearAlgebra
 
 
@@ -71,9 +72,9 @@ Calculate the area of a 2D polygon using the shoelace formula.
 - The area of the polygon
 """
 function shoelace(polygon::Vector{Vector{<:Real}})
-   # Close the polygon if needed
+   # Close the polygon if needed (copy to avoid mutating the caller's input)
    if polygon[1] != polygon[end]
-      push!(polygon, polygon[1])
+      polygon = vcat(polygon, [polygon[1]])
    end
 
    # Calculate the area
@@ -102,7 +103,7 @@ https://doi.org/10.3390/sym10100477
    - 0: outside
    - -1: on the edge
 """
-function hao_sun(point::Vector{Float64}, polygon::Vector{Vector{Float64}})::Int
+function hao_sun(point::Vector{Float64}, polygon::Vector{Vector{Float64}})
    k = 0
 
    xp = point[1]
@@ -143,9 +144,9 @@ function hao_sun(point::Vector{Float64}, polygon::Vector{Vector{Float64}})::Int
          end 
       elseif v1 == 0 && v2 == 0
          if u2 <= 0 && u1 >= 0
-            return on
+            return -1
          elseif u1 <= 0 && u2 >= 0
-            return on
+            return -1
          end
       end
    end

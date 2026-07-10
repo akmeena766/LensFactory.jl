@@ -114,7 +114,7 @@ end
     Ez(cosmology::AbstractCosmology, z::Real) --> Real
 Calculate dimensionless Hubble parameter ``(E)`` at redshift, ``z``,
 ```math
-E(z) = \\sqrt{ Ω_{m0} (1+z)^2 + Ω_{r0} (1+z)^4 + Ω_{k0} (1+z)^2 + Ω_{w0} (1+z)^{3(1+w)} }.
+E(z) = \\sqrt{ Ω_{m0} (1+z)^3 + Ω_{r0} (1+z)^4 + Ω_{k0} (1+z)^2 + Ω_{w0} (1+z)^{3(1+w)} }.
 ```
 
 # Arguments

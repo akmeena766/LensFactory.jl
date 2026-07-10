@@ -909,7 +909,7 @@ struct init_EinastoLens{T<:Real} <: AbstractLens
    x_s::T
    n::T
 end
-function init_EinastoLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, k_s::Real=NaN, x_s::Real=NaN, n::Real=1.0)
+function init_EinastoLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, k_s::Real=NaN, x_s::Real=NaN, n::Real=0.2)
    D_d, x_c, y_c, k_s, x_s, n = promote(D_d, x_c, y_c, k_s, x_s, n)
    T = typeof(D_d)
    return init_EinastoLens{T}(:EinastoLens, D_d, x_c, y_c, k_s, x_s, n)
