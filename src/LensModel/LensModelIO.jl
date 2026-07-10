@@ -1216,7 +1216,7 @@ function _mcmc!(sampling_dict::Dict)
 end
 
 # Internal function: Process Lens Model section
-const SAMPLING_SCHEMES = Set([:SourcePlane, :ImagePlane])
+const SAMPLING_SCHEMES = Set([:SourcePlane, :ImagePlane_fast])
 function _sampling!(dict::Dict)
    sampling_dict = dict[:sampling]
 

@@ -20,7 +20,10 @@ using ..Lenses
 export logL_sourceplane
 export logL_sourceplane_flux
 export logL_sourceplane_timedelay
-export logL_imageplane
+export logL_imageplane_fast
+export logL_imageplane_fast_flux
+export logL_imageplane_fast_timedelay
+
 
 
 # --------------------------------------------------------------------------------------------------
@@ -38,6 +41,18 @@ const CHI2_PEN_DETA = 1.0e8
 # Floor on |mu_mod| after the first-order correction, protecting log10 against
 # overshoot of the linear extrapolation very close to critical curves.
 const MU_MIN = 1.0e-6
+
+# Image-plane Newton solver settings (used by logL_imageplane_fast).
+# The lens equation β = θ − a_dis·α(θ) is solved for θ near each observed image.
+const IMG_SOLVE_MAX_ITER = 50        # Maximum Newton iterations per image
+const IMG_SOLVE_TOL      = 1.0e-8    # Convergence tol on |β − θ + a_dis·α| (arcsec); far
+                                     # below mas astrometry, above the Float64 round-off floor
+const IMG_DET_MIN        = 1.0e-12   # |det J| below which the Newton step is abandoned
+
+# Finite penalty added per image when the Newton solve fails to converge (e.g. the
+# trial image sits on/near a critical curve). Finite (rather than −Inf) so the NM
+# simplex still sees a gradient; effectively a rejection for the MCMC stage.
+const CHI2_PEN_NOCONV = 1.0e8
 
 
 # --------------------------------------------------------------------------------------------------
@@ -139,6 +154,53 @@ end
    return β_model, W_all, iS_all
 end
 
+# Solve the lens equation β_target = θ − a_dis·α(θ) for the image position θ using
+# Newton's method, starting from the observed image position (θx0, θy0). The Jacobian
+# of the map θ ↦ β is J = I − a_dis·ψ_ij, evaluated on the fly from the lens model.
+#
+# Returns (θx, θy, converged). When converged == false the last iterate is returned
+# (the caller applies a finite penalty); this happens if |det J| collapses (image on a
+# critical curve) or the iteration does not reach tol within max_iter.
+@inline function _solve_image_position(lens::AbstractLens, adis_value::Float64,
+                                       βx_target::Float64, βy_target::Float64,
+                                       θx0::Float64, θy0::Float64)
+   θx = θx0
+   θy = θy0
+
+   @inbounds for _ in 1:IMG_SOLVE_MAX_ITER
+      # Residual of the lens equation at the current guess
+      ψx, ψy = Lenses.get_deflection(lens, θx, θy)
+      fx = θx - adis_value * ψx - βx_target
+      fy = θy - adis_value * ψy - βy_target
+
+      # Converged?
+      if abs(fx) < IMG_SOLVE_TOL && abs(fy) < IMG_SOLVE_TOL
+         return θx, θy, true
+      end
+
+      # Jacobian J = I − a_dis·ψ_ij (symmetric)
+      ψxx, ψyy, ψxy = Lenses.get_jacobian(lens, θx, θy)
+      J11 = 1.0 - adis_value * ψxx
+      J22 = 1.0 - adis_value * ψyy
+      J12 = -adis_value * ψxy
+
+      det = J11 * J22 - J12 * J12
+      if abs(det) < IMG_DET_MIN
+         return θx, θy, false
+      end
+
+      # Newton step Δθ = J⁻¹ f
+      Δx = ( J22 * fx - J12 * fy) / det
+      Δy = (-J12 * fx + J11 * fy) / det
+      θx = θx - Δx
+      θy = θy - Δy
+
+      if !isfinite(θx) || !isfinite(θy)
+         return θx0, θy0, false
+      end
+   end
+   return θx, θy, false
+end
 
 # --------------------------------------------------------------------------------------------------
 # Source plane likelihood functions
@@ -154,7 +216,7 @@ function logL_sourceplane(model::ModelConfig,
    # Identity tuple
    I4 = (1.0, 0.0, 0.0, 1.0)
 
-# Storage for the shared per-knot source positions (kid-indexed)
+   # Storage for the shared per-knot source positions (kid-indexed)
    n_knots = sum(length(src.knots) for src in model.source_config.sources)
    β_ind_s = Vector{Vector{NTuple{2, Float64}}}(undef, n_knots)
    β_mod_s = Vector{NTuple{2, Float64}}(undef, n_knots)
@@ -436,31 +498,255 @@ end
 # --------------------------------------------------------------------------------------------------
 # Image plane likelihood functions
 # --------------------------------------------------------------------------------------------------
-function logL_imageplane(model::ModelConfig, 
-                         adis::Vector{Float64}, 
-                         αx_all::Vector{Vector{Float64}}, 
-                         αy_all::Vector{Vector{Float64}}, 
-                         A_all::Vector{NTuple{4, Vector{Float64}}})
-# NOT IMPLEMENTED YET.
-   #
-   # Image-plane sampling is gated off in LensModelFit.log_likelihood, so this function is
-   # currently dead code. The previous draft below referenced undefined variables
-   # (θx_model / θy_model) and called _weighted_position with the OLD signature
-   # (βx_ind, βy_ind, ...) that no longer exists - both would throw at runtime the moment
-   # image-plane sampling was switched on. It is stubbed cleanly here so that turning the
-   # feature on fails with a clear message rather than an UndefVarError / MethodError.
-   error("Image-plane likelihood (logL_imageplane) is not implemented yet.")
+function logL_imageplane_fast_flux(model::ModelConfig, 
+                                   lens::AbstractLens,
+                                   adis::Vector{Float64}, 
+                                   αx_all::Vector{Vector{Float64}}, 
+                                   αy_all::Vector{Vector{Float64}}, 
+                                   A_all::Vector{NTuple{4, Vector{Float64}}})
+   # Initialize chi2 for position
+   χ2_total = 0.0
 
-   # ------------------------------------------------------------------------------------------
-   # Reference sketch for the future implementation (kept for convenience, NOT executed):
-   #
-   #   For each knot:
-   #     1. Solve for the source position β_model in the source plane
-   #        (β_model, _, iS_all) = _weighted_position(β_ind, A, σx, σy, σθ, n)
-   #     2. Map β_model back to the image plane to get predicted image positions
-   #        θ_model[i] (this is the missing step - needs an image-plane solver).
-   #     3. χ² = Σ_i δθᵀ · S⁻¹ · δθ,  with δθ = θ_obs - θ_model  and S⁻¹ from iS_all.
-   # ------------------------------------------------------------------------------------------
+   # Identity tuple
+   I4 = (1.0, 0.0, 0.0, 1.0)
+
+   # Storage for the per-knot model source positions (kid-indexed)
+   n_knots = sum(length(src.knots) for src in model.source_config.sources)
+   β_mod_s = Vector{NTuple{2, Float64}}(undef, n_knots)
+
+   # Storage for the recovered image positions (kid-indexed), reused by flux / time-delay
+   θ_mod_s = Vector{Vector{NTuple{2, Float64}}}(undef, n_knots)
+
+   # Track whether every observed image was recovered.
+   all_converged = true
+
+   # Calculate chi2 for position
+   sid = 1
+   kid = 1
+   for src in model.source_config.sources
+      # Distance ratio for this source
+      adis_value = adis[sid]
+
+      for knot in src.knots
+         # Knot positions and measurement errors
+         x  = knot.x
+         y  = knot.y
+         σx = knot.σx
+         σy = knot.σy
+         σθ = knot.σθ
+         n  = length(x)
+
+         # Deflection vector at the observed image positions
+         αx = @. adis_value * αx_all[kid]
+         αy = @. adis_value * αy_all[kid]
+
+         # Deformation tensor A = I − a_dis·ψ_ij at the observed image positions
+         A = @. adis_value * A_all[kid]
+         for i in eachindex(A)
+            @. A[i] = I4[i] - A[i]
+         end
+
+         # Individual source positions (paired)
+         β_ind = @. tuple(x - αx, y - αy)
+
+         # Get weighted model source position (same as source-plane scheme) and the
+         # per-image inverse covariance matrices S⁻¹ used for the image-plane χ².
+         β_model, _, iS_all = _weighted_position(β_ind, A, σx, σy, σθ, n)
+         βx_model, βy_model = β_model
+
+         # Store model source position for flux / time-delay chi2 (kid-indexed)
+         β_mod_s[kid] = β_model
+
+         # Map the model source back to the image plane and accumulate the χ²
+         θ_knot = Vector{NTuple{2, Float64}}(undef, n)
+         χ2_knot = 0.0
+         for i in 1:n
+            # Solve β_model = θ − a_dis·α(θ) starting from the observed image position
+            θx_m, θy_m, converged = _solve_image_position(lens, adis_value, βx_model, βy_model, x[i], y[i])
+
+            # Penalize images whose predicted position could not be recovered
+            if !converged
+               all_converged = false
+               θ_knot[i] = (x[i], y[i])          # placeholder, unused when !all_converged
+               χ2_knot = χ2_knot + CHI2_PEN_NOCONV
+               continue
+            end
+
+            # Store the recovered image position for flux / time-delay reuse
+            θ_knot[i] = (θx_m, θy_m)
+
+            # Image-plane residual δθ = θ_obs − θ_model
+            δθx = x[i] - θx_m
+            δθy = y[i] - θy_m
+
+            # χ² = δθᵀ * S⁻¹ * δθ
+            iS11, iS12, iS21, iS22 = iS_all[i]
+            χ2_knot = χ2_knot + δθx * (iS11 * δθx + iS12 * δθy) + δθy * (iS21 * δθx + iS22 * δθy)
+         end
+         θ_mod_s[kid] = θ_knot
+         χ2_total = χ2_total + χ2_knot
+
+         kid = kid + 1
+      end
+      sid = sid + 1
+   end
+   return -0.5 * χ2_total, β_mod_s, θ_mod_s, all_converged
+end
+
+
+function logL_imageplane_fast_flux(model::ModelConfig,
+                              lens::AbstractLens,
+                              adis::Vector{Float64},
+                              θ_mod_all::Vector{Vector{NTuple{2, Float64}}})
+   # Initialize chi2 for flux
+   χ2_total = 0.0
+
+   sid = 1
+   kid = 1
+   for src in model.source_config.sources
+      # Distance ratio for this source
+      adis_value = adis[sid]
+
+      for knot in src.knots
+         # Knot magnitude values and errors
+         m  = knot.m
+         σm = knot.σm
+         n  = length(m)
+
+         # Skip knots without magnitude measurements (kid must still advance)
+         if n == 0
+            kid += 1
+            continue
+         end
+
+         # Recovered image positions for this knot
+         θ_mod = θ_mod_all[kid]
+
+         # Best-fit (profiled) source magnitude from exact magnifications at θ_model
+         m_src = 0.0
+         wsum  = 0.0
+         dm = Vector{Float64}(undef, n)
+         for i in 1:n
+            # Skip unmeasured images (marked with sigma <= 0)
+            if σm[i] <= 0.0
+               dm[i] = 0.0   # Placeholder, never used
+               continue
+            end
+
+            # Exact signed determinant det[I − a_dis·ψ_ij] at the predicted image
+            θx, θy = θ_mod[i]
+            ψxx, ψyy, ψxy = Lenses.get_jacobian(lens, θx, θy)
+            detA = (1.0 - adis_value * ψxx) * (1.0 - adis_value * ψyy) - (adis_value * ψxy)^2
+
+            # Guard against an image sitting on a critical curve
+            if abs(detA) < DETA_MIN
+               χ2_total += CHI2_PEN_DETA
+               detA = detA < 0.0 ? -DETA_MIN : DETA_MIN
+            end
+
+            # Signed magnification, floored against overflow
+            abs_μ = max(abs(1.0 / detA), MU_MIN)
+
+            dm[i] = m[i] + 2.5 * log10(abs_μ)
+            w = 1.0 / σm[i]^2
+
+            m_src = m_src + dm[i] * w
+            wsum  = wsum + w
+         end
+         m_src = m_src / wsum
+
+         # Chi2 for this knot, with the source magnitude m_src profiled out
+         χ2_knot = 0.0
+         for i in 1:n
+            if σm[i] <= 0.0
+               continue
+            end
+            χ2_knot = χ2_knot + (dm[i] - m_src)^2 / σm[i]^2
+         end
+         χ2_total = χ2_total + χ2_knot
+
+         kid = kid + 1
+      end
+      sid = sid + 1
+   end
+   return -0.5 * χ2_total
+end
+
+
+function logL_imageplane_fast_timedelay(model::ModelConfig,
+                                   lens::AbstractLens,
+                                   adis::Vector{Float64},
+                                   z_d::Float64,
+                                   D_d::Float64,
+                                   β_mod_all::Vector{NTuple{2, Float64}},
+                                   θ_mod_all::Vector{Vector{NTuple{2, Float64}}})
+   # Initialize chi2
+   χ2_total = 0.0
+
+   # Multiplicative constant (arrival time in days)
+   constant_factor = (1.0 + z_d) * D_d * ANGLE_ARCSEC^2 / CONST_C / DAY2SECOND
+
+   sid = 1
+   kid = 1
+   for src in model.source_config.sources
+      # Distance ratio for this source
+      adis_value = adis[sid]
+
+      for knot in src.knots
+         # Knot time delay values and errors
+         Δt_obs = knot.td
+         σ_Δt   = knot.σ_td
+         n = length(Δt_obs)
+
+         # Skip knots without time-delay measurements (kid must still advance)
+         if n == 0
+            kid = kid + 1
+            continue
+         end
+
+         # Recovered image positions and model source position for this knot
+         θ_mod = θ_mod_all[kid]
+         βx_model, βy_model = β_mod_all[kid]
+         pref = constant_factor / adis_value
+
+         # Best-fit arrival-time zero-point
+         Δt_0 = 0.0
+         wsum = 0.0
+         td_fit = Vector{Float64}(undef, n)
+         for i in 1:n
+            # Skip unmeasured images (marked with sigma <= 0)
+            if σ_Δt[i] <= 0.0
+               td_fit[i] = 0.0   # Placeholder, never used
+               continue
+            end
+
+            # Exact Fermat potential at the predicted image position
+            θx, θy = θ_mod[i]
+            ψ = Lenses.get_potential(lens, θx, θy)
+            fermat = 0.5 * ((θx - βx_model)^2 + (θy - βy_model)^2) - adis_value * ψ
+            td_fit[i] = pref * fermat
+
+            w = 1.0 / σ_Δt[i]^2
+            Δt_0 = Δt_0 + (Δt_obs[i] - td_fit[i]) * w
+            wsum = wsum + w
+         end
+         Δt_0 = Δt_0 / wsum
+
+         # Chi2 for this knot, with the zero-point Δt_0 profiled out
+         χ2_knot = 0.0
+         for i in 1:n
+            if σ_Δt[i] <= 0.0
+               continue
+            end
+            χ2_knot = χ2_knot + (Δt_obs[i] - td_fit[i] - Δt_0)^2 / σ_Δt[i]^2
+         end
+         χ2_total = χ2_total + χ2_knot
+
+         kid = kid + 1
+      end
+      sid = sid + 1
+   end
+   return -0.5 * χ2_total
 end
 
 end

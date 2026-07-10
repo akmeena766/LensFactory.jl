@@ -37,6 +37,20 @@ export _fit_model
 
 
 # --------------------------------------------------------------------------------------------------
+# Helper functions
+# --------------------------------------------------------------------------------------------------
+@inline function _lens_distance(model::ModelConfig, cosmo::Cosmology.AbstractCosmology)
+   z_d = model.observation.z_d
+   if model.static_ADD
+      D_d = model.observation.D_d
+   else
+      D_d = Cosmology.angular_diameter_distance(cosmo, 0.0, z_d)
+   end
+   return z_d, D_d
+end
+
+
+# --------------------------------------------------------------------------------------------------
 # Log-likelihood
 # --------------------------------------------------------------------------------------------------
 function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real})
@@ -77,18 +91,32 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
       if model.source_config.use_time_delay
          # Lens redshift and angular-diameter distance, cached in Observation
          # (cosmological parameters are always fixed - enforced at input reading)
-         z_d = model.observation.z_d
-         if model.static_ADD
-            D_d = model.observation.D_d
-         else
-            D_d = Cosmology.angular_diameter_distance(cosmo, 0.0, z_d)
-         end
-         
+         z_d, D_d = _lens_distance(model, cosmo)
+
          logL_td = Likelihood.logL_sourceplane_timedelay(model, adis, z_d, D_d, β_ind, β_mod, ψ_all, αx_all, αy_all)
          logL = logL + logL_td
       end
-   elseif model.sampler.scheme == :ImagePlane
-      error("Image plane sampling is not implemented yet.")      
+   elseif model.sampler.scheme == :ImagePlane_fast
+      # Position likelihood
+      logL_position, β_mod, θ_mod, all_converged = Likelihood.logL_imageplane_fast(model, lens_model, adis, αx_all, αy_all, A_all)
+      logL = logL + logL_position
+
+      # Flux / time-delay are only meaningful when every observed image was recovered; if not,
+      # the position penalty already dominates and the predicted images are unusable, so skip.
+      if all_converged
+         # Flux likelihood (exact magnification at the recovered images)
+         if model.source_config.use_flux
+            logL_flux = Likelihood.logL_imageplane_fast_flux(model, lens_model, adis, θ_mod)
+            logL = logL + logL_flux
+         end
+
+         # Time-delay likelihood (exact Fermat potential at the recovered images)
+         if model.source_config.use_time_delay
+            z_d, D_d = _lens_distance(model, cosmo)
+            logL_td = Likelihood.logL_imageplane_fast_timedelay(model, lens_model, adis, z_d, D_d, β_mod, θ_mod)
+            logL = logL + logL_td
+         end
+      end
    else
       error("Unsupported sampling scheme: $(model.sampler.scheme)")
    end
