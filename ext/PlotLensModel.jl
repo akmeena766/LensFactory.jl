@@ -679,8 +679,7 @@ function LensFactory.LensModel.plot_image_scatter(model::LensModel.ModelConfig,
 
    # Initialize figure
    fig, ax = LensFactory.Lenses.plot_sky(2, 2; xlabel=L"\Delta\theta_1~\text{(arcsec)}", 
-                                               ylabel=L"\Delta\theta_2~\text{(arcsec)}",
-                                               title="Image-plane residuals")
+                                               ylabel=L"\Delta\theta_2~\text{(arcsec)}")
 
    # Residuals
    scatter!(ax, dx_all, dy_all; point_kws..., label="Residuals (obs - pred)")
