@@ -39,8 +39,7 @@ end
 # - `Vector{Int64}`: indices corresponding to `free_parameter_names` based on `param_ids`
 # --------------------------------------------------------------------------------------------------
 function _resolve_param_indices(free_parameter_names::AbstractVector{Tuple{Symbol, Symbol}}, 
-                                param_ids::Union{Nothing, Symbol, AbstractVector{Symbol}, 
-                                                 AbstractVector{Int64}, AbstractVector{Tuple{Symbol, Symbol}}})
+                                param_ids::Union{Nothing, Symbol, AbstractVector{Symbol}, AbstractVector{Int64}, AbstractVector{Tuple{Symbol, Symbol}}})
    # Get total number of free parameters
    n_total = length(free_parameter_names)
    
@@ -87,7 +86,11 @@ PARAM_NAME = Dict{Symbol, String}(:lens1 => "L1", :lens2 => "L2", :lens3 => "L3"
                                   :gamma => "\\gamma", :angle => "\\theta", :delta => "\\delta",
                                   :ref_sigma => "\\sigma_{\\star}", 
                                   :ref_core => "\\theta_{c,\\star}", 
-                                  :ref_cut => "\\theta_{t,\\star}")
+                                  :ref_cut => "\\theta_{t,\\star}",
+                                  :ref_mag     => "m_{\\star}",
+                                  :slope_sigma => "\\lambda",
+                                  :slope_core  => "\\beta",
+                                  :slope_cut   => "\\alpha")
 
 function get_param_name(key::Symbol)
    # Check static dictionary first
@@ -112,6 +115,13 @@ function get_param_name(key::Symbol)
    if m !== nothing
       n = m.captures[1]
       return "a_{dis}"
+   end
+
+   # Match :scalingN pattern
+   m = match(r"^scaling(\d+)$", string(key))
+   if m !== nothing
+      n = m.captures[1]
+      return "L_{$n}^{\\star}"
    end
    
    error("Unknown parameter name: $key")

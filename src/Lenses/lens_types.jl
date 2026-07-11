@@ -13,7 +13,11 @@ export init_PIEPLens
 export init_SIELens
 export init_PJELens
 export init_HernquistLens
+export init_aHernquistLens
+export init_eHernquistMDLens
 export init_NFWLens
+export init_aNFWLens
+export init_eNFWMDLens
 export init_tNFWLens
 export init_gNFWLens
 export init_EinastoLens
@@ -316,7 +320,7 @@ Initialize pseudo isothermal elliptical potential (PIEP) lens with the given par
 - `v_d::Real = NaN`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
 - `x_s::Real = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
 - `eps::Real = NaN`: Ellipticity (dimensionless).
-- `pa::Real = NaN`: Position angle (in ``\\rm \\mathbf{radians}``).
+- `pa::Real = NaN`: Position angle (in ``\\rm \\mathbf{deg}``).
 """
 struct init_PIEPLens{T<:Real} <: AbstractLens
    _lens_::Symbol
@@ -349,7 +353,7 @@ Initialize singular isothermal ellipsoid (SIE) lens with the given parameters.
 - `v_d::Real = NaN`: Velocity dispersion (in ``\\rm \\mathbf{km/s}``).
 - `x_s::Real = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
 - `eps::Real = NaN`: Ellipticity (dimensionless).
-- `pa::Real = NaN`: Position angle (in ``\\rm \\mathbf{radians}``).
+- `pa::Real = NaN`: Position angle (in ``\\rm \\mathbf{deg}``).
 """
 struct init_SIELens{T<:Real} <: AbstractLens
    _lens_::Symbol
@@ -384,7 +388,7 @@ Initialize Pseudo-Jaffe Ellipsoid (PJE) lens with the given parameters.
 - `x_s::Real = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
 - `x_t::Real = NaN`: Truncation radius (in ``\\rm \\mathbf{arcseconds}``).
 - `eps::Real = NaN`: Ellipticity (dimensionless).
-- `pa::Real = NaN`: Position angle (in ``\\rm \\mathbf{radians}``).
+- `pa::Real = NaN`: Position angle (in ``\\rm \\mathbf{deg}``).
 """
 struct init_PJELens{T<:Real} <: AbstractLens
    _lens_::Symbol
@@ -451,7 +455,7 @@ parameters.
 - `mass::Real= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
 - `x_s::Real = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
 - `eps::Real = NaN`: Ellipticity.
-- `pa::Real = NaN`: Position angle (in ``\\rm \\mathbf{radians}``).
+- `pa::Real = NaN`: Position angle (in ``\\rm \\mathbf{deg}``).
 """
 struct init_eHernquistMDLens{T<:Real} <: AbstractLens
    _lens_::Symbol
@@ -488,7 +492,7 @@ Initialize an approximate Hernquist lens (aHernquistLens) with the given paramet
 - `mass::Real= NaN`: Mass of the lens (in ``\\rm \\mathbf{M_\\odot}``).
 - `x_s::Real = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
 - `eps::Real = NaN`: Ellipticity.
-- `pa::Real = NaN`: Position angle (in ``\\rm \\mathbf{radians}``).
+- `pa::Real = NaN`: Position angle (in ``\\rm \\mathbf{deg}``).
 """
 struct init_aHernquistLens{T<:Real} <: AbstractLens
    _lens_::Symbol
@@ -598,7 +602,7 @@ overwritten.**
 - `x_s::Real = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
 - `c::Real = NaN`: Concentration of the lens.
 - `eps::Real = NaN`: Ellipticity.
-- `pa::Real = NaN`: Position angle (in ``\\rm \\mathbf{radians}``).
+- `pa::Real = NaN`: Position angle (in ``\\rm \\mathbf{deg}``).
 """
 struct init_eNFWMDLens{T<:Real} <: AbstractLens
    _lens_::Symbol
@@ -672,7 +676,7 @@ be initialized with either the concentration `c` or the scale radius `x_s`. **If
 - `x_s::Real = NaN`: Scale radius (in ``\\rm \\mathbf{arcseconds}``).
 - `c::Real = NaN`: Concentration of the lens.
 - `eps::Real = NaN`: Ellipticity.
-- `pa::Real = NaN`: Position angle (in ``\\rm \\mathbf{radians}``).
+- `pa::Real = NaN`: Position angle (in ``\\rm \\mathbf{deg}``).
 """
 struct init_aNFWLens{T<:Real} <: AbstractLens
    _lens_::Symbol
@@ -1049,7 +1053,7 @@ Initialize a Multi-component PJE lens with the given parameters.
 - `x_s = Vector{<:Real}()`: Vector of scale radii (in ``\\rm \\mathbf{arcseconds}``).
 - `x_t = Vector{<:Real}()`: Vector of tidal radii (in ``\\rm \\mathbf{arcseconds}``).
 - `eps = Vector{<:Real}()`: Vector of ellipticities.
-- `pa = Vector{<:Real}()`: Vector of position angles (in ``\\rm \\mathbf{radians}``).
+- `pa = Vector{<:Real}()`: Vector of position angles (in ``\\rm \\mathbf{deg}``).
 """
 struct init_MultiPJELens{T<:Real} <: AbstractLens
    _lens_::Symbol
@@ -1102,6 +1106,7 @@ const lens_init_functions = Dict{Symbol, Function}(
    :SIELens           => (comp -> init_SIELens(x_c=comp.x_c, y_c=comp.y_c, v_d=comp.v_d, x_s=comp.x_s, eps=comp.eps, pa=comp.pa)),
    :PJELens           => (comp -> init_PJELens(x_c=comp.x_c, y_c=comp.y_c, v_d=comp.v_d, x_s=comp.x_s, x_t=comp.x_t, eps=comp.eps, pa=comp.pa)),
    :HernquistLens     => (comp -> init_HernquistLens(D_d=comp.D_d, x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, x_s=comp.x_s)),
+   :eHernquistMDLens  => (comp -> init_eHernquistMDLens(D_d=comp.D_d, x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, x_s=comp.x_s, eps=comp.eps, pa=comp.pa)),
    :aHernquistLens    => (comp -> init_aHernquistLens(D_d=comp.D_d, x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, x_s=comp.x_s, eps=comp.eps, pa=comp.pa)),
    :NFWLens           => (comp -> init_NFWLens(comp.cosmology, comp.z_d; x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, c=comp.c)),
    :aNFWLens          => (comp -> init_aNFWLens(comp.cosmology, comp.z_d; x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, c=comp.c, eps=comp.eps, pa=comp.pa)),
