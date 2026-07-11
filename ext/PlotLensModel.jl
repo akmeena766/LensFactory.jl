@@ -78,9 +78,7 @@ end
 PARAM_NAME = Dict{Symbol, String}(:lens1 => "L1", :lens2 => "L2", :lens3 => "L3", :lens4 => "L4", 
                                   :lens5 => "L5", :lens6 => "L6", :lens7 => "L7", :lens8 => "L8", 
                                   :lens9 => "L9", :lens10 => "L10",
-                                  :scaling => "S", 
-                                  :x_c => "x_c", :y_c => "y_c", 
-                                  :eps => "\\epsilon", :pa => "\\phi", 
+                                  :x_c => "x_c", :y_c => "y_c", :eps => "\\epsilon", :pa => "\\phi", 
                                   :x_s => "x_s", :x_t => "x_t",
                                   :v_d => "v_d", :mass => "\\log[M]", :c => "c",
                                   :gamma => "\\gamma", :angle => "\\theta", :delta => "\\delta",
@@ -414,7 +412,11 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
    # Replace free parameter values by best-fit values
    pvals = LensFactory.LensModel.LensModelUtils.param_dict(model, best_θ, param_ref)
    
-   best_model = LensFactory.LensModel.LensModelUtils.build_lens(model, pvals)
+   # Update cosmology
+   cosmo = LensFactory.LensModel.LensModelUtils.current_cosmology(model, pvals)
+   
+   # Get best-fit model
+   best_model = LensFactory.LensModel.LensModelUtils.build_lens(model, pvals, cosmo)
 
    # Generate grid
    FOV = model.observation.FOV
@@ -422,11 +424,11 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
    x_grid, y_grid = Lenses.get_meshgrid(0.5 * FOV[1], 0.5 * FOV[2], pixel_scale)
 
    # Get angular-diameter distance ratios
-   adis = LensModel.adis_current(model, pvals)
+   adis = LensFactory.LensModel.adis_current(model, pvals, cosmo)
 
    # Calculate deflection and deformation tensor at all image positions
-   αx_all, αy_all = LensModel.lens_quantities_def(model, best_model)
-   A_all          = LensModel.lens_quantities_jac(model, best_model)
+   αx_all, αy_all = LensFactory.LensModel.LensModelUtils.lens_quantities_def(model, best_model)
+   A_all          = LensFactory.LensModel.LensModelUtils.lens_quantities_jac(model, best_model)
 
    # Identity tuple
    I4 = (1.0, 0.0, 0.0, 1.0)
@@ -482,11 +484,11 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
          end
 
          # Individual source positions using broadcasting
-         βx_ind = @. x - αx
-         βy_ind = @. y - αy
+         β_ind = @. tuple(x - αx, y - αy)
 
          # Get weighted source position
-         βx_model, βy_model, _ = LensModel.Likelihood._weighted_position(βx_ind, βy_ind, A, σx, σy, σθ, n)
+         β_model, _, _ = LensModel.Likelihood._weighted_position(β_ind, A, σx, σy, σθ, n)
+         βx_model, βy_model = β_model
 
          # Get image positions
          predicted_image = Lenses.get_image(best_model, x_grid, y_grid, adis_value, (βx_model, βy_model))
@@ -577,8 +579,12 @@ function LensFactory.LensModel.plot_image_scatter(model::LensModel.ModelConfig,
  
    # Replace free parameter values by best-fit values
    pvals = LensFactory.LensModel.LensModelUtils.param_dict(model, best_θ, param_ref)
- 
-   best_model = LensFactory.LensModel.LensModelUtils.build_lens(model, pvals)
+   
+   # Update cosmology
+   cosmo = LensFactory.LensModel.LensModelUtils.current_cosmology(model, pvals)
+   
+   # Get best-fit model
+   best_model = LensFactory.LensModel.LensModelUtils.build_lens(model, pvals, cosmo)
 
    # Generate grid
    FOV = model.observation.FOV
@@ -586,11 +592,11 @@ function LensFactory.LensModel.plot_image_scatter(model::LensModel.ModelConfig,
    x_grid, y_grid = Lenses.get_meshgrid(0.5 * FOV[1], 0.5 * FOV[2], pixel_scale)
  
    # Get angular-diameter distance ratios
-   adis = LensModel.adis_current(model, pvals)
+   adis = LensFactory.LensModel.adis_current(model, pvals, cosmo)
  
    # Calculate deflection and deformation tensor at all image positions
-   αx_all, αy_all = LensModel.lens_quantities_def(model, best_model)
-   A_all          = LensModel.lens_quantities_jac(model, best_model)
+   αx_all, αy_all = LensFactory.LensModel.LensModelUtils.lens_quantities_def(model, best_model)
+   A_all          = LensFactory.LensModel.LensModelUtils.lens_quantities_jac(model, best_model)
 
    # Identity tuple
    I4 = (1.0, 0.0, 0.0, 1.0)
@@ -627,11 +633,11 @@ function LensFactory.LensModel.plot_image_scatter(model::LensModel.ModelConfig,
          end
  
          # Individual source positions using broadcasting
-         βx_ind = @. x - αx
-         βy_ind = @. y - αy
- 
-         # Weighted source position
-         βx_model, βy_model, _ = LensModel.Likelihood._weighted_position(βx_ind, βy_ind, A, σx, σy, σθ, n)
+         β_ind = @. tuple(x - αx, y - αy)
+
+         # Get weighted source position
+         β_model, _, _ = LensModel.Likelihood._weighted_position(β_ind, A, σx, σy, σθ, n)
+         βx_model, βy_model = β_model
  
          # Predicted image positions
          predicted_image = Lenses.get_image(best_model, x_grid, y_grid, adis_value, (βx_model, βy_model))
