@@ -616,8 +616,8 @@ function get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Real
             βy = PolygonOps.bilinear_interpolation(rand_x[k], rand_y[k], θy) - adis * ψy_interp
 
             # Get the corresponding pixel values
-            βx_p = round(Int64, βx/pixel_h + nx/2.0)
-            βy_p = round(Int64, βy/pixel_h + ny/2.0)
+            βx_p = round(Int64, βx/pixel_h + 0.5*nx + 0.5)
+            βy_p = round(Int64, βy/pixel_h + 0.5*ny + 0.5)
 
             # make sure pixel position is within bounds
             if (1 <= βx_p <= nx) && (1 <= βy_p <= ny)
@@ -710,8 +710,8 @@ function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::T) whe
          βy = θy[i, j] - adis * ψy[i, j]
 
          # Get pixel position from radians
-         pixel_x = round(Int64, βx / pixel_h + 0.5 * nx + 1.0)
-         pixel_y = round(Int64, βy / pixel_h + 0.5 * ny + 1.0)
+         pixel_x = round(Int64, βx / pixel_h + 0.5*nx + 0.5)
+         pixel_y = round(Int64, βy / pixel_h + 0.5*ny + 0.5)
 
          # make sure pixel position is within bounds
          if (1 <= pixel_x <= nx) && (1 <= pixel_y <= ny)
