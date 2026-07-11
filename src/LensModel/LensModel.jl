@@ -302,7 +302,8 @@ function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::M
    x_grid, y_grid = Lenses.get_meshgrid(0.5 * FOV[1], 0.5 * FOV[2], pixel_scale)
 
    # Calculate deformation at all image positions
-   ψ_all, αx_all, αy_all, A_all = LensModelUtils.lens_quantities(model, best_model)
+   αx_all, αy_all = LensModelUtils.lens_quantities_def(model, best_model)
+   A_all          = LensModelUtils.lens_quantities_jac(model, best_model)
 
    # Identity tuple
    I4 = (1.0, 0.0, 0.0, 1.0)

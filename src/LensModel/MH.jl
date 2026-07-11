@@ -37,11 +37,11 @@ function _mh_runner_adaptive(log_posterior, start_θ::Vector{Float64}, n_steps::
    σ = copy(initial_σ)
     
    # Target acceptance rate
-   target_rate = 0.234
+   target_rate   = 0.234
    target_window = (0.23, 0.24)
-   block_size = n_adapt
-   num_blocks = div(n_steps, block_size)
-   rate_history = zeros(Float64, num_blocks)
+   block_size    = n_adapt
+   num_blocks    = cld(n_steps, block_size)
+   rate_history  = zeros(Float64, num_blocks)
 
    # Adaptation lock variables
    adaptation_locked = false
@@ -51,9 +51,13 @@ function _mh_runner_adaptive(log_posterior, start_θ::Vector{Float64}, n_steps::
    for b in 1:num_blocks
       block_accepted = 0
 
-      for i in 1:block_size
+      # Number of steps in this block (last block may be shorter)
+      i0 = (b - 1) * block_size
+      n_block = min(block_size, n_steps - i0)
+
+      for i in 1:n_block
          # Calculate absolute index in the full chain
-         idx = (b-1)*block_size + i
+         idx = i0 + i
             
          # Proposal Step: In-place to avoid allocations
          for j in 1:n_params
@@ -73,14 +77,14 @@ function _mh_runner_adaptive(log_posterior, start_θ::Vector{Float64}, n_steps::
             
          # Record State
          @views full_chain[idx, :] .= current_θ
-         ll_history[i] = current_logp
+         ll_history[idx] = current_logp
 
          next!(p)
       end
         
       # --- Adaptation Block ---
-      # Update σ based on the performance of the last 10,000 steps
-      current_rate = block_accepted / block_size
+      # Update σ based acceptance rate over the last block
+      current_rate = block_accepted / n_block
       rate_history[b] = current_rate
         
       if !adaptation_locked
@@ -100,7 +104,7 @@ function _mh_runner_adaptive(log_posterior, start_θ::Vector{Float64}, n_steps::
          end
       end
    end
-   return full_chain, rate_history
+   return full_chain, ll_history, rate_history
 end
 
 
@@ -138,7 +142,7 @@ function mh_runner(log_posterior::Function, seeds::Vector{Vector{Float64}}, n_st
    n_params = length(seeds[1])
    
    # Number of blocks
-   num_blocks = div(n_steps, n_adapt)
+   num_blocks = cld(n_steps, n_adapt)
     
    # Initial heuristic for σ: 2% of starting value or a small floor
    # This acts as the starting point for the adaptive blocks.
@@ -153,9 +157,9 @@ function mh_runner(log_posterior::Function, seeds::Vector{Vector{Float64}}, n_st
    p = Progress(n_steps * n_chains; dt=0.1, desc="Sampling Posterior... ", barlen=50)
    @threads for c in 1:n_chains
       # Each thread runs its own independent adaptive sampler
-      chains, rate_history = _mh_runner_adaptive(log_posterior, seeds[c], n_steps, n_adapt, σ_initial, p)
+      chains, ll_history, rate_history = _mh_runner_adaptive(log_posterior, seeds[c], n_steps, n_adapt, σ_initial, p)
       @views all_chains[:, c, :] .= chains
-      all_rates[:, c] .= rate_history
+      all_rates[:, c]   .= rate_history
       all_llhoods[:, c] .= ll_history
    end
 

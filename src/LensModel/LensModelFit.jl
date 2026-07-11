@@ -69,8 +69,9 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
    # Calculate position likelihood
    logL = 0.0
    if model.sampler.scheme == :SourcePlane
-      # Calculate deflection at image positions
-      ψ_all, αx_all, αy_all, A_all = LensModelUtils.lens_quantities(model, lens_model)
+      # Deflection and deformation tensor at the observed image positions
+      αx_all, αy_all = LensModelUtils.lens_quantities_def(model, lens_model)
+      A_all          = LensModelUtils.lens_quantities_jac(model, lens_model)
 
       # Calculate position likelihood
       logL_position, β_ind, β_mod = Likelihood.logL_sourceplane(model, adis, αx_all, αy_all, A_all)
@@ -93,10 +94,17 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
          # (cosmological parameters are always fixed - enforced at input reading)
          z_d, D_d = _lens_distance(model, cosmo)
 
+         # Potential at the observed image positions (only needed for this term)
+         ψ_all = LensModelUtils.lens_quantities_pot(model, lens_model)
+
          logL_td = Likelihood.logL_sourceplane_timedelay(model, adis, z_d, D_d, β_ind, β_mod, ψ_all, αx_all, αy_all)
          logL = logL + logL_td
       end
    elseif model.sampler.scheme == :ImagePlane_fast
+      # Deflection and deformation tensor at the observed image positions
+      αx_all, αy_all = LensModelUtils.lens_quantities_def(model, lens_model)
+      A_all          = LensModelUtils.lens_quantities_jac(model, lens_model)
+
       # Position likelihood
       logL_position, β_mod, θ_mod, all_converged = Likelihood.logL_imageplane_fast(model, lens_model, adis, αx_all, αy_all, A_all)
       logL = logL + logL_position
@@ -112,7 +120,9 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
 
          # Time-delay likelihood (exact Fermat potential at the recovered images)
          if model.source_config.use_time_delay
+            # Lens redshift and angular-diameter distance, cached in Observation
             z_d, D_d = _lens_distance(model, cosmo)
+            
             logL_td = Likelihood.logL_imageplane_fast_timedelay(model, lens_model, adis, z_d, D_d, β_mod, θ_mod)
             logL = logL + logL_td
          end

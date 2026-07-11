@@ -414,8 +414,9 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
    # Get angular-diameter distance ratios
    adis = LensModel.adis_current(model, pvals)
 
-   # Calculate deformation at all image positions
-   ψ_all, αx_all, αy_all, A_all = LensModel.lens_quantities(model, best_model)
+   # Calculate deflection and deformation tensor at all image positions
+   αx_all, αy_all = LensModel.lens_quantities_def(model, best_model)
+   A_all          = LensModel.lens_quantities_jac(model, best_model)
 
    # Identity tuple
    I4 = (1.0, 0.0, 0.0, 1.0)
@@ -577,8 +578,9 @@ function LensFactory.LensModel.plot_image_scatter(model::LensModel.ModelConfig,
    # Get angular-diameter distance ratios
    adis = LensModel.adis_current(model, pvals)
  
-   # Calculate lensing quantities
-   ψ_all, αx_all, αy_all, A_all = LensModel.lens_quantities(model, best_model)
+   # Calculate deflection and deformation tensor at all image positions
+   αx_all, αy_all = LensModel.lens_quantities_def(model, best_model)
+   A_all          = LensModel.lens_quantities_jac(model, best_model)
 
    # Identity tuple
    I4 = (1.0, 0.0, 0.0, 1.0)

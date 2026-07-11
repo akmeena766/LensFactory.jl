@@ -296,40 +296,74 @@ end
 
 
 # --------------------------------------------------------------------------------------------------
-# All lensing quantities needed for log-likelihood 
+# Per-knot lensing quantities needed for the log-likelihood, split by quantity so that each
+# is computed only when the sampling scheme / chi2 terms actually require it:
+#   - lens_quantities_pot : potential (source-plane time-delay term only)
+#   - lens_quantities_def : deflection (position terms, source-plane time-delay term)
+#   - lens_quantities_jac : deformation tensor (position and flux terms)
 # --------------------------------------------------------------------------------------------------
-function lens_quantities(model::ModelConfig, lens::Lenses.AbstractLens)
+function lens_quantities_pot(model::ModelConfig, lens::Lenses.AbstractLens)
    # Count the total number of knots in the lens model
    n_knots = sum(length(s.knots) for s in model.source_config.sources)
 
-   # Allocate outputs (vector of vectors)
-   ψ_all  = Vector{Vector{Float64}}(undef, n_knots)
-   αx_all = Vector{Vector{Float64}}(undef, n_knots)
-   αy_all = Vector{Vector{Float64}}(undef, n_knots)
-   A_all  = Vector{NTuple{4, Vector{Float64}}}(undef, n_knots)
+   # Allocate output (vector of vectors)
+   ψ_all = Vector{Vector{Float64}}(undef, n_knots)
 
    kid = 1
    for src in model.source_config.sources
       for knot in src.knots
-         # One image system knot positions
-         x = knot.x
-         y = knot.y
+         # Potential at the knot positions
+         ψ_all[kid] = Lenses.get_potential(lens, knot.x, knot.y)
 
-         # Potential
-         ψ_all[kid] = Lenses.get_potential(lens, x, y)
+         # Increment
+         kid = kid + 1
+      end
+   end
+   return ψ_all
+end
 
-         # Deflection
-         αx_all[kid], αy_all[kid] = Lenses.get_deflection(lens, x, y)
 
-         # Deformation tensor
-         ψxx, ψyy, ψxy = Lenses.get_jacobian(lens, x, y)
+function lens_quantities_def(model::ModelConfig, lens::Lenses.AbstractLens)
+   # Count the total number of knots in the lens model
+   n_knots = sum(length(s.knots) for s in model.source_config.sources)
+
+   # Allocate outputs (vector of vectors)
+   αx_all = Vector{Vector{Float64}}(undef, n_knots)
+   αy_all = Vector{Vector{Float64}}(undef, n_knots)
+
+   kid = 1
+   for src in model.source_config.sources
+      for knot in src.knots
+         # Deflection at the knot positions
+         αx_all[kid], αy_all[kid] = Lenses.get_deflection(lens, knot.x, knot.y)
+
+         # Increment
+         kid = kid + 1
+      end
+   end
+   return αx_all, αy_all
+end
+
+
+function lens_quantities_jac(model::ModelConfig, lens::Lenses.AbstractLens)
+   # Count the total number of knots in the lens model
+   n_knots = sum(length(s.knots) for s in model.source_config.sources)
+
+   # Allocate output (vector of tuples of vectors)
+   A_all = Vector{NTuple{4, Vector{Float64}}}(undef, n_knots)
+
+   kid = 1
+   for src in model.source_config.sources
+      for knot in src.knots
+         # Deformation tensor at the knot positions
+         ψxx, ψyy, ψxy = Lenses.get_jacobian(lens, knot.x, knot.y)
          A_all[kid] = (ψxx, ψxy, copy(ψxy), ψyy)
 
          # Increment
          kid = kid + 1
       end
    end
-   return ψ_all, αx_all, αy_all, A_all
+   return A_all
 end
 
 
