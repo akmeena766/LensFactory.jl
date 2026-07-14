@@ -524,7 +524,10 @@ can specify the unit of the input coordinates as either RA/DEC or arcseconds.
 # Returns
 - `ψ`: Lensing potential at the input coordinates for the best-fit model.
 """
-function get_potential(data_jld2::JLD2.JLDFile, θx::T, θy::T) where T <: Union{RV, ROA}
+function get_potential(data_jld2::JLD2.JLDFile, θx::T, θy::T;
+                       burn_in::Float64  = 0.2, 
+                       thin::Int64       = 1, 
+                       with_errors::Bool = false) where T <: Union{RV, ROA}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
@@ -535,12 +538,24 @@ function get_potential(data_jld2::JLD2.JLDFile, θx::T, θy::T) where T <: Union
    chains = data_jld2["chains"]
    logL   = data_jld2["logL"]
 
-   # Get best-fit lens model
-   best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_logL=logL)
-
+   # Get reference position
    RA_REF  = model.observation.reference[1]
    DEC_REF = model.observation.reference[2]
-   return get_potential(best_model, θx, θy; reference=(RA_REF, DEC_REF))
+
+   if with_errors == false
+      # Get best-fit lens model
+      best_model, best_logL = get_best_model(model; mcmc_chains=chains, mcmc_logL=logL; burn_in=0.0)
+
+      return get_potential(best_model, θx, θy; reference=(RA_REF, DEC_REF))
+   else
+      error("get_potential currently does not support with_errors=true.")
+      # Get best-fit lens model
+      best_model, best_logL = get_best_model(model; mcmc_chains=chains, mcmc_logL=logL; burn_in=0.0)
+
+      # Get 
+
+      return get_potential(model, θx, θy; reference=(RA_REF, DEC_REF))
+   end
 end
 
 
