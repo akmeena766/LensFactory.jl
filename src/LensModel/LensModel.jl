@@ -48,9 +48,11 @@ export free_parameter_names
 export get_best_fit_parameters
 export get_best_fit_rms
 export get_best_model
+export get_cosmology
 export get_potential
 export get_deflection
 export get_jacobian
+export get_magnification_image
 export predict_image
 export save_best_fits
 export get_AIC
@@ -69,6 +71,56 @@ function plot_corner end
 function plot_trace end
 function plot_best_model end
 function plot_image_scatter end
+
+
+# --------------------------------------------------------------------------------------------------
+# Helper functions
+# --------------------------------------------------------------------------------------------------
+# Build a lens model from a single parameter vector `θ` (e.g., a best-fit or one posterior sample).
+function _build_sample_model(model::ModelConfig, θ::AbstractVector{Float64}, param_ref::Dict)
+   # Replace free parameter values by the sample values
+   pvals = LensModelUtils.param_dict(model, θ, param_ref)
+ 
+   # Update cosmology
+   cosmo = LensModelUtils.current_cosmology(model, pvals)
+ 
+   # Build lens model
+   lens = LensModelUtils.build_lens(model, pvals, cosmo)
+ 
+   return lens, pvals, cosmo
+end
+
+# Flatten the post-burn-in MCMC chains and locate the best-fit sample. The best-fit sample is
+# determined on the unthinned post-burn-in chain, so `thin > 1` cannot skip the global best.
+# `sample_idx` contains the (per-chain step) thinned row indices into `flat_chains`, with the
+# best-fit sample removed.
+function _posterior_samples(chains::Array{Float64, 3}, logL::Matrix{Float64};
+                            burn_in::Float64 = 0.2, 
+                            thin::Int64      = 1)
+   # Get chain details
+   n_steps, n_chains, n_params = size(chains)
+ 
+   # Remove burn-in
+   start_idx     = Int(floor(n_steps * burn_in)) + 1
+   burnin_chains = chains[start_idx:end, :, :]
+   burnin_logL   = logL[start_idx:end, :]
+   post_steps    = size(burnin_chains, 1)
+ 
+   # Flatten across all chains
+   flat_chains = reshape(burnin_chains, :, n_params)
+   flat_logL   = vec(burnin_logL)
+ 
+   # Get best-fit sample (global best over all post-burn-in samples)
+   best_idx  = argmax(flat_logL)
+   best_θ    = flat_chains[best_idx, :]
+   best_logL = flat_logL[best_idx]
+ 
+   # Thinned flat indices (per-chain step thinning), excluding the best-fit sample
+   sample_idx = [s + (c - 1) * post_steps for c in 1:n_chains for s in 1:thin:post_steps]
+   filter!(!=(best_idx), sample_idx)
+ 
+   return best_θ, best_logL, flat_chains, sample_idx
+end
 
 
 # --------------------------------------------------------------------------------------------------
@@ -166,11 +218,11 @@ Get the best-fit parameters from the optimization or MCMC results.
 """
 function get_best_fit_parameters(results::Union{Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, Matrix{Float64}}; 
                              chains::Union{Array{Float64, 3}, Nothing}=nothing, 
-                             burn_in::Float64=0.2,
-                             with_errors::Bool=false,
-                             thin::Int64=1,
-                             print_table::Bool=false,
-                             free_parameter_names=nothing)
+                             burn_in::Float64     = 0.2,
+                             with_errors::Bool    = false,
+                             thin::Int64          = 1,
+                             print_table::Bool    = false,
+                             free_parameter_names = nothing)
    # Initialize outputs
    best_θ    = nothing
    best_logL = -Inf
@@ -281,17 +333,9 @@ function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::M
    # Get the best parameters based on minimum logL
    best_θ, _ = get_best_fit_parameters(logL; chains=chains, burn_in=burn_in)
 
-   # Get list of parameters for the lens model
+   # Get best-fit model, parameter values and cosmology
    param_ref = Dict(p.key => p.refer for p in model.parameters)
-   
-   # Replace free parameter values by best-fit values
-   pvals = LensModelUtils.param_dict(model, best_θ, param_ref)
-
-   # Update cosmology
-   cosmo = LensModelUtils.current_cosmology(model, pvals)
-
-   # Get best-fit model
-   best_model = LensModelUtils.build_lens(model, pvals, cosmo)
+   best_model, pvals, cosmo = _build_sample_model(model, best_θ, param_ref)
 
    # Get angular-diameter distance ratios
    adis = LensModelUtils.adis_current(model, pvals, cosmo)
@@ -444,6 +488,73 @@ function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::M
    return nothing
 end
 
+
+# --------------------------------------------------------------------------------------------------
+# Get best-fit cosmology
+# --------------------------------------------------------------------------------------------------
+"""
+    get_cosmology(data_jld2::JLD2.JLDFile; burn_in::Float64=0.2, thin::Int64=1, with_errors::Bool=false)
+Extract the cosmology corresponding to the best-fit model. If `with_errors=true`, the cosmology is
+also constructed for every post-burn-in (thinned) posterior sample, excluding the best-fit sample,
+so that uncertainties on cosmology-dependent quantities can be derived from the sample
+distribution. Note that the sampled cosmologies only differ from the best-fit one if cosmological
+parameters are free in the fit.
+ 
+# Arguments
+- `data_jld2::JLD2.JLDFile`: JLD2 data file containing the fit results.
+ 
+# Keyword Arguments
+- `burn_in::Float64=0.2`: The fraction of MCMC chains to discard as burn-in. Set to 0.0 when the
+   input file was produced by [`error_models`](@ref), as those samples are already post-burn-in.
+- `thin::Int64=1`: The thinning factor applied (per chain) when selecting posterior samples. Only
+   used when `with_errors=true`.
+- `with_errors::Bool=false`: If `true`, also return the cosmology for every posterior sample.
+ 
+# Returns
+- If `with_errors=false`:
+   - `cosmo_best`: Cosmology corresponding to the best-fit parameters.
+- If `with_errors=true`:
+   - `cosmo_best`: Cosmology corresponding to the best-fit parameters.
+   - `cosmo_samples::Vector`: Cosmology for each posterior sample (best fit excluded).
+"""
+function get_cosmology(data_jld2::JLD2.JLDFile;
+                       burn_in::Float64  = 0.2,
+                       thin::Int64       = 1,
+                       with_errors::Bool = false)
+   # Load the model, chains and logL from the input file
+   model  = data_jld2["model"]
+   chains = data_jld2["chains"]
+   logL   = data_jld2["logL"]
+ 
+   # Flatten chains and get best-fit sample
+   best_θ, _, flat_chains, sample_idx = _posterior_samples(chains, logL; burn_in=burn_in, thin=thin)
+ 
+   # Get list of parameters for the lens model (sample-independent, build once)
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+ 
+   # Get best-fit cosmology (no lens model needed)
+   pvals      = LensModelUtils.param_dict(model, best_θ, param_ref)
+   cosmo_best = LensModelUtils.current_cosmology(model, pvals)
+ 
+   if !with_errors
+      return cosmo_best
+   end
+ 
+   # Construct the cosmology for every remaining posterior sample
+   cosmo_samples = Vector{typeof(cosmo_best)}(undef, length(sample_idx))
+ 
+   for (k, i) in enumerate(sample_idx)
+      # Replace free parameter values by the i-th sample values
+      pvals = LensModelUtils.param_dict(model, flat_chains[i, :], param_ref)
+ 
+      # Construct cosmology for this sample
+      cosmo_samples[k] = LensModelUtils.current_cosmology(model, pvals)
+   end
+ 
+   return cosmo_best, cosmo_samples
+end
+
+
 # --------------------------------------------------------------------------------------------------
 # Get lensing quantities for the best-fit model
 # --------------------------------------------------------------------------------------------------
@@ -477,57 +588,68 @@ function get_best_model(model::ModelConfig;
       error("Either optim_result or (mcmc_chains and mcmc_logL) must be provided.")
    end
 
-   # Get list of parameters for the lens model
+   # Build best-fit lens model
    param_ref = Dict(p.key => p.refer for p in model.parameters)
-   
-   # Replace free parameter values by best-fit values
-   pvals = LensModelUtils.param_dict(model, best_θ, param_ref)
-   
-   # Update cosmology
-   cosmo = LensModelUtils.current_cosmology(model, pvals)
+   best_model, _, _ = _build_sample_model(model, best_θ, param_ref)
 
-   return LensModelUtils.build_lens(model, pvals, cosmo), best_logL
+   return best_model, best_logL
 end
 
 
 """
     get_potential(best_model::Lenses.AbstractLens, θx::T, θy::T;
-                  reference::Tuple{Float64, Float64}) where T <: Union{RV, ROA}
+                  reference::Tuple{Float64, Float64} = (0.0, 0.0)) where T <: Union{Real, ROA}
 """
-function get_potential(best_model::Lenses.AbstractLens, θx::T, θy::T; 
-                       reference::Tuple{Float64, Float64} = (0.0, 0.0)) where T <: Union{RV, ROA}
+function get_potential(lens_model::Lenses.AbstractLens, θx::T, θy::T; 
+                       reference::Tuple{Float64, Float64} = (0.0, 0.0)) where T <: Union{Real, ROA}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
    end
    
    if reference[1] == 0.0 && reference[2] == 0.0
-      return Lenses.get_potential(best_model, θx, θy)
+      return Lenses.get_potential(lens_model, θx, θy)
    else
       θx_arcsec, θy_arcsec = AstrometricOps.gnomonic_offsets_arcsec(reference[1], reference[2], θx, θy)
-      return Lenses.get_potential(best_model, θx_arcsec, θy_arcsec)
+      return Lenses.get_potential(lens_model, θx_arcsec, θy_arcsec)
    end
 end
 
 
 """
-    get_potential(jld2_file::JLD2.JLDFile, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{ROA, Vector{Int64}}
-Calculate the lensing potential at the given coordinates `(θx, θy)` for the best-fit model. The user
-can specify the unit of the input coordinates as either RA/DEC or arcseconds.
+    get_potential(data_jld2::JLD2.JLDFile, θx::T, θy::T; 
+                  burn_in::Float64  = 0.2, 
+                  thin::Int64       = 1, 
+                  with_errors::Bool = false) where T <: Union{Real, ROA}
+Calculate the lensing potential at the given coordinates `(θx, θy)` for the best-fit model. If
+`with_errors=true`, the potential is also calculated for every post-burn-in (thinned) posterior
+sample, excluding the best-fit sample, so that uncertainties can be derived from the sample
+distribution.
 
 # Arguments
-- `jld2_file::JLD2.JLDFile` or `best_model::Lenses.AbstractLens`: JLD2 data file containing the fit
-   results or the best-fit lens model.
-- `θx`: x-coordinates
-- `θy`: y-coordinates
+- `data_jld2`: JLD2 data file containing the fit results or the best-fit lens model.
+- `θx`: x-coordinates (RA in degrees).
+- `θy`: y-coordinates (DEC in degrees).
 
+# Keyword Arguments
+- `burn_in = 0.2`: The fraction of MCMC chains to discard as burn-in. Set to 0.0 when the
+   input file was produced by [`error_models`](@ref), as those samples are already post-burn-in.
+- `thin = 1`: The thinning factor applied (per chain) when selecting posterior samples. Only
+   used when `with_errors = true`.
+- `with_errors = false`: If `true`, also return the potential for every posterior sample.
+ 
 # Returns
-- `ψ`: Lensing potential at the input coordinates for the best-fit model.
+- If `with_errors=false`:
+   - `ψ_best`: Lensing potential at the input coordinates for the best-fit model.
+- If `with_errors=true`:
+   - `ψ_best`: Lensing potential at the input coordinates for the best-fit model.
+   - `ψ_samples::Vector`: Lensing potential for each posterior sample (best fit excluded), where
+      each element has the same shape as `θx`.
 """
 function get_potential(data_jld2::JLD2.JLDFile, θx::T, θy::T;
                        burn_in::Float64  = 0.2, 
                        thin::Int64       = 1, 
-                       with_errors::Bool = false) where T <: Union{RV, ROA}
+                       with_errors::Bool = false) where T <: Union{Real, ROA}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
@@ -542,28 +664,41 @@ function get_potential(data_jld2::JLD2.JLDFile, θx::T, θy::T;
    RA_REF  = model.observation.reference[1]
    DEC_REF = model.observation.reference[2]
 
+   # Flatten chains and get best-fit sample
+   best_θ, _, flat_chains, sample_idx = _posterior_samples(chains, logL; burn_in=burn_in, thin=thin)
+ 
+   # Get list of parameters for the lens model (sample-independent, build once)
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+ 
+   # Build best-fit lens model and calculate its potential
+   best_model, _, _ = _build_sample_model(model, best_θ, param_ref)
+   ψ_best = get_potential(best_model, θx, θy; reference=(RA_REF, DEC_REF))
+ 
    if !with_errors
-      # Get best-fit lens model
-      best_model, best_logL = get_best_model(model; mcmc_chains=chains, mcmc_logL=logL, burn_in=0.0)
-
-      return get_potential(best_model, θx, θy; reference=(RA_REF, DEC_REF))
-   else
-      error("get_potential currently does not support with_errors=true.")
-      # Get best-fit lens model
-      best_model, best_logL = get_best_model(model; mcmc_chains=chains, mcmc_logL=logL, burn_in=0.0)
-
-      # Get 
-
-      return get_potential(model, θx, θy; reference=(RA_REF, DEC_REF))
+      return ψ_best
    end
+
+   # Calculate the potential for every remaining posterior sample
+   ψ_samples = Vector{typeof(ψ_best)}(undef, length(sample_idx))
+ 
+   for (k, i) in enumerate(sample_idx)
+      # Build lens model for this sample
+      sample_model, _, _ = _build_sample_model(model, flat_chains[i, :], param_ref)
+ 
+      # Calculate potential for this sample
+      ψ_samples[k] = get_potential(sample_model, θx, θy; reference=(RA_REF, DEC_REF))
+   end
+ 
+   return ψ_best, ψ_samples
 end
 
 
 """
-    get_deflection(best_model::Lenses.AbstractLens, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
+    get_deflection(best_model::Lenses.AbstractLens, θx::T, θy::T; 
+                   reference::Tuple{Float64, Float64}=(0.0, 0.0)) where T <: Union{Real, ROA}
 """
 function get_deflection(best_model::Lenses.AbstractLens, θx::T, θy::T; 
-                        reference::Tuple{Float64, Float64} = (0.0, 0.0)) where T <: Union{RV, ROA}
+                        reference::Tuple{Float64, Float64} = (0.0, 0.0)) where T <: Union{Real, ROA}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
@@ -580,22 +715,35 @@ end
 
 
 """
-    get_deflection(jld2_file::JLD2.JLDFile, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
-Calculate the lensing deflection at the given coordinates `(θx, θy)` for the best-fit model. The
-user can specify the unit of the input coordinates as either RA/DEC or arcseconds.
-
+    get_deflection(data_jld2::JLD2.JLDFile, θx::T, θy::T; 
+                   burn_in::Float64  = 0.2, 
+                   thin::Int64       = 1, 
+                   with_errors::Bool = false) where T <: Union{Real, ROA}
+Calculate the lensing deflection at the given coordinates `(θx, θy)` for the best-fit model. If
+`with_errors=true`, the deflection is also calculated for every post-burn-in (thinned) posterior
+sample, excluding the best-fit sample, so that uncertainties can be derived from the sample
+distribution.
+ 
 # Arguments
-- `jld2_file::JLD2.JLDFile` or `best_model::Lenses.AbstractLens`: JLD2 data file containing the fit
-   results or the best-fit lens model.
-- `θx`: x-coordinates
-- `θy`: y-coordinates
-
+- `data_jld2`: JLD2 data file containing the fit results.
+- `θx`: x-coordinates (RA in degrees).
+- `θy`: y-coordinates (DEC in degrees).
+ 
 # Keyword Arguments
-- reference = (0.0, 0.0): Reference (RA, Dec) coordinate (in degrees). 
-
+- `burn_in=0.2`: The fraction of MCMC chains to discard as burn-in. Set to 0.0 when the
+   input file was produced by [`error_models`](@ref), as those samples are already post-burn-in.
+- `thin=1`: The thinning factor applied (per chain) when selecting posterior samples. Only
+   used when `with_errors=true`.
+- `with_errors=false`: If `true`, also return the deflection for every posterior sample.
+ 
 # Returns
-- `αx`: x-component of the deflection angle (in arcseconds).
-- `αy`: y-component of the deflection angle (in arcseconds).
+- If `with_errors=false`:
+   - `αx`: x-component of the deflection angle (in arcseconds).
+   - `αy`: y-component of the deflection angle (in arcseconds).
+- If `with_errors=true`:
+   - `(αx_best, αy_best)`: Deflection components for the best-fit model.
+   - `(αx_samples, αy_samples)`: Vectors with deflection components for each posterior sample
+      (best fit excluded), where each element has the same shape as `θx`.
 """
 function get_deflection(data_jld2::JLD2.JLDFile, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{ROA, Vector{Int64}}
    # Check if the input coordinates are of the same size
@@ -608,19 +756,44 @@ function get_deflection(data_jld2::JLD2.JLDFile, θx::T, θy::T; unit::Symbol=:R
    chains = data_jld2["chains"]
    logL   = data_jld2["logL"]
 
-   # Get best-fit lens model
-   best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_logL=logL)
-
+   # Get reference position
    RA_REF  = model.observation.reference[1]
    DEC_REF = model.observation.reference[2]
-   return get_deflection(best_model, θx, θy; reference=(RA_REF, DEC_REF))
+ 
+   # Flatten chains and get best-fit sample
+   best_θ, _, flat_chains, sample_idx = _posterior_samples(chains, logL; burn_in=burn_in, thin=thin)
+ 
+   # Get list of parameters for the lens model (sample-independent, build once)
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+ 
+   # Build best-fit lens model and calculate its deflection
+   best_model, _, _ = _build_sample_model(model, best_θ, param_ref)
+   αx_best, αy_best = get_deflection(best_model, θx, θy; reference=(RA_REF, DEC_REF))
+ 
+   if !with_errors
+      return αx_best, αy_best
+   end
+ 
+   # Calculate the deflection for every remaining posterior sample
+   αx_samples = Vector{typeof(αx_best)}(undef, length(sample_idx))
+   αy_samples = Vector{typeof(αy_best)}(undef, length(sample_idx))
+ 
+   for (k, i) in enumerate(sample_idx)
+      # Build lens model for this sample
+      sample_model, _, _ = _build_sample_model(model, flat_chains[i, :], param_ref)
+ 
+      # Calculate deflection for this sample
+      αx_samples[k], αy_samples[k] = get_deflection(sample_model, θx, θy; reference=(RA_REF, DEC_REF))
+   end
+ 
+   return (αx_best, αy_best), (αx_samples, αy_samples)
 end
 
 """
-    get_jacobian(best_model::Lenses.AbstractLens, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
+    get_jacobian(best_model::Lenses.AbstractLens, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{Real, ROA}
 """
 function get_jacobian(best_model::Lenses.AbstractLens, θx::T, θy::T; 
-                      reference::Tuple{Float64, Float64} = (0.0, 0.0)) where T <: Union{RV, ROA}
+                      reference::Tuple{Float64, Float64} = (0.0, 0.0)) where T <: Union{Real, ROA}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
@@ -638,25 +811,41 @@ end
 
 
 """
-    get_jacobian(jld2_file::JLD2.JLDFile, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{RV, ROA}
-Calculate the Jacobian (i.e., deformation tensor) at the given coordinates `(θx, θy)` for the 
-best-fit model. The user can specify the unit of the input coordinates as either RA/DEC or arcseconds.
-
+    get_jacobian(data_jld2::JLD2.JLDFile, θx::T, θy::T; 
+                 burn_in::Float64  = 0.2, 
+                 thin::Int64       = 1, 
+                 with_errors::Bool = false) where T <: Union{Real, ROA}
+Calculate the Jacobian (i.e., deformation tensor) at the given coordinates `(θx, θy)` for the
+best-fit model. If `with_errors=true`, the Jacobian is also calculated for every post-burn-in
+(thinned) posterior sample, excluding the best-fit sample, so that uncertainties can be derived
+from the sample distribution.
+ 
 # Arguments
-- `jld2_file::JLD2.JLDFile` or `best_model::Lenses.AbstractLens`: JLD2 data file containing the fit
-   results or the best-fit lens model.
-- `θx`: x-coordinates
-- `θy`: y-coordinates
-
+- `data_jld2::JLD2.JLDFile`: JLD2 data file containing the fit results.
+- `θx`: x-coordinates (RA in degrees).
+- `θy`: y-coordinates (DEC in degrees).
+ 
 # Keyword Arguments
-- reference = (0.0, 0.0): Reference (RA, Dec) coordinate (in degrees). 
-
+- `burn_in::Float64=0.2`: The fraction of MCMC chains to discard as burn-in. Set to 0.0 when the
+   input file was produced by [`error_models`](@ref), as those samples are already post-burn-in.
+- `thin::Int64=1`: The thinning factor applied (per chain) when selecting posterior samples. Only
+   used when `with_errors=true`.
+- `with_errors::Bool=false`: If `true`, also return the Jacobian for every posterior sample.
+ 
 # Returns
-- `ψxx`: xx-component of the jacobian.
-- `ψyy`: yy-component of the jacobian.
-- `ψxy`: xy-component of the jacobian.
+- If `with_errors=false`:
+   - `ψxx`: xx-component of the jacobian.
+   - `ψyy`: yy-component of the jacobian.
+   - `ψxy`: xy-component of the jacobian.
+- If `with_errors=true`:
+   - `(ψxx_best, ψyy_best, ψxy_best)`: Jacobian components for the best-fit model.
+   - `(ψxx_samples, ψyy_samples, ψxy_samples)`: Vectors with Jacobian components for each
+      posterior sample (best fit excluded), where each element has the same shape as `θx`.
 """
-function get_jacobian(data_jld2::JLD2.JLDFile, θx::T, θy::T) where T <: Union{RV, ROA}
+function get_jacobian(data_jld2::JLD2.JLDFile, θx::T, θy::T; 
+                      burn_in::Float64  = 0.2,
+                      thin::Int64       = 1,
+                      with_errors::Bool = false) where T <: Union{Real, ROA}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
@@ -667,17 +856,159 @@ function get_jacobian(data_jld2::JLD2.JLDFile, θx::T, θy::T) where T <: Union{
    chains = data_jld2["chains"]
    logL   = data_jld2["logL"]
 
-   # Get best-fit lens model
-   best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_logL=logL)
-
+   # Get reference position
    RA_REF  = model.observation.reference[1]
    DEC_REF = model.observation.reference[2]
-   return get_jacobian(best_model, θx, θy; reference=(RA_REF, DEC_REF))
+ 
+   # Flatten chains and get best-fit sample
+   best_θ, _, flat_chains, sample_idx = _posterior_samples(chains, logL; burn_in=burn_in, thin=thin)
+ 
+   # Get list of parameters for the lens model (sample-independent, build once)
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+ 
+   # Build best-fit lens model and calculate its Jacobian
+   best_model, _, _ = _build_sample_model(model, best_θ, param_ref)
+   ψxx_best, ψyy_best, ψxy_best = get_jacobian(best_model, θx, θy; reference=(RA_REF, DEC_REF))
+ 
+   if !with_errors
+      return ψxx_best, ψyy_best, ψxy_best
+   end
+ 
+   # Calculate the Jacobian for every remaining posterior sample
+   ψxx_samples = Vector{typeof(ψxx_best)}(undef, length(sample_idx))
+   ψyy_samples = Vector{typeof(ψyy_best)}(undef, length(sample_idx))
+   ψxy_samples = Vector{typeof(ψxy_best)}(undef, length(sample_idx))
+ 
+   for (k, i) in enumerate(sample_idx)
+      # Build lens model for this sample
+      sample_model, _, _ = _build_sample_model(model, flat_chains[i, :], param_ref)
+ 
+      # Calculate Jacobian for this sample
+      ψxx_samples[k], ψyy_samples[k], ψxy_samples[k] = get_jacobian(sample_model, θx, θy; reference=(RA_REF, DEC_REF))
+   end
+ 
+   return (ψxx_best, ψyy_best, ψxy_best), (ψxx_samples, ψyy_samples, ψxy_samples)
 end
 
 
 """
-    predict_image(jld2_file::JLD2.JLDFile, θx::T, θy::T, z_s::Float64; unit::Symbol=:RA_DEC) where T <: Union{RV, Vector{Float64}}
+    get_magnification_image(best_model::Lenses.AbstractLens, θx::T, θy::T, adis::Real; 
+                            reference::Tuple{Float64, Float64} = (0.0, 0.0)) where T <: Union{Real, ROA}
+"""
+function get_magnification_image(best_model::Lenses.AbstractLens, θx::T, θy::T, adis::Real; 
+                                 reference::Tuple{Float64, Float64} = (0.0, 0.0)) where T <: Union{Real, ROA}
+   # Check if the input coordinates are of the same size
+   if size(θx) != size(θy)
+      throw(ArgumentError("Input coordinates must be of the same size."))
+   end
+
+   # Convert input coordinates to arcseconds if they are in RA/DEC
+   if reference[1] == 0.0 && reference[2] == 0.0
+      return Lenses.get_magnification_image(best_model, θx, θy, adis)
+   else
+      # Convert RA/DEC to arcseconds relative to the reference position
+      θx_arcsec, θy_arcsec = AstrometricOps.gnomonic_offsets_arcsec(reference[1], reference[2], θx, θy)
+      return Lenses.get_magnification_image(best_model, θx_arcsec, θy_arcsec, adis)
+   end
+end
+
+
+"""
+    get_magnification_image(data_jld2::JLD2.JLDFile, θx::T, θy::T, z_s::Float64; 
+                            burn_in::Float64  = 0.2, 
+                            thin::Int64       = 1, 
+                            with_errors::Bool = false) where T <: Union{RV, ROA}
+Calculate the magnification at the given coordinates `(θx, θy)` for a source at redshift `z_s`
+using the best-fit model. If `with_errors=true`, the magnification is also calculated for every
+post-burn-in (thinned) posterior sample, excluding the best-fit sample, so that uncertainties can
+be derived from the sample distribution.
+ 
+Since the magnification depends on the angular-diameter distance ratio `D_ls/D_os`, both the lens
+model and the cosmology are rebuilt from the same parameter vector for every posterior sample.
+This preserves the correlations between lens and cosmological parameters in the posterior.
+ 
+# Arguments
+- `data_jld2::JLD2.JLDFile`: JLD2 data file containing the fit results.
+- `θx`: x-coordinates (RA in degrees).
+- `θy`: y-coordinates (DEC in degrees).
+- `z_s::Float64`: Source redshift.
+ 
+# Keyword Arguments
+- `burn_in::Float64=0.2`: The fraction of MCMC chains to discard as burn-in. Set to 0.0 when the
+   input file was produced by [`error_models`](@ref), as those samples are already post-burn-in.
+- `thin::Int64=1`: The thinning factor applied (per chain) when selecting posterior samples. Only
+   used when `with_errors=true`.
+- `with_errors::Bool=false`: If `true`, also return the magnification for every posterior sample.
+ 
+# Returns
+- If `with_errors=false`:
+   - `μ_best`: Magnification at the input coordinates for the best-fit model.
+- If `with_errors=true`:
+   - `μ_best`: Magnification at the input coordinates for the best-fit model.
+   - `μ_samples::Vector`: Magnification for each posterior sample (best fit excluded), where each
+      element has the same shape as `θx`.
+"""
+function get_magnification_image(data_jld2::JLD2.JLDFile, θx::T, θy::T, z_s::Float64;
+                                 burn_in::Float64  = 0.2,
+                                 thin::Int64       = 1,
+                                 with_errors::Bool = false) where T <: Union{RV, ROA}
+   # Check if the input coordinates are of the same size
+   if size(θx) != size(θy)
+      throw(ArgumentError("Input coordinates must be of the same size."))
+   end
+ 
+   # Load the model, chains and logL from the input file
+   model  = data_jld2["model"]
+   chains = data_jld2["chains"]
+   logL   = data_jld2["logL"]
+ 
+   # Get lens redshift and reference position
+   z_d     = model.observation.z_d
+   RA_REF  = model.observation.reference[1]
+   DEC_REF = model.observation.reference[2]
+ 
+   # Flatten chains and get best-fit sample
+   best_θ, _, flat_chains, sample_idx = _posterior_samples(chains, logL; burn_in=burn_in, thin=thin)
+ 
+   # Get list of parameters for the lens model (sample-independent, build once)
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+ 
+   # Build best-fit lens model and cosmology from the same parameter vector
+   best_model, _, cosmo = _build_sample_model(model, best_θ, param_ref)
+ 
+   # Angular-diameter distance ratio for the best-fit cosmology
+   Dls  = Cosmology.angular_diameter_distance(cosmo, z_d, z_s)
+   Dos  = Cosmology.angular_diameter_distance(cosmo, 0.0, z_s)
+   adis = Dls / Dos
+ 
+   # Calculate magnification for the best-fit model
+   μ_best = get_magnification_image(best_model, θx, θy, adis; reference=(RA_REF, DEC_REF))
+ 
+   if !with_errors
+      return μ_best
+   end
+ 
+   # Calculate the magnification for every remaining posterior sample
+   μ_samples = Vector{typeof(μ_best)}(undef, length(sample_idx))
+ 
+   for (k, i) in enumerate(sample_idx)
+      # Build lens model and cosmology for this sample (from the same parameter vector)
+      sample_model, _, cosmo_i = _build_sample_model(model, flat_chains[i, :], param_ref)
+ 
+      # Angular-diameter distance ratio for this sample's cosmology
+      Dls_i  = Cosmology.angular_diameter_distance(cosmo_i, z_d, z_s)
+      Dos_i  = Cosmology.angular_diameter_distance(cosmo_i, 0.0, z_s)
+      adis_i = Dls_i / Dos_i
+ 
+      # Calculate magnification for this sample
+      μ_samples[k] = get_magnification_image(sample_model, θx, θy, adis_i; reference=(RA_REF, DEC_REF))
+   end
+ 
+   return μ_best, μ_samples
+end
+
+"""
+    predict_image(jld2_file::JLD2.JLDFile, θx::T, θy::T, z_s::Float64; unit::Symbol=:RA_DEC) where T <: Union{Real, Vector{Float64}}
 Predict counter-image positions, magnifications and time delays based on the best-fit lens model.
 The function can take either a single observed image or multiple observed images of the same system.
 If multiple images are provided then the function will calculate the barycentric source position and
@@ -699,7 +1030,7 @@ then predict the counter-image positions, magnifications and time delays.
    The table is sorted based on the time delay and at the end also contains the best-fit model 
    predicted source position.
 """
-function predict_image(data_jld2::JLD2.JLDFile, θx::T, θy::T, z_s::Float64; unit::Symbol=:RA_DEC) where T <: Union{RV, Vector{Float64}}
+function predict_image(data_jld2::JLD2.JLDFile, θx::T, θy::T, z_s::Float64; unit::Symbol=:RA_DEC) where T <: Union{Real, Vector{Float64}}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
@@ -975,10 +1306,30 @@ end
 # --------------------------------------------------------------------------------------------------
 # Extract posterior samples and best-fit from MCMC chain → JLD2
 # --------------------------------------------------------------------------------------------------
+"""
+    error_models(data_jld2::JLD2.JLDFile; 
+                 n_samples:: Int64 = 1000,
+                 burn_in::Float64  = 0.2,
+                 out_file::String  = "")
+Extracts posterior samples and best-fit values from the MCMC chains stored in a JLD2 file.
+
+# Arguments
+- `data_jld2::JLD2.JLDFile`: Path to the JLD2 file containing the MCMC results.
+
+# Keyword Arguments
+- `n_samples = 1000`: The number of posterior samples to extract.
+- `burn_in   = 0.2`: The fraction of MCMC steps to discard as burn-in (default: 20%).
+- `out_file  = ""`: Optional path to save the extracted posterior samples and best-fit values 
+                           to a new JLD2 file. If empty, the file will be named 
+                           `"err_post_<Date>_<Time>.jld2"`.
+
+# Returns
+- `nothing`: Saves error models in a JLD2 file.
+"""
 function error_models(data_jld2::JLD2.JLDFile; 
                       n_samples:: Int64 = 1000,
-                      burn_in::Float64 = 0.2,
-                      out_file::String = "")
+                      burn_in::Float64  = 0.2,
+                      out_file::String  = "")
    # Load data from the JLD2 file
    Date   = data_jld2["Date"]
    Time   = data_jld2["Time"]
