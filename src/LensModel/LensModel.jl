@@ -542,15 +542,15 @@ function get_potential(data_jld2::JLD2.JLDFile, θx::T, θy::T;
    RA_REF  = model.observation.reference[1]
    DEC_REF = model.observation.reference[2]
 
-   if with_errors == false
+   if !with_errors
       # Get best-fit lens model
-      best_model, best_logL = get_best_model(model; mcmc_chains=chains, mcmc_logL=logL; burn_in=0.0)
+      best_model, best_logL = get_best_model(model; mcmc_chains=chains, mcmc_logL=logL, burn_in=0.0)
 
       return get_potential(best_model, θx, θy; reference=(RA_REF, DEC_REF))
    else
       error("get_potential currently does not support with_errors=true.")
       # Get best-fit lens model
-      best_model, best_logL = get_best_model(model; mcmc_chains=chains, mcmc_logL=logL; burn_in=0.0)
+      best_model, best_logL = get_best_model(model; mcmc_chains=chains, mcmc_logL=logL, burn_in=0.0)
 
       # Get 
 
