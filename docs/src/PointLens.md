@@ -1,5 +1,5 @@
 # Point Lens
-Arguably, the simplest gravitational lens is a **point mass lens** (i.e., Schwarzschild lens). 
+Arguably, the simplest gravitational lens is a point mass lens (i.e., Schwarzschild lens). 
 The lensing by a given point mass lens is characterized by two parameters: its mass ($M$) and the 
 source position ($\boldsymbol{\beta}$). The corresponding lens potential is given by
 ```math
