@@ -346,7 +346,7 @@ end
     get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: ROA --> Tuple(ROA, ROA, ROA)
 Calculate jacobian (i.e., deformation tensor) of the lens mapping for a given lens model,
 ```math
-\\mathcal{A}(\\pmb{θ}) = 
+\\mathbb{A}(\\pmb{θ}) = 
 \\begin{pmatrix}
    ψ_{xx} & ψ_{xy} \\\\
    ψ_{xy} & ψ_{yy}
@@ -542,7 +542,7 @@ end
                             adis::Real) where T <: ROA --> ROA
 Calculate signed magnification at the given angular coordinate(s) for a given lens model,
 ```math
-\\mu(\\pmb{θ}) = \\frac{1}{det\\left[ \\mathbb{I} - a_{\\rm dis} \\, \\mathcal{A} \\right]},
+\\mu(\\pmb{θ}) = \\frac{1}{det\\left[ \\mathbb{I} - a_{\\rm dis} \\, \\mathbb{A} \\right]},
 ```
 where ``\\mathbb{I}`` is the identity matrix.
 
@@ -573,9 +573,10 @@ end
     get_magnification_source(lens::AbstractLens, θx::T, θy::T, 
                              adis::Real; 
                              rays_per_pixel::Int64 = 1) where T <: Matrix{<:Real} --> Matrix{<:Real}
-Calculates the magnification map in source plane using inverse ray shooting (IRS) for a given lens 
-model. The number of average rays per pixel can be specified using the `rays_per_pixel` keyword argument. 
-This function is not optimized for speed and is only intended to visualize the magnification map.
+Calculates the magnification map in source plane using inverse ray shooting (IRS) for a given 
+lens model. The number of average rays per pixel can be specified using the `rays_per_pixel` 
+keyword argument. **This function is not optimized for speed and is only intended to visualize 
+the magnification map.**
 
 # Arguments
 - `lens`: Lens model.
@@ -632,7 +633,7 @@ function get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Real
 
             # make sure pixel position is within bounds
             if (1 <= βx_p <= nx) && (1 <= βy_p <= ny)
-               μ_source[βx_p, βy_p] += area_per_ray
+               μ_source[βx_p, βy_p] = μ_source[βx_p, βy_p] + area_per_ray
             end
          end
       end
@@ -645,14 +646,13 @@ end
     get_image(lens::AbstractLens, θx::T, θy::T, 
               adis::Real, 
               β::NTuple{2, Real}) where T <: AbstractMatrix{<:Real} --> Vector{NTuple{2, Real}}
-Calculate image positions for a given lens model and source position. To get the image positions,
-this implementation finds the intersection points of contours corresponding to,
+Calculate image positions for a given lens model and point source position. To get the image 
+positions, this implementation finds the intersection points of contours corresponding to,
 ```math
 \\pmb{β} - \\pmb{θ} + a_{\\rm dis} \\, \\pmb{α}(\\pmb{θ}) = 0,
 ```
-where ``\\pmb{β}`` is the source position, ``\\pmb{θ}`` is the image plane grid, ``a_{\\rm dis}`` is 
-the distance ratio (i.e., ``D_{ds}/D_s``), and ``\\pmb{α}(\\pmb{θ})`` is the deflection angle. To 
-find the intersection points inside the pixels, we use bi-linear interpolation.
+where ``\\pmb{β}`` is the source position, ``\\pmb{θ}`` is the image plane grid, ``a_{\\rm dis}`` 
+is the distance ratio (i.e., ``D_{ds}/D_s``), and ``\\pmb{α}(\\pmb{θ})`` is the deflection angle. 
 """
 function get_image(lens::AbstractLens, θx::T, θy::T, adis::Real, β::NTuple{2, Real}) where T <: AbstractMatrix{<:Real}
    # Get the potential gradient
@@ -682,8 +682,8 @@ end
     get_image(lens::AbstractLens, θx::T, θy::T, 
               adis::Real, 
               β::T) where T <: Matrix{<:Real} --> Matrix{<:Real}
-Calculate image map for an extended source given a lens model. This function employs inverse ray 
-shooting (IRS) to construct the image plane map.
+Calculate lensed  image map for an extended source given a lens model. This function employs 
+inverse ray shooting (IRS) to construct the image plane map.
 
 # Arguments
 - `lens`: Lens model.
@@ -774,8 +774,9 @@ end
 """
     get_caustic(lens::AbstractLens, θx::T, θy::T, 
                 adis::Real) where T <: Matrix{<:Real} --> Tuple{Vector{Vector{Vector{Float64}}}, Vector{Vector{Vector{Float64}}}}
-Calculate caustics for a given lens model. The function first gets the critical curves and then maps
-them to the source plane using lens equation.
+Calculate caustics for a given lens model. The function first gets the critical curves and then 
+maps them to the source plane using the lens equation. **The functon runs over all tangential 
+critical curves.**
 
 # Arguments
 - `lens`: Lens model.
@@ -848,6 +849,7 @@ Calculate the Einstein radius (i.e., ``θ_E``) for an arbitrary lens model, whic
 θ_E = \\sqrt{\\frac{A_{\\rm critical}}{π}},
 ```
 where ``A_{\\rm critical}`` is the total angular area enclosed by the tangential critical curve(s).
+Again, it is important to note that we are running over all tangential critical curves.
 
 # Arguments
 - `lens`: Lens model.
@@ -935,10 +937,10 @@ end
                      origin::Union{Tuple{Float64, Float64}, Nothing} = nothing, 
                      n_bin::Int64     = 50, 
                      bin_type::Symbol = :log) where T <: Matrix{<:Real} --> Tuple{Vector{Float64}, Vector{Float64}}
-Calculate the cumulative mass enclosed within a given radius ``θ`` for a given lens model. While 
-converting the input convergence map into the physical units, it is assumed that source is at infinity 
-(i.e., ``a_{\\rm dis} = 1``). Hence, if the input convergence is for any finite source redshift, then
-divide the output mass values by ``a_{\\rm dis}``.
+Calculate the cumulative mass enclosed within a given angular radius ``θ`` for a given lens model. 
+While converting the input convergence map into the physical units, it is assumed that source is 
+at infinity (i.e., ``a_{\\rm dis} = 1``). Hence, if the input convergence is for any finite source 
+redshift, then divide the output mass values by ``a_{\\rm dis}``.
 
 # Arguments
 - `kappa`: Convergence map.
