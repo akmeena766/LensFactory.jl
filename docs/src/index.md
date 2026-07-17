@@ -46,13 +46,13 @@ adis = Dls/Dos
 # Initialize a point mass lens of mass 10^12 Solar mass
 lens = Lenses.init_PointLens(D_d=Dol, mass=1E12)
 
-# An arbitrary point in the image plane
+# An arbitrary position (in arcseconds) in the image plane
 x, y = 1.23, 0.57
 
-# Get lens potential at the 
+# Get lens potential at the above position
 pot = Lenses.get_potential(lens, x, y)
 
-# Get scaled deflection component at (1", 1")
+# Get scaled deflection component
 dx, dy = Lenses.get_deflection(lens, x, y)
 
 # Get magnification

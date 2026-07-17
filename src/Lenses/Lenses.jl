@@ -208,8 +208,9 @@ end
     get_potential(lens::AbstractLens, θx::T, θy::T) where T <: ROA --> ROA
 Calculate lensing potential at the given angular coordinates for the given lens model,
 ```math
-ψ(\\pmb{θ}) = \\frac{4{\\rm G}}{\\rm c^2} \\frac{1}{D_d} \\int d^2 \\pmb{θ}' \\, Σ(\\pmb{θ}') \\, \\ln\\left(|\\pmb{θ} - \\pmb{θ'}|\\right).
+ψ(\\pmb{θ}) = \\frac{4{\\rm G}}{\\rm c^2} \\frac{1}{D_d} \\int_{\\mathbb{R}^2} d^2 \\pmb{θ}' \\, Σ(\\pmb{θ}') \\, \\ln|\\pmb{θ} - \\pmb{θ'}|,
 ```
+where `` Σ(\\pmb{θ})`` is in units of ``\\rm{\\mathbf{kg/arcsec^2}}``.
 
 # Arguments
 - `lens`: Lens model.
@@ -276,7 +277,7 @@ end
 Calculate (vector) deflection angle at the given angular coordinate(s) for a given lens model,
 ```math
 \\pmb{α}(\\pmb{θ}) = \\pmb{∇} ψ(\\pmb{θ}) 
-= \\frac{4{\\rm G}}{\\rm c^2} \\frac{1}{D_d} \\int d^2 \\pmb{θ}' \\, Σ(\\pmb{θ}') \\frac{\\pmb{θ} - \\pmb{θ}'}{|\\pmb{θ} - \\pmb{θ}'|^2}.
+= \\frac{4{\\rm G}}{\\rm c^2} \\frac{1}{D_d} \\int_{\\mathbb{R}^2} d^2 \\pmb{θ}' \\, Σ(\\pmb{θ}') \\frac{\\pmb{θ} - \\pmb{θ}'}{|\\pmb{θ} - \\pmb{θ}'|^2}.
 ```
 
 # Arguments
@@ -425,7 +426,7 @@ end
                    β::NTuple{2, Real}) where T <: ROA --> ROA
 Calculate time delay for a given lens model and source position. The corresponding expression is given as,
 ```math
-t_d(\\pmb{θ}; \\pmb{β}) = \\frac{1+z_l}{\\rm c} \\frac{D_d D_s}{D_{ds}} \\theta_0^2
+t_d(\\pmb{θ}; \\pmb{β}) = \\frac{1+z_d}{\\rm c} \\frac{D_d D_s}{D_{ds}} \\theta_0^2
    \\left[ \\frac{(\\pmb{θ} - \\pmb{β})^2}{2} - \\frac{D_{ds}}{D_s} \\psi(\\pmb{θ}) \\right],
 ```
 where ``\\theta_0`` is normalizing angular unit. Since all the angular coordinates are in arcseconds,
@@ -477,7 +478,17 @@ end
 """
     get_kappa_gamma(lens::AbstractLens, θx::T, θy::T, 
                     adis::Real) where T <: ROA --> ROA
-Calculate convergence and shear components at the given angular coordinate(s) for a given lens model.
+Calculate convergence (``\\kappa``) and shear components (``\\gamma_1``, ``\\gamma_2``) at the 
+given angular coordinate(s) for a given lens model. The corresponding formulae are,
+```math
+\\begin{equation}
+\\begin{split}
+   κ   &= (ψ_{xx} + ψ_{yy})/2, \\\\
+   γ_1 &= (ψ_{xx} - ψ_{yy})/2, \\\\
+   γ_2 &= ψ_{xy}.
+\\end{split}
+\\end{equation}
+```
 
 # Arguments
 - `lens`: Lens model.
