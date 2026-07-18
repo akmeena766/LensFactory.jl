@@ -633,8 +633,8 @@ function get_magnification_source(cosmology::Cosmology.AbstractCosmology, lens::
 
          for k in 1:rays_per_pixel
             # Get the source plane position
-            βx = PolygonOps.interpolation(rand_x[k], rand_y[k], θx) - PolygonOps.interpolation(rand_x[k], rand_y[k], ψx)
-            βy = PolygonOps.interpolation(rand_x[k], rand_y[k], θy) - PolygonOps.interpolation(rand_x[k], rand_y[k], ψy)
+            βx = PolygonOps.bilinear_interpolation(rand_x[k], rand_y[k], θx) - PolygonOps.bilinear_interpolation(rand_x[k], rand_y[k], ψx)
+            βy = PolygonOps.bilinear_interpolation(rand_x[k], rand_y[k], θy) - PolygonOps.bilinear_interpolation(rand_x[k], rand_y[k], ψy)
 
             # Get the corresponding pixel values
             βx_p = round(Int64, βx/pixel_h + 0.5*nx + 0.5)
