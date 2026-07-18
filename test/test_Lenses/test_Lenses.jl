@@ -70,19 +70,19 @@ ngx, ngy = size(grid_x)
 
 
 @testset "Lenses (API)" begin
-      @testset "Meshgrid" begin
-         # 2D grid constructor: grid/pixel size <=0 error handeling
-         @test_throws ArgumentError Lenses.get_meshgrid(1, 1, -1)
-         @test_throws ArgumentError Lenses.get_meshgrid(1, 0, +1)
+   @testset "Meshgrid" begin
+      # 2D grid constructor: grid/pixel size <=0 error handeling
+      @test_throws ArgumentError Lenses.get_meshgrid(1, 1, -1)
+      @test_throws ArgumentError Lenses.get_meshgrid(1, 0, +1)
 
-         # 2D grid constructor: size 
-         xp, yp, pp = 1, 2, 0.3
-         xg, yg = Lenses.get_meshgrid(xp, yp, pp)
-         nx, ny = size(xg)
-         @test size(xg) == size(yg)
-         @test size(xg, 1) == size(collect(-xp:pp:xp), 1)
-         @test size(xg, 2) == size(collect(-yp:pp:yp), 1)
-      end
+      # 2D grid constructor: size 
+      xp, yp, pp = 1, 2, 0.3
+      xg, yg = Lenses.get_meshgrid(xp, yp, pp)
+      nx, ny = size(xg)
+      @test size(xg) == size(yg)
+      @test size(xg, 1) == size(collect(-xp:pp:xp), 1)
+      @test size(xg, 2) == size(collect(-yp:pp:yp), 1)
+   end
 
    @testset "Σ_cr" begin
       D_d, D_ds, D_s = 1.0, 1.0, 2.0
