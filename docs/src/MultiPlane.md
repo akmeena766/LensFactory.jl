@@ -1,4 +1,8 @@
 # MultiPlane
+When the deflectors along the line of sight are located at different redshifts (e.g., a galaxy 
+lens with line-of-sight perturbers, or a cluster with structures at multiple redshifts), the 
+single-plane approximation breaks down, and the light rays need to be propagated through a series 
+of lens planes.
 
 Following same terminology as single plane lensing, we can write the lensing potential and 
 deflection in ``j``th plane as,
@@ -24,8 +28,24 @@ With the above, the total potential and deflection for a lens system with $N_p$ 
 \end{align*}
 ```
 
+Similarly, the excess time delay accumulates between consecutive planes as,
+```math
+\begin{equation*}
+Δt = \sum_{i=1}^{N_p} \frac{1 + z_i}{\rm c} \frac{D_i D_{i+1}}{D_{i,i+1}}
+\left[ \frac{1}{2} \left| \pmb{θ}_i - \pmb{θ}_{i+1} \right|^2 
+- \frac{D_{i,i+1}}{D_{i+1}} ψ_i(\pmb{θ}_i) \right],
+\end{equation*}
+```
+where $z_i$ is the redshift of the ``i``th lens plane and the ($N_p$+1)th plane is the source 
+plane, i.e., $\pmb{θ}_{N_p+1} = \pmb{β}$ and $D_{N_p+1} = D_s$.
+
+In `LensFactory`, a multi-plane lens is initialized from a vector of lens components, where each 
+component specifies its lens redshift (`z_d`) in addition to the usual lens model parameters. 
+Components sharing the same redshift are automatically grouped into a single (composite) lens 
+plane, and the lens planes are sorted in increasing redshift.
 
 ```@docs
+Lenses.init_MultiPlaneLens
 MultiPlane.get_potential
 MultiPlane.get_deflection
 MultiPlane.get_jacobian

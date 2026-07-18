@@ -175,7 +175,7 @@ end
                      D_s::Real  = NaN, 
                      mass::Real = NaN, 
                      x_s::Real  = NaN)
-Calculate the Einstein angle for a point mass lens,
+Calculate the Einstein angle for a Plummer lens,
 ```math
 \\theta_E = \\sqrt{\\frac{4 \\, \\rm{G} \\, M}{\\rm{c}^2} \\frac{D_{ds}}{D_d D_s} - x_s^2}.
 ```

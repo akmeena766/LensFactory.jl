@@ -1155,6 +1155,19 @@ function init_CompositeLens(lens::Vector{<:NamedTuple})
 end
 
 
+"""
+    init_MultiPlaneLens(lens::Vector{<:NamedTuple})
+Initialize a multi-plane lens from a vector of lens components. Each component must contain the
+lens redshift (`z_d`) along with the parameters of the corresponding lens model. Components
+sharing the same redshift are grouped into a single (composite) lens plane, and the lens planes
+are sorted in increasing redshift. At least two distinct lens planes are required.
+
+# Arguments
+- `lens::Vector{<:NamedTuple}`: Vector of lens components.
+
+# Returns
+- `MultiPlaneLens`: Multi-plane lens.
+"""
 struct init_MultiPlaneLens{T<:Real} <: AbstractLens
    _lens_::Symbol
    n_p::Int64
