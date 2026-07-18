@@ -835,7 +835,7 @@ function get_critical_area(lens::AbstractLens, θx::T, θy::T, adis::Float64) wh
    # Run a loop over all tangential critical curves
    area = 0.0
    for curve in critical_tan
-      area += shoelace(curve)
+      area = area + PolygonOps.shoelace(curve)
    end
    return area
 end

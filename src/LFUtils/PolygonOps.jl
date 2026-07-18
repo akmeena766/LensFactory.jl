@@ -71,7 +71,7 @@ Calculate the area of a 2D polygon using the shoelace formula.
 # Returns
 - The area of the polygon
 """
-function shoelace(polygon::Vector{Vector{<:Real}})
+function shoelace(polygon::Vector{<:Vector{<:Real}})
    # Close the polygon if needed (copy to avoid mutating the caller's input)
    if polygon[1] != polygon[end]
       polygon = vcat(polygon, [polygon[1]])
