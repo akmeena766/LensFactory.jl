@@ -55,7 +55,7 @@ pot = Lenses.get_potential(lens, x, y)
 # Get scaled deflection component
 dx, dy = Lenses.get_deflection(lens, x, y)
 
-# Get magnification
+# Get (signed) magnification
 mu = Lenses.get_magnification_image(lens, x, y, adis)
 ```
 
