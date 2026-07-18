@@ -15,7 +15,6 @@ a cosmology and calculate the angular diameter distance to the lens. We refer re
 [Basic: Example - 2](https://github.com/akmeena766/LensFactory-Examples/blob/main/Basic/Example-2%3A%20Point%20mass%20lens.ipynb)
 for more details.
 
-
 ```@docs
 Lenses.init_PointLens
 Lenses.PointLens.potential!

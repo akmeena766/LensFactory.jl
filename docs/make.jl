@@ -1,9 +1,13 @@
 using Documenter
+using DocumenterCitations
 using LensFactory
 using Makie
 
+bib = CitationBibliography(joinpath(@__DIR__, "src", "References.bib"), style = :authoryear)
+
 makedocs(
     sitename = "LensFactory.jl",
+    plugins  = [bib],
     modules = [LensFactory, 
                 Constants, 
                 Cosmology, 
@@ -61,6 +65,7 @@ makedocs(
                         ],
             "Publications"   => "Publications.md",
             "History"        => "History.md",
+            "Bibliography"   => "References.md"
         ]
 )
 

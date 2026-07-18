@@ -1,4 +1,5 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+DocumenterCitations = "daee34ce-89f3-4625-b898-19384cb65244"
 LensFactory = "e2630f5e-de23-4bea-bc0a-959d40375e7e"
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
