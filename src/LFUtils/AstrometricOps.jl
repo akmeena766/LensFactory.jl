@@ -21,6 +21,33 @@ export gnomonic_offsets_radec
 # --------------------------------------------------------------------------------------------------
 # Gnomonic projection offsets (north up, east left)
 # --------------------------------------------------------------------------------------------------
+"""
+    gnomonic_offsets_arcsec(ra_ref::Float64, dec_ref::Float64, ra_cat::Float64, dec_cat::Float64)
+"""
+function gnomonic_offsets_arcsec(ra_ref::Float64, dec_ref::Float64, ra_cat::Float64, dec_cat::Float64)
+   x, y = gnomonic_offsets_arcsec(ra_ref, dec_ref, [ra_cat], [dec_cat])
+   return x[1], y[1]
+end
+
+
+"""
+    gnomonic_offsets_arcsec(ra_ref::Float64, dec_ref::Float64, ra_cat::Vector{Float64}, dec_cat::Vector{Float64})
+Project catalog positions onto the tangent plane at a reference position using the gnomonic
+projection and return the angular offsets in arcseconds. The convention is north up, east left
+(i.e., `x` increases towards west).
+
+Scalar inputs `(ra_cat::Float64, dec_cat::Float64)` are also accepted, returning scalar offsets.
+
+# Arguments
+- `ra_ref::Float64`: Reference right ascension (in degrees)
+- `dec_ref::Float64`: Reference declination (in degrees)
+- `ra_cat::Vector{Float64}`: Catalog right ascensions (in degrees)
+- `dec_cat::Vector{Float64}`: Catalog declinations (in degrees)
+
+# Returns
+- `x::Vector{Float64}`: Offsets along the x-axis (in arcseconds)
+- `y::Vector{Float64}`: Offsets along the y-axis (in arcseconds)
+"""
 function gnomonic_offsets_arcsec(ra_ref::Float64, dec_ref::Float64, ra_cat::Vector{Float64}, dec_cat::Vector{Float64})
    deg2rad = π / 180.0
    rad2as  = 180.0 * 3600.0 / π
@@ -44,12 +71,33 @@ function gnomonic_offsets_arcsec(ra_ref::Float64, dec_ref::Float64, ra_cat::Vect
    return x .* rad2as, y .* rad2as
 end
 
-function gnomonic_offsets_arcsec(ra_ref::Float64, dec_ref::Float64, ra_cat::Float64, dec_cat::Float64)
-   x, y = gnomonic_offsets_arcsec(ra_ref, dec_ref, [ra_cat], [dec_cat])
+
+"""
+    gnomonic_offsets_radec(ra_ref::Float64, dec_ref::Float64, x_as::Float64, y_as::Float64)
+"""
+function gnomonic_offsets_radec(ra_ref::Float64, dec_ref::Float64, x_as::Float64, y_as::Float64)
+   x, y = gnomonic_offsets_radec(ra_ref, dec_ref, [x_as], [y_as])
    return x[1], y[1]
 end
 
+"""
+    gnomonic_offsets_radec(ra_ref::Float64, dec_ref::Float64, x_as::Vector{Float64}, y_as::Vector{Float64})
+Inverse gnomonic projection: convert tangent-plane offsets (in arcseconds) around a reference
+position back to (RA, Dec) sky coordinates. Follows the same north up, east left convention as
+[`gnomonic_offsets_arcsec`](@ref).
 
+Scalar inputs `(x_as::Float64, y_as::Float64)` are also accepted, returning scalar coordinates.
+
+# Arguments
+- `ra_ref::Float64`: Reference right ascension (in degrees)
+- `dec_ref::Float64`: Reference declination (in degrees)
+- `x_as::Vector{Float64}`: Offsets along the x-axis (in arcseconds)
+- `y_as::Vector{Float64}`: Offsets along the y-axis (in arcseconds)
+
+# Returns
+- `ra::Vector{Float64}`: Right ascensions (in degrees)
+- `dec::Vector{Float64}`: Declinations (in degrees)
+"""
 function gnomonic_offsets_radec(ra_ref::Float64, dec_ref::Float64, x_as::Vector{Float64}, y_as::Vector{Float64})
    deg2rad = π / 180.0
    as2rad  = π / (180.0 * 3600.0)
@@ -85,11 +133,6 @@ function gnomonic_offsets_radec(ra_ref::Float64, dec_ref::Float64, x_as::Vector{
    ra = @. ra0 + atan(num_ra, den_ra)
 
    return ra ./ deg2rad, dec ./ deg2rad
-end
-
-function gnomonic_offsets_radec(ra_ref::Float64, dec_ref::Float64, x_as::Float64, y_as::Float64)
-   x, y = gnomonic_offsets_radec(ra_ref, dec_ref, [x_as], [y_as])
-   return x[1], y[1]
 end
 
 end

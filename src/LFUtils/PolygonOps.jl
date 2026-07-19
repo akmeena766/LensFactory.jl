@@ -62,7 +62,7 @@ end
 
 
 """
-    shoelace(polygon::Vector{Vector{Float64}})
+    shoelace(polygon::Vector{<:Vector{<:Real}})
 Calculate the area of a 2D polygon using the shoelace formula.
 
 # Arguments
@@ -90,8 +90,7 @@ end
 
 """
     hao_sun(point, polygon)
-Algorithm to determine if a point is in the given polygon. Taken from Hao and Sun (2018): 
-https://doi.org/10.3390/sym10100477
+Algorithm to determine if a point is in the given polygon. Taken from [sym10100477](@citet)
 
 # Arguments
 - `point::Vector{Float64}`: The (x, y) coordinate of the point to check

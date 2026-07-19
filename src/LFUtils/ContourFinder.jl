@@ -17,6 +17,23 @@ module ContourFinder
 export get_contour
 
 
+"""
+    get_contour(x::AbstractMatrix{<:Real}, y::AbstractMatrix{<:Real}, z::AbstractMatrix{<:Real}, level::Real)
+Extract the iso-contours of a 2D scalar field `z` at the given `level` using the marching
+squares algorithm. The grid may be curvilinear: `x` and `y` give the coordinates of each grid
+node and must share the axes of `z`. Ambiguous saddle cells are resolved with the cell-center
+average, and contour crossings are located by linear interpolation along cell edges.
+
+# Arguments
+- `x::AbstractMatrix{<:Real}`: x-coordinates of the grid nodes
+- `y::AbstractMatrix{<:Real}`: y-coordinates of the grid nodes
+- `z::AbstractMatrix{<:Real}`: Scalar field values at the grid nodes
+- `level::Real`: Contour level to trace
+
+# Returns
+- `Vector{Vector{Vector{Float64}}}`: A list of contour lines, each a list of `[x, y]` points.
+   Closed contours end at their starting point; open contours terminate at the grid boundary.
+"""
 function get_contour(x::AbstractMatrix{<:Real}, y::AbstractMatrix{<:Real}, z::AbstractMatrix{<:Real}, level::Real)
    # Checking the type of input data
    if !(axes(x) == axes(y) == axes(z))

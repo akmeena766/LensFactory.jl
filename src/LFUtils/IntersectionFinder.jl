@@ -18,12 +18,27 @@ using LinearAlgebra
 export get_intersection
 
 
+"""
+    get_intersection(x1::AbstractVector{<:Real}, y1::AbstractVector{<:Real},
+                     x2::AbstractVector{<:Real}, y2::AbstractVector{<:Real})
+Find the intersection points of two piecewise-linear curves. Candidate segment pairs are
+selected with a bounding-box overlap test and each pair is solved as a 4x4 linear system.
+Duplicate solutions (within a distance of `1E-12`) are removed. Based on the MATLAB routine
+[Fast and Robust Curve Intersections](https://www.mathworks.com/matlabcentral/fileexchange/11837-fast-and-robust-curve-intersections).
+
+# Arguments
+- `x1::AbstractVector{<:Real}`: x-coordinates of the first curve
+- `y1::AbstractVector{<:Real}`: y-coordinates of the first curve
+- `x2::AbstractVector{<:Real}`: x-coordinates of the second curve
+- `y2::AbstractVector{<:Real}`: y-coordinates of the second curve
+
+# Returns
+- `Vector{NTuple{2,Real}}`: Unique intersection points as `(x, y)` tuples
+"""
 function get_intersection(x1::AbstractVector{<:Real}, y1::AbstractVector{<:Real},
                           x2::AbstractVector{<:Real}, y2::AbstractVector{<:Real})
-    """
     # Based on: https://www.mathworks.com/matlabcentral/fileexchange/11837-fast-and-robust-curve-intersections
     # Python implementation: https://github.com/sukhbinder/intersection/tree/master/intersect
-    """
     # Check if curve-1 is consistent
     if !(length(x1) > 1) || !(length(y1) > 1) || length(x1) == length(y1) || 
         throw(ArgumentError("Incompatible input axes for input vectors."))
