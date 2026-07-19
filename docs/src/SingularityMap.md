@@ -2,17 +2,16 @@
 According to catastrophe theory, the stable singularities of the gravitational lens map can be 
 classified into folds (``A_2``), which form the critical curves, cusps (``A_3``), and the 
 higher-order swallowtail (``A_4``) and umbilic (``D_4``) singularities, which only occur at 
-isolated points in the image plane. For a fixed lens, as we vary the source distance, the critical 
-curves sweep through the image plane, and the higher-order singularities appear at specific source 
-distances. The `SingularityMap` module maps out these singularities in the image plane without 
-requiring a specific source distance.
+isolated points in the image plane [2020MNRAS.492.3294M](@cite). For a fixed lens, as we vary 
+the source distance, the critical curves sweep through the image plane, and the higher-order 
+singularities appear at specific source distances. The `SingularityMap` module maps out these 
+singularities in the image plane without requiring a specific source distance.
 
-Writing the (distance-scaled) Jacobian of the lens map as 
-``\mathbb{A} = \mathbb{I} - a \, ψ_{,ij}``, where $a$ is the source distance ratio 
-($a = D_{ds}/D_s$ scaled appropriately) and $ψ_{,ij}$ is the Hessian of the lens potential, we 
-denote the eigenvalues and (unit) eigenvectors of $ψ_{,ij}$ as ($λ_1,~λ_2$) and 
-($\pmb{q}_1,~\pmb{q}_2$), respectively. A point in the image plane lies on a critical curve for a 
-source distance such that $a λ_i = 1$. The singularity map is then built from the following 
+Writing the Jacobian of the lens map as ``\mathbb{A} = \mathbb{I} - a \, ψ_{ij}``, where $a$ is 
+the distance ratio ($a = D_{ds}/D_s$ scaled appropriately) and $ψ_{ij}$ is the deformation tensor. 
+The eigenvalues and (unit) eigenvectors of $ψ_{ij}$ are denoted as ($λ_1,~λ_2$) and 
+($\pmb{q}_1,~\pmb{q}_2$), respectively. A point in the image plane lies on a critical curve for 
+a source distance such that $a λ_i = 1$. The singularity map is then built from the following 
 conditions:
 
 - **``A_3``-lines**: the loci of points that become cusps for some source distance, satisfying 
