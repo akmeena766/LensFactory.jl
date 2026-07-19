@@ -199,7 +199,32 @@ end
 """
     from_jacobian(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T;
                   adis::Float64 = 1.0,
-                  buffer::Int64 = 10) where T<:Matrix{Float64}
+                  buffer::Int64 = 10,
+                  A4::Bool      = false,
+                  D4::Bool      = false) where T<:Matrix{Float64}
+Calculate singularity map from precomputed deformation tensor.
+
+# Arguments
+- `ψxx` : xx-component map of the deformation tensor
+- `ψyy` : yy-component map of the deformation tensor
+- `ψxy` : xy-component map of the deformation tensor
+- `θx`  : x-grid map (in arcseconds)
+- `θy`  : y-grid map (in arcseconds)
+
+# Keyword Arguments
+- `adis = 1.0`  : Distance ratio
+- `buffer = 10` : Buffer at the edge to ignore
+- `A4 = false`  : Whether to compute A4 points
+- `D4 = false`  : Whether to compute D4 points
+
+# Returns
+- A3_1: A3-lines corresponding to first eigenvalue of deformation tensor
+- A3_2: A3-lines corresponding to second eigenvalue of deformation tensor
+if `A4 = true`:
+   - A4_1: A4 singularities (i.e., swallowtails) on the first A3 line
+   - A4_2: A4 singularities (i.e., swallowtails) on the second A3 line
+if `D4 = true`:
+   - D4: Umbilic singularities (both Hyperbolic and elliptic)
 """
 function from_jacobian(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T; 
                        adis::Float64 = 1.0,
@@ -225,7 +250,32 @@ end
               adis:: Float64      = 1.0,
               buffer::Int64       = 10,
               adaptive::Bool      = false,
-              resolution::Float64 = 0.001) where T<:Matrix{Float64})
+              resolution::Float64 = 0.001,
+              A4::Bool            = false,
+              D4::Bool            = false) where T<:Matrix{Float64}
+Calculate singularity map for a given lens model.
+
+# Arguments
+- `lens` : Lens model
+- `θx`   : x-grid map (in arcseconds)
+- `θy`   : y-grid map (in arcseconds)
+
+# Keyword Arguments
+- `adis = 1.0`         : Distance ratio
+- `buffer = 10`        : Buffer at the edge to ignore
+- `adaptive = false`   : Whether to use adaptive grid
+- `resolution = 0.001` : Resolution of the grid (in arcseconds)
+- `A4 = false`         : Whether to compute A4 points
+- `D4 = false`         : Whether to compute D4 points
+
+# Returns
+- A3_1: A3-lines corresponding to first eigenvalue of deformation tensor
+- A3_2: A3-lines corresponding to second eigenvalue of deformation tensor
+if `A4 = true`:
+   - A4_1: A4 singularities (i.e., swallowtails) on the first A3 line
+   - A4_2: A4 singularities (i.e., swallowtails) on the second A3 line
+if `D4 = true`:
+   - D4: Umbilic singularities (both Hyperbolic and elliptic)
 """
 function from_lens(lens::Lenses.AbstractLens, θx::T, θy::T;
                    adis::Float64       = 1.0,
