@@ -22,7 +22,7 @@ RTOL_RHOC  = 1.0e-6
                         :angular_diameter_distance, 
                         :luminosity_distance, :distance_modulus,
                         :angular_scale, :comoving_volume_element, :comoving_volume, 
-                        :adis2zs)
+                        :adis2zs, :zs2adis)
       for nm in exported_names
          @test isdefined(Cosmology, nm)
          @test nm in names(Cosmology)
@@ -302,7 +302,33 @@ RTOL_RHOC  = 1.0e-6
       flat_val = comoving_distance_transverse(flat_lcdm, 0.0, 1.0)
       @test isapprox(comoving_distance_transverse(near_flat_pos, 0.0, 1.0), flat_val; rtol=1.0e-4)
       @test isapprox(comoving_distance_transverse(near_flat_neg, 0.0, 1.0), flat_val; rtol=1.0e-4)
-    end
+   
+      # Milne (Ωk0 = 1): a fully analytic exercise of the open-curvature branch.
+      # E(z) = 1+z  =>  D_C = D_H ln(1+z), and with Ωk = 1,
+      # D_M(0,z) = D_H sinh(D_C/D_H) = D_H sinh(ln(1+z)) = D_H [(1+z) - 1/(1+z)] / 2.
+      dH_milne = hubble_distance(milne.H0)
+      for z in (0.5, 1.0, 3.0, 9.0)
+         dM_analytic = dH_milne * ((1.0 + z) - 1.0 / (1.0 + z)) / 2.0
+         @test isapprox(comoving_distance_transverse(milne, 0.0, z), dM_analytic; rtol=RTOL_PHYS)
+         @test isapprox(comoving_distance_radial(milne, 0.0, z), dH_milne * log(1.0 + z); rtol=RTOL_PHYS)
+      end
+
+      # z1 > z2 gives a negative radial distance, and D_M carries the sign through
+      # sinh (odd function), so the transverse distance is negated as well.
+      @test isapprox(comoving_distance_transverse(open_univ, 1.0, 0.0),
+                     -comoving_distance_transverse(open_univ, 0.0, 1.0); rtol=1.0e-5)
+
+      # White-box: the internal _transverse_from_radial applied to the radial
+      # comoving distance must reproduce comoving_distance_transverse(0, z) for
+      # every curvature sign (flat, open, closed, Milne).
+      for c in (flat_lcdm, open_univ, closed_univ, milne)
+         for z in (0.5, 1.0, 2.0)
+            χ = comoving_distance_radial(c, 0.0, z)
+            @test isapprox(Cosmology._transverse_from_radial(c, χ),
+                           comoving_distance_transverse(c, 0.0, z); rtol=RTOL_TIGHT)
+         end
+      end
+   end
 
 
    @testset "luminosity_distance, angular_diameter_distance, distance_modulus" begin
@@ -401,6 +427,44 @@ RTOL_RHOC  = 1.0e-6
    end
 
 
+   @testset "zs2adis" begin
+      # zs2adis returns a_dis = D_ds/D_s = D_A(z_d, z_s)/D_A(0, z_s). The (1+z_s)
+      # factors cancel, so it must equal the angular-diameter-distance ratio
+      # exactly, for ANY cosmology and any z_d < z_s.
+      for c in self_consistent_fixtures
+         for (z_d, z_s) in ((0.3, 1.0), (0.5, 2.0), (1.0, 3.0), (0.2, 5.0))
+            direct = angular_diameter_distance(c, z_d, z_s) / angular_diameter_distance(c, 0.0, z_s)
+            @test isapprox(zs2adis(c, z_d, z_s), direct; rtol=RTOL_TIGHT)
+         end
+      end
+
+      # Independently-derived reference ratios (these are the same anchors the
+      # adis2zs round-trip uses below).
+      @test isapprox(zs2adis(flat_lcdm, 0.5, 2.0), 0.6353907944259781; rtol=RTOL_PHYS)
+      @test isapprox(zs2adis(flat_lcdm, 1.0, 3.0), 0.4801774192569025; rtol=RTOL_PHYS)
+
+      # Passing the precomputed radial comoving distance χ(z_d) via `dC` must give
+      # the identical result (it only skips the recomputation of one integral).
+      χ_d = comoving_distance_radial(flat_lcdm, 0.0, 0.5)
+      @test isapprox(zs2adis(flat_lcdm, 0.5, 2.0; dC=χ_d), zs2adis(flat_lcdm, 0.5, 2.0); rtol=RTOL_TIGHT)
+      for c in (open_univ, closed_univ, wcdm)
+         χ = comoving_distance_radial(c, 0.0, 0.4)
+         @test isapprox(zs2adis(c, 0.4, 2.5; dC=χ), zs2adis(c, 0.4, 2.5); rtol=RTOL_TIGHT)
+      end
+
+      # a_dis lies in (0, 1) and, for a fixed lens, increases monotonically with
+      # the source redshift toward a supremum below 1 (D_ds/D_s grows as the
+      # source recedes, since χ_s saturates at the finite comoving horizon).
+      ratios = [zs2adis(flat_lcdm, 0.5, z_s) for z_s in (0.6, 1.0, 2.0, 5.0, 20.0)]
+      @test all(0.0 .< ratios .< 1.0)
+      @test issorted(ratios)
+
+      # Requires z_s > z_d: equal or inverted redshifts must error.
+      @test_throws ErrorException zs2adis(flat_lcdm, 1.0, 1.0)
+      @test_throws ErrorException zs2adis(flat_lcdm, 2.0, 1.0)
+   end
+
+
    @testset "adis2zs" begin
       # Forward/backward round-trip: pick a target z_s, compute its true distance
       # ratio directly, then confirm adis2zs recovers z_s from that ratio.
@@ -415,6 +479,29 @@ RTOL_RHOC  = 1.0e-6
       @test isapprox(adis_true2, 0.4801774192569025; rtol=RTOL_PHYS)
       z_s_recovered2 = adis2zs(flat_lcdm, z_d2, adis_true2)
       @test isapprox(z_s_recovered2, z_s_true2; atol=1.0e-3)
+
+      # Forced non-convergence: for z_d=0.5 in flat_lcdm, the distance ratio
+      # adis(z_s) -> ~0.8501 as z_s -> 100 (its supremum on the search domain),
+      # so a target of 1.0 can never be bracketed and the bisection must run out
+      # of iterations and raise an error.
+      @test_throws ErrorException adis2zs(flat_lcdm, 0.5, 1.0; max_iter=50)
+
+      # zs2adis / adis2zs are mutual inverses: for any cosmology and any lens,
+      # feeding zs2adis's output back through adis2zs must recover the source
+      # redshift. This exercises the bisection on open, closed and w-CDM models,
+      # not just flat_lcdm.
+      for c in self_consistent_fixtures
+         for (z_d, z_s) in ((0.3, 1.5), (0.5, 2.0), (1.0, 4.0))
+            adis = zs2adis(c, z_d, z_s)
+            @test isapprox(adis2zs(c, z_d, adis), z_s; atol=1.0e-3)
+         end
+      end
+
+      # A source just behind the lens (a_dis -> 1) should be recovered as z_s
+      # slightly above z_d.
+      z_close = 0.55
+      adis_close = zs2adis(flat_lcdm, 0.5, z_close)
+      @test isapprox(adis2zs(flat_lcdm, 0.5, adis_close), z_close; atol=1.0e-3)
 
       # Forced non-convergence: for z_d=0.5 in flat_lcdm, the distance ratio
       # adis(z_s) -> ~0.8501 as z_s -> 100 (its supremum on the search domain),
