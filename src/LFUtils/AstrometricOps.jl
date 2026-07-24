@@ -110,26 +110,27 @@ function gnomonic_offsets_radec(ra_ref::Float64, dec_ref::Float64, x_as::Vector{
    x = x_as .* as2rad
    y = y_as .* as2rad
 
-   # Angular distance rho
+   # Tangent-plane radius. In the gnomonic projection this equals tan(c), where c is the true
+   # angular distance from the reference, so c = atan(rho) (NOT c = rho).
    rho = @. sqrt(x^2 + y^2)
-   
-   # Avoid division by zero at the exact center
-   # For very small rho, sin(rho)/rho is approximately 1
-   srho = @. sin(rho)
-   crho = @. cos(rho)
+   c    = @. atan(rho)
+   srho = @. sin(c)
+   crho = @. cos(c)
 
    # Calculate Dec
-   # Note: we use clamp to avoid domain errors in asin from float precision
+   # Note: we use clamp to avoid domain errors in asin from float precision.
+   # At the exact center rho = 0 the (y * srho / rho) term is 0/0 = NaN; handle it explicitly.
    term_dec = @. crho * sin(dec0) + (y * srho * cos(dec0) / rho)
    replace!(term_dec, NaN => sin(dec0)) # Handle rho=0 case
    dec = @. asin(clamp(term_dec, -1.0, 1.0))
 
-   # Calculate RA
-   num_ra = @. x * srho
+   # Calculate RA. The projection uses a north-up, east-left convention (x increases towards
+   # west), so the east-positive standard coordinate is -x.
+   num_ra = @. -x * srho
    den_ra = @. rho * cos(dec0) * crho - y * sin(dec0) * srho
-   
-   # atan2 handles the quadrant correctly
-   # If rho is 0, Δra should be 0
+
+   # atan2 handles the quadrant correctly.
+   # If rho is 0, both arguments are 0 and atan returns 0, so Δra = 0.
    ra = @. ra0 + atan(num_ra, den_ra)
 
    return ra ./ deg2rad, dec ./ deg2rad
