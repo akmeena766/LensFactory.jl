@@ -30,6 +30,7 @@ makedocs(
                         "NSISMD Lens"                  => "NSISMDLens.md",
                         "Gaussian Lens"                => "GaussianLens.md",
                         "Sersic Lens"                  => "SersicLens.md",
+                        "Pixel Lens"                   => "PixelLens.md",
                         "External Effects"             => "ExternalEffects.md",
                         "Third Order Perturbation"     => "ExternalEffects3.md",
                         "Multipole Perturbation"       => "Multipole.md",
@@ -47,6 +48,7 @@ makedocs(
                         "Einasto Lens"                 => "EinastoLens.md",
                         "Multi-Plummer Lens"           => "MultiPlummerLens.md",
                         "Multi-Gaussian Lens"          => "MultiGaussianLens.md",
+                        "Multi-Pixel Lens"             => "MultiPixelLens.md",
                         "Multi-PJE Lens"               => "MultiPJELens.md",
                         "Composite Lens"               => "CompositeLens.md"
                         ],

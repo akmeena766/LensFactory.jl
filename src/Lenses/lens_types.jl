@@ -6,6 +6,7 @@ export init_NSISPLens
 export init_NSISMDLens
 export init_GaussianLens
 export init_SersicLens
+export init_PixelLens
 export init_ExternalEffects
 export init_ExternalEffects3
 export init_Multipole
@@ -225,6 +226,30 @@ function init_SersicLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, mass::Re
    D_d, x_c, y_c, mass, x_e, n = promote(D_d, x_c, y_c, mass, x_e, n)
    T = typeof(D_d)
    return init_SersicLens{T}(:SersicLens, D_d, x_c, y_c, mass, x_e, n)
+end
+
+
+"""
+    init_PixelLens(x_c::Real = 0.0, 
+                   y_c::Real = 0.0, 
+                   kappa::Real = NaN)
+Initialize a square pixel lens with the given parameters.
+
+# Keyword Arguments
+- `x_c::Real = 0.0`: x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c::Real = 0.0`: y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `kappa::Real = NaN`: Convergence (dimensionless).
+"""
+struct init_PixelLens{T<:Real} <: AbstractLens  
+   _lens_::Symbol
+   x_c::T
+   y_c::T
+   kappa::T
+end
+function init_PixelLens(; x_c::Real=0.0, y_c::Real=0.0, kappa::Real=NaN)
+   x_c, y_c, kappa = promote(x_c, y_c, kappa)
+   T = typeof(x_c)
+   return init_PixelLens{T}(:PixelLens, x_c, y_c, kappa)
 end
 
 
@@ -978,7 +1003,8 @@ struct init_MultiPlummerLens{T<:Real} <: AbstractLens
 end
 function init_MultiPlummerLens(; D_d::Real=NaN, x_c=Vector{<:Real}(), y_c=Vector{<:Real}(), mass=Vector{<:Real}(), x_s=Vector{<:Real}())
    if !(length(x_c) == length(y_c) == length(mass) == length(x_s))
-      throw(ArgumentError("x_c, y_c, mass, and x_s must all have the same length (one entry per component); got $(length(x_c)), $(length(y_c)), $(length(mass)), $(length(x_s))."))
+      throw(ArgumentError("x_c, y_c, mass, and x_s must all have the same length (one entry per component); 
+            got $(length(x_c)), $(length(y_c)), $(length(mass)), $(length(x_s))."))
    end
    
    T = promote_type(typeof(D_d), eltype(x_c), eltype(y_c), eltype(mass), eltype(x_s))
@@ -1019,7 +1045,8 @@ struct init_MultiGaussianLens{T<:Real} <: AbstractLens
 end
 function init_MultiGaussianLens(; D_d::Real=NaN, x_c=Vector{<:Real}(), y_c=Vector{<:Real}(), mass=Vector{<:Real}(), x_s=Vector{<:Real}())
    if !(length(x_c) == length(y_c) == length(mass) == length(x_s))
-      throw(ArgumentError("x_c, y_c, mass, and x_s must all have the same length (one entry per component); got $(length(x_c)), $(length(y_c)), $(length(mass)), $(length(x_s))."))
+      throw(ArgumentError("x_c, y_c, mass, and x_s must all have the same length (one entry per component); 
+            got $(length(x_c)), $(length(y_c)), $(length(mass)), $(length(x_s))."))
    end
 
    T = promote_type(typeof(D_d), eltype(x_c), eltype(y_c), eltype(mass), eltype(x_s))
@@ -1031,6 +1058,38 @@ function init_MultiGaussianLens(; D_d::Real=NaN, x_c=Vector{<:Real}(), y_c=Vecto
    
    n = length(x_c)
    return init_MultiGaussianLens{T}(:MultiGaussianLens, D_d, n, x_c, y_c, mass, x_s)
+end
+
+
+"""
+    init_MultiPixelLens(x_c = Vector{<:Real}(), y_c = Vector{<:Real}(), kappa = Vector{<:Real}())
+Initialize a Multi-component Pixel lens with the given parameters.
+
+# Keyword Arguments
+- `x_c = Vector{<:Real}()`: Vector of x-coordinates (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c = Vector{<:Real}()`: Vector of y-coordinates (in ``\\rm \\mathbf{arcseconds}``).
+- `kappa = Vector{<:Real}()`: Vector of convergences (dimensionless).
+"""
+struct init_MultiPixelLens{T<:Real} <: AbstractLens
+   _lens_::Symbol
+   n::Int64
+   x_c::Vector{T}
+   y_c::Vector{T}
+   kappa::Vector{T}
+end
+function init_MultiPixelLens(; x_c=Vector{<:Real}(), y_c=Vector{<:Real}(), kappa=Vector{<:Real}())
+   if !(length(x_c) == length(y_c) == length(kappa))
+      throw(ArgumentError("x_c, y_c, and kappa must all have the same length (one entry per component); 
+            got $(length(x_c)), $(length(y_c)), and $(length(kappa))."))
+   end
+
+   T = promote_type(eltype(x_c), eltype(y_c), eltype(kappa))
+   x_c   = Vector{T}(x_c)
+   y_c   = Vector{T}(y_c)
+   kappa = Vector{T}(kappa)
+   
+   n = length(x_c)
+   return init_MultiPixelLens{T}(:MultiPixelLens, n, x_c, y_c, kappa)
 end
 
 
