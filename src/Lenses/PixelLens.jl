@@ -70,6 +70,9 @@ end
 # --------------------------------------------------------------------------------------------------
 # Main functions
 # --------------------------------------------------------------------------------------------------
+"""
+    potential!(ψ::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θpix::T) where {U<:Real, S<:Real, T<:Real}
+"""
 function potential!(ψ::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θpix::T) where {U<:Real, S<:Real, T<:Real}
    xp = θx - (θxc + θpix/2)  
    xm = θx - (θxc - θpix/2)
@@ -80,6 +83,23 @@ function potential!(ψ::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θpix::T) wh
    return ψ_up
 end
 
+"""
+    potential!(ψ::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θpix::T) where {U<:ROA, S<:ROA, T<:Real}
+Calculate potential at given coordinates for a pixel lens and update the potential (ψ) in place.
+
+# Arguments
+- `ψ`   : Potential at given coordinates
+- `θx`  : x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θxc` : x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc` : y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `κ`   : Convergence value (assuming ``D_{ds}/D_s = 1``).
+- `θpix`: Pixel size (in ``\\rm \\mathbf{arcseconds}``).
+
+# Returns
+- `nothing`: Updates the potential (ψ) in place.
+
+"""
 function potential!(ψ::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θpix::T) where {U<:ROA, S<:ROA, T<:Real}
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -96,6 +116,9 @@ function potential!(ψ::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θpix::T) wh
 end
 
 
+"""
+    deflection!(ψx::U, ψy::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θpix::T) where {U<:Real, S<:Real, T<:Real}
+"""
 function deflection!(ψx::U, ψy::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θpix::T) where {U<:Real, S<:Real, T<:Real}
    xp = θx - (θxc + θpix/2)  
    xm = θx - (θxc - θpix/2)
@@ -107,6 +130,25 @@ function deflection!(ψx::U, ψy::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θ
    return ψx_up, ψy_up
 end
 
+"""
+    deflection!(ψx::U, ψy::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θpix::T) where {U<:ROA, S<:ROA, T<:Real}
+Calculate deflection at given coordinates for a pixel lens and update the deflection components
+(ψx, ψy) in place.
+
+# Arguments
+- `ψx`  : x-component of the deflection at given coordinates
+- `ψy`  : y-component of the deflection at given coordinates
+- `θx`  : x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θxc` : x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc` : y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `κ`   : Convergence value (assuming ``D_{ds}/D_s = 1``).
+- `θpix`: Pixel size (in ``\\rm \\mathbf{arcseconds}``).
+
+# Returns
+- `nothing`: Updates the deflection (ψx, ψy) in place.
+
+"""
 function deflection!(ψx::U, ψy::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θpix::T) where {U<:ROA, S<:ROA, T<:Real}
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
@@ -124,6 +166,9 @@ function deflection!(ψx::U, ψy::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θ
 end
 
 
+"""
+    jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θpix::T) where {U<:Real, S<:Real, T<:Real}
+"""
 function jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θpix::T) where {U<:Real, S<:Real, T<:Real}
    xp = θx - (θxc + θpix/2)  
    xm = θx - (θxc - θpix/2)
@@ -136,6 +181,25 @@ function jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, θxc::T, θyc::T, 
    return ψxx_up, ψyy_up, ψxy_up
 end
 
+"""
+    jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θpix::T) where {U<:ROA, S<:ROA, T<:Real}
+Calculate jacobian at given coordinates for a pixel lens and update the jacobian components 
+(ψxx, ψyy, ψxy) in place.
+
+# Arguments
+- `ψxx` : x-component of the jacobian at given coordinates
+- `ψyy` : y-component of the jacobian at given coordinates
+- `ψxy` : xy-component of the jacobian at given coordinates
+- `θx`  : x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θxc` : x-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `θyc` : y-coordinate of the lens (in ``\\rm \\mathbf{arcseconds}``).
+- `κ`   : Convergence value (assuming ``D_{ds}/D_s = 1``).
+- `θpix`: Pixel size (in ``\\rm \\mathbf{arcseconds}``).
+
+# Returns
+- `nothing`: Updates the jacobian (ψxx, ψyy, ψxy) in place.
+"""
 function jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θpix::T) where {U<:ROA, S<:ROA, T<:Real}
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
