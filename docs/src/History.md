@@ -1,5 +1,6 @@
 | Date       | Version  | Comments |
 | :-------   | :------: | :------- |
+| 01/08/2026 | 0.1.1    | Added `PixelLens` and `MultiPixelLens`. Updated documentation. |
 | 12/07/2026 | 0.1.0    | Added `ImagePlane_fast` and logL for flux and time delay. |
 | 03/07/2026 | 0.0.9    | Updated and tested support for lens modelling. |
 | 28/04/2026 | 0.0.8    | Fixed bugs in `init_CompositeLens` and `LensModel`. Added new `Multipole` lens model. |
