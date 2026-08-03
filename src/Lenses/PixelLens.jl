@@ -59,7 +59,7 @@ end
 end
 
 @inline function _ψ̃yy(θx::T, θy::T) where T <: Real
-   return atan_cont(θy, θx) / π
+   return _atan(θy, θx) / π
 end
 
 @inline function _ψ̃xy(θx::T, θy::T) where T <: Real
@@ -112,7 +112,7 @@ function potential!(ψ::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θpix::T) wh
          ψ[i, j] = ψ[i, j] + κ * (_ψ̃(xp, yp) + _ψ̃(xm, ym) - _ψ̃(xp, ym) - _ψ̃(xm, yp))
       end
    end
-   return ψ
+   return nothing
 end
 
 
@@ -125,8 +125,8 @@ function deflection!(ψx::U, ψy::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θ
    yp = θy - (θyc + θpix/2)  
    ym = θy - (θyc - θpix/2)
 
-   ψx_up = ψx + κ * (_ψ̃x(xp, yp) + _ψ̃x(xm, ym) - _ψ̃x(xp, ym) - _ψ̃x(xm, ym))
-   ψy_up = ψy + κ * (_ψ̃y(xp, yp) + _ψ̃y(xm, ym) - _ψ̃y(xp, ym) - _ψ̃y(xm, ym))
+   ψx_up = ψx + κ * (_ψ̃x(xp, yp) + _ψ̃x(xm, ym) - _ψ̃x(xp, ym) - _ψ̃x(xm, yp))
+   ψy_up = ψy + κ * (_ψ̃y(xp, yp) + _ψ̃y(xm, ym) - _ψ̃y(xp, ym) - _ψ̃y(xm, yp))
    return ψx_up, ψy_up
 end
 
@@ -158,11 +158,11 @@ function deflection!(ψx::U, ψy::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θ
          yp = θy[i, j] - (θyc + θpix/2)
          ym = θy[i, j] - (θyc - θpix/2)
          
-         ψx[i, j] = ψx[i, j] + κ * (_ψ̃x(xp, yp) + _ψ̃x(xm, ym) - _ψ̃x(xp, ym) - _ψ̃x(xm, ym))
-         ψy[i, j] = ψy[i, j] + κ * (_ψ̃y(xp, yp) + _ψ̃y(xm, ym) - _ψ̃y(xp, ym) - _ψ̃y(xm, ym))
+         ψx[i, j] = ψx[i, j] + κ * (_ψ̃x(xp, yp) + _ψ̃x(xm, ym) - _ψ̃x(xp, ym) - _ψ̃x(xm, yp))
+         ψy[i, j] = ψy[i, j] + κ * (_ψ̃y(xp, yp) + _ψ̃y(xm, ym) - _ψ̃y(xp, ym) - _ψ̃y(xm, yp))
       end
    end
-   return ψx, ψy
+   return nothing
 end
 
 
@@ -209,12 +209,12 @@ function jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, θxc::T, θyc::T, 
          yp = θy[i, j] - (θyc + θpix/2)
          ym = θy[i, j] - (θyc - θpix/2)
          
-         ψxx[i, j] = ψxx[i, j] + κ * (_ψ̃xx(xp, yp) + _ψ̃xx(xm, ym) - _ψ̃xx(xp, ym) - _ψ̃xx(xm, ym))
-         ψyy[i, j] = ψyy[i, j] + κ * (_ψ̃yy(xp, yp) + _ψ̃yy(xm, ym) - _ψ̃yy(xp, ym) - _ψ̃yy(xm, ym))
-         ψxy[i, j] = ψxy[i, j] + κ * (_ψ̃xy(xp, yp) + _ψ̃xy(xm, ym) - _ψ̃xy(xp, ym) - _ψ̃xy(xm, ym))
+         ψxx[i, j] = ψxx[i, j] + κ * (_ψ̃xx(xp, yp) + _ψ̃xx(xm, ym) - _ψ̃xx(xp, ym) - _ψ̃xx(xm, yp))
+         ψyy[i, j] = ψyy[i, j] + κ * (_ψ̃yy(xp, yp) + _ψ̃yy(xm, ym) - _ψ̃yy(xp, ym) - _ψ̃yy(xm, yp))
+         ψxy[i, j] = ψxy[i, j] + κ * (_ψ̃xy(xp, yp) + _ψ̃xy(xm, ym) - _ψ̃xy(xp, ym) - _ψ̃xy(xm, yp))
       end
    end
-   return ψxx, ψyy, ψxy
+   return nothing
 end
 
 end
