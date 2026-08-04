@@ -43,6 +43,7 @@ include("./eHernquistMDLens.jl")
 include("./eNFWMDLens.jl")
 include("./MultiPlummerLens.jl")
 include("./MultiGaussianLens.jl")
+include("./MultiPixelLens.jl")
 include("./MultiPJELens.jl")
 
 
@@ -1298,6 +1299,10 @@ end
    return SersicLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_e, lens.n)
 end
 
+@inline function potential_helper!(ψ::T, lens::init_PixelLens, θx::T, θy::T) where T <: Union{Real, ROA}
+   return PixelLens.potential!(ψ, θx, θy, lens.x_c, lens.y_c, κ::T, lens.pixel_size::T)
+end
+
 @inline function potential_helper!(ψ::T, lens::init_ExternalEffects, θx::T, θy::T) where T <: Union{Real, ROA}
    return ExternalEffects.potential!(ψ, θx, θy, lens.kappa, lens.gamma, lens.angle)
 end
@@ -1366,6 +1371,10 @@ end
    return MultiGaussianLens.potential!(ψ, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.n)
 end
 
+@inline function potential_helper!(ψ::T, lens::init_MultiPixelLens, θx::T, θy::T) where T <: Union{Real, ROA}
+   return MultiPixelLens.potential!(ψ, θx, θy, lens.x_c, lens.y_c, lens.kappa, lens.pixel_size, lens.n)
+end
+
 @inline function potential_helper!(ψ::T, lens::init_MultiPJELens, θx::T, θy::T) where T <: Union{Real, ROA}
    return MultiPJELens.potential!(ψ, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.x_t, lens.eps, lens.pa, lens.n)
 end
@@ -1400,6 +1409,10 @@ end
 
 @inline function deflection_helper!(ψx::T, ψy::T, lens::init_SersicLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return SersicLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_e, lens.n)
+end
+
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_PixelLens, θx::T, θy::T) where T <: Union{Real, ROA}
+   return PixelLens.deflection!(ψx, ψy, θx, θy, lens.x_c, lens.y_c, κ::T, lens.pixel_size::T)
 end
 
 @inline function deflection_helper!(ψx::T, ψy::T, lens::init_ExternalEffects, θx::T, θy::T) where T <: Union{Real, ROA}
@@ -1470,6 +1483,10 @@ end
    return MultiGaussianLens.deflection!(ψx, ψy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.n)
 end
 
+@inline function deflection_helper!(ψx::T, ψy::T, lens::init_MultiPixelLens, θx::T, θy::T) where T <: Union{Real, ROA}
+   return MultiPixelLens.deflection!(ψx, ψy, θx, θy, lens.x_c, lens.y_c, lens.kappa, lens.pixel_lens, lens.n)
+end
+
 @inline function deflection_helper!(ψx::T, ψy::T, lens::init_MultiPJELens, θx::T, θy::T) where T <: Union{Real, ROA}
    return MultiPJELens.deflection!(ψx, ψy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.x_t, lens.eps, lens.pa, lens.n)
 end
@@ -1504,6 +1521,10 @@ end
 
 @inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_SersicLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return SersicLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_e, lens.n)
+end
+
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PixelLens, θx::T, θy::T) where T <: Union{Real, ROA}
+   return PixelLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, κ::T, lens.pixel_size::T)
 end
 
 @inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_ExternalEffects, θx::T, θy::T) where T <: Union{Real, ROA}
@@ -1572,6 +1593,10 @@ end
 
 @inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_MultiGaussianLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return MultiGaussianLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.n)
+end
+
+@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_MultiPixelLens, θx::T, θy::T) where T <: Union{Real, ROA}
+   return MultiPixelLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, lens.kappa, lens.pixel_size, lens.n)
 end
 
 @inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_MultiPJELens, θx::T, θy::T) where T <: Union{Real, ROA}

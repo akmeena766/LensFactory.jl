@@ -245,11 +245,12 @@ struct init_PixelLens{T<:Real} <: AbstractLens
    x_c::T
    y_c::T
    kappa::T
+   pixel_size::T
 end
-function init_PixelLens(; x_c::Real=0.0, y_c::Real=0.0, kappa::Real=NaN)
-   x_c, y_c, kappa = promote(x_c, y_c, kappa)
+function init_PixelLens(; x_c::Real=0.0, y_c::Real=0.0, kappa::Real=NaN, pixel_size::Real=NaN)
+   x_c, y_c, kappa = promote(x_c, y_c, kappa, pixel_size)
    T = typeof(x_c)
-   return init_PixelLens{T}(:PixelLens, x_c, y_c, kappa)
+   return init_PixelLens{T}(:PixelLens, x_c, y_c, kappa, pixel_size)
 end
 
 
@@ -1076,20 +1077,22 @@ struct init_MultiPixelLens{T<:Real} <: AbstractLens
    x_c::Vector{T}
    y_c::Vector{T}
    kappa::Vector{T}
+   pixel_size::Vector{T}
 end
-function init_MultiPixelLens(; x_c=Vector{<:Real}(), y_c=Vector{<:Real}(), kappa=Vector{<:Real}())
-   if !(length(x_c) == length(y_c) == length(kappa))
-      throw(ArgumentError("x_c, y_c, and kappa must all have the same length (one entry per component); 
-            got $(length(x_c)), $(length(y_c)), and $(length(kappa))."))
+function init_MultiPixelLens(; x_c=Vector{<:Real}(), y_c=Vector{<:Real}(), kappa=Vector{<:Real}(), pixel_size=Vector{<:Real}())
+   if !(length(x_c) == length(y_c) == length(kappa) == length(pixel_size))
+      throw(ArgumentError("x_c, y_c, kappa, pixel_size must all have the same length (one entry 
+      per component); got $(length(x_c)), $(length(y_c)), $(length(kappa)) and $(length(pixel_size))."))
    end
 
    T = promote_type(eltype(x_c), eltype(y_c), eltype(kappa))
    x_c   = Vector{T}(x_c)
    y_c   = Vector{T}(y_c)
    kappa = Vector{T}(kappa)
+   pixel_size = Vector{T}(pixel_size)
    
    n = length(x_c)
-   return init_MultiPixelLens{T}(:MultiPixelLens, n, x_c, y_c, kappa)
+   return init_MultiPixelLens{T}(:MultiPixelLens, n, x_c, y_c, kappa, pixel_size)
 end
 
 
@@ -1158,6 +1161,7 @@ const lens_init_functions = Dict{Symbol, Function}(
    :NSISMDLens        => (comp -> init_NSISMDLens(x_c=comp.x_c, y_c=comp.y_c, v_d=comp.v_d, x_s=comp.x_s)),
    :GaussianLens      => (comp -> init_GaussianLens(D_d=comp.D_d, x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, x_s=comp.x_s)),
    :SersicLens        => (comp -> init_SersicLens(D_d=comp.D_d, x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, x_e=comp.x_e, n=comp.n)),
+   :PixelLens         => (comp -> init_PixelLens(x_c=comp.x_c, y_c=comp.y_c, kappa=comp.kappa, pixel_size=comp.pixel_size)),
    :ExternalEffects   => (comp -> init_ExternalEffects(kappa=comp.kappa, gamma=comp.gamma, angle=comp.angle)),
    :ExternalEffects3  => (comp -> init_ExternalEffects3(delta=comp.delta, angle=comp.angle)),
    :Multipole         => (comp -> init_Multipole(delta=comp.delta, angle=comp.angle, m=comp.m, n=comp.n)),
@@ -1175,6 +1179,7 @@ const lens_init_functions = Dict{Symbol, Function}(
    :EinastoLens       => (comp -> init_EinastoLens(comp.cosmology, comp.z_d; x_c=comp.x_c, y_c=comp.y_c, x_s=comp.x_s, n=comp.n)),
    :MultiPlummerLens  => (comp -> init_MultiPlummerLens(D_d=comp.D_d, x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, x_s=comp.x_s)),
    :MultiGaussianLens => (comp -> init_MultiGaussianLens(D_d=comp.D_d, x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, x_s=comp.x_s)),
+   :MultiPixelLens    => (comp -> init_PixelLens(x_c=comp.x_c, y_c=comp.y_c, kappa=comp.kappa, pixel_size=comp.pixel_size)),
    :MultiPJELens      => (comp -> init_MultiPJELens(x_c=comp.x_c, y_c=comp.y_c, v_d=comp.v_d, x_s=comp.x_s, x_t=comp.x_t, eps=comp.eps, pa=comp.pa))
    )
 
