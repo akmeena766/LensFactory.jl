@@ -77,4 +77,27 @@
    # ---- Convergence scales linearly with κ --------------------------------------------
    lens2 = Lenses.init_PixelLens(x_c=0.0, y_c=0.0, kappa=2.5, pixel_size=1.0)
    @test Lenses.get_potential(lens2, xt1, yt1) ≈ 2.5 * pot1 atol=1e-12
+
+   # ---- get_kappa_gamma recovers the convergence and shear (adis = 1) ------------------
+   κin, γ1in, γ2in = Lenses.get_kappa_gamma(lens, 0.2, -0.3, 1.0)   # interior point
+   @test κin  ≈  1.0                  atol=1e-12                     # κ recovered = input κ
+   @test γ1in ≈ -0.06725837199105811  atol=1e-12
+   @test γ2in ≈  0.15412790347279126  atol=1e-12
+
+   # κ = ½(ψxx+ψyy), γ1 = ½(ψxx-ψyy), γ2 = ψxy  (consistency with the raw jacobian)
+   let j = Lenses.get_jacobian(lens, 0.2, -0.3)
+      @test κin  ≈ 0.5 * (j[1] + j[2]) atol=1e-13
+      @test γ1in ≈ 0.5 * (j[1] - j[2]) atol=1e-13
+      @test γ2in ≈ j[3]                atol=1e-13
+   end
+
+   # Convergence vanishes far outside the patch
+   @test Lenses.get_kappa_gamma(lens, 12.0, 0.0, 1.0)[1] ≈ 0.0 atol=1e-12
+
+   # Convergence and shear scale linearly with adis
+   let (κa, γ1a, γ2a) = Lenses.get_kappa_gamma(lens, 0.2, -0.3, 2.0)
+      @test κa  ≈ 2.0 * κin  atol=1e-12
+      @test γ1a ≈ 2.0 * γ1in atol=1e-12
+      @test γ2a ≈ 2.0 * γ2in atol=1e-12
+   end
 end

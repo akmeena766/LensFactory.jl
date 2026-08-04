@@ -79,4 +79,14 @@
    # (0.25, 0.25) lies inside pixel 1 ([-0.5,0.5]²) and pixel 2 ([0.2,0.8]²)
    j = Lenses.get_jacobian(lens2, 0.25, 0.25)
    @test j[1] + j[2] ≈ 2.0 * (k1 + k2) atol=1e-12
+
+   # ---- get_kappa_gamma over the overlap: κ = Σκ_k, γ1 = 0 by diagonal symmetry --------
+   κo, γ1o, γ2o = Lenses.get_kappa_gamma(lens2, 0.25, 0.25, 1.0)
+   @test κo  ≈  k1 + k2               atol=1e-12
+   @test γ1o ≈  0.0                   atol=1e-12
+   @test γ2o ≈ -0.5442814604797956    atol=1e-12
+   let jj = Lenses.get_jacobian(lens2, 0.25, 0.25)
+      @test κo  ≈ 0.5 * (jj[1] + jj[2]) atol=1e-13
+      @test γ2o ≈ jj[3]                 atol=1e-13
+   end
 end
