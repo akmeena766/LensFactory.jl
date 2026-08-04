@@ -1179,7 +1179,7 @@ const lens_init_functions = Dict{Symbol, Function}(
    :EinastoLens       => (comp -> init_EinastoLens(comp.cosmology, comp.z_d; x_c=comp.x_c, y_c=comp.y_c, x_s=comp.x_s, n=comp.n)),
    :MultiPlummerLens  => (comp -> init_MultiPlummerLens(D_d=comp.D_d, x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, x_s=comp.x_s)),
    :MultiGaussianLens => (comp -> init_MultiGaussianLens(D_d=comp.D_d, x_c=comp.x_c, y_c=comp.y_c, mass=comp.mass, x_s=comp.x_s)),
-   :MultiPixelLens    => (comp -> init_PixelLens(x_c=comp.x_c, y_c=comp.y_c, kappa=comp.kappa, pixel_size=comp.pixel_size)),
+   :MultiPixelLens    => (comp -> init_MultiPixelLens(x_c=comp.x_c, y_c=comp.y_c, kappa=comp.kappa, pixel_size=comp.pixel_size)),
    :MultiPJELens      => (comp -> init_MultiPJELens(x_c=comp.x_c, y_c=comp.y_c, v_d=comp.v_d, x_s=comp.x_s, x_t=comp.x_t, eps=comp.eps, pa=comp.pa))
    )
 
