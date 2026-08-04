@@ -24,6 +24,7 @@ xt2, yt2 = 1.0, 0.0
    include("./test_Lenses/test_Lenses_NSISMDLens.jl")
    include("./test_Lenses/test_Lenses_GaussianLens.jl")
    include("./test_Lenses/test_Lenses_SersicLens.jl")
+   include("./test_Lenses/test_Lenses_PixelLens.jl")
    include("./test_Lenses/test_Lenses_ExternalEffects.jl")
    include("./test_Lenses/test_Lenses_ExternalEffects3.jl")
    include("./test_Lenses/test_Lenses_Multipole.jl")
@@ -41,6 +42,7 @@ xt2, yt2 = 1.0, 0.0
    include("./test_Lenses/test_Lenses_EinastoLens.jl")
    include("./test_Lenses/test_Lenses_MultiPlummerLens.jl")
    include("./test_Lenses/test_Lenses_MultiGaussianLens.jl")
+   include("./test_Lenses/test_Lenses_MultiPixelLens.jl")
    include("./test_Lenses/test_Lenses_MultiPJELens.jl")
    include("./test_Lenses/test_Lenses_CompositeLens.jl")
 end
