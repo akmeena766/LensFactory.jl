@@ -230,9 +230,10 @@ end
 
 
 """
-    init_PixelLens(x_c::Real = 0.0, 
-                   y_c::Real = 0.0, 
-                   kappa::Real = NaN)
+    init_PixelLens(x_c::Real        = 0.0, 
+                   y_c::Real        = 0.0, 
+                   kappa::Real      = NaN,
+                   pixel_size::Real = NaN)
 Initialize a square pixel lens with the given parameters.
 
 # Keyword Arguments
@@ -1063,13 +1064,17 @@ end
 
 
 """
-    init_MultiPixelLens(x_c = Vector{<:Real}(), y_c = Vector{<:Real}(), kappa = Vector{<:Real}())
+    init_MultiPixelLens(x_c        = Vector{<:Real}(), 
+                        y_c        = Vector{<:Real}(), 
+                        kappa      = Vector{<:Real}(),
+                        pixel_size = Vector{<:Real}())
 Initialize a Multi-component Pixel lens with the given parameters.
 
 # Keyword Arguments
-- `x_c = Vector{<:Real}()`: Vector of x-coordinates (in ``\\rm \\mathbf{arcseconds}``).
-- `y_c = Vector{<:Real}()`: Vector of y-coordinates (in ``\\rm \\mathbf{arcseconds}``).
-- `kappa = Vector{<:Real}()`: Vector of convergences (dimensionless).
+- `x_c = Vector{<:Real}()`        : Vector of x-coordinates (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c = Vector{<:Real}()`        : Vector of y-coordinates (in ``\\rm \\mathbf{arcseconds}``).
+- `kappa = Vector{<:Real}()`      : Vector of convergences (dimensionless).
+- `pixel_size = Vector{<:Real}()` : Vector of pixel sizes (in ``\\rm \\mathbf{arcseconds}``).
 """
 struct init_MultiPixelLens{T<:Real} <: AbstractLens
    _lens_::Symbol
