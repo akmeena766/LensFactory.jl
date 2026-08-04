@@ -1300,7 +1300,7 @@ end
 end
 
 @inline function potential_helper!(ψ::T, lens::init_PixelLens, θx::T, θy::T) where T <: Union{Real, ROA}
-   return PixelLens.potential!(ψ, θx, θy, lens.x_c, lens.y_c, κ::T, lens.pixel_size::T)
+   return PixelLens.potential!(ψ, θx, θy, lens.x_c, lens.y_c, lens.kappa, lens.pixel_size)
 end
 
 @inline function potential_helper!(ψ::T, lens::init_ExternalEffects, θx::T, θy::T) where T <: Union{Real, ROA}
@@ -1412,7 +1412,7 @@ end
 end
 
 @inline function deflection_helper!(ψx::T, ψy::T, lens::init_PixelLens, θx::T, θy::T) where T <: Union{Real, ROA}
-   return PixelLens.deflection!(ψx, ψy, θx, θy, lens.x_c, lens.y_c, κ::T, lens.pixel_size::T)
+   return PixelLens.deflection!(ψx, ψy, θx, θy, lens.x_c, lens.y_c, lens.kappa, lens.pixel_size)
 end
 
 @inline function deflection_helper!(ψx::T, ψy::T, lens::init_ExternalEffects, θx::T, θy::T) where T <: Union{Real, ROA}
@@ -1484,7 +1484,7 @@ end
 end
 
 @inline function deflection_helper!(ψx::T, ψy::T, lens::init_MultiPixelLens, θx::T, θy::T) where T <: Union{Real, ROA}
-   return MultiPixelLens.deflection!(ψx, ψy, θx, θy, lens.x_c, lens.y_c, lens.kappa, lens.pixel_lens, lens.n)
+   return MultiPixelLens.deflection!(ψx, ψy, θx, θy, lens.x_c, lens.y_c, lens.kappa, lens.pixel_size, lens.n)
 end
 
 @inline function deflection_helper!(ψx::T, ψy::T, lens::init_MultiPJELens, θx::T, θy::T) where T <: Union{Real, ROA}
@@ -1524,7 +1524,7 @@ end
 end
 
 @inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PixelLens, θx::T, θy::T) where T <: Union{Real, ROA}
-   return PixelLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, κ::T, lens.pixel_size::T)
+   return PixelLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, lens.kappa, lens.pixel_size)
 end
 
 @inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_ExternalEffects, θx::T, θy::T) where T <: Union{Real, ROA}

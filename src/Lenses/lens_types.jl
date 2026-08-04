@@ -248,7 +248,7 @@ struct init_PixelLens{T<:Real} <: AbstractLens
    pixel_size::T
 end
 function init_PixelLens(; x_c::Real=0.0, y_c::Real=0.0, kappa::Real=NaN, pixel_size::Real=NaN)
-   x_c, y_c, kappa = promote(x_c, y_c, kappa, pixel_size)
+   x_c, y_c, kappa, pixel_size = promote(x_c, y_c, kappa, pixel_size)
    T = typeof(x_c)
    return init_PixelLens{T}(:PixelLens, x_c, y_c, kappa, pixel_size)
 end
@@ -1085,7 +1085,7 @@ function init_MultiPixelLens(; x_c=Vector{<:Real}(), y_c=Vector{<:Real}(), kappa
       per component); got $(length(x_c)), $(length(y_c)), $(length(kappa)) and $(length(pixel_size))."))
    end
 
-   T = promote_type(eltype(x_c), eltype(y_c), eltype(kappa))
+   T = promote_type(eltype(x_c), eltype(y_c), eltype(kappa), eltype(pixel_size))
    x_c   = Vector{T}(x_c)
    y_c   = Vector{T}(y_c)
    kappa = Vector{T}(kappa)
