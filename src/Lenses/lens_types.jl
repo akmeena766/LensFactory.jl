@@ -1299,16 +1299,18 @@ end
 # `planes` must already hold the physical (corrected) lenses for indices 1 .. k-1. `αx` / `αy` are
 # caller-provided scratch buffers (length >= k-1) reused across calls to avoid per-call allocation.
 function _raytrace_to_plane!(αx::Vector{Float64}, αy::Vector{Float64}, planes::AbstractVector, adis_ij::AbstractMatrix, k::Int, θx::Real, θy::Real)
-   # For the first plane the observed position IS the physical position
-   k == 1 && return float(θx), float(θy)
+   # For the first plane the observed position is the physical position
+   if k == 1 
+      return float(θx), float(θy)
+   end
 
    for nj in 1:k-1
       # Position of this ray in plane nj
       θx_j = float(θx)
       θy_j = float(θy)
       for nl in 1:nj-1
-         θx_j -= adis_ij[nl, nj] * αx[nl]
-         θy_j -= adis_ij[nl, nj] * αy[nl]
+         θx_j = θx_j - adis_ij[nl, nj] * αx[nl]
+         θy_j = θy_j - adis_ij[nl, nj] * αy[nl]
       end
 
       # Deflection contributed by (physical) plane nj at that position
@@ -1319,8 +1321,8 @@ function _raytrace_to_plane!(αx::Vector{Float64}, αy::Vector{Float64}, planes:
    θx_k = float(θx)
    θy_k = float(θy)
    for nj in 1:k-1
-      θx_k -= adis_ij[nj, k] * αx[nj]
-      θy_k -= adis_ij[nj, k] * αy[nj]
+      θx_k = θx_k - adis_ij[nj, k] * αx[nj]
+      θy_k = θy_k - adis_ij[nj, k] * αy[nj]
    end
    return θx_k, θy_k
 end
@@ -1331,7 +1333,7 @@ end
 # replaced by their physical (plane-frame) values; NamedTuples without a centre are returned
 # unchanged. `planes` must already hold the physical (corrected) planes 1 .. k-1.
 function _update_centre(nt::NamedTuple, planes::AbstractVector, adis_ij::AbstractMatrix, k::Int, αx::Vector{Float64}, αy::Vector{Float64})
-   if !haskey(nt, :x_c) && !haskey(nt, :y_c)
+   if !haskey(nt, :x_c) || !haskey(nt, :y_c)
       return nt
    end
 
@@ -1364,6 +1366,7 @@ function init_MultiPlaneLens(lens::Vector{<:NamedTuple};
    # Get sorted unique lens redshifts
    zd_unique = unique(component.z_d for component in lens)
    sort!(zd_unique)
+   n_p = length(zd_unique)
 
    # Check minimum number of planes
    if length(zd_unique) < 2
