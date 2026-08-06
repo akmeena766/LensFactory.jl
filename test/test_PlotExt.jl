@@ -7,6 +7,8 @@ using KernelDensity
 using LaTeXStrings
 CairoMakie.activate!()
 
-# include("./test_Extension/test_PlotLenses.jl")
-# include("./test_Extension/test_PlotMultiPlane.jl")
-# include("./test_Extension/test_PlotLensModel.jl")
+@testset "PlotExt" begin
+   include("./test_Extension/test_PlotLenses.jl")
+   # include("./test_Extension/test_PlotMultiPlane.jl")
+   # include("./test_Extension/test_PlotLensModel.jl") 
+end

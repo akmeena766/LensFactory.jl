@@ -16,8 +16,11 @@
    @test ext isa Module
 
    # ---- Wiring: every plot_* entry point gained a method from the extension -----------------------
-   for f in (Lenses.plot_sky, Lenses.plot_image_plane, Lenses.plot_surface_density,
-             Lenses.plot_magnification_map, Lenses.plot_magnification_profile)
+   for f in (Lenses.plot_sky, 
+             Lenses.plot_image_plane, 
+             Lenses.plot_surface_density,
+             Lenses.plot_magnification_map, 
+             Lenses.plot_magnification_profile)
       @test !isempty(methods(f))
    end
 
@@ -30,7 +33,7 @@
    adis     = D_ds / D_s
 
    # Lens centre is offset by half a pixel so that no grid point ever hits the singularity.
-   lens   = Lenses.init_PointLens(D_d = D_d, x_c = 0.05, y_c = 0.05, mass = 1.0e12)
+   lens   = Lenses.init_SISLens(x_c = 0.05, y_c = 0.05, v_d=300)
    θx, θy = Lenses.get_meshgrid(3.0, 3.0, 0.1)
 
    # ---- Smoke tests: entry points build valid Figure/Axis objects --------------------------------
@@ -68,7 +71,8 @@
 
       # Same call with contours overlaid.
       fig2, ax2 = Lenses.plot_surface_density(lens, θx, θy, adis;
-                                              unit = :convergence, plot_contour = true)
+                                              unit = :convergence, 
+                                              plot_contour = true)
       @test fig2 isa Makie.Figure
       @test ax2  isa Makie.Axis
    end
