@@ -1224,8 +1224,13 @@ function init_CompositeLens(lens::Vector{<:NamedTuple})
 end
 
 
+# --------------------------------------------------------------------------------------------------
+# Multi-plane lens constructor
+# --------------------------------------------------------------------------------------------------
 """
-    init_MultiPlaneLens(lens::Vector{<:NamedTuple})
+    init_MultiPlaneLens(lens::Vector{<:NamedTuple};
+                        cosmology::Union{Nothing, Cosmology.AbstractCosmology} = nothing,
+                        position::Symbol = :physical)
 Initialize a multi-plane lens from a vector of lens components. Each component must contain the
 lens redshift (`z_d`) along with the parameters of the corresponding lens model. Components
 sharing the same redshift are grouped into a single (composite) lens plane, and the lens planes
@@ -1233,6 +1238,15 @@ are sorted in increasing redshift. At least two distinct lens planes are require
 
 # Arguments
 - `lens::Vector{<:NamedTuple}`: Vector of lens components.
+
+# Keyword Arguments
+- `cosmology = nothing`: Cosmology model. Required only when `position = :observed` to calculate 
+   the plane-plane distance ratios.
+- `position = :physical`: Convention for the supplied deflector centres.
+  - `:physical`: centres are already plane-frame positions and are used as-is.
+  - `:observed`: centres are observed (on-sky) positions. Those on planes behind the first need to
+      be mapped to their physical (plane-frame) positions by ray-tracing through the foreground 
+      planes.
 
 # Returns
 - `MultiPlaneLens`: Multi-plane lens.
@@ -1251,11 +1265,107 @@ function init_MultiPlaneLens(; n_p::Int64=0, z_d::Vector{<:Real}=Float64[], _pla
    T = eltype(z_d)
    return init_MultiPlaneLens{T}(:MultiPlaneLens, n_p, z_d, Vector{AbstractLens}(_plane_))
 end
-function init_MultiPlaneLens(lens::Vector{<:NamedTuple})   
+
+# CONVENTION: The centre (x_c, y_c) of every deflector is an OBSERVED, on-sky angular position. 
+# The recursive lens equation, however, evaluates a plane's deflection at the ray position in 
+# that plane's OWN frame. For the nearest plane the two coincide, but for every plane behind it 
+# the observed centre is itself displaced by the foreground deflection, so using it directly 
+# mis-places the deflector by exactly the foreground bending. `update_lens_positions` maps each 
+# observed centre to its physical (plane-frame) position by ray-tracing it through the already-
+# corrected foreground planes, and returns a NEW multi-plane lens. This mirrors the "observed 
+# convention" (observed_convention_index) of lenstronomy.
+#
+# Planes are corrected in increasing-redshift order, so a single ordered pass is EXACT (no 
+# iteration): by the time plane k is reached, planes 1 .. k-1 are already physical. The correction 
+# depends only on the plane-plane ratios adis_ij = D_ji / D_oi, which are source-independent, so 
+# a lens corrected once is valid for every source redshift.
+
+# Plane-plane angular-diameter-distance ratios adis_ij[nj, ni] = D_ji / D_oi (source-independent).
+# `z_d` must be sorted in increasing redshift (as produced by the constructor below).
+function _plane_ratios(cosmology::Cosmology.AbstractCosmology, z_d::AbstractVector{<:Real})
+   n_p = length(z_d)
+   adis_ij = zeros(n_p, n_p)
+   for ni in 1:n_p
+      D_oi = Cosmology.angular_diameter_distance(cosmology, 0.0, z_d[ni])
+      for nj in 1:ni-1
+         D_ji = Cosmology.angular_diameter_distance(cosmology, z_d[nj], z_d[ni])
+         adis_ij[nj, ni] = D_ji / D_oi
+      end
+   end
+   return adis_ij
+end
+
+# Physical (plane-frame) position at plane `k` of a ray that arrives at the observed angle (θx, θy).
+# `planes` must already hold the physical (corrected) lenses for indices 1 .. k-1. `αx` / `αy` are
+# caller-provided scratch buffers (length >= k-1) reused across calls to avoid per-call allocation.
+function _raytrace_to_plane!(αx::Vector{Float64}, αy::Vector{Float64}, planes::AbstractVector, adis_ij::AbstractMatrix, k::Int, θx::Real, θy::Real)
+   # For the first plane the observed position IS the physical position
+   k == 1 && return float(θx), float(θy)
+
+   for nj in 1:k-1
+      # Position of this ray in plane nj
+      θx_j = float(θx)
+      θy_j = float(θy)
+      for nl in 1:nj-1
+         θx_j -= adis_ij[nl, nj] * αx[nl]
+         θy_j -= adis_ij[nl, nj] * αy[nl]
+      end
+
+      # Deflection contributed by (physical) plane nj at that position
+      αx[nj], αy[nj] = get_deflection(planes[nj], θx_j, θy_j)
+   end
+
+   # Position of this ray in plane k
+   θx_k = float(θx)
+   θy_k = float(θy)
+   for nj in 1:k-1
+      θx_k -= adis_ij[nj, k] * αx[nj]
+      θy_k -= adis_ij[nj, k] * αy[nj]
+   end
+   return θx_k, θy_k
+end
+
+
+# NamedTuple-level centre correction, used while BUILDING a multi-plane lens with position=:observed
+# so each plane is constructed only ONCE (no build-then-rebuild). Returns a NamedTuple with x_c/y_c
+# replaced by their physical (plane-frame) values; NamedTuples without a centre are returned
+# unchanged. `planes` must already hold the physical (corrected) planes 1 .. k-1.
+function _update_centre(nt::NamedTuple, planes::AbstractVector, adis_ij::AbstractMatrix, k::Int, αx::Vector{Float64}, αy::Vector{Float64})
+   if !haskey(nt, :x_c) && !haskey(nt, :y_c)
+      return nt
+   end
+
+   # Get center position
+   x_c = nt.x_c
+   y_c = nt.y_c
+
+   if x_c isa Real
+      xp, yp = _raytrace_to_plane!(αx, αy, planes, adis_ij, k, x_c, y_c)
+      return merge(nt, (x_c = xp, y_c = yp))
+   else
+      # One centre per member (e.g. scaling-relation lenses): trace each independently
+      xp = Vector{Float64}(undef, length(x_c))
+      yp = Vector{Float64}(undef, length(y_c))
+      for m in eachindex(x_c)
+         xp[m], yp[m] = _raytrace_to_plane!(αx, αy, planes, adis_ij, k, x_c[m], y_c[m])
+      end
+      return merge(nt, (x_c = xp, y_c = yp))
+   end
+end
+
+function init_MultiPlaneLens(lens::Vector{<:NamedTuple};
+                             cosmology::Union{Nothing, Cosmology.AbstractCosmology} = nothing,
+                             position::Symbol = :physical)
+   # Check position argument
+   if position ∉ (:observed, :physical)
+      throw(ArgumentError("position must be :observed or :physical, got :$position."))
+   end
+   
    # Get sorted unique lens redshifts
    zd_unique = unique(component.z_d for component in lens)
    sort!(zd_unique)
 
+   # Check minimum number of planes
    if length(zd_unique) < 2
       throw(ArgumentError("Only $(length(zd_unique)) lens plane found. Need >= 2."))
    end
@@ -1266,8 +1376,31 @@ function init_MultiPlaneLens(lens::Vector{<:NamedTuple})
       push!(get!(lens_by_z, component.z_d, []), component)
    end
 
-   # Construct composite lenses for each unique redshift
-   lens_components = AbstractLens[init_CompositeLens(lens_by_z[z]) for z in zd_unique]
+   # Return lens if input centers are already physical
+   if position == :physical
+      lens_planes = AbstractLens[init_CompositeLens(lens_by_z[z]) for z in zd_unique]
+      return init_MultiPlaneLens(n_p=length(zd_unique), z_d=zd_unique, _plane_=lens_planes)
+   end
 
-   return init_MultiPlaneLens(n_p=length(zd_unique), z_d=zd_unique, _plane_=lens_components)
+   # :observed -> map on-sky centres to physical plane-frame positions WHILE building, so each plane
+   # is constructed only once. Planes are built in increasing-redshift order, so plane k is corrected
+   # through the already-physical planes 1 .. k-1 (single ordered pass, source-independent).
+   if cosmology === nothing
+      throw(ArgumentError("position = :observed requires a cosmology to initialize MultiPlane lens."))
+   end
+
+   adis_ij = _plane_ratios(cosmology, zd_unique)
+   planes  = Vector{AbstractLens}(undef, n_p)
+   αx      = Vector{Float64}(undef, n_p - 1)
+   αy      = Vector{Float64}(undef, n_p - 1)
+   for k in 1:n_p
+      nts = lens_by_z[zd_unique[k]]
+      if k == 1
+         planes[k] = init_CompositeLens(nts)
+      else
+         updated = NamedTuple[_update_centre(nt, planes, adis_ij, k, αx, αy) for nt in nts]
+         planes[k] = init_CompositeLens(updated)
+      end
+   end
+   return init_MultiPlaneLens(n_p=n_p, z_d=zd_unique, _plane_=planes)
 end
