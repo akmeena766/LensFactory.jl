@@ -67,6 +67,61 @@ end
 end
 
 
+function _ψ̃_kernel(θx::T, θy::T, θxc::T, θyc::T, θpix::T) where T <: Real
+   xp = θx - (θxc + θpix/2)
+   xm = θx - (θxc - θpix/2)
+   yp = θy - (θyc + θpix/2)
+   ym = θy - (θyc - θpix/2)
+
+   return (_ψ̃(xp, yp) + _ψ̃(xm, ym) - _ψ̃(xp, ym) - _ψ̃(xm, yp))
+end
+
+function _ψ̃x_kernel(θx::T, θy::T, θxc::T, θyc::T, θpix::T) where T <: Real
+   xp = θx - (θxc + θpix/2)
+   xm = θx - (θxc - θpix/2)
+   yp = θy - (θyc + θpix/2)
+   ym = θy - (θyc - θpix/2)
+
+   return (_ψ̃x(xp, yp) + _ψ̃x(xm, ym) - _ψ̃x(xp, ym) - _ψ̃x(xm, yp))
+end
+
+function _ψ̃y_kernel(θx::T, θy::T, θxc::T, θyc::T, θpix::T) where T <: Real
+   xp = θx - (θxc + θpix/2)
+   xm = θx - (θxc - θpix/2)
+   yp = θy - (θyc + θpix/2)
+   ym = θy - (θyc - θpix/2)
+
+   return (_ψ̃y(xp, yp) + _ψ̃y(xm, ym) - _ψ̃y(xp, ym) - _ψ̃y(xm, yp))
+end
+
+function _ψ̃xx_kernel(θx::T, θy::T, θxc::T, θyc::T, θpix::T) where T <: Real
+   xp = θx - (θxc + θpix/2)
+   xm = θx - (θxc - θpix/2)
+   yp = θy - (θyc + θpix/2)
+   ym = θy - (θyc - θpix/2)
+
+   return (_ψ̃xx(xp, yp) + _ψ̃xx(xm, ym) - _ψ̃xx(xp, ym) - _ψ̃xx(xm, yp))
+end
+
+function _ψ̃yy_kernel(θx::T, θy::T, θxc::T, θyc::T, θpix::T) where T <: Real
+   xp = θx - (θxc + θpix/2)
+   xm = θx - (θxc - θpix/2)
+   yp = θy - (θyc + θpix/2)
+   ym = θy - (θyc - θpix/2)
+
+   return (_ψ̃yy(xp, yp) + _ψ̃yy(xm, ym) - _ψ̃yy(xp, ym) - _ψ̃yy(xm, yp))
+end
+
+function _ψ̃xy_kernel(θx::T, θy::T, θxc::T, θyc::T, θpix::T) where T <: Real
+   xp = θx - (θxc + θpix/2)
+   xm = θx - (θxc - θpix/2)
+   yp = θy - (θyc + θpix/2)
+   ym = θy - (θyc - θpix/2)
+
+   return (_ψ̃xy(xp, yp) + _ψ̃xy(xm, ym) - _ψ̃xy(xp, ym) - _ψ̃xy(xm, yp))
+end
+
+
 # --------------------------------------------------------------------------------------------------
 # Main functions
 # --------------------------------------------------------------------------------------------------
