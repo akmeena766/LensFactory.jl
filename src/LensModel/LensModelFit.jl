@@ -400,7 +400,7 @@ function _fit_model(model::ModelConfig; save::Bool=true, file_name::Union{String
    # Save best fit
    if save
       if file_name === nothing
-         file_name = "$(model.observation.lens)_$(Dates.today()).jld2"
+         file_name = "$(model.observation.lens)_$(Dates.format(Dates.today(), "yyyymmdd")).jld2"
       end
       date = Dates.now(UTC)
       jldsave(file_name; Date      = Dates.Date(date),
