@@ -64,6 +64,7 @@ export get_critical_curve
 export get_caustic
 export get_critical_area
 export get_einstein_angle
+export get_image_multiplicity
 export get_radial_profile
 export get_mass_profile
 export shear_cartesian2polar, shear_polar2cartesian
@@ -864,6 +865,151 @@ Again, it is important to note that we are running over all tangential critical 
 """
 function get_einstein_angle(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:Real}
    return sqrt(get_critical_area(lens, θx, θy, adis) / π)
+end
+
+
+function _is_closed_curve(curve::Vector{<:Vector{<:Real}})
+   if length(curve) < 4
+      return false
+   end 
+   return curve[1] == curve[end]
+end
+
+function _caustic_winding(caustics::Vector{<:Vector{<:Vector{<:Real}}}, βx::Real, βy::Real; 
+                          verbose::Bool = true)
+   point = [Float64(βx), Float64(βy)]
+ 
+   w = Int64[]
+   for curve in caustics
+      if !_is_closed_curve(curve)
+         if verbose
+            @warn "Skipping an open caustic; enlarge the grid (θx, θy) so that all " *
+                   "critical curves are enclosed by it."
+         end
+         continue
+      end
+      push!(w, PolygonOps.winding_number(point, curve))
+   end
+   return w
+end
+
+"""
+    get_image_multiplicity(caustics::Vector{<:Vector{<:Vector{<:Real}}}, βx::Real, βy::Real;
+                           n_far::Int    = 1,
+                           verbose::Bool = true) --> Int
+Calculate the number of images of a point source located at ``(β_x, β_y)`` from the caustics alone.
+
+A source lying far outside every caustic has a single image. Moving in towards the lens, the number
+of images changes by ``\\pm 2`` at every caustic crossing, so the multiplicity anywhere in the source
+plane follows from counting the crossings along the way in,
+ 
+```math
+N(\\pmb{β}) = N_\\infty + 2 \\sum_i \\left| w_i(\\pmb{β}) \\right|,
+```
+ 
+where ``w_i`` is the winding number of the ``i``-th caustic about ``\\pmb{β}`` and
+``N_\\infty = 1``. Using winding numbers rather than a raw crossing count takes care of the sign of
+each crossing automatically, so the answer does not depend on the direction one comes in from and
+stays correct for caustics that self-intersect (swallowtails) or that overlap each other (e.g. a
+naked cusp configuration, where the tangential caustic sticks out of the radial one). Note that the 
+caustics are the only input: the image plane is not needed, and the direction in which
+the caustics happen to be traced is irrelevant because only ``|w_i|`` enters.
+
+!!! warning
+    The lens is assumed to be non-singular, so that ``N`` is odd everywhere 
+    [1981ApJ...244L...1B](@cite). A singular lens (e.g.[`PointLens`](PointLens.md), 
+    [`SISLens`](SISLens.md)) destroys the central image and produces 
+    cuts [1987ApJ...312...22K](@cite) that also change the multiplicity but are not images of 
+    critical curves, and hence are invisible here. For such models the count returned is that of 
+    the corresponding non-singular lens.
+ 
+# Arguments
+- `caustics`: Caustic curves in the source plane, e.g. from [`get_caustic`](@ref).
+- `βx`      : x-coordinate of the source (in ``\\rm \\mathbf{arcseconds}``).
+- `βy`      : y-coordinate of the source (in ``\\rm \\mathbf{arcseconds}``).
+ 
+# Keyword Arguments
+- `n_far     = 1`: Number of images of a source lying far outside all caustics.
+- `verbose   = true`: Warn when an open (i.e., unclosed) caustic is discarded.
+ 
+# Returns
+- `N`: Number of images of the point source.
+"""
+function get_image_multiplicity(caustics::Vector{<:Vector{<:Vector{<:Real}}}, βx::Real, βy::Real;
+                         n_far::Int    = 1,
+                         verbose::Bool = true)
+   # Get the winding numbers for all tangential caustics
+   w = _caustic_winding(caustics, βx, βy; verbose = verbose)
+   return n_far + 2 * sum(abs, w; init = 0)
+end
+
+
+"""
+    get_image_multiplicity(lens::AbstractLens, θx::T, θy::T, adis::Float64;
+                           source::Union{Nothing, NTuple{2, Real}} = nothing,
+                           n_far::Int    = 1,
+                           verbose::Bool = true) where T <: Matrix{<:Real}
+Calculate the number of images for a given lens model. The function first gets the tangential and
+radial caustics with [`get_caustic`](@ref) and then counts the caustic crossings on the way in from
+infinity; see the caustic based method above for the details.
+ 
+The shape of the output follows the `source` keyword argument,
+ 
+- `source = (βx, βy)` ``\\Rightarrow`` number of images of that point source,
+- `source = nothing`  ``\\Rightarrow`` multiplicity map over the whole grid.
+ 
+In the latter case the grid `(θx, θy)` is reused as the source plane grid, so that `N[i, j]` is the
+number of images of a point source sitting at `(θx[i, j], θy[i, j])`. This needs no extra input: a
+grid that contains every critical curve, as it must, also contains every caustic, since the
+deflection pulls the critical curves inwards. For a multiplicity map on a different (e.g. zoomed in)
+grid, get the caustics with [`get_caustic`](@ref) and pass them to the caustic based method above.
+ 
+The image plane grid must be large enough to contain **all** critical curves, otherwise the
+corresponding caustics are open and are dropped from the count.
+ 
+# Arguments
+- `lens`: Lens model.
+- `θx`  : x-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `adis`: Distance ratio (i.e., ``D_{ds}/D_s``).
+ 
+# Keyword Arguments
+- `source = nothing`: Source angular position (in ``\\rm \\mathbf{arcseconds}``).
+   * If ``\\mathbf{nothing}``, then the multiplicity is calculated at every pixel of the grid.
+- `n_far  = 1`: Number of images of a source lying far outside all caustics.
+ 
+# Returns
+- `N`: Number of images, either for the requested source position or over the whole grid.
+"""
+function get_image_multiplicity(lens::AbstractLens, θx::T, θy::T, adis::Float64;
+                                source::Union{Nothing, NTuple{2, Real}} = nothing,
+                                n_far::Int    = 1,
+                                verbose::Bool = true) where T <: Matrix{<:Real}
+   # Get tangential and rafial caustics
+   caustics_tan, caustics_rad = get_caustic(lens, θx, θy, adis)
+   caustics = vcat(caustics_tan, caustics_rad)
+
+   # Drop the open caustics so that we do not get warnings later
+   n_open = count(curve -> !_is_closed_curve(curve), caustics)
+   if n_open > 0
+      @warn "Skipping $(n_open) open caustic(s); enlarge the grid (θx, θy) so that all critical " *
+            "curves are enclosed by it."
+      caustics = [curve for curve in caustics if _is_closed_curve(curve)]
+   end
+
+   # If no source position is provided, run over every pixel of the grid
+   if isnothing(source)
+      N = Matrix{Int}(undef, size(θx))
+      Threads.@threads for k in eachindex(θx)
+         N[k] = get_image_multiplicity(caustics, θx[k], θy[k]; n_far = n_far, verbose = false)
+      end
+      return N
+   elseif source isa NTuple{2, Real}
+      return get_image_multiplicity(caustics, source[1], source[2]; n_far = n_far, verbose = false)
+   else
+      throw(ArgumentError("`source` must either be `nothing` or a tuple of coordinates (βx, βy), " *
+                          "got a $(typeof(source))."))
+   end
 end
 
 

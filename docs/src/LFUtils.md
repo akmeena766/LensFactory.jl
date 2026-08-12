@@ -31,5 +31,6 @@ LFUtils.IntersectionFinder.get_intersection
 LFUtils.PolygonOps.bilinear_interpolation
 LFUtils.PolygonOps.shoelace
 LFUtils.PolygonOps.hao_sun
+LFUtils.PolygonOps.winding_number
 LFUtils.PolygonOps.fit_ellipse
 ```

@@ -34,6 +34,7 @@ Lenses.get_critical_curve
 Lenses.get_caustic
 Lenses.get_critical_area
 Lenses.get_einstein_angle
+Lenses.get_image_multiplicity
 Lenses.get_radial_profile
 Lenses.get_mass_profile
 Lenses.shear_cartesian2polar

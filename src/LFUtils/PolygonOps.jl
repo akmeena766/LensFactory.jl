@@ -16,9 +16,10 @@ using LinearAlgebra
 # --------------------------------------------------------------------------------------------------
 # Various function to export
 # --------------------------------------------------------------------------------------------------
+export bilinear_interpolation
 export shoelace
 export hao_sun
-export bilinear_interpolation
+export winding_number
 export fit_ellipse
 
 
@@ -154,6 +155,63 @@ function hao_sun(point::Vector{Float64}, polygon::Vector{Vector{Float64}})
       return 0
    end
    return 1
+end
+
+
+"""
+    winding_number(point::Vector{<:Real}, polygon::Vector{<:Vector{<:Real}})
+Calculate the winding number of a closed `polygon` about the given `point`, i.e. the (signed)
+number of times the polygon wraps around the point. A ray is shot from the point towards ``+x``
+and the crossings of the polygon are counted `+1` (polygon crossing the ray upwards) or `-1`
+(crossing it downwards).
+
+The winding number is undefined for a point lying exactly on an edge, in which case the returned
+value depends on which side of the edge the floating point arithmetic lands.
+
+# Arguments
+- `point`  : The (x, y) coordinate of the point to check
+- `polygon`: A vector of [x, y] coordinates representing the polygon vertices
+ 
+# Returns
+- `Int`: Winding number about the given point (`0` if the point lies outside the polygon)
+"""
+function winding_number(point::Vector{<:Real}, polygon::Vector{<:Vector{<:Real}})
+   xp = point[1]
+   yp = point[2]
+
+   # The polygon is closed by the loop below. A repeated last vertex needs no special treatment,
+   # since the resulting zero-length edge cannot cross the ray and contributes nothing.
+   n = length(polygon)
+   if n < 3
+      return 0
+   end
+
+   wn = 0
+   @inbounds for i in 1:n
+      # Index of the next vertex, wrapping around at the last one
+      if i == n
+         j = 1
+      else
+         j = i + 1
+      end
+
+      x1, y1 = polygon[i][1], polygon[i][2]
+      x2, y2 = polygon[j][1], polygon[j][2]
+
+      # Positive if the point lies to the left of the directed edge (i --> j)
+      side = (x2 - x1) * (yp - y1) - (xp - x1) * (y2 - y1)
+
+      if y1 <= yp
+         if y2 > yp && side > 0
+            wn = wn + 1
+         end
+      else
+         if y2 <= yp && side < 0
+            wn = wn - 1
+         end
+      end
+   end
+   return wn
 end
 
 
