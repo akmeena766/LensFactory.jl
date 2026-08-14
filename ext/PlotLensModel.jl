@@ -483,7 +483,12 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
          σθ = knot.σθ
 
          # Plot observed positions of knots
-         scatter!(ax, x, y, markersize=20, marker=:circle, color=:transparent, strokecolor=:black, strokewidth=2, label = first_plot ? "Observed" : nothing)
+         scatter!(ax, x, y; markersize  = 20, 
+                            marker      = :circle, 
+                            color       = :transparent, 
+                            strokecolor = :black, 
+                            strokewidth = 2, 
+                            label       = first_plot ? "Observed" : nothing)
          if plot_errors
             for i in 1:size(x, 1)
                e_x, e_y = _ellipse(σx[i], σy[i], σθ[i]; x0=x[i], y0=y[i])
@@ -594,8 +599,11 @@ function LensFactory.LensModel.plot_image_scatter(model::LensModel.ModelConfig,
                                                   save_plot::Bool        = true,
                                                   plot_name::String      = "./predicted_scatter.png",
                                                   resolution::Int64      = 2,
-                                                  point_kws::NamedTuple  = (markersize=18, marker=:circle, color=:transparent, strokecolor=:black, strokewidth=2)
-                                                 )
+                                                  point_kws::NamedTuple  = (markersize  = 18, 
+                                                                            marker      = :circle, 
+                                                                            color       = :transparent, 
+                                                                            strokecolor = :black, 
+                                                                            strokewidth = 2))
    # Get the best parameters based on minimum log-likelihood
    best_θ, _ = LensFactory.LensModel.get_best_fit_parameters(logL; chains=chains)
  
