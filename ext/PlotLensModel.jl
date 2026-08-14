@@ -298,8 +298,11 @@ Generates trace plots for the given MCMC chains.
 """
 function LensFactory.LensModel.plot_trace(chains; 
                               free_parameter_names=nothing, 
-                              burn_in::Float64=0.0, thin::Int64=1,
-                              save_plot::Bool=true, plot_name::String="./trace.png", resolution::Int64=2)
+                              burn_in::Float64  = 0.0,
+                              thin::Int64       = 1,
+                              save_plot::Bool   = true, 
+                              plot_name::String = "./trace.png", 
+                              resolution::Int64 = 2)
    # Adapt to [n_params, n_chains, n_steps]
    n_steps, n_chains, n_params = size(chains)
     
@@ -374,6 +377,10 @@ Generates a plot comparing the observed image positions with the predicted image
 - `logL`: Log-likelihood values corresponding to the chains, of shape (n_steps, n_chains).
 
 # Keyword arguments
+- `source::Union{Nothing, Integer} = nothing`: Which system to plot. `nothing` plots every system and
+   draws the critical curves/caustics at the redshift `z_s`. An integer plots only that system and
+   draws the critical curves/caustics at that system's own angular-diameter distance ratio, in which
+   case `z_s` is ignored.
 - `z_s::RV = 1.5`: Source redshift.
 - `plot_error::Bool = true`: Whether to plot the error ellipses for the observed image positions.
 - `plot_critical::Bool = true`: Whether to plot the critical curves.
@@ -392,17 +399,18 @@ Generates a plot comparing the observed image positions with the predicted image
 function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig, 
                                               chains::Array{Float64, 3}, 
                                               logL::Matrix{Float64};
-                                              z_s::RV=1.5,
-                                              plot_errors::Bool=true,
-                                              plot_critical::Bool=true,
-                                              critical_tan_kws::NamedTuple=(color=:red, linewidth=2, linestyle=:solid),
-                                              critical_rad_kws::NamedTuple=(color=:red, linewidth=2, linestyle=:dash),
-                                              plot_caustics::Bool=true,
-                                              caustic_tan_kws::NamedTuple=(color=:green, linewidth=2, linestyle=:solid),
-                                              caustic_rad_kws::NamedTuple=(color=:green, linewidth=2, linestyle=:dash),
-                                              save_plot::Bool=true,
-                                              plot_name::String="./best_model.png",
-                                              resolution::Int64=2)
+                                              source::Union{Nothing, Int64} = nothing,
+                                              z_s::RV = 1.5,
+                                              plot_errors::Bool = true,
+                                              plot_critical::Bool = true,
+                                              critical_rad_kws::NamedTuple = (color=:red, linewidth=2, linestyle=:dash),
+                                              critical_tan_kws::NamedTuple = (color=:red, linewidth=2, linestyle=:solid),
+                                              plot_caustics::Bool = true,
+                                              caustic_tan_kws::NamedTuple = (color=:green, linewidth=2, linestyle=:solid),
+                                              caustic_rad_kws::NamedTuple = (color=:green, linewidth=2, linestyle=:dash),
+                                              save_plot::Bool = true,
+                                              plot_name::String = "./best_model.png",
+                                              resolution::Int64 = 2)
    # Get the best parameters based on minimum log-likelihood
    best_θ, _ = LensFactory.LensModel.get_best_fit_parameters(logL; chains=chains)
 
@@ -426,6 +434,17 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
    # Get angular-diameter distance ratios
    adis = LensFactory.LensModel.adis_current(model, pvals, cosmo)
 
+   # Systems to plot: a single system, or all of them
+   n_sources = length(model.source_config.sources)
+   if isnothing(source)
+      plot_sids = collect(1:n_sources)
+   else
+      plot_sids = [Int64(source)]
+   end
+
+   # Number of knots preceding each source, so `kid` stays aligned with αx_all / A_all
+   knot_offsets = cumsum([0; [length(s.knots) for s in model.source_config.sources]])
+
    # Calculate deflection and deformation tensor at all image positions
    αx_all, αy_all = LensFactory.LensModel.LensModelUtils.lens_quantities_def(model, best_model)
    A_all          = LensFactory.LensModel.LensModelUtils.lens_quantities_jac(model, best_model)
@@ -442,17 +461,19 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
    
    # Calculate RMS for each image
    first_plot = true
-   sid = 1
-   kid = 1
-   for src in model.source_config.sources
+   for sid in plot_sids
+      # Source configuration for this system
+      src = model.source_config.sources[sid]
+
       # Get angular-diameter distance ratio for this source
       adis_value = adis[sid]
+
+      # Knot counter, offset into the global knot list
+      kid = knot_offsets[sid]
       
-      # Generate source id
-      src_id = Symbol(:src, sid)
       for knot in src.knots
          # Generate knot id
-         knot_id = Symbol(:knot, kid)
+         kid = kid + 1
 
          # Knot positions and measurement errors
          x  = knot.x
@@ -494,29 +515,33 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
          predicted_image = Lenses.get_image(best_model, x_grid, y_grid, adis_value, (βx_model, βy_model))
 
          # Plot predicted image positions
-         scatter!(ax, first.(predicted_image), last.(predicted_image); markersize=20, 
-                     marker=:diamond, color=:transparent, strokecolor=:red, strokewidth=2, label = first_plot ? "Predicted" : nothing)
+         scatter!(ax, first.(predicted_image), last.(predicted_image); 
+                     markersize  = 20,
+                     marker      = :diamond, 
+                     color       = :transparent, 
+                     strokecolor = :dodgerblue, 
+                     strokewidth = 2, 
+                     label       = first_plot ? "Predicted" : nothing)
          
          # Update the label to false
          first_plot = false
-         
-         kid = kid + 1
       end
-      sid = sid + 1
    end
 
    if plot_critical || plot_caustics
-      # Get cosmology
-      cosmo = model.cosmology
-      
-      # ADDs
-      Dls = Cosmology.angular_diameter_distance(cosmo, model.observation.z_d, z_s)
-      Dos = Cosmology.angular_diameter_distance(cosmo, 0.0, z_s)
-      adis_value = Dls / Dos
+      if isnothing(source)
+         # No single system to inherit from: use the requested source redshift
+         Dls = Cosmology.angular_diameter_distance(cosmo, model.observation.z_d, z_s)
+         Dos = Cosmology.angular_diameter_distance(cosmo, 0.0, z_s)
+         adis_crit = Dls / Dos
+      else
+         # Curves at the redshift of the system being plotted
+         adis_crit = adis[source]
+      end      
 
       if plot_critical
          # Get critical curves
-         critical_tan, critical_rad = Lenses.get_critical_curve(best_model, x_grid, y_grid, adis_value)
+         critical_tan, critical_rad = Lenses.get_critical_curve(best_model, x_grid, y_grid, adis_crit)
 
          # Plot tangential critical curve
          for curve in critical_tan
@@ -531,7 +556,7 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
 
       if plot_caustics
          # Get caustics
-         caustic_tan, caustic_rad = Lenses.get_caustic(best_model, x_grid, y_grid, adis_value)
+         caustic_tan, caustic_rad = Lenses.get_caustic(best_model, x_grid, y_grid, adis_crit)
 
          # Plot tangential caustic
          for curve in caustic_tan
