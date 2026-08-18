@@ -1,3 +1,5 @@
+# Hernquist lens
+
 ```@docs
 Lenses.init_HernquistLens
 Lenses.HernquistLens.potential!

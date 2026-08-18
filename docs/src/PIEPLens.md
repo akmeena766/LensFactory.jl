@@ -1,3 +1,5 @@
+# PIEP Lens
+
 ```@docs
 Lenses.init_PIEPLens
 Lenses.PIEPLens.potential!

@@ -1,3 +1,5 @@
+# PJE lens
+
 ```@docs
 Lenses.init_PJELens
 Lenses.PJELens.potential!

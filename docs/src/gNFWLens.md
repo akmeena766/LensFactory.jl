@@ -1,3 +1,5 @@
+# Generalized NFW (gNFW) lens
+
 ```@docs
 Lenses.init_gNFWLens
 Lenses.gNFWLens.potential!

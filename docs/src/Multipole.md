@@ -1,3 +1,5 @@
+# Multipole perturbation
+
 ```@docs
 Lenses.init_Multipole
 Lenses.Multipole.potential!

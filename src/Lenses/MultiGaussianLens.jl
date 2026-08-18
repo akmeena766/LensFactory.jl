@@ -24,6 +24,9 @@ export jacobian!
 # --------------------------------------------------------------------------------------------------
 # Main functions
 # --------------------------------------------------------------------------------------------------
+"""
+    potential!(ψ::U, θx::S, θy::S, D_d::Real, θxc::T, θyc::T, mass::T, θs::T, nl::Int64) where {U<:Real, S<:Real, T<:Vector{<:Real}}
+"""
 function potential!(ψ::U, θx::S, θy::S, D_d::Real, θxc::T, θyc::T, mass::T, θs::T, nl::Int64) where {U<:Real, S<:Real, T<:Vector{<:Real}}
    ψ_up = ψ
    for k in 1:nl
@@ -39,6 +42,9 @@ function potential!(ψ::U, θx::S, θy::S, D_d::Real, θxc::T, θyc::T, mass::T,
    return ψ_up
 end
 
+"""
+    potential!(ψ::U, θx::S, θy::S, D_d::Real, θxc::T, θyc::T, mass::T, θs::T, nl::Int64) where {U<:ROA, S<:ROA, T<:Vector{<:Real}}
+"""
 function potential!(ψ::U, θx::S, θy::S, D_d::Real, θxc::T, θyc::T, mass::T, θs::T, nl::Int64) where {U<:ROA, S<:ROA, T<:Vector{<:Real}}
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    for k in 1:nl
@@ -58,6 +64,9 @@ function potential!(ψ::U, θx::S, θy::S, D_d::Real, θxc::T, θyc::T, mass::T,
 end
 
 
+"""
+    deflection!(ψx::U, ψy::U, θx::S, θy::S, D_d::Real, θxc::T, θyc::T, mass::T, θs::T, nl::Int64) where {U<:Real, S<:Real, T<:Vector{<:Real}}
+"""
 function deflection!(ψx::U, ψy::U, θx::S, θy::S, D_d::Real, θxc::T, θyc::T, mass::T, θs::T, nl::Int64) where {U<:Real, S<:Real, T<:Vector{<:Real}}
    ψx_up = ψx
    ψy_up = ψy
@@ -75,6 +84,9 @@ function deflection!(ψx::U, ψy::U, θx::S, θy::S, D_d::Real, θxc::T, θyc::T
    return ψx_up, ψy_up
 end
 
+"""
+    deflection!(ψx::U, ψy::U, θx::S, θy::S, D_d::Real, θxc::T, θyc::T, mass::T, θs::T, nl::Int64) where {U<:ROA, S<:ROA, T<:Vector{<:Real}}
+"""
 function deflection!(ψx::U, ψy::U, θx::S, θy::S, D_d::Real, θxc::T, θyc::T, mass::T, θs::T, nl::Int64) where {U<:ROA, S<:ROA, T<:Vector{<:Real}}
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    for k in 1:nl
@@ -95,6 +107,9 @@ function deflection!(ψx::U, ψy::U, θx::S, θy::S, D_d::Real, θxc::T, θyc::T
 end
 
 
+"""
+    jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, D_d::Real, θxc::T, θyc::T, mass::T, θs::T, nl::Int64) where {U<:Real, S<:Real, T<:Vector{<:Real}}
+"""
 function jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, D_d::Real, θxc::T, θyc::T, mass::T, θs::T, nl::Int64) where {U<:Real, S<:Real, T<:Vector{<:Real}}
    ψxx_up = ψxx
    ψyy_up = ψyy
@@ -117,7 +132,9 @@ function jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, D_d::Real, θxc::T
    return ψxx_up, ψyy_up, ψxy_up
 end
 
-
+"""
+    jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, D_d::Real, θxc::T, θyc::T, mass::T, θs::T, nl::Int64) where {U<:ROA, S<:ROA, T<:Vector{<:Real}}
+"""
 function jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, D_d::Real, θxc::T, θyc::T, mass::T, θs::T, nl::Int64) where {U<:ROA, S<:ROA, T<:Vector{<:Real}}
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    for k in 1:nl

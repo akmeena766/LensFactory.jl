@@ -1,3 +1,5 @@
+# Approximate NFW (aNFW) lens
+
 ```@docs
 Lenses.init_aNFWLens
 Lenses.aNFWLens.potential!

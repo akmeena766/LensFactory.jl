@@ -7,7 +7,7 @@ Below is the full list of various constants available in `LensFactory`.
 ### Typed constants
 ```julia
 RV = Real
-ROA = Union{AbstractVector{<:Real},AbstractMatrix{<:Real}}
+ROA = Union{AbstractVector{<:Real}, AbstractMatrix{<:Real}}
 ```
 
 ### Natural constants

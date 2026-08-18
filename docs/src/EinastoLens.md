@@ -1,3 +1,5 @@
+# Einasto lens
+
 ```@docs
 Lenses.init_EinastoLens
 Lenses.EinastoLens.potential!

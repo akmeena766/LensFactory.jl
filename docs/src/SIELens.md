@@ -1,3 +1,5 @@
+# SIE Lens
+
 ```@docs
 Lenses.init_SIELens
 Lenses.SIELens.potential!
