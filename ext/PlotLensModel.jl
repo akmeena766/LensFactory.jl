@@ -377,6 +377,7 @@ Generates a plot comparing the observed image positions with the predicted image
 - `logL`: Log-likelihood values corresponding to the chains, of shape (n_steps, n_chains).
 
 # Keyword arguments
+- two_panel::Bool = false`: Whether to create a two-panel plot with source plane on the left and image plane on the right.
 - `source::Union{Nothing, Integer} = nothing`: Which system to plot. `nothing` plots every system and
    draws the critical curves/caustics at the redshift `z_s`. An integer plots only that system and
    draws the critical curves/caustics at that system's own angular-diameter distance ratio, in which
@@ -399,6 +400,7 @@ Generates a plot comparing the observed image positions with the predicted image
 function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig, 
                                               chains::Array{Float64, 3}, 
                                               logL::Matrix{Float64};
+                                              two_panel::Bool = false,
                                               source::Union{Nothing, Int64} = nothing,
                                               z_s::RV = 1.5,
                                               plot_errors::Bool = true,
@@ -453,12 +455,41 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
    I4 = (1.0, 0.0, 0.0, 1.0)
 
    # Initialize empty figure
-   fig = Figure(size=(600, 600), figure_padding=15, fontsize=20, fonts=(; regular="Times New Roman"))
-   ax = Axis(fig[1, 1])
+   if two_panel
+      # Create figure
+      fig = Figure(size=(1200, 600), figure_padding=15, fontsize=20, fonts=(; regular="Times New Roman"))
 
-   # Set plot keywords
-   LensFactory.Lenses.set_plotKws!(ax)
-   
+      # Create axes
+      ax1 = Axis(fig[1, 1])
+      ax2 = Axis(fig[1, 2])
+      ax = (ax1, ax2)
+      
+
+      # Set axis labels and limits
+      ax[1].xlabel = L"θ_1~\text{(in arcseconds)}"
+      ax[1].ylabel = L"θ_2~\text{(in arcseconds)}"
+      ax[2].xlabel = L"θ_1~\text{(in arcseconds)}"
+      ax[2].ylabel = L"θ_2~\text{(in arcseconds)}"
+
+      # Set plot keywords
+      LensFactory.Lenses.set_plotKws!(ax[1])
+      LensFactory.Lenses.set_plotKws!(ax[2])
+   else
+      # Create figure
+      fig = Figure(size=(600, 600), figure_padding=15, fontsize=20, fonts=(; regular="Times New Roman"))
+
+      # Create axis
+      ax0 = Axis(fig[1, 1])
+      ax = (ax0, ax0)
+
+      # Set axis labels and limits
+      ax[1].xlabel = L"θ_1~\text{(in arcseconds)}"
+      ax[1].ylabel = L"θ_2~\text{(in arcseconds)}"
+
+      # Set plot keywords
+      LensFactory.Lenses.set_plotKws!(ax[1])
+   end
+         
    # Calculate RMS for each image
    first_plot = true
    for sid in plot_sids
@@ -483,16 +514,16 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
          σθ = knot.σθ
 
          # Plot observed positions of knots
-         scatter!(ax, x, y; markersize  = 20, 
-                            marker      = :circle, 
-                            color       = :transparent, 
-                            strokecolor = :black, 
-                            strokewidth = 2, 
-                            label       = first_plot ? "Observed" : nothing)
+         scatter!(ax[2], x, y; markersize  = 20, 
+                               marker      = :circle, 
+                               color       = :transparent, 
+                               strokecolor = :black, 
+                               strokewidth = 2, 
+                               label       = first_plot ? "Observed" : nothing)
          if plot_errors
             for i in 1:size(x, 1)
                e_x, e_y = _ellipse(σx[i], σy[i], σθ[i]; x0=x[i], y0=y[i])
-               lines!(ax, e_x, e_y, color=:black, linewidth=2)
+               lines!(ax[2], e_x, e_y; color=:black, linewidth=2)
             end
          end
 
@@ -516,17 +547,25 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
          β_model, _, _ = LensModel.Likelihood._weighted_position(β_ind, A, σx, σy, σθ, n)
          βx_model, βy_model = β_model
 
+         if two_panel
+            scatter!(ax[1], βx_model, βy_model; markersize  = 20,
+                                                marker      = :diamond, 
+                                                color       = :transparent, 
+                                                strokecolor = :dodgerblue, 
+                                                strokewidth = 2, 
+                                                label       = L"β_\text{model}")
+         end
+
          # Get image positions
          predicted_image = Lenses.get_image(best_model, x_grid, y_grid, adis_value, (βx_model, βy_model))
 
          # Plot predicted image positions
-         scatter!(ax, first.(predicted_image), last.(predicted_image); 
-                     markersize  = 20,
-                     marker      = :diamond, 
-                     color       = :transparent, 
-                     strokecolor = :dodgerblue, 
-                     strokewidth = 2, 
-                     label       = first_plot ? "Predicted" : nothing)
+         scatter!(ax[2], first.(predicted_image), last.(predicted_image); markersize  = 20,
+                                                                          marker      = :diamond, 
+                                                                          color       = :transparent, 
+                                                                          strokecolor = :dodgerblue, 
+                                                                          strokewidth = 2, 
+                                                                          label       = first_plot ? "Predicted" : nothing)
          
          # Update the label to false
          first_plot = false
@@ -550,12 +589,12 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
 
          # Plot tangential critical curve
          for curve in critical_tan
-            lines!(ax, first.(curve), last.(curve); critical_tan_kws...)
+            lines!(ax[2], first.(curve), last.(curve); critical_tan_kws...)
          end
 
          # Plot radial critical curve
          for curve in critical_rad
-            lines!(ax, first.(curve), last.(curve); critical_rad_kws...)
+            lines!(ax[2], first.(curve), last.(curve); critical_rad_kws...)
          end
       end
 
@@ -565,26 +604,34 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
 
          # Plot tangential caustic
          for curve in caustic_tan
-            lines!(ax, first.(curve), last.(curve); caustic_tan_kws...)
+            lines!(ax[1], first.(curve), last.(curve); caustic_tan_kws...)
          end
 
          # Plot radial caustic
          for curve in caustic_rad
-            lines!(ax, first.(curve), last.(curve); caustic_rad_kws...)
+            lines!(ax[1], first.(curve), last.(curve); caustic_rad_kws...)
          end
       end
    end
 
-   # Axis limits
-   xlims!(ax, minimum(x_grid), maximum(x_grid))
-   ylims!(ax, minimum(y_grid), maximum(y_grid))
+   if two_panel
+      xlims!(ax[1], minimum(x_grid), maximum(x_grid))
+      ylims!(ax[1], minimum(y_grid), maximum(y_grid))
 
-   # Set axis labels and limits
-   ax.xlabel = L"\theta_1~\text{(in arcseconds)}"
-   ax.ylabel = L"\theta_2~\text{(in arcseconds)}"
-   
-   # Legend
-   axislegend(ax)
+      xlims!(ax[2], minimum(x_grid), maximum(x_grid))
+      ylims!(ax[2], minimum(y_grid), maximum(y_grid))
+      
+      # Legend
+      axislegend(ax[1])
+      axislegend(ax[2])
+   else
+      xlims!(ax[1], minimum(x_grid), maximum(x_grid))
+      ylims!(ax[1], minimum(y_grid), maximum(y_grid))
+
+      # Legend
+      axislegend(ax[2])
+   end
+
 
    if save_plot
       save(plot_name, fig, px_per_unit=resolution)
