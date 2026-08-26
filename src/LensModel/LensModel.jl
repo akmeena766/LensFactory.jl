@@ -54,6 +54,7 @@ export get_potential
 export get_deflection
 export get_jacobian
 export get_magnification_image
+export get_source_position
 export predict_image
 export save_best_fits
 export get_AIC
@@ -124,7 +125,7 @@ function _posterior_samples(chains::Array{Float64, 3}, logL::Matrix{Float64};
 end
 
 #
-function _get_source_positions(lens::Lenses.AbstractLens, knot::LensModelIO.Knot, adis::Float64)
+function _get_source_position(lens::Lenses.AbstractLens, knot::LensModelIO.Knot, adis::Float64)
    # Knot positions and number of images
    x  = knot.x
    y  = knot.y
@@ -639,7 +640,7 @@ function get_adis(data_jld2::JLD2.JLDFile; source_id::Union{Int64, Symbol} = :al
    if source_id == :all
       return adis
    end
-   return adis[source_id]
+   return [adis[source_id]]
 end
 
 
@@ -1120,19 +1121,23 @@ function get_source_position(data_jld2::JLD2.JLDFile; source_id::Union{Symbol, I
                                                       knot_id::Union{Symbol, Int64}   = :all, 
                                                       burn_in::Float64                = 0.2, 
                                                       unit::Symbol                    = :arcsec)
-   # Check the requested unit
+   # Everything that can be checked without the file is checked before the file is opened, so that
+   # a mistyped argument does not cost a model build first
    if unit != :arcsec && unit != :RA_DEC
       throw(ArgumentError("Invalid unit. Supported units are :arcsec and :RA_DEC."))
    end
 
-   # Check the source id
-   if source_id != :all && typeof(source_id) != Int64
-      throw(ArgumentError("source_id must be an Int64 or :all."))
+   if source_id isa Symbol && source_id !== :all
+      throw(ArgumentError("Invalid source_id. Must be :all or an Int64; got :$(source_id)."))
+   end
+ 
+   if knot_id isa Symbol && knot_id !== :all
+      throw(ArgumentError("Invalid knot_id. Must be :all or an Int64; got :$(knot_id)."))
    end
 
-   # Check the knot id
-   if knot_id != :all && typeof(knot_id) != Int64
-      throw(ArgumentError("knot_id must be an Int64 or :all."))
+   if source_id === :all && knot_id isa Int64
+      throw(ArgumentError("knot_id must be :all when source_id is :all, since knot indices are " *
+                          "local to a source and knot $(knot_id) on its own identifies nothing."))
    end
 
    # Load the model, chains and logL from the input file
@@ -1140,24 +1145,23 @@ function get_source_position(data_jld2::JLD2.JLDFile; source_id::Union{Symbol, I
    chains = data_jld2["chains"]
    logL   = data_jld2["logL"]
 
-   # Get reference (RA, Dec) if needed
+   # Check that the requested source and knot exist
+   sources = model.source_config.sources
+   if source_id isa Int64 && (source_id < 1 || source_id > length(sources))
+      throw(ArgumentError("Invalid source_id. The model has $(length(sources)) source(s)."))
+   end
+
+   if source_id isa Int64 && knot_id isa Int64
+      n_knot = length(sources[source_id].knots)
+      if knot_id < 1 || knot_id > n_knot
+         throw(ArgumentError("Invalid knot_id. Source $source_id has $(n_knot) knot(s)."))
+      end
+   end
+
+   # Reference position (RA, Dec): needed for sky coordinate conversion
    if unit == :RA_DEC
       RA_REF  = model.observation.reference[1]
       DEC_REF = model.observation.reference[2]
-   end
-
-
-   # Check that the requested source and knot exist
-   sources = model.source_config.sources
-   if source_id != :all && (source_id < 1 || source_id > length(sources))
-      throw(ArgumentError("Invalid source_id. The model has $(length(sources)) source(s)."))
-   end
-   
-   if source_id != :all
-      knots = sources[source_id].knots
-      if knot_id < 1 || knot_id > length(knots)
-         throw(ArgumentError("Invalid knot_id. Source $source_id has $(length(knots)) knot(s)."))
-      end
    end
 
    # Get the best parameters based on maximum log-likelihood
@@ -1169,36 +1173,35 @@ function get_source_position(data_jld2::JLD2.JLDFile; source_id::Union{Symbol, I
 
    # Angular-diameter distance ratio for the all sources
    adis = LensModelUtils.adis_current(model, pvals, cosmo)
+
+   # Walk the requested (source, knot) pairs once, collecting a flat table.  Every return shape is
+   # built from this, so the positions themselves are computed in exactly one place
+   src_range = source_id === :all ? (1:length(sources)) : (source_id:source_id)
+   n_row = sum(knot_id === :all ? length(sources[s].knots) : 1 for s in src_range)
    
-   if source_id == :all
-      β = Vector{Vector{NTuple{2, Float64}}}(undef, 0)
-      if knot_id == :all
-         for (src_id, src) in enumerate(sources)
-            β_src = Vector{NTuple{2, Float64}}(undef, 0)
-            for knot in src.knots
-               β_knot = _get_source_positions(best_model, knot, adis[src_id])
-               if unit == :RA_DEC
-                  β_knot = AstrometricOps.gnomonic_offsets_radec(RA_REF, DEC_REF, β_knot[1], β_knot[2])
-               end
-               push!(β_src, β_knot)
-            end
-            push!(β, β_src)
-         end
+   β_table = Matrix{Float64}(undef, n_row, 4)
+   row = 1
+   for s in src_range
+      knots   = sources[s].knots
+      if knot_id === :all
+         k_range = (1:length(knots))
       else
-         throw(ArgumentError("knot_id must be :all when source_id is :all."))
+         k_range = (knot_id:knot_id)
       end
-   else
-      if knot_id != :all
-         knot = sources[source_id].knots[knot_id]
-         β = _get_source_positions(best_model, knot, adis[source_id])
+
+      for k in k_range
+         β_knot = _get_source_position(best_model, knots[k], adis[s])
          if unit == :RA_DEC
-            β = AstrometricOps.gnomonic_offsets_radec(RA_REF, DEC_REF, β[1], β[2])
+            β_knot = AstrometricOps.gnomonic_offsets_radec(RA_REF, DEC_REF, β_knot[1], β_knot[2])
          end
-      else
-         throw(ArgumentError("knot_id must be an Int64 when source_id is an Int64."))
+         β_table[row, 1] = s
+         β_table[row, 2] = k
+         β_table[row, 3] = β_knot[1]
+         β_table[row, 4] = β_knot[2]
+         row = row + 1
       end
    end
-   return β
+   return β_table
 end
 
 
