@@ -123,6 +123,36 @@ function _posterior_samples(chains::Array{Float64, 3}, logL::Matrix{Float64};
    return best_θ, best_logL, flat_chains, sample_idx
 end
 
+#
+function _get_source_positions(lens::Lenses.AbstractLens, knot::LensModelIO.Knot, adis::Float64)
+   # Knot positions and number of images
+   x  = knot.x
+   y  = knot.y
+   σx = knot.σx
+   σy = knot.σy
+   σθ = knot.σθ
+   n = length(x)
+
+   # Deflection vector at the knot positions
+   αx, αy = Lenses.get_deflection(lens, x, y)
+   αx = @. adis * αx
+   αy = @. adis * αy
+
+   # Jacobian A = I - a_dis * ψ_ij at the knot positions
+   ψxx, ψyy, ψxy = Lenses.get_jacobian(lens, x, y)
+   A11 = @. 1.0 - adis * ψxx
+   A12 = @.     - adis * ψxy
+   A22 = @. 1.0 - adis * ψyy
+   A   = (A11, A12, copy(A12), A22)
+
+   # Individual source positions (paired)
+   β_ind = @. tuple(x - αx, y - αy)
+
+   # Weighted source position
+   β, _, _ = Likelihood._weighted_position(β_ind, A, σx, σy, σθ, n)
+   return β
+end
+
 
 # --------------------------------------------------------------------------------------------------
 # Read input file and return model configuration
@@ -578,7 +608,13 @@ sample. Otherwise, it is simply the fixed input value.
 # Returns
 - `adis::Float64`: Distance ratio Dls/Dos of the requested source.
 """
-function get_adis(data_jld2::JLD2.JLDFile, source_id::Int64; burn_in::Float64 = 0.2)
+function get_adis(data_jld2::JLD2.JLDFile; source_id::Union{Int64, Symbol} = :all,
+                                           burn_in::Float64                = 0.2)
+   # Check if correct source id is given
+   if source_id != :all && (typeof(source_id) != Int64)
+      throw(ArgumentError("Invalid source_id. Must be :all or an Int64 > 0."))
+   end
+
    # Load the model, chains and logL from the input file
    model  = data_jld2["model"]
    chains = data_jld2["chains"]
@@ -586,8 +622,8 @@ function get_adis(data_jld2::JLD2.JLDFile, source_id::Int64; burn_in::Float64 = 
  
    # Check that the requested source exists
    n_src = length(model.source_config.sources)
-   if source_id < 1 || source_id > n_src
-      throw(ArgumentError("Invalid source_id. The model has $n_src source(s)."))
+   if source_id != :all && (typeof(source_id) != Int64 || source_id < 1 || source_id > n_src)
+      throw(ArgumentError("Invalid source_id. Must be :all or an Int64 between 1 and $n_src."))
    end
 
    # Get the best parameters based on maximum log-likelihood
@@ -600,6 +636,9 @@ function get_adis(data_jld2::JLD2.JLDFile, source_id::Int64; burn_in::Float64 = 
  
    # Distance ratio for the requested source
    adis = LensModelUtils.adis_current(model, pvals, cosmo)
+   if source_id == :all
+      return adis
+   end
    return adis[source_id]
 end
 
@@ -1077,12 +1116,28 @@ lens model stored in `data_jld2`.
 # Returns
 - `β::NTuple{2, Float64}`: Weighted source position of the requested knot.
 """
-function get_source_position(data_jld2::JLD2.JLDFile, source_id::Int64, knot_id; 
-                             burn_in::Float64 = 0.2, 
-                             unit::Symbol     = :arcsec)
+function get_source_position(data_jld2::JLD2.JLDFile; source_id::Union{Symbol, Int64} = :all, 
+                                                      knot_id::Union{Symbol, Int64}   = :all, 
+                                                      burn_in::Float64                = 0.2, 
+                                                      unit::Symbol                    = :arcsec)
    # Check the requested unit
    if unit != :arcsec && unit != :RA_DEC
       throw(ArgumentError("Invalid unit. Supported units are :arcsec and :RA_DEC."))
+   end
+
+   if unit == :RA_DEC
+      RA_REF  = model.observation.reference[1]
+      DEC_REF = model.observation.reference[2]
+   end
+
+   # Check the source id
+   if source_id != :all && typeof(source_id) != Int64
+      throw(ArgumentError("source_id must be an Int64 or :all."))
+   end
+
+   # Check the knot id
+   if knot_id != :all && typeof(knot_id) != Int64
+      throw(ArgumentError("knot_id must be an Int64 or :all."))
    end
 
    # Load the model, chains and logL from the input file
@@ -1092,15 +1147,16 @@ function get_source_position(data_jld2::JLD2.JLDFile, source_id::Int64, knot_id;
 
    # Check that the requested source and knot exist
    sources = model.source_config.sources
-   if source_id < 1 || source_id > length(sources)
+   if source_id != :all && (source_id < 1 || source_id > length(sources))
       throw(ArgumentError("Invalid source_id. The model has $(length(sources)) source(s)."))
    end
-
-   knots = sources[source_id].knots
-   if knot_id < 1 || knot_id > length(knots)
-      throw(ArgumentError("Invalid knot_id. Source $source_id has $(length(knots)) knot(s)."))
+   
+   if source_id != :all
+      knots = sources[source_id].knots
+      if knot_id < 1 || knot_id > length(knots)
+         throw(ArgumentError("Invalid knot_id. Source $source_id has $(length(knots)) knot(s)."))
+      end
    end
-   knot = knots[knot_id]
 
    # Get the best parameters based on maximum log-likelihood
    best_θ, _ = get_best_fit_parameters(logL; chains=chains, burn_in=burn_in)
@@ -1109,38 +1165,32 @@ function get_source_position(data_jld2::JLD2.JLDFile, source_id::Int64, knot_id;
    param_ref = Dict(p.key => p.refer for p in model.parameters)
    best_model, pvals, cosmo = _build_sample_model(model, best_θ, param_ref)
 
-   # Angular-diameter distance ratio for the requested source
+   # Angular-diameter distance ratio for the all sources
    adis = LensModelUtils.adis_current(model, pvals, cosmo)
-   adis_value = adis[source_id]
-
-   # Knot positions and number of images
-   x = knot.x
-   y = knot.y
-   n = length(x)
-
-   # Deflection vector at the knot positions
-   αx, αy = Lenses.get_deflection(best_model, x, y)
-   αx = @. adis_value * αx
-   αy = @. adis_value * αy
-
-   # Jacobian A = I - a_dis * ψ_ij at the knot positions
-   ψxx, ψyy, ψxy = Lenses.get_jacobian(best_model, x, y)
-   A11 = @. 1.0 - adis_value * ψxx
-   A12 = @.     - adis_value * ψxy
-   A22 = @. 1.0 - adis_value * ψyy
-   A   = (A11, A12, copy(A12), A22)
-
-   # Individual source positions (paired)
-   β_ind = @. tuple(x - αx, y - αy)
-
-   # Weighted source position
-   β, _, _ = Likelihood._weighted_position(β_ind, A, knot.σx, knot.σy, knot.σθ, n)
-
-   # Convert to (RA, Dec) if requested
-   if unit == :RA_DEC
-      RA_REF  = model.observation.reference[1]
-      DEC_REF = model.observation.reference[2]
-      β = AstrometricOps.gnomonic_offsets_radec(RA_REF, DEC_REF, β[1], β[2])
+   
+   if source_id == :all
+      β = Vector{Vector{NTuple{2, Float64}}}(undef, 0)
+      if knot_id == :all
+         for (src_id, src) in enumerate(sources)
+            β_src = Vector{NTuple{2, Float64}}(undef, 0)
+            for knot in src.knots
+               β_knot = _get_source_positions(best_model, knot, adis[src_id])
+               if unit == :RA_DEC
+                  β_knot = AstrometricOps.gnomonic_offsets_radec(RA_REF, DEC_REF, β_knot[1], β_knot[2])
+               end
+               push!(β_src, β_knot)
+            end
+            push!(β, β_src)
+         end
+      else
+         throw(ArgumentError("knot_id must be :all when source_id is :all."))
+      end
+   else
+      knot = sources[source_id].knots[knot_id]
+      β = _get_source_positions(best_model, knot, adis[source_id])
+      if unit == :RA_DEC
+         β = AstrometricOps.gnomonic_offsets_radec(RA_REF, DEC_REF, β[1], β[2])
+      end
    end
    return β
 end
