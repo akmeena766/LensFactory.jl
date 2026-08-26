@@ -1125,11 +1125,6 @@ function get_source_position(data_jld2::JLD2.JLDFile; source_id::Union{Symbol, I
       throw(ArgumentError("Invalid unit. Supported units are :arcsec and :RA_DEC."))
    end
 
-   if unit == :RA_DEC
-      RA_REF  = model.observation.reference[1]
-      DEC_REF = model.observation.reference[2]
-   end
-
    # Check the source id
    if source_id != :all && typeof(source_id) != Int64
       throw(ArgumentError("source_id must be an Int64 or :all."))
@@ -1144,6 +1139,13 @@ function get_source_position(data_jld2::JLD2.JLDFile; source_id::Union{Symbol, I
    model  = data_jld2["model"]
    chains = data_jld2["chains"]
    logL   = data_jld2["logL"]
+
+   # Get reference (RA, Dec) if needed
+   if unit == :RA_DEC
+      RA_REF  = model.observation.reference[1]
+      DEC_REF = model.observation.reference[2]
+   end
+
 
    # Check that the requested source and knot exist
    sources = model.source_config.sources
@@ -1186,10 +1188,14 @@ function get_source_position(data_jld2::JLD2.JLDFile; source_id::Union{Symbol, I
          throw(ArgumentError("knot_id must be :all when source_id is :all."))
       end
    else
-      knot = sources[source_id].knots[knot_id]
-      β = _get_source_positions(best_model, knot, adis[source_id])
-      if unit == :RA_DEC
-         β = AstrometricOps.gnomonic_offsets_radec(RA_REF, DEC_REF, β[1], β[2])
+      if knot_id != :all
+         knot = sources[source_id].knots[knot_id]
+         β = _get_source_positions(best_model, knot, adis[source_id])
+         if unit == :RA_DEC
+            β = AstrometricOps.gnomonic_offsets_radec(RA_REF, DEC_REF, β[1], β[2])
+         end
+      else
+         throw(ArgumentError("knot_id must be an Int64 when source_id is an Int64."))
       end
    end
    return β
