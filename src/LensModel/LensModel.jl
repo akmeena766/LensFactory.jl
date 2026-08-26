@@ -49,6 +49,7 @@ export get_best_fit_parameters
 export get_best_fit_rms
 export get_best_model
 export get_cosmology
+export get_adis
 export get_potential
 export get_deflection
 export get_jacobian
@@ -556,6 +557,54 @@ end
 
 
 # --------------------------------------------------------------------------------------------------
+# Get best-fit distance ratio for a source
+# --------------------------------------------------------------------------------------------------
+"""
+    get_adis(data_jld2::JLD2.JLDFile, source_id::Int64; burn_in::Float64=0.2)
+Calculate the distance ratio a_dis = Dls/Dos of source `source_id` for the best-fit model stored 
+in `data_jld2`. If the source redshift (or the distance ratio itself) is a free parameter of the 
+fit, or if any cosmological parameter is free, the returned value corresponds to the best-fit 
+sample. Otherwise, it is simply the fixed input value.
+ 
+# Arguments
+- `data_jld2::JLD2.JLDFile`: JLD2 data file containing the fit results.
+- `source_id::Int64`: Index of the source, as ordered in the input file.
+ 
+# Keyword Arguments
+- `burn_in::Float64=0.2`: The fraction of MCMC chains to discard as burn-in while determining the
+   best-fit model. Set to 0.0 when the input file was produced by [`error_models`](@ref), as those
+   samples are already post-burn-in.
+ 
+# Returns
+- `adis::Float64`: Distance ratio Dls/Dos of the requested source.
+"""
+function get_adis(data_jld2::JLD2.JLDFile, source_id::Int64; burn_in::Float64 = 0.2)
+   # Load the model, chains and logL from the input file
+   model  = data_jld2["model"]
+   chains = data_jld2["chains"]
+   logL   = data_jld2["logL"]
+ 
+   # Check that the requested source exists
+   n_src = length(model.source_config.sources)
+   if source_id < 1 || source_id > n_src
+      throw(ArgumentError("Invalid source_id. The model has $n_src source(s)."))
+   end
+
+   # Get the best parameters based on maximum log-likelihood
+   best_θ, _ = get_best_fit_parameters(logL; chains=chains, burn_in=burn_in)
+ 
+   # Best-fit parameter values and cosmology (no lens model needed)
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+   pvals     = LensModelUtils.param_dict(model, best_θ, param_ref)
+   cosmo     = LensModelUtils.current_cosmology(model, pvals)
+ 
+   # Distance ratio for the requested source
+   adis = LensModelUtils.adis_current(model, pvals, cosmo)
+   return adis[source_id]
+end
+
+
+# --------------------------------------------------------------------------------------------------
 # Get lensing quantities for the best-fit model
 # --------------------------------------------------------------------------------------------------
 """
@@ -575,15 +624,12 @@ parameters are determined by the minimum log-likelihood in `logL`.
 - `logL`: Log-likelihoohood correspodning to best-fit lens model.
 """
 function get_best_model(model::ModelConfig; 
-                        optim_result::Union{Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, Nothing}=nothing, 
-                        mcmc_chains::Union{Array{Float64, 3}, Nothing}=nothing, 
-                        mcmc_logL::Union{Matrix{Float64}, Nothing}=nothing, 
-                        burn_in::Float64=0.2)
+                        chains::Union{Array{Float64, 3}, Nothing} = nothing, 
+                        logL::Union{Matrix{Float64}, Nothing}     = nothing, 
+                        burn_in::Float64                          = 0.2)
    # Get the best parameters based on minimum log-likelihood
-   if optim_result !== nothing
-      best_θ, best_logL = get_best_fit_parameters(optim_result)
-   elseif mcmc_chains !== nothing && mcmc_logL !== nothing
-      best_θ, best_logL = get_best_fit_parameters(mcmc_logL; chains=mcmc_chains, burn_in=burn_in)
+   if chains !== nothing && logL !== nothing
+      best_θ, best_logL = get_best_fit_parameters(logL; chains=chains, burn_in=burn_in)
    else
       error("Either optim_result or (mcmc_chains and mcmc_logL) must be provided.")
    end
@@ -1006,6 +1052,99 @@ function get_magnification_image(data_jld2::JLD2.JLDFile, θx::T, θy::T, z_s::F
  
    return μ_best, μ_samples
 end
+
+
+"""
+    get_source_position(data_jld2::JLD2.JLDFile, source_id::Int64, knot_id; 
+                        burn_in::Float64 = 0.2, 
+                        unit::Symbol     = :arcsec)
+Calculate the weighted source position of knot `knot_id` of source `source_id` for the best-fit 
+lens model stored in `data_jld2`.
+
+# Arguments
+- `data_jld2::JLD2.JLDFile`: JLD2 data file containing the fit results.
+- `source_id::Int64`: Index of the source, as ordered in the input file.
+- `knot_id::Int64`: Index of the knot within that source, as ordered in the input file.
+
+# Keyword Arguments
+- `burn_in::Float64=0.2`: The fraction of MCMC chains to discard as burn-in while determining the
+   best-fit lens model. Set to 0.0 when the input file was produced by [`error_models`](@ref), as
+   those samples are already post-burn-in.
+- `unit::Symbol=:arcsec`: Unit of the returned source position.
+   - `:arcsec`: Arcseconds relative to the reference position of the model.
+   - `:RA_DEC`: RA/Dec in degrees.
+
+# Returns
+- `β::NTuple{2, Float64}`: Weighted source position of the requested knot.
+"""
+function get_source_position(data_jld2::JLD2.JLDFile, source_id::Int64, knot_id; 
+                             burn_in::Float64 = 0.2, 
+                             unit::Symbol     = :arcsec)
+   # Check the requested unit
+   if unit != :arcsec && unit != :RA_DEC
+      throw(ArgumentError("Invalid unit. Supported units are :arcsec and :RA_DEC."))
+   end
+
+   # Load the model, chains and logL from the input file
+   model  = data_jld2["model"]
+   chains = data_jld2["chains"]
+   logL   = data_jld2["logL"]
+
+   # Check that the requested source and knot exist
+   sources = model.source_config.sources
+   if source_id < 1 || source_id > length(sources)
+      throw(ArgumentError("Invalid source_id. The model has $(length(sources)) source(s)."))
+   end
+
+   knots = sources[source_id].knots
+   if knot_id < 1 || knot_id > length(knots)
+      throw(ArgumentError("Invalid knot_id. Source $source_id has $(length(knots)) knot(s)."))
+   end
+   knot = knots[knot_id]
+
+   # Get the best parameters based on maximum log-likelihood
+   best_θ, _ = get_best_fit_parameters(logL; chains=chains, burn_in=burn_in)
+ 
+   # Build the best-fit lens model, parameter values and cosmology
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+   best_model, pvals, cosmo = _build_sample_model(model, best_θ, param_ref)
+
+   # Angular-diameter distance ratio for the requested source
+   adis = LensModelUtils.adis_current(model, pvals, cosmo)
+   adis_value = adis[source_id]
+
+   # Knot positions and number of images
+   x = knot.x
+   y = knot.y
+   n = length(x)
+
+   # Deflection vector at the knot positions
+   αx, αy = Lenses.get_deflection(best_model, x, y)
+   αx = @. adis_value * αx
+   αy = @. adis_value * αy
+
+   # Jacobian A = I - a_dis * ψ_ij at the knot positions
+   ψxx, ψyy, ψxy = Lenses.get_jacobian(best_model, x, y)
+   A11 = @. 1.0 - adis_value * ψxx
+   A12 = @.     - adis_value * ψxy
+   A22 = @. 1.0 - adis_value * ψyy
+   A   = (A11, A12, copy(A12), A22)
+
+   # Individual source positions (paired)
+   β_ind = @. tuple(x - αx, y - αy)
+
+   # Weighted source position
+   β, _, _ = Likelihood._weighted_position(β_ind, A, knot.σx, knot.σy, knot.σθ, n)
+
+   # Convert to (RA, Dec) if requested
+   if unit == :RA_DEC
+      RA_REF  = model.observation.reference[1]
+      DEC_REF = model.observation.reference[2]
+      β = AstrometricOps.gnomonic_offsets_radec(RA_REF, DEC_REF, β[1], β[2])
+   end
+   return β
+end
+
 
 """
     predict_image(jld2_file::JLD2.JLDFile, θx::T, θy::T, z_s::Float64; unit::Symbol=:RA_DEC) where T <: Union{Real, Vector{Float64}}
