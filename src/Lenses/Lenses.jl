@@ -508,15 +508,10 @@ function get_kappa_gamma(lens::AbstractLens, θx::T, θy::T, adis::Real) where T
    # Get the jacobian components
    ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
 
-   # Scale the deformation tensor
-   @. ψxx = adis * ψxx
-   @. ψyy = adis * ψyy
-   @. ψxy = adis * ψxy
-
    # Convergence and shear components
-   κ  = 0.5 .* (ψxx .+ ψyy)
-   γ1 = 0.5 .* (ψxx .- ψyy)
-   γ2 = ψxy
+   κ  = 0.5 .* adis .* (ψxx .+ ψyy)
+   γ1 = 0.5 .* adis .* (ψxx .- ψyy)
+   γ2 =        adis .* ψxy
 
    return κ, γ1, γ2
 end
@@ -530,13 +525,13 @@ function get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Real)
    # Get the jacobian components
    ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
 
-   # Scale the deformation tensor
-   ψxx = adis * ψxx
-   ψyy = adis * ψyy
-   ψxy = adis * ψxy
+   # Convergence and shear components
+   κ  = 0.5 * adis * (ψxx + ψyy)
+   γ1 = 0.5 * adis * (ψxx - ψyy)
+   γ2 =        adis * ψxy
 
    # μ = 1 / det(A)
-   return 1.0 / (1.0 + ψxx * ψyy - ψxx - ψyy - ψxy^2)
+   return 1.0 / ( (1.0 - κ)^2 - (γ1^2 + γ2^2))
 end
 
 
@@ -562,13 +557,13 @@ function get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Real)
    # Get the jacobian components
    ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
 
-   # Scale the deformation tensor
-   @. ψxx = adis * ψxx
-   @. ψyy = adis * ψyy
-   @. ψxy = adis * ψxy
+   # Convergence and shear components
+   κ  = 0.5 .* adis .* (ψxx .+ ψyy)
+   γ1 = 0.5 .* adis .* (ψxx .- ψyy)
+   γ2 =        adis .* ψxy
 
    # μ = 1 / det(1 - A)
-   return @. 1.0 / (1.0 + ψxx * ψyy - ψxx - ψyy - ψxy^2)
+   return @. 1.0 / ( (1.0 - κ)^2 - (γ1^2 + γ2^2))
 end
 
 
@@ -756,15 +751,10 @@ function get_critical_curve(lens::AbstractLens, θx::T, θy::T, adis::Float64) w
    # Get the jacobian components
    ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
 
-   # Scale the deformation tensor
-   @. ψxx = adis * ψxx
-   @. ψyy = adis * ψyy
-   @. ψxy = adis * ψxy
-
    # Convergence and shear components
-   κ  = 0.5 .* (ψxx .+ ψyy)
-   γ1 = 0.5 .* (ψxx .- ψyy)
-   γ2 = ψxy
+   κ  = 0.5 .* adis .* (ψxx .+ ψyy)
+   γ1 = 0.5 .* adis .* (ψxx .- ψyy)
+   γ2 =        adis .* ψxy
 
    # Get the zero eigenvalue contours
    critical_tan = ContourFinder.get_contour(θx, θy, 1.0 .- κ .- sqrt.(γ1.^2 .+ γ2.^2), 0)
