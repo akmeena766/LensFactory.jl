@@ -731,6 +731,39 @@ function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::T) whe
    return image_map
 end
 
+
+"""
+    get_critical_curve(θx::T, θy::T, adis::Float64,
+                       ψxx::T, ψyy::T, ψxy::T) where T <: Matrix{<:Real} --> Tuple{Vector{Vector{Vector{Float64}}}, Vector{Vector{Vector{Float64}}}}
+Calculate critical curves from a deformation tensor that has already been computed. For this 
+function, no lens is needed.
+ 
+# Arguments
+- `θx`  : x-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `adis`: Distance ratio (i.e., ``D_{ds}/D_s``).
+- `ψxx` : xx-component of the deformation tensor.
+- `ψyy` : yy-component of the deformation tensor.
+- `ψxy` : xy-component of the deformation tensor.
+ 
+# Returns
+- `critical_tan`: Tangential critical curve(s).
+- `critical_rad`: Radial critical curve(s).
+"""
+function get_critical_curve(θx::T, θy::T, adis::Float64, ψxx::T, ψyy::T, ψxy::T) where T <: Matrix{<:Real}
+   # Convergence and shear components, scaled out of place so the caller keeps its tensor
+   κ  = 0.5 .* adis .* (ψxx .+ ψyy)
+   γ1 = 0.5 .* adis .* (ψxx .- ψyy)
+   γ2 = adis .* ψxy
+   γ  = sqrt.(γ1.^2 .+ γ2.^2)
+
+   # Get the zero eigenvalue contours
+   critical_tan = ContourFinder.get_contour(θx, θy, 1.0 .- κ .- γ, 0)
+   critical_rad = ContourFinder.get_contour(θx, θy, 1.0 .- κ .+ γ, 0)
+ 
+   return critical_tan, critical_rad
+end
+
 """
     get_critical_curve(lens::AbstractLens, θx::T, θy::T, 
                        adis::Real) where T <: Matrix{<:Real} --> Tuple{Vector{Vector{Vector{Float64}}}, Vector{Vector{Vector{Float64}}}}
@@ -751,18 +784,54 @@ function get_critical_curve(lens::AbstractLens, θx::T, θy::T, adis::Float64) w
    # Get the jacobian components
    ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
 
-   # Convergence and shear components
-   κ  = 0.5 .* adis .* (ψxx .+ ψyy)
-   γ1 = 0.5 .* adis .* (ψxx .- ψyy)
-   γ2 =        adis .* ψxy
-
-   # Get the zero eigenvalue contours
-   critical_tan = ContourFinder.get_contour(θx, θy, 1.0 .- κ .- sqrt.(γ1.^2 .+ γ2.^2), 0)
-   critical_rad = ContourFinder.get_contour(θx, θy, 1.0 .- κ .+ sqrt.(γ1.^2 .+ γ2.^2), 0)
-
-   return critical_tan, critical_rad   
+   return get_critical_curve(θx, θy, adis, ψxx, ψyy, ψxy)
 end
 
+
+# Map a set of critical curves into the source plane
+function _map_to_source(lens::AbstractLens, curves::Vector{<:Vector{<:Vector{Float64}}}, adis::Float64)
+   caustics = Vector{Vector{Vector{Float64}}}(undef, length(curves))
+   for (idx, curve) in enumerate(curves)
+      ψ_x, ψ_y = get_deflection(lens, first.(curve), last.(curve))
+      src_x = first.(curve) .- adis .* ψ_x
+      src_y =  last.(curve) .- adis .* ψ_y
+      caustics[idx] = [[x, y] for (x, y) in zip(src_x, src_y)]
+   end
+   return caustics
+end
+
+
+"""
+    get_caustic(lens::AbstractLens, θx::T, θy::T, adis::Float64, 
+                ψxx::T, ψyy::T, ψxy::T) where T <: Matrix{<:Real} --> Tuple{Vector{Vector{Vector{Float64}}}, Vector{Vector{Vector{Float64}}}}
+Calculate caustics for a given lens model. The function first gets the critical curves and then 
+maps them to the source plane using the lens equation. **The functon runs over all tangential 
+and radial critical curves.**
+
+# Arguments
+- `lens`: Lens model.
+- `θx`  : x-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `adis`: Distance ratio (i.e., ``D_{ds}/D_s``).
+- `ψxx` : xx-component of the deformation tensor.
+- `ψyy` : yy-component of the deformation tensor.
+- `ψxy` : xy-component of the deformation tensor.
+
+# Returns
+- `caustics_tan`: Tangential caustics (in ``\\rm \\mathbf{arcseconds}``).
+- `caustics_rad`: Radial caustics (in ``\\rm \\mathbf{arcseconds}``).
+"""
+function get_caustic(lens::AbstractLens, θx::T, θy::T, adis::Float64, 
+                     ψxx::T, ψyy::T, ψxy::T) where T <: Matrix{<:Real}
+   # Calculate critical curves
+   critical_tan, critical_rad = get_critical_curve(θx, θy, adis, ψxx, ψyy, ψxy)
+
+   # Map the critical curves to the source plane
+   caustics_tan = _map_to_source(lens, critical_tan, adis)
+   caustics_rad = _map_to_source(lens, critical_rad, adis)
+
+   return caustics_tan, caustics_rad
+end
 
 """
     get_caustic(lens::AbstractLens, θx::T, θy::T, 
@@ -782,27 +851,10 @@ critical curves.**
 - `caus_rad`: Radial caustic curves (in ``\\rm \\mathbf{arcseconds}``).
 """
 function get_caustic(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:Real}
-   # Generate critical curves
-   critical_tan, critical_rad = get_critical_curve(lens, θx, θy, adis)
-
-   # Get tangential caustics
-   caustics_tan = Vector{Vector{Vector{Float64}}}(undef, length(critical_tan))
-   for (idx, curve) in enumerate(critical_tan)
-      ψ_x, ψ_y = get_deflection(lens, first.(curve), last.(curve))
-      src_x = first.(curve) .- adis .* ψ_x
-      src_y =  last.(curve) .- adis .* ψ_y
-      caustics_tan[idx] = [[x, y] for (x, y) in zip(src_x, src_y)]
-   end
- 
-   # Get radial caustics
-   caustics_rad = Vector{Vector{Vector{Float64}}}(undef, length(critical_rad))
-   for (idx, curve) in enumerate(critical_rad)
-      ψ_x, ψ_y = get_deflection(lens, first.(curve), last.(curve))
-      src_x = first.(curve) .- adis .* ψ_x
-      src_y =  last.(curve) .- adis .* ψ_y
-      caustics_rad[idx] = [[x, y] for (x, y) in zip(src_x, src_y)]
-   end
-   return caustics_tan, caustics_rad
+   # Get deformation tensor components
+   ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
+   
+   return get_caustic(lens, θx, θy, adis, ψxx, ψyy, ψxy)
 end
 
 
