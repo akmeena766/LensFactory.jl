@@ -254,13 +254,20 @@ function fit_ellipse(x::Vector{Float64}, y::Vector{Float64})
    # Eigen Decomposition
    eigenvalues, eigenvectors = eigen(S, C)
 
-   # We want the only positive eigenvalue for this specific C matrix
-   valid_idx = findall(λ -> isreal(λ) && isfinite(real(λ)) && real(λ) > 0, eigenvalues)
+   # Select on the ellipse condition of the eigenvector, not on the sign of the
+   # eigenvalue: for (near-)exact input S is rank-deficient, so the eigenvalue of
+   # the wanted solution is ~1e-16 and its sign is pure rounding noise.
+   V    = real.(eigenvectors)
+   disc = 4 .* V[1, :] .* V[3, :] .- V[2, :] .^ 2      # 4ac - b² > 0 for an ellipse
+   λ    = eigenvalues
+   valid_idx = findall(i -> isfinite(real(λ[i])) &&
+                            abs(imag(λ[i])) ≤ 1e-8 * max(1.0, abs(real(λ[i]))) &&
+                            disc[i] > 0,
+                       eachindex(λ))
    isempty(valid_idx) && error("No valid ellipse solution found")
+   idx = valid_idx[argmin(abs.(real.(λ[valid_idx])))]
 
-   # Get the coefficients for the best fit
-   idx = valid_idx[argmin(real(eigenvalues[valid_idx]))]
-   a, b, c, d, e, f = real(eigenvectors[:, idx])
+   a, b, c, d, e, f = V[:, idx]
 
    # --- Denormalize ---
    a2 = a / sx^2
