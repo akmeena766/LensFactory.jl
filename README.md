@@ -72,8 +72,20 @@ current **dev** version. If any of the examples are not working, please let me k
 ## Citation
 If you use `LensFactory.jl` in your research, please cite:
 ```bibtex
-@article{LensFactory.jl,
-
+@ARTICLE{LensFactory.jl,
+       author = {{Meena}, Ashish Kumar},
+        title = "{$\texttt{LensFactory.jl}$: A general-purpose strong lens modeling package}",
+      journal = {arXiv e-prints},
+     keywords = {Cosmology and Nongalactic Astrophysics},
+         year = 2026,
+        month = sep,
+          eid = {arXiv:2609.08649},
+        pages = {arXiv:2609.08649},
+archivePrefix = {arXiv},
+       eprint = {2609.08649},
+ primaryClass = {astro-ph.CO},
+       adsurl = {https://ui.adsabs.harvard.edu/abs/2026arXiv260908649M},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
 }
 ```
 
