@@ -3,10 +3,10 @@
 The `Lenses` module is the interface between the user and various lens models. The user will call 
 functions from this module to compute various lensing quantities. For examples on how to use this 
 module and various functions within it, see 
-[Basic-Example-2](https://github.com/akmeena766/LensFactory-Examples/blob/main/Basic/Example-2%3A%20Point%20mass%20lens.ipynb),
-[Basic-Example-3](https://github.com/akmeena766/LensFactory-Examples/blob/main/Basic/Example-3%3A%20SIS%20lens%20model.ipynb)
+[Basic-Example-2](https://github.com/akmeena766/LensFactory_Examples/blob/main/Basic/Example2_Point_mass_lens.ipynb),
+[Basic-Example-3](https://github.com/akmeena766/LensFactory_Examples/blob/main/Basic/Example3_Plummer_lens_model.ipynb)
 and 
-[Basic-Example-4](https://github.com/akmeena766/LensFactory-Examples/blob/main/Basic/Example-4%3A%20Lensing%20quantities.ipynb).
+[Basic-Example-4](https://github.com/akmeena766/LensFactory_Examples/blob/main/Basic/Example4_Lensing_quantities.ipynb).
 
 !!! note
     Keeping in mind that most of the astrophysical scenario (primarily strong lensing by galaxies or 

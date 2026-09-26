@@ -2,7 +2,7 @@
 When the deflectors along the line of sight are located at different redshifts (e.g., a galaxy 
 lens with line-of-sight perturbers, or a cluster with structures at multiple redshifts), the 
 single-plane approximation breaks down, and the light rays need to be propagated through a series 
-of lens planes.
+of lens planes [1992grle.book.....S](@cite).
 
 Following same terminology as single plane lensing, we can write the lensing potential and 
 deflection in ``j``th plane as,
