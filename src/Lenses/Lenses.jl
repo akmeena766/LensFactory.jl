@@ -322,6 +322,84 @@ end
 
 
 """
+    get_deformation(lens::AbstractLens, θx::T, θy::T) where T <: Real --> Tuple{Real, Real, Real}
+"""
+function get_deformation(lens::AbstractLens, θx::Real, θy::Real)
+   # Promote to common type
+   θx, θy = promote(θx, θy)
+   T = typeof(θx)
+
+   # Initialize zero-valued deflection scalars
+   ψxx = zero(T)
+   ψyy = zero(T)
+   ψxy = zero(T)
+
+   if lens._lens_ == :CompositeLens
+      for component in lens._components_
+         ψxx, ψyy, ψxy = jacobian_helper!(ψxx, ψyy, ψxy, component, θx, θy)
+      end
+      return ψxx, ψyy, ψxy
+   else
+      ψxx, ψyy, ψxy = jacobian_helper!(ψxx, ψyy, ψxy, lens, θx, θy)
+      return ψxx, ψyy, ψxy
+   end
+end
+
+"""
+    get_deformation(lens::AbstractLens, θx::T, θy::T) where T <: ROA --> Tuple(ROA, ROA, ROA)
+Calculate deformation tensor of the lens mapping for a given lens model,
+```math
+\\mathbb{A}(\\pmb{θ}) = 
+\\begin{pmatrix}
+   ψ_{xx} & ψ_{xy} \\\\
+   ψ_{xy} & ψ_{yy}
+\\end{pmatrix}.
+```
+
+Since the deformation tensor is symmetric (for single lens plane), only three components are returned,
+i.e., ``(ψ_{xx}, ψ_{yy}, ψ_{xy})``.
+
+# Arguments
+- `lens`: Lens model.
+- `θx`  : x-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-coordinate(s) (in ``\\rm \\mathbf{arcseconds}``).
+
+# Returns
+- `ψxx` : xx-component of the deformation tensor.
+- `ψyy` : yy-component of the deformation tensor.
+- `ψxy` : xy-component of the deformation tensor.
+"""
+function get_deformation(lens::AbstractLens, θx::T, θy::T) where T <: Union{ROA, Vector{Int64}}
+   # Check if the input coordinates are of the same size
+   if size(θx) != size(θy)
+      throw(ArgumentError("Input coordinates must be of the same size."))
+   end
+      
+   # Promote both only if either is Int64
+   if eltype(θx) === Int64 || eltype(θy) === Int64
+      θx = Float64.(θx)
+      θy = Float64.(θy)
+   end
+
+   # Initialize zero-valued potential array
+   OutT = promote_type(eltype(θx), eltype(θy), lens_eltype(lens))
+   ψxx = zeros(OutT, size(θx))
+   ψyy = zeros(OutT, size(θy))
+   ψxy = zeros(OutT, size(θx))
+
+   if lens._lens_ == :CompositeLens
+      for component in lens._components_
+         jacobian_helper!(ψxx, ψyy, ψxy, component, θx, θy)
+      end
+      return ψxx, ψyy, ψxy
+   else
+      jacobian_helper!(ψxx, ψyy, ψxy, lens, θx, θy)
+      return ψxx, ψyy, ψxy
+   end
+end
+
+
+"""
     get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: Real --> Tuple{Real, Real, Real}
 """
 function get_jacobian(lens::AbstractLens, θx::Real, θy::Real)
