@@ -1,7 +1,8 @@
 # External Effects: Third Order
 Going one order beyond the constant convergence and shear described in 
-[External Effects](ExternalEffects.md), the environment also introduces higher-order perturbations 
-in the lens potential. The generic third-order perturbation can be written as 
+[External Effects](ExternalEffects.md), the environment can also introduces third-order 
+perturbations in the lens potential. **The `ExternalEffects3` lens model corresponds to third-order 
+pertubations for an SIS lens model**. The generic third-order perturbation can be written as 
 [1991ApJ...373..354K, 1999AJ....118...14B](@cite),
 ```math
 \begin{align*}
