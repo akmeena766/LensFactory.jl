@@ -4,7 +4,7 @@ module PolygonOps
 # --------------------------------------------------------------------------------------------------
 # Julia inbuilt functions to import
 # --------------------------------------------------------------------------------------------------
-using StatsBase
+using Statistics
 using LinearAlgebra
 
 
@@ -83,7 +83,7 @@ function shoelace(polygon::Vector{<:Vector{<:Real}})
    for i in 1:(length(polygon)-1)
       x1, y1 = polygon[i]
       x2, y2 = polygon[i+1]
-      area += x1*y2 - x2*y1
+      area   = area + x1*y2 - x2*y1
    end
    return 0.5 * abs(area)
 end
@@ -232,8 +232,8 @@ Fits an ellipse to a set of points (x, y) using the least squares method with a 
 """
 function fit_ellipse(x::Vector{Float64}, y::Vector{Float64})
    # --- Normalize ---
-   mx = mean(x)
-   my = mean(y)
+   mx = Statistics.mean(x)
+   my = Statistics.mean(y)
 
    sx = (maximum(x) - minimum(x)) / 2
    sy = (maximum(y) - minimum(y)) / 2

@@ -5,6 +5,7 @@ module Diagnostic
 # Julia inbuilt functions to use
 # --------------------------------------------------------------------------------------------------
 using StatsBase
+using Statistics
 using Printf
 
 
@@ -47,12 +48,12 @@ function calculate_gr(chains::Array{Float64, 3}; burn_in::Float64=0.2)
       @views param_samples = samples[:, :, p]
         
       # W: Within-chain variance
-      chain_vars = StatsBase.var(param_samples, dims=1)
-      W = StatsBase.mean(chain_vars)
+      chain_vars = Statistics.var(param_samples, dims=1)
+      W = Statistics.mean(chain_vars)
         
       # B: Between-chain variance
-      chain_means = StatsBase.mean(param_samples, dims=1)
-      grand_mean = StatsBase.mean(chain_means)
+      chain_means = Statistics.mean(param_samples, dims=1)
+      grand_mean = Statistics.mean(chain_means)
       B = (n / (m - 1)) * sum((chain_means .- grand_mean).^2)
         
       # V_hat: Pooled variance estimate
@@ -197,7 +198,7 @@ function autocorrelation(chains::Array{Float64, 3};
          # Limit lags to N/5 — the standard recommendation beyond which
          # autocorrelation estimates become unreliable due to sample noise.
          max_lag = min(length(chain_data) ÷ 5, 2000)
-         ac      = autocor(chain_data, 0:max_lag)
+         ac      = StatsBase.autocor(chain_data, 0:max_lag)
          
          # Integrated Autocorrelation Time (IAT)
          # Truncate at the first negative lag to avoid noise inflation.
@@ -288,7 +289,7 @@ function acceptance_rate(chains::Array{Float64, 3}; burn_in::Float64=0.2)
    end
 
    # Summary Statistics
-   avg_acc = StatsBase.mean(walker_rates)
+   avg_acc = Statistics.mean(walker_rates)
    min_acc = minimum(walker_rates)
    max_acc = maximum(walker_rates)
 

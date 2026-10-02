@@ -5,7 +5,7 @@ module MH
 # Julia inbuilt functions to import
 # --------------------------------------------------------------------------------------------------
 using Random
-using StatsBase
+using Statistics
 using Base.Threads
 using ProgressMeter
 
@@ -123,7 +123,7 @@ function report_rates(all_rates::Matrix{Float64}, target::Float64=0.234)
 
    for c in 1:n_chains
       final_rates = @view all_rates[tail_idx:end, c]
-      mu = round(StatsBase.mean(final_rates), digits=3)
+      mu = round(Statistics.mean(final_rates), digits=3)
         
       status = abs(mu - target) < 0.05 ? "Tuned" : "Drifting"
         
