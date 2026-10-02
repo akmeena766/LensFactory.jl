@@ -336,11 +336,11 @@ function get_deformation(lens::AbstractLens, θx::Real, θy::Real)
 
    if lens._lens_ == :CompositeLens
       for component in lens._components_
-         ψxx, ψyy, ψxy = jacobian_helper!(ψxx, ψyy, ψxy, component, θx, θy)
+         ψxx, ψyy, ψxy = deformation_helper!(ψxx, ψyy, ψxy, component, θx, θy)
       end
       return ψxx, ψyy, ψxy
    else
-      ψxx, ψyy, ψxy = jacobian_helper!(ψxx, ψyy, ψxy, lens, θx, θy)
+      ψxx, ψyy, ψxy = deformation_helper!(ψxx, ψyy, ψxy, lens, θx, θy)
       return ψxx, ψyy, ψxy
    end
 end
@@ -389,11 +389,11 @@ function get_deformation(lens::AbstractLens, θx::T, θy::T) where T <: Union{RO
 
    if lens._lens_ == :CompositeLens
       for component in lens._components_
-         jacobian_helper!(ψxx, ψyy, ψxy, component, θx, θy)
+         deformation_helper!(ψxx, ψyy, ψxy, component, θx, θy)
       end
       return ψxx, ψyy, ψxy
    else
-      jacobian_helper!(ψxx, ψyy, ψxy, lens, θx, θy)
+      deformation_helper!(ψxx, ψyy, ψxy, lens, θx, θy)
       return ψxx, ψyy, ψxy
    end
 end
@@ -414,11 +414,11 @@ function get_jacobian(lens::AbstractLens, θx::Real, θy::Real)
 
    if lens._lens_ == :CompositeLens
       for component in lens._components_
-         ψxx, ψyy, ψxy = jacobian_helper!(ψxx, ψyy, ψxy, component, θx, θy)
+         ψxx, ψyy, ψxy = deformation_helper!(ψxx, ψyy, ψxy, component, θx, θy)
       end
       return ψxx, ψyy, ψxy
    else
-      ψxx, ψyy, ψxy = jacobian_helper!(ψxx, ψyy, ψxy, lens, θx, θy)
+      ψxx, ψyy, ψxy = deformation_helper!(ψxx, ψyy, ψxy, lens, θx, θy)
       return ψxx, ψyy, ψxy
    end
 end
@@ -467,11 +467,11 @@ function get_jacobian(lens::AbstractLens, θx::T, θy::T) where T <: Union{ROA, 
 
    if lens._lens_ == :CompositeLens
       for component in lens._components_
-         jacobian_helper!(ψxx, ψyy, ψxy, component, θx, θy)
+         deformation_helper!(ψxx, ψyy, ψxy, component, θx, θy)
       end
       return ψxx, ψyy, ψxy
    else
-      jacobian_helper!(ψxx, ψyy, ψxy, lens, θx, θy)
+      deformation_helper!(ψxx, ψyy, ψxy, lens, θx, θy)
       return ψxx, ψyy, ψxy
    end
 end
@@ -1761,111 +1761,111 @@ end
 # --------------------------------------------------------------------------------------------------
 # -------------------- Deformation tensor for various lens models ----------------------------------
 # --------------------------------------------------------------------------------------------------
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PointLens, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PointLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return PointLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PlummerLens, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PlummerLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return PlummerLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_SISLens, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_SISLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return SISLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, lens.v_d)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_NSISPLens, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_NSISPLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return NSISPLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_NSISMDLens, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_NSISMDLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return NSISMDLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_GaussianLens, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_GaussianLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return GaussianLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_SersicLens, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_SersicLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return SersicLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_e, lens.n)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PixelLens, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PixelLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return PixelLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, lens.kappa, lens.pixel_size)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_ExternalEffects, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_ExternalEffects, θx::T, θy::T) where T <: Union{Real, ROA}
    return ExternalEffects.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.kappa, lens.gamma, lens.angle)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_ExternalEffects3, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_ExternalEffects3, θx::T, θy::T) where T <: Union{Real, ROA}
    return ExternalEffects3.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.delta, lens.angle)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_Multipole, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_Multipole, θx::T, θy::T) where T <: Union{Real, ROA}
    return Multipole.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.delta, lens.angle, lens.m, lens.n)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PIEPLens, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PIEPLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return PIEPLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.eps, lens.pa)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_SIELens, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_SIELens, θx::T, θy::T) where T <: Union{Real, ROA}
    return SIELens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.eps, lens.pa)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PJELens, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_PJELens, θx::T, θy::T) where T <: Union{Real, ROA}
    return PJELens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.x_t, lens.eps, lens.pa)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_HernquistLens, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_HernquistLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return HernquistLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_NFWLens, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_NFWLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return NFWLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_tNFWLens, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_tNFWLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return tNFWLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s, lens.x_t)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_gNFWLens, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_gNFWLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return gNFWLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s, lens.n)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_EinastoLens, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_EinastoLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return EinastoLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s, lens.n)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_aHernquistLens, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_aHernquistLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return aHernquistLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.eps, lens.pa)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_aNFWLens, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_aNFWLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return aNFWLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s, lens.eps, lens.pa)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_eHernquistMDLens, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_eHernquistMDLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return eHernquistMDLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.eps, lens.pa)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_eNFWMDLens, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_eNFWMDLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return eNFWMDLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.k_s, lens.x_s, lens.eps, lens.pa)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_MultiPlummerLens, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_MultiPlummerLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return MultiPlummerLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.n)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_MultiGaussianLens, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_MultiGaussianLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return MultiGaussianLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.D_d, lens.x_c, lens.y_c, lens.mass, lens.x_s, lens.n)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_MultiPixelLens, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_MultiPixelLens, θx::T, θy::T) where T <: Union{Real, ROA}
    return MultiPixelLens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, lens.kappa, lens.pixel_size, lens.n)
 end
 
-@inline function jacobian_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_MultiPJELens, θx::T, θy::T) where T <: Union{Real, ROA}
+@inline function deformation_helper!(ψxx::T, ψyy::T, ψxy::T, lens::init_MultiPJELens, θx::T, θy::T) where T <: Union{Real, ROA}
    return MultiPJELens.jacobian!(ψxx, ψyy, ψxy, θx, θy, lens.x_c, lens.y_c, lens.v_d, lens.x_s, lens.x_t, lens.eps, lens.pa, lens.n)
 end
 
