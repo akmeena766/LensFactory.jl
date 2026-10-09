@@ -95,11 +95,31 @@ end
 end
 
 @kwdef struct LensConfig <: AbstractLensConfig
-   method::Symbol
    components::Vector{LensComponent}
    galaxies::Dict{Symbol, GalaxyComponent}   # Galaxy catalogs, keyed by the owning lens id
    multiplane::Bool                          # Multi-plane lensing flag
    z_lenses::Vector{Float64}                 # Per-component lens redshift (multi-plane only, else empty)
+end
+
+@kwdef struct MaxExtConfig <: AbstractLensConfig
+   regularization::Float64
+   max_iter::Int64
+end
+
+function LensConfig(method::Symbol; kwargs...)
+   if method == :Parametric
+      return LensConfig(; components = kwargs[:components], 
+                         galaxies    = kwargs[:galaxies], 
+                         multiplane  = kwargs[:multiplane], 
+                         z_lenses    = kwargs[:z_lenses])
+   elseif method == :MaxEnt
+      return MaxExtConfig(; pixel_size   = kwargs[:pixel_size], 
+                          regularization = kwargs[:regularization], 
+                          max_iter       = kwargs[:max_iter])
+   else
+      error("Unsupported lens model method: $method. Supported methods are: :Parametric, :MaxEnt.")
+   end
+   return LensConfig(method, AbstractLensConfig[])
 end
 
 # --------------------------------------------------------------------------------------------------
@@ -570,13 +590,11 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter}, observation::Observa
          end
       end
 
-      return LensConfig(
-         method     = method,
-         components = lens_name, 
-         galaxies   = galaxies, 
-         multiplane = multiplane,
-         z_lenses   = Float64[]
-      )
+      return LensConfig(; method     = method,
+                          components = lens_name, 
+                          galaxies   = galaxies, 
+                          multiplane = multiplane,
+                          z_lenses   = Float64[])
    else
       # ---------------- Multi-plane lensing ----------------------------------------------------
       # Every lens must provide a FIXED redshift ** z_d **. Lenses sharing the same z_d are grouped 
