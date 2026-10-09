@@ -95,6 +95,7 @@ end
 end
 
 @kwdef struct LensConfig <: AbstractLensConfig
+   method::Symbol
    components::Vector{LensComponent}
    galaxies::Dict{Symbol, GalaxyComponent}   # Galaxy catalogs, keyed by the owning lens id
    multiplane::Bool                          # Multi-plane lensing flag
@@ -475,6 +476,7 @@ end
 
 
 # Build lens model
+SUPPORTED_METHODS = Set([:Parametric, :MaxEnt])
 function _lensmodel!(dict::Dict, params::Vector{Parameter}, observation::Observation, cosmo::Cosmology.AbstractCosmology)
    lens_dict = dict[:lens_model]
 
@@ -482,6 +484,20 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter}, observation::Observa
    _require(lens_dict, :total_lenses)
    if lens_dict[:total_lenses] <= 0
       error("Total number of lenses must be greater than zero.")
+   end
+
+   # Make sure that the method exists and is valid
+   _require(lens_dict, :method)
+   method = Symbol(lens_dict[:method])
+   if method ∉ SUPPORTED_METHODS
+      error("Unsupported lens model method: $method. Supported methods are: $(SUPPORTED_METHODS).")
+   end
+
+   # Determine single plane vs. multi-plane lensing is specified and make sure that free-form 
+   # (i.e., MaxEnt) methods are not used with multi-plane lensing.
+   multiplane = get!(lens_dict, :multiplane, false)
+   if multiplane == true && method == :MaxEnt
+      error("Multi-plane lensing is not supported for MaxEnt method.")
    end
 
    # Construct a composite lens using initial values
@@ -494,7 +510,6 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter}, observation::Observa
    galaxies = Dict{Symbol, GalaxyComponent}()
 
    # Single plane vs. multiplane lensing
-   multiplane = get!(lens_dict, :multiplane, false)
    if multiplane == false
       # Single plane lensing
       for i in 1:n_lenses
@@ -556,9 +571,10 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter}, observation::Observa
       end
 
       return LensConfig(
+         method     = method,
          components = lens_name, 
          galaxies   = galaxies, 
-         multiplane = false,
+         multiplane = multiplane,
          z_lenses   = Float64[]
       )
    else
@@ -572,7 +588,6 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter}, observation::Observa
       error("Multi-plane lensing support is not yet implemented.")
 
       z_lenses = Vector{Float64}(undef, n_lenses)
-
       for i in 1:n_lenses
          lens_id = Symbol(:lens, i)
          indi_lens_dict = lens_dict[lens_id]
@@ -643,7 +658,7 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter}, observation::Observa
 
       return LensConfig(components = lens_name, 
                         galaxies   = galaxies, 
-                        multiplane = true,
+                        multiplane = multiplane,
                         z_lenses   = z_lenses)
    end
 end
