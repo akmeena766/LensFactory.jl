@@ -52,7 +52,7 @@ function _maxent(lens_dict::Dict, params::Vector{Parameter}, observation::Observ
       error("Default map is not provided for MaxEnt method.")
    end
    x_pos, y_pos, κ_map = _generate_map(default_map, FOV, pixel_scale)
-   multi_pixel_lens = MultiPixelLens(x_pos, y_pos, κ_map)
+   multi_pixel_lens = PixelComponent(x_pos, y_pos, κ_map)
 
    # Generate lens component
    for i in 1:n_lenses
