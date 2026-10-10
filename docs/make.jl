@@ -56,7 +56,8 @@ makedocs(
             "Sources"        => "Sources.md",
             "LensModel"      => [
                         "General"    => "LensModel.md",
-                        "Parametric" => "LensModel_Parametric.md"
+                        "Parametric" => "LensModel_Parametric.md",
+                        "Maximum Entropy" => "LensModel_MaxEnt.md"
                         ],
             "SingularityMap" => "SingularityMap.md",
             "LFUtils"        => "LFUtils.md",

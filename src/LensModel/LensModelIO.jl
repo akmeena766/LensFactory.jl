@@ -102,9 +102,17 @@ end
    galaxies::Dict{Symbol, GalaxyComponent}
 end
 
+@kwdef struct PixelComponent <: AbstractLensConfig
+   x::Vector{Float64}
+   y::Vector{Float64}
+   κ::Vector{Float64}
+end
+
 @kwdef struct MaxExtConfig <: AbstractLensConfig
-   regularization::Float64
-   max_iter::Int64
+   multiplane::Bool
+   components::Vector{LensComponent}
+   alpha::Float64
+   pixels::PixelComponent
 end
 
 
@@ -438,24 +446,23 @@ end
 # --------------------------------------------------------------------------------------------------
 # ---------------- Read Lens Model -----------------------------------------------------------------
 # --------------------------------------------------------------------------------------------------
-include("_ParametricIO.jl")
-
 # Build lens model
 SUPPORTED_METHODS = Set([:Parametric, :MaxEnt])
 function LensConfig(method::Symbol; kwargs...)
    if method == :Parametric
-      return ParametricLensConfig(; components = kwargs[:components], 
-                                   galaxies    = kwargs[:galaxies], 
-                                   multiplane  = kwargs[:multiplane], 
-                                   z_lenses    = kwargs[:z_lenses])
+      return ParametricConfig(; components = kwargs[:components], 
+                                galaxies    = kwargs[:galaxies], 
+                                multiplane  = kwargs[:multiplane], 
+                                z_lenses    = kwargs[:z_lenses])
    elseif method == :MaxEnt
-      return MaxExtConfig(; pixel_size   = kwargs[:pixel_size], 
-                          regularization = kwargs[:regularization], 
-                          max_iter       = kwargs[:max_iter])
+      return MaxExtConfig(; pixel_size   = kwargs[:pixel_size])
    else
       error("Unsupported lens model method: $method. Supported methods are: $(SUPPORTED_METHODS).")
    end
 end
+
+include("_ParametricIO.jl")
+include("_MaxEntIO.jl")
 
 function _lensmodel!(dict::Dict, params::Vector{Parameter}, observation::Observation, cosmo::Cosmology.AbstractCosmology)
    lens_dict = dict[:lens_model]
@@ -482,7 +489,7 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter}, observation::Observa
 
    # Read inputs according to the specified method
    if method == :Parametric
-      return _parametric(lens_dict, params, observation, multiplane)
+      return _parametric(lens_dict, params, observation, multiplane, cosmo)
    elseif method == :MaxEnt
       return _maxent(lens_dict, params, observation)
    end

@@ -1,2 +1,2 @@
-# Parametric lens modelling
+# Parametric method
 

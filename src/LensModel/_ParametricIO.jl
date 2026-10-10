@@ -1,5 +1,5 @@
 # --------------------------------------------------------------------------------------------------
-# Internal functions to read parametric lens model
+# Internal functions to read parametric method
 # --------------------------------------------------------------------------------------------------
 # Lens models that do not require position
 const NO_POSITION = Set([:ExternalEffects, :ExternalEffects3, :Multipole])
@@ -47,7 +47,7 @@ function _read_scaling_relation!(scaling_dict::Dict, owner::Symbol, params::Vect
    return nothing
 end
 
-function _parametric(lens_dict::Dict, params::Vector{Parameter}, observation::Observation, multiplane::Bool)
+function _parametric(lens_dict::Dict, params::Vector{Parameter}, observation::Observation, multiplane::Bool, cosmo::Cosmology.AbstractCosmology)
    # Construct a composite lens using initial values
    n_lenses = lens_dict[:total_lenses]
 
@@ -116,10 +116,10 @@ function _parametric(lens_dict::Dict, params::Vector{Parameter}, observation::Ob
             _read_scaling_relation!(indi_lens_dict[:scaling_relation], Symbol(:scaling, i), params)
          end
       end
-      return ParametricLensConfig(; multiplane = multiplane,
-                                    z_lenses   = Float64[],
-                                    components = lens_name,
-                                    galaxies   = galaxies)
+      return ParametricConfig(; multiplane = multiplane,
+                                z_lenses   = Float64[],
+                                components = lens_name,
+                                galaxies   = galaxies)
    else
       # ---------------- Multi-plane lensing -------------------------------------------------------
       error("Multi-plane lensing support is not yet implemented.")
@@ -192,9 +192,9 @@ function _parametric(lens_dict::Dict, params::Vector{Parameter}, observation::Ob
       if length(unique(z_lenses)) < 2
          error("Multi-plane mode requires lenses at >= 2 distinct redshifts. Use multiplane: false otherwise.")
       end
-      return ParametricLensConfig(; multiplane = multiplane,
-                                    z_lenses   = z_lenses,
-                                    components = lens_name,
-                                    galaxies   = galaxies)
+      return ParametricConfig(; multiplane = multiplane,
+                                z_lenses   = z_lenses,
+                                components = lens_name,
+                                galaxies   = galaxies)
    end
 end
