@@ -184,7 +184,7 @@ end
 # --------------------------------------------------------------------------------------------------
 # Run Optimizer
 # --------------------------------------------------------------------------------------------------
-function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real}, opt::OptimizerConfig, cfg::NMConfig, verbose::Bool)
+function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real}, opt::OptimizerConfig, cfg::Dict{Symbol, Any}, verbose::Bool)
    # Initialize free parameter vector
    θ_initial = θ_initializer(model; run_mode=opt.run_mode, max_runs=opt.max_runs)
 
@@ -203,7 +203,7 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
       θ0 = copy(θ_initial[i])
 
       # Call optimizer
-      θ_opt, fmax, _, _, converged = nmsmax(x -> objective(model, x, param_ref), θ0; tol = cfg.tolerance, max_its = cfg.max_iter)
+      θ_opt, fmax, _, _, converged = nmsmax(x -> objective(model, x, param_ref), θ0; tol = cfg[:tolerance], max_its = cfg[:n_runs])
 
       # Write to the specific memory slot reserved for individual run
       if converged

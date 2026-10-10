@@ -116,7 +116,7 @@ function _parametric(lens_dict::Dict, params::Vector{Parameter}, observation::Ob
             _read_scaling_relation!(indi_lens_dict[:scaling_relation], Symbol(:scaling, i), params)
          end
       end
-      return ParametricConfig(; multiplane = multiplane,
+      return ParametricLens(; multiplane = multiplane,
                                 z_lenses   = Float64[],
                                 components = lens_name,
                                 galaxies   = galaxies)
@@ -192,7 +192,7 @@ function _parametric(lens_dict::Dict, params::Vector{Parameter}, observation::Ob
       if length(unique(z_lenses)) < 2
          error("Multi-plane mode requires lenses at >= 2 distinct redshifts. Use multiplane: false otherwise.")
       end
-      return ParametricConfig(; multiplane = multiplane,
+      return ParametricLens(; multiplane = multiplane,
                                 z_lenses   = z_lenses,
                                 components = lens_name,
                                 galaxies   = galaxies)

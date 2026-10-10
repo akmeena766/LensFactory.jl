@@ -64,7 +64,7 @@ function _maxent(lens_dict::Dict, params::Vector{Parameter}, observation::Observ
       lens_name[i] = LensComponent(owner=lens_id, name=name)
    end
 
-   return MaxExtConfig(; multiplane = false,
+   return MaxEntLens(; multiplane = false,
                          components = lens_name, 
                          alpha      = alpha, 
                          pixels     = multi_pixel_lens)

@@ -25,9 +25,10 @@ export Observation
 export Parameter
 export SourceConfig
 export ScalingRelation
-export ParametricConfig
-export MaxExtConfig
-export NMConfig
+export ParametricLens
+export MaxEntLens
+export ParametricOptimizer
+export MaxEntOptimizer
 export OptimizerConfig
 export MHConfig
 export AIESConfig
@@ -95,7 +96,7 @@ end
    slope_cut::Float64
 end
 
-@kwdef struct ParametricConfig <: AbstractLensConfig
+@kwdef struct ParametricLens <: AbstractLensConfig
    multiplane::Bool
    z_lenses::Vector{Float64}
    components::Vector{LensComponent}
@@ -108,7 +109,7 @@ end
    κ::Vector{Float64}
 end
 
-@kwdef struct MaxExtConfig <: AbstractLensConfig
+@kwdef struct MaxEntLens <: AbstractLensConfig
    multiplane::Bool
    components::Vector{LensComponent}
    alpha::Float64
@@ -146,17 +147,25 @@ end
 # --------------------------------------------------------------------------------------------------
 # Abstract type: Optimizer
 # --------------------------------------------------------------------------------------------------
-@kwdef struct NMConfig <: AbstractOptimizerConfig
-   max_iter::Int64
-   tolerance::Float64
+@kwdef struct ParametricOptimizer <: AbstractOptimizerConfig
+   run_mode::Symbol
+   n_runs::Int64
+   tolerence::Float64
+end
+
+@kwdef struct MaxEntOptimizer <: AbstractOptimizerConfig
+   n_runs::Float64
+   save_runs::Bool
+   save_path::String
+   refine::Bool
+   refine_rounds::Int64
+   refine_factor::Float64
 end
 
 @kwdef struct OptimizerConfig <: AbstractOptimizerConfig
    method::Symbol
-   run_mode::Symbol
-   max_runs::Int64
-   tolerance::Float64
-   config::AbstractOptimizerConfig
+   MethodConfig::AbstractOptimizerConfig
+   OptimizerKeys::Dict{Symbol, Any}
 end
 
 
@@ -455,15 +464,17 @@ function LensConfig(method::Symbol; kwargs...)
                                 multiplane  = kwargs[:multiplane], 
                                 z_lenses    = kwargs[:z_lenses])
    elseif method == :MaxEnt
-      return MaxExtConfig(; pixel_size   = kwargs[:pixel_size])
+      return MaxEntConfig(; pixel_size   = kwargs[:pixel_size])
    else
       error("Unsupported lens model method: $method. Supported methods are: $(SUPPORTED_METHODS).")
    end
 end
 
+# Read lens model according to the specified method
 include("_ParametricIO.jl")
 include("_MaxEntIO.jl")
 
+# Read lens model according to the specified method
 function _lensmodel!(dict::Dict, params::Vector{Parameter}, observation::Observation, cosmo::Cosmology.AbstractCosmology)
    lens_dict = dict[:lens_model]
 
@@ -489,9 +500,9 @@ function _lensmodel!(dict::Dict, params::Vector{Parameter}, observation::Observa
 
    # Read inputs according to the specified method
    if method == :Parametric
-      return _parametric(lens_dict, params, observation, multiplane, cosmo)
+      return method, _parametric(lens_dict, params, observation, multiplane, cosmo)
    elseif method == :MaxEnt
-      return _maxent(lens_dict, params, observation)
+      return method, _maxent(lens_dict, params, observation)
    end
 end
 
@@ -954,25 +965,7 @@ end
 # --------------------------------------------------------------------------------------------------
 # ---------------- Read Optimizer ------------------------------------------------------------------
 # --------------------------------------------------------------------------------------------------
-const OPTIMIZER_META_KEYS = Set([:enabled, :convergence])
-
-# Infer method
-function _infer_method(dict::Dict, meta_keys::Set{Symbol})
-   found = nothing
-   for k in keys(dict)
-      k in meta_keys && continue
-      if found !== nothing 
-         error("Multiple modeling methods found. Please clarify.")
-      end
-      found = k
-   end
-   if found === nothing
-      error("No modeling method found.")
-   end
-   return found
-end
-
-function _optimizer!(sampling_dict::Dict)
+function _optimizer!(sampling_dict::Dict, method::Symbol)
    optimizer = get(sampling_dict, :optimizer, nothing)
 
    # Check if optimizer is missing or explicitly disabled
@@ -980,44 +973,33 @@ function _optimizer!(sampling_dict::Dict)
       return nothing
    end
 
-   # Infer optimizer method from keys
-   method = _infer_method(optimizer, OPTIMIZER_META_KEYS)
+   # Full optimizer config
+   config = sampling_dict[:optimizer]
 
-   # Method section may be empty (e.g. "NM:" with nothing below it) --> use all defaults
-   config = optimizer[method]
-   if config === nothing 
-      config = Dict{Symbol,Any}()
+   # Get optimizer method config details
+   method_config = nothing
+   if method == :Parametric
+      method_config = ParametricOptimizer(; run_mode  = String(get(config[method], :run_mode, "random")),
+                                            n_runs    = Int64(get(config[method], :n_runs, 10000)),
+                                            tolerance = Float64(get(config[method], :tolerance, 1e-3)))
+   elseif method == :MaxEnt
+      method_config = MaxEntOptimizer(; n_runs        = Int64(get(config[method], :n_runs, 10)),
+                                        save_runs     = Bool(get(config[method], :save_runs, false)),
+                                        save_path     = String(get(config[method], :save_path, "./")),
+                                        refine        = Bool(get(config[method], :refine, false)),
+                                        refine_rounds = Int64(get(config[method], :refine_rounds, 1)), 
+                                        refine_factor = Float64(get(config[method], :refine_factor, 1.0)))
+   else
+      error("Unknown method $method in sampling[:optimizer]")
    end
 
-   algorithm_config =
-      if method == :NM
-         NMConfig(
-            max_iter  = Int64(get(config, :max_iter, 10000)),
-            tolerance = Float64(get(config, :tolerance, 1e-6))
-         )
-      else
-         error("Unknown optimizer method: $method")
-      end
-   
-   # Convergence parameters (defaults defined here)
-   convergence = get(optimizer, :convergence, Dict{Symbol,Any}())
-   if convergence === nothing
-      convergence = Dict{Symbol,Any}()
-   end
+   # Get optimizer keys
+   other = only(k for k in keys(config) if k ∉ (:enabled, method))
+   optimizer_keys = get(config, other, Dict{Symbol,Any}())
 
-   if haskey(convergence, :run_mode)
-      convergence[:run_mode] = Symbol(convergence[:run_mode])
-   end
-
-   run_mode  = Symbol(get(convergence, :run_mode, :random))
-   max_runs  = Int64(get(convergence, :max_runs, 100))
-   tolerance = Float64(get(convergence, :tolerance, 1e-3))
-
-   return OptimizerConfig(method    = method, 
-                          run_mode  = run_mode,
-                          max_runs  = max_runs,
-                          tolerance = tolerance,
-                          config    = algorithm_config)
+   return OptimizerConfig(method        = method, 
+                          MethodConfig  = method_config,
+                          OptimizerKeys = optimizer_keys)
 end
 
 # --------------------------------------------------------------------------------------------------
@@ -1064,7 +1046,7 @@ end
 
 # Internal function: Process Lens Model section
 const SAMPLING_SCHEMES = Set([:SourcePlane, :ImagePlane_fast])
-function _sampling!(dict::Dict)
+function _sampling!(dict::Dict, method::Symbol)
    sampling_dict = dict[:sampling]
 
    # Get sampler details
@@ -1080,7 +1062,7 @@ function _sampling!(dict::Dict)
    verbose = get!(sampling_dict, :verbose, true)
 
    # Get optimizer details
-   optimizer_params = _optimizer!(sampling_dict)
+   optimizer_params = _optimizer!(sampling_dict, method)
 
    # Get MCMC details
    mcmc_params = _mcmc!(sampling_dict)
@@ -1111,7 +1093,7 @@ function _read_input(filename::AbstractString)
    observation = _observation(dict, cosmology)
 
    # Get lens model and its parameters
-   lens_config = _lensmodel!(dict, params, observation, cosmology)
+   method, lens_config = _lensmodel!(dict, params, observation, cosmology)
 
    # ---------------- Resolve the z-sampling mode --------------------------------------------------
    # Detect free cosmological parameters
@@ -1149,7 +1131,7 @@ function _read_input(filename::AbstractString)
    end
 
    # Get sampling details
-   sampler = _sampling!(dict)
+   sampler = _sampling!(dict, method)
 
    # Identify free parameters
    free_param_idxs = findall(p -> p.lower != p.upper, params)
