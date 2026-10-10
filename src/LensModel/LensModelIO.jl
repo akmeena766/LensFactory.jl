@@ -25,7 +25,8 @@ export Observation
 export Parameter
 export SourceConfig
 export ScalingRelation
-export LensConfig
+export ParametricConfig
+export MaxExtConfig
 export NMConfig
 export OptimizerConfig
 export MHConfig
@@ -94,7 +95,7 @@ end
    slope_cut::Float64
 end
 
-@kwdef struct ParametricLensConfig <: AbstractLensConfig
+@kwdef struct ParametricConfig <: AbstractLensConfig
    multiplane::Bool
    z_lenses::Vector{Float64}
    components::Vector{LensComponent}
@@ -198,7 +199,7 @@ end
 @kwdef struct ModelConfig <: AbstractLensConfig
    observation::Observation
    cosmology::Cosmology.AbstractCosmology
-   lens_config::LensConfig
+   lens_config::AbstractLensConfig
    source_config::SourceConfig
    parameters::Vector{Parameter}
    free_param_idxs::Vector{Int64}
