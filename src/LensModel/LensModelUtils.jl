@@ -113,17 +113,17 @@ function θ_lhs(model::ModelConfig, max_runs::Int64)
    return [vec(lhs_matrix[i, :]) for i in 1:max_runs]
 end
 
-function θ_initializer(model::ModelConfig; run_mode::Symbol=:random, max_runs::Int64=1)
+function θ_initializer(model::ModelConfig; run_mode::Symbol=:random, n_runs::Int64=1)
    if run_mode === :reference
-      return [θ_reference(model) for _ in 1:max_runs]
+      return [θ_reference(model) for _ in 1:n_runs]
    elseif run_mode === :jitter
-      return [θ_reference(model) .+ 1e-3 .* randn(length(model.free_param_idxs)) for _ in 1:max_runs]
+      return [θ_reference(model) .+ 1e-3 .* randn(length(model.free_param_idxs)) for _ in 1:n_runs]
    elseif run_mode === :random
-      return [θ_random(model) for _ in 1:max_runs]
+      return [θ_random(model) for _ in 1:n_runs]
    elseif run_mode === :grid
-      return θ_grid(model, max_runs)
+      return θ_grid(model, n_runs)
    elseif run_mode === :lhs
-      return θ_lhs(model, max_runs)
+      return θ_lhs(model, n_runs)
    else
       error("Unknown run_mode: $run_mode")
    end

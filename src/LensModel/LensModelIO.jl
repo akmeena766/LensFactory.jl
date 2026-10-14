@@ -150,7 +150,7 @@ end
 @kwdef struct ParametricOptimizer <: AbstractOptimizerConfig
    run_mode::Symbol
    n_runs::Int64
-   tolerence::Float64
+   tolerance::Float64
 end
 
 @kwdef struct MaxEntOptimizer <: AbstractOptimizerConfig
@@ -188,7 +188,7 @@ end
 
 @kwdef struct MCMCConfig <: AbstractMCMCConfig
    method::Symbol
-   config::AbstractMCMCConfig
+   MCMCKeys::AbstractMCMCConfig
 end
 
 @kwdef struct SamplerConfig <: AbstractLensConfig
@@ -966,29 +966,31 @@ end
 # ---------------- Read Optimizer ------------------------------------------------------------------
 # --------------------------------------------------------------------------------------------------
 function _optimizer!(sampling_dict::Dict, method::Symbol)
+   # Check if optimizer is missing
    optimizer = get(sampling_dict, :optimizer, nothing)
-
-   # Check if optimizer is missing or explicitly disabled
-   if optimizer === nothing || !get(optimizer, :enabled, true)
+   if optimizer === nothing
       return nothing
    end
 
-   # Full optimizer config
+   # Full optimizer config and check if the method is enabled
    config = sampling_dict[:optimizer]
+   if config[:enabled] === false
+      return nothing
+   end
 
-   # Get optimizer method config details
+   # Get optimizer method config details and set defaults if missing
    method_config = nothing
    if method == :Parametric
-      method_config = ParametricOptimizer(; run_mode  = String(get(config[method], :run_mode, "random")),
-                                            n_runs    = Int64(get(config[method], :n_runs, 10000)),
+      method_config = ParametricOptimizer(; run_mode  = Symbol(get(config[method],  :run_mode,  :random)),
+                                            n_runs    = Int64(get(config[method],   :n_runs,    10000)),
                                             tolerance = Float64(get(config[method], :tolerance, 1e-3)))
    elseif method == :MaxEnt
-      method_config = MaxEntOptimizer(; n_runs        = Int64(get(config[method], :n_runs, 10)),
-                                        save_runs     = Bool(get(config[method], :save_runs, false)),
-                                        save_path     = String(get(config[method], :save_path, "./")),
-                                        refine        = Bool(get(config[method], :refine, false)),
-                                        refine_rounds = Int64(get(config[method], :refine_rounds, 1)), 
-                                        refine_factor = Float64(get(config[method], :refine_factor, 1.0)))
+      method_config = MaxEntOptimizer(; n_runs        = Int64(get(config[method],   :n_runs,        10)),
+                                        save_runs     = Bool(get(config[method],    :save_runs,     false)),
+                                        save_path     = String(get(config[method],  :save_path,     "./")),
+                                        refine        = Bool(get(config[method],    :refine,        false)),
+                                        refine_rounds = Int64(get(config[method],   :refine_rounds, 1)), 
+                                        refine_factor = Float64(get(config[method], :refine_factor, 1)))
    else
       error("Unknown method $method in sampling[:optimizer]")
    end
@@ -1005,43 +1007,40 @@ end
 # --------------------------------------------------------------------------------------------------
 # ---------------- Read MCMC -----------------------------------------------------------------------
 # --------------------------------------------------------------------------------------------------
-const MCMC_META_KEYS = Set([:enabled])
 function _mcmc!(sampling_dict::Dict)
+   # Check if mcmc is missing
    mcmc = get(sampling_dict, :mcmc, nothing)
+   if mcmc === nothing
+      return nothing
+   end
 
-   # Check if mcmc is missing or explicitly disabled
-   if mcmc === nothing || !get(mcmc, :enabled, true)
+   # Check if mcmc is disabled
+   if mcmc[:enabled] === false
       return nothing
    end
 
    # Infer mcmc method from keys
-   method = _infer_method(mcmc, MCMC_META_KEYS)
-   
-   # Method section may be empty (e.g. "AIES:" with nothing below it) --> use all defaults
-   config = mcmc[method]
-   if config === nothing
-      config = Dict{Symbol,Any}()
-   end
+   method = only(k for k in keys(mcmc) if k ∉ Set([:enabled]))
 
-   algorithm_config =
-      if method == :MH
-         n_steps = Int64(get(config, :n_steps, 10000))
-         MHConfig(
-            n_walkers = Int64(get(config, :n_walkers, 1)),
-            n_steps   = n_steps,
-            n_adapt   = Int64(get(config, :n_adapt, div(n_steps, 10)))
-         )
-      elseif method == :AIES
-         AIESConfig(
-            n_walkers = Int64(get(config, :n_walkers, 100)),
-            n_steps   = Int64(get(config, :n_steps, 100000)),
-            a         = Float64(get(config, :a, 2.0))
-         )
-      else
-         error("Unknown MCMC method: $method")
-      end
-   
-   return MCMCConfig(method = method, config = algorithm_config)
+   # Read method config and set defaults if missing
+   config = mcmc[method]
+
+   # Get MCMC method config details and set defaults if missing
+   method_config = nothing
+   if method == :MH
+      method_config = MHConfig(; n_walkers = Int64(get(config, :n_walkers, 1)),
+                                 n_steps   = Int64(get(config, :n_steps,   100000)),
+                                 n_adapt   = Int64(get(config, :n_adapt,   div(n_steps, 10))))
+   elseif method == :AIES
+      method_config = AIESConfig(; n_walkers = Int64(get(config,   :n_walkers, 100)),
+                                   n_steps   = Int64(get(config,   :n_steps,   100000)),
+                                   a         = Float64(get(config, :a,         2.0))
+      )
+   else
+      error("Unknown MCMC method: $method")
+   end
+   return MCMCConfig(method   = method, 
+                     MCMCKeys = method_config)
 end
 
 # Internal function: Process Lens Model section

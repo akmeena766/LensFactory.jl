@@ -50,9 +50,9 @@ export nmsmax
 #  - C. T. Kelley, Iterative Methods for Optimization, SIAM, 1999.
 # """
 function nmsmax(fun, x; 
-                       tol::Float64            = 1e-3,
+                       tolerance::Float64      = 1e-3,
                        target_f::Float64       = Inf,
-                       max_its::Real           = Inf,
+                       iterations::Real        = Inf,
                        max_evals::Real         = Inf,
                        initial_simplex::Symbol = :regular,
                        trace::Bool             = false)
@@ -144,7 +144,7 @@ function nmsmax(fun, x;
       end
 
       # Stopping Test 3 - too many iterations?
-      if n_iters > max_its
+      if n_iters > iterations
          msg = "Max no. of iterations exceeded...quitting\n"
          break
       end
@@ -152,8 +152,8 @@ function nmsmax(fun, x;
       # Stopping Test 4 - converged?   This is test (4.3) in [1].
       best         = simplex[:,1]
       size_simplex = sum(abs.(simplex[:, 2:end] .- best)) / max(1.0, sum(abs.(best)))
-      if size_simplex <= tol
-         msg = @sprintf("Converged: simplex size %.5g ≤ %.5g", size_simplex, tol)
+      if size_simplex <= tolerance
+         msg = @sprintf("Converged: simplex size %.5g ≤ %.5g", size_simplex, tolerance)
          converged = true
          break
       end

@@ -184,26 +184,24 @@ end
 # --------------------------------------------------------------------------------------------------
 # Run Optimizer
 # --------------------------------------------------------------------------------------------------
-function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real}, opt::OptimizerConfig, cfg::Dict{Symbol, Any}, verbose::Bool)
+function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real}, method_cfg::ParametricOptimizer, opt_cfg::Dict{Symbol, Any}, verbose::Bool)
    # Initialize free parameter vector
-   θ_initial = θ_initializer(model; run_mode=opt.run_mode, max_runs=opt.max_runs)
-
-
+   θ_initial = LensModelUtils.θ_initializer(model; run_mode = method_cfg.run_mode, 
+                                                   n_runs   = method_cfg.n_runs)
    # Number of runs
    n_runs = length(θ_initial)
 
    # Store results to check for convergence
    results = Vector{Union{Nothing, NamedTuple{(:θ, :f), Tuple{Vector{Float64}, Float64}}}}(nothing, n_runs)
 
-   # Progress bar setup
+   # Progress bar setup and threaded execution
    p = Progress(n_runs; dt=0.1, desc="Running Nelder-Mead Optimizer... ")
-   
    @threads for i in 1:n_runs
       # Copying input ensures thread isolation
       θ0 = copy(θ_initial[i])
 
       # Call optimizer
-      θ_opt, fmax, _, _, converged = nmsmax(x -> objective(model, x, param_ref), θ0; tol = cfg[:tolerance], max_its = cfg[:n_runs])
+      θ_opt, fmax, _, _, converged = nmsmax(x -> objective(model, x, param_ref), θ0; opt_cfg...)
 
       # Write to the specific memory slot reserved for individual run
       if converged
@@ -226,10 +224,9 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
    best_val = converged_results[1].f
 
    # Statistics and consistency checks
-   total_runs = opt.max_runs
+   total_runs      = method_cfg.n_runs
    total_converged = length(converged_results)
    same_best_count = 0
-   
    for result in converged_results
       # Calculate relative difference for parameters (avoiding division by zero)
       # Using 1e-8 as a floor to handle parameters that are exactly 0.0
@@ -239,14 +236,14 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
       rel_diff_f = abs(result.f - best_val) / (abs(best_val) + 1e-8)
 
       # Check if all parameters are within percentage tolerance (e.g., 0.1% = 0.001)
-      if all(rel_diff_θ .< opt.tolerance) && (rel_diff_f < opt.tolerance)
-         same_best_count += 1
+      if all(rel_diff_θ .< method_cfg.tolerance) && (rel_diff_f < method_cfg.tolerance)
+         same_best_count = same_best_count + 1
       end
    end
 
    # Calculate the percentage
-   conv_rate = (total_converged / total_runs) * 100
-   stability_rate = (same_best_count / total_converged) * 100
+   convergence_rate = (total_converged / total_runs) * 100
+   stability_rate   = (same_best_count / total_converged) * 100
 
    # Print statistics
    if verbose
@@ -261,7 +258,7 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
       
       val_r = 
          "| " * rpad(total_runs, 8) * 
-         "| " * rpad("$(round(conv_rate, digits=1))%", 15) * 
+         "| " * rpad("$(round(convergence_rate, digits=1))%", 15) * 
          "| " * rpad("$(round(stability_rate, digits=1))%", 13) * 
          "| " * rpad(round(-best_val, digits=4), w) * 
          "|"
@@ -275,7 +272,7 @@ end
 # Main optimizer function (wrapper to use multiple dispatch)
 function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real}, verbose::Bool)
    opt = model.sampler.optimizer
-   return run_optimizer(model, param_ref, opt, opt.config, verbose)
+   return run_optimizer(model, param_ref, opt.MethodConfig, opt.OptimizerKeys, verbose)
 end
 
 
@@ -387,7 +384,7 @@ function _fit_model(model::ModelConfig; save::Bool=true, file_name::Union{String
 
    # MCMC
    chains = nothing
-   logL = nothing
+   logL   = nothing
    if sampler.mcmc !== nothing
       chains, logL = run_mcmc(model, param_ref, θ_start, verbose)
    end
