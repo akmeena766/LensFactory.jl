@@ -56,4 +56,10 @@ export SingularityMap
 include("./LensModel/LensModel.jl")
 export LensModel
 
+
+# --------------------------------------------------------------------------------------------------
+# Command-line interface (`LensFactory input.yaml`)
+# --------------------------------------------------------------------------------------------------
+include("./CLI.jl")
+
 end
