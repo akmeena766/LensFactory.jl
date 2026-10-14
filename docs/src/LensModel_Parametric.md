@@ -18,4 +18,28 @@ cosmology:
 source:
   from_file: true
   source_file: A370_images.txt
+
+lens_model:
+  method: Parametric
+  multiplane: false
+  total_lenses: 5
+  lens1:
+
+sampling:
+  scheme: SourcePlane
+  verbose: true
+  optimizer:
+    enabled: true
+    Parametric:
+      run_mode: random
+      n_runs: 10000
+      tolerance: 1E-2
+    NM:
+      iterations: 100000
+      tolerance: 1e-6
+  mcmc:
+    enabled: true
+    AIES:
+      n_chains: 12
+      n_steps: 500000
 ```
