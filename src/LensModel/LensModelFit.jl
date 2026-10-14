@@ -352,14 +352,14 @@ function run_mcmc(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol}, <:Re
    mcmc = model.sampler.mcmc
 
    # Initialize seeds (No optimizer → random initial parameters)
-   n_walkers = mcmc.config.n_walkers
-   seeds = if θ_start !== nothing
-      get_best_seeds(θ_start, n_walkers)
+   n_walkers = mcmc.MCMCKeys.n_walkers
+   seeds = []
+   if θ_start !== nothing
+      seeds = get_best_seeds(θ_start, n_walkers)
    else
-      [LensModelUtils.θ_random(model) for _ in 1:n_walkers]
+      seeds = [LensModelUtils.θ_random(model) for _ in 1:n_walkers]
    end
-
-   return run_mcmc(model, mcmc.config, param_ref, seeds, verbose)
+   return run_mcmc(model, mcmc.MCMCKeys, param_ref, seeds, verbose)
 end
 
 

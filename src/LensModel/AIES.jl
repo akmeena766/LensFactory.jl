@@ -129,7 +129,6 @@ function aies_runner(log_posterior::Function,
    # Row 1 is seed-filling only — no ticks for that.
    # -----------------------------------------------------------------------------------------------
    p = Progress((n_steps - 1) * n_walkers; dt=0.1, desc="Sampling Posterior (AIES)... ")
-
    for i in 2:n_steps
       for (active, inactive) in divisions
          n_active = length(active)

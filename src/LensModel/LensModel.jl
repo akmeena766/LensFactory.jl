@@ -1241,7 +1241,7 @@ function predict_image(data_jld2::JLD2.JLDFile, θx::T, θy::T, z_s::Float64; un
    logL   = data_jld2["logL"]
 
    # Get best-fit lens model
-   best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_logL=logL)
+   best_model, _ = get_best_model(model; chains=chains, logL=logL)
 
    # Construct grid
    FOV = model.observation.FOV
