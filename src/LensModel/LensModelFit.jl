@@ -374,10 +374,8 @@ function _fit_model(model::ModelConfig; save::Bool=true, file_name::Union{String
    # Freeze reference once
    param_ref = Dict(p.key => p.refer for p in model.parameters)
 
-   # Initial guess
-   θ_start = nothing
-
    # Optimization
+   θ_start = nothing
    if sampler.optimizer !== nothing
       θ_start = run_optimizer(model, param_ref, verbose)
    end
