@@ -148,12 +148,12 @@ const _CLI_COMMANDS = Dict(
 # --------------------------------------------------------------------------------------------------
 # Entry point
 # --------------------------------------------------------------------------------------------------
-"""
-    LensFactory.main(args::Vector{String})
+# """
+#     LensFactory.main(args::Vector{String})
 
-Entry point of the `LensFactory` command-line tool, e.g. `LensFactory fit input.yaml`.
-Returns the process exit code: 0 on success, 1 if the command failed and 2 for invalid arguments.
-"""
+# Entry point of the `LensFactory` command-line tool, e.g. `LensFactory fit input.yaml`.
+# Returns the process exit code: 0 on success, 1 if the command failed and 2 for invalid arguments.
+# """
 function (@main)(args::Vector{String})
    rest = args
    if isempty(rest)
