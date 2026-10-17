@@ -46,6 +46,9 @@ include("./MultiGaussianLens.jl")
 include("./MultiPixelLens.jl")
 include("./MultiPJELens.jl")
 
+# Point-source image finder module
+include("./ImageFinder.jl")
+
 
 # --------------------------------------------------------------------------------------------------
 # Functions to export
@@ -719,17 +722,62 @@ end
 
 
 """
-    get_image(lens::AbstractLens, θx::T, θy::T, 
-              adis::Real, 
-              β::NTuple{2, Real}) where T <: AbstractMatrix{<:Real} --> Vector{NTuple{2, Real}}
-Calculate image positions for a given lens model and point source position. To get the image 
-positions, this implementation finds the intersection points of contours corresponding to,
+    get_image(lens::AbstractLens, θx::T, θy::T, adis::Real, β::NTuple{2, Real};
+              method::Symbol  = :contour,
+              tolerence::Real = 1.0E-6,
+              max_levels::Int = 20,
+              max_newton::Int = 20) where T <: AbstractMatrix{<:Real} --> Vector{NTuple{2, Real}}
+Calculate image positions for a given lens model and point source position, i.e., the solution of,
 ```math
 \\pmb{β} - \\pmb{θ} + a_{\\rm dis} \\, \\pmb{α}(\\pmb{θ}) = 0,
 ```
 where ``\\pmb{β}`` is the source position, ``\\pmb{θ}`` is the image plane grid, ``a_{\\rm dis}`` 
-is the distance ratio (i.e., ``D_{ds}/D_s``), and ``\\pmb{α}(\\pmb{θ})`` is the deflection angle. 
+is the distance ratio (i.e., ``D_{ds}/D_s``), and ``\\pmb{α}(\\pmb{θ})`` is the deflection angle.
+
+Currently, two methods are available:
+- `:contour`: Contour method (default). This method uses contour finding and intersection finding 
+   to locate the image positions. The accuracy is limited by the grid resolution and can be slow for
+   large grids.
+
+- `:adaptive`: Adaptive method. This method splits every grid cell into two triangles and keeps only
+   those that contains ``\\pmb{β}`` in the source plane. After than, it recursively subdivides them 
+   until they are smaller than `tolerence`. 
+
+# Arguments
+- `lens`: Lens model.
+- `θx`  : x-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `θy`  : y-grid (in ``\\rm \\mathbf{arcseconds}``).
+- `adis`: Distance ratio (i.e., ``D_{ds}/D_s``).
+- `β`   : Point source position (in ``\\rm \\mathbf{arcseconds}``).
+
+# Keyword Arguments
+- `method     = :contour`: Either `:contour` or `:adaptive`.
+- `tol_images = 1.0E-4`  : (`:adaptive` only) Target size of refined triangles (in ``\\rm \\mathbf{arcseconds}``).
+- `tol_source = 1.0E-2`  : (`:adaptive` only) Target source-plane residual (in ``\\rm \\mathbf{arcseconds}``).
+- `max_levels = 20`      : (`:adaptive` only) Maximum allowed source-plane residual (in ``\\rm \\mathbf{arcseconds}``).
+- `max_newton = 20`      : (`:adaptive` only) Maximum number of Newton iterations.
+
+# Returns
+- `image_position`: Vector of image positions (in ``\\rm \\mathbf{arcseconds``).
 """
+# function get_image(lens::AbstractLens, θx::T, θy::T, adis::Real, β::NTuple{2, Real};
+#                    method::Symbol   = :contour,
+#                    tol_images::Real = 1.0E-4,
+#                    tol_source::Real = 1.0E-2,
+#                    max_levels::Int  = 20,
+#                    max_newton::Int  = 20) where T <: AbstractMatrix{<:Real}
+#    if method == :contour
+#       return ImageFinder.get_image(lens, θx, θy, adis, β)
+#    elseif method == :adaptive
+#       return AdaptiveFinder.get_image(lens, θx, θy, adis, β; 
+#                                       tol_images = tol_images,
+#                                       tol_source = tol_source,
+#                                       max_levels = max_levels,
+#                                       max_newton = max_newton)
+#    else
+#       throw(ArgumentError("Invalid $method. Choose either :contour or :adaptive."))
+#    end
+# end
 function get_image(lens::AbstractLens, θx::T, θy::T, adis::Real, β::NTuple{2, Real}) where T <: AbstractMatrix{<:Real}
    # Get the potential gradient
    ψx, ψy = get_deflection(lens, θx, θy)
