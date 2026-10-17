@@ -724,7 +724,9 @@ end
 """
     get_image(lens::AbstractLens, θx::T, θy::T, adis::Real, β::NTuple{2, Real};
               method::Symbol  = :contour,
-              tolerence::Real = 1.0E-6,
+              tol_images::Real = 1.0E-8,
+              tol_refine::Real = 1.0E-3,
+              tol_source::Real = 1.0E-6,
               max_levels::Int = 20,
               max_newton::Int = 20) where T <: AbstractMatrix{<:Real} --> Vector{NTuple{2, Real}}
 Calculate image positions for a given lens model and point source position, i.e., the solution of,
@@ -752,55 +754,58 @@ Currently, two methods are available:
 
 # Keyword Arguments
 - `method     = :contour`: Either `:contour` or `:adaptive`.
-- `tol_images = 1.0E-4`  : (`:adaptive` only) Target size of refined triangles (in ``\\rm \\mathbf{arcseconds}``).
-- `tol_source = 1.0E-2`  : (`:adaptive` only) Target source-plane residual (in ``\\rm \\mathbf{arcseconds}``).
+- `tol_images = 1.0E-8`  : (`:adaptive` only) Target size of refined triangles (in ``\\rm \\mathbf{arcseconds}``).
+- `tol_refine = 1.0E-3`  : (`:adaptive` only) Target size at which Newton-Raphson takes over (in ``\\rm \\mathbf{arcseconds}``).
+- `tol_source = 1.0E-6`  : (`:adaptive` only) Target source-plane residual (in ``\\rm \\mathbf{arcseconds}``).
 - `max_levels = 20`      : (`:adaptive` only) Maximum allowed source-plane residual (in ``\\rm \\mathbf{arcseconds}``).
 - `max_newton = 20`      : (`:adaptive` only) Maximum number of Newton iterations.
 
 # Returns
 - `image_position`: Vector of image positions (in ``\\rm \\mathbf{arcseconds``).
 """
-# function get_image(lens::AbstractLens, θx::T, θy::T, adis::Real, β::NTuple{2, Real};
-#                    method::Symbol   = :contour,
-#                    tol_images::Real = 1.0E-4,
-#                    tol_source::Real = 1.0E-2,
-#                    max_levels::Int  = 20,
-#                    max_newton::Int  = 20) where T <: AbstractMatrix{<:Real}
-#    if method == :contour
-#       return ImageFinder.get_image(lens, θx, θy, adis, β)
-#    elseif method == :adaptive
-#       return AdaptiveFinder.get_image(lens, θx, θy, adis, β; 
-#                                       tol_images = tol_images,
-#                                       tol_source = tol_source,
-#                                       max_levels = max_levels,
-#                                       max_newton = max_newton)
-#    else
-#       throw(ArgumentError("Invalid $method. Choose either :contour or :adaptive."))
-#    end
-# end
-function get_image(lens::AbstractLens, θx::T, θy::T, adis::Real, β::NTuple{2, Real}) where T <: AbstractMatrix{<:Real}
-   # Get the potential gradient
-   ψx, ψy = get_deflection(lens, θx, θy)
-
-   # Get grid for contour
-   RXC = ContourFinder.get_contour(θx, θy, β[1] .- θx .+ adis .* ψx, 0.0)
-   RYC = ContourFinder.get_contour(θx, θy, β[2] .- θy .+ adis .* ψy, 0.0)
-
-   # Initialize empty Vector of tuples to store image positions
-   image_position::Vector{NTuple{2, Real}} = []
-   for contour_1 in RXC
-      for contour_2 in RYC
-         # Find the intersection points
-         intersect_points = IntersectionFinder.get_intersection(first.(contour_1), last.(contour_1), first.(contour_2), last.(contour_2))
-         
-         # Store the intersection points in the image_position vector
-         for point in intersect_points
-            push!(image_position, point)
-         end
-      end
+function get_image(lens::AbstractLens, θx::T, θy::T, adis::Real, β::NTuple{2, Real};
+                   method::Symbol   = :contour,
+                   tol_images::Real = 1.0E-8,
+                   tol_refine::Real = 1.0E-3,
+                   tol_source::Real = 1.0E-6,
+                   max_levels::Int  = 20,
+                   max_newton::Int  = 20) where T <: AbstractMatrix{<:Real}
+   # Make sure the method is either :contour or :adaptive
+   if !(method === :contour || method === :adaptive)
+      throw(ArgumentError("Unknown method `:$method`; use `:contour` or `:adaptive`."))
    end
-   return image_position
+
+   # Lens mapping θ -> β on the full grid
+   ψx, ψy = get_deflection(lens, θx, θy)
+   βx_grid = θx .- adis .* ψx
+   βy_grid = θy .- adis .* ψy
+
+   # Get images and retunr
+   if method == :contour
+      return ImageFinder.find_images_contour(θx, θy, βx_grid, βy_grid, β)
+   elseif method == :adaptive
+      # Lens equation, β = θ - adis α(θ), at a single point
+      function lens_map(x, y)
+         αx, αy = get_deflection(lens, x, y)
+         return x - adis * αx, y - adis * αy
+      end
+
+      # Its Jacobian, A = ∂β/∂θ = I - adis ∇∇ψ, as (A11, A12, A21, A22)
+      function lens_jac(x, y)
+         ψxx, ψyy, ψxy = get_jacobian(lens, x, y)
+         return 1.0 - adis * ψxx, -adis * ψxy, -adis * ψxy, 1.0 - adis * ψyy
+      end
+      return ImageFinder.find_images_adaptive(lens_map, lens_jac, θx, θy, βx_grid, βy_grid, β; 
+                                              tol_images = tol_images,
+                                              tol_refine = tol_refine,
+                                              tol_source = tol_source,
+                                              max_levels = max_levels,
+                                              max_newton = max_newton)
+   else
+      throw(ArgumentError("Invalid $method. Choose either :contour or :adaptive."))
+   end
 end
+
 
 """
     get_image(lens::AbstractLens, θx::T, θy::T, 
