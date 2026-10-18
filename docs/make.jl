@@ -50,7 +50,8 @@ makedocs(
                         "Multi-Gaussian Lens"          => "MultiGaussianLens.md",
                         "Multi-Pixel Lens"             => "MultiPixelLens.md",
                         "Multi-PJE Lens"               => "MultiPJELens.md",
-                        "Composite Lens"               => "CompositeLens.md"
+                        "Composite Lens"               => "CompositeLens.md",
+                        "Image Finder"                 => "ImageFinder.md"
                         ],
             "MultiPlane"     => "MultiPlane.md",
             "Sources"        => "Sources.md",

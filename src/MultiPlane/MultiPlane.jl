@@ -654,11 +654,25 @@ end
 """
     get_image(cosmology::Cosmology.AbstractCosmology, 
               lens::Lenses.AbstractLens, 
-              θx::T, θy::T, z_s::Real, β::NTuple{2, Real}) where T <: Matrix{<:Real}
+              θx::T, θy::T, z_s::Real, β::NTuple{2, Real};
+              method::Symbol   = :contour,
+              tol_images::Real = 1.0E-8,
+              tol_refine::Real = 1.0E-3,
+              tol_source::Real = 1.0E-6,
+              max_levels::Int  = 20,
+              max_newton::Int  = 20) where T <: Matrix{<:Real}
 Calculate image positions for a given source position in the source plane for a given multi-plane 
-lens system with cosmology and source redshift. The function uses a contour-finding method to 
-compute the image positions by finding the intersection of contours corresponding to the lens 
-equation in the image plane.
+lens system with cosmology and source redshift.
+
+Currently, two methods are available:
+- `:contour`: Contour method (default). This method uses contour finding and intersection finding 
+   to locate the image positions. The accuracy is limited by the grid resolution and can be slow for
+   large grids. See [`Lenses.ImageFinder.find_images_contour`](@ref).
+
+- `:adaptive`: Adaptive method. This method splits every grid cell into two triangles and keeps only
+   those that contains ``\\pmb{β}`` in the source plane until we reach `tol_refine`. After that 
+   Newton-Raphson refine the image position until `tol_image`. The accuracy is independent of the 
+   grid resolution. See [`Lenses.ImageFinder.find_images_adaptive`](@ref).
 
 # Arguments
 - `cosmology::Cosmology.AbstractCosmology`: Cosmology model.
@@ -668,31 +682,62 @@ equation in the image plane.
 - `z_s::Real`: The redshift of the source plane.
 - `β::NTuple{2, Real}`: The source plane position (in arcseconds) as a tuple (βx, βy).
 
+# Keyword Arguments
+- `method     = :contour`: Either `:contour` or `:adaptive`.
+- `tol_images = 1.0E-8`  : (`:adaptive` only) Target size of refined triangles (in ``\\rm \\mathbf{arcseconds}``).
+- `tol_refine = 1.0E-3`  : (`:adaptive` only) Target size at which Newton-Raphson takes over (in ``\\rm \\mathbf{arcseconds}``).
+- `tol_source = 1.0E-6`  : (`:adaptive` only) Target source-plane residual (in ``\\rm \\mathbf{arcseconds}``).
+- `max_levels = 20`      : (`:adaptive` only) Maximum allowed source-plane residual (in ``\\rm \\mathbf{arcseconds}``).
+- `max_newton = 20`      : (`:adaptive` only) Maximum number of Newton iterations.
+
 # Returns
 - `image_position`: A vector of tuples containing the image positions (in arcseconds).
 """
-function get_image(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, z_s::Real, β::NTuple{2, <:Real}) where T <: Matrix{<:Real}
-   # Get the potential gradient
-   ψx, ψy = get_deflection(cosmology, lens, θx, θy, z_s)
-
-   # Get grid for contour
-   RXC = ContourFinder.get_contour(θx, θy, β[1] .- θx .+ ψx, 0.0)
-   RYC = ContourFinder.get_contour(θx, θy, β[2] .- θy .+ ψy, 0.0)
-
-   # Initialize empty Vector of tuples to store image positions
-   image_position::Vector{NTuple{2, Real}} = []
-   for contour_1 in RXC
-      for contour_2 in RYC
-         # Find the intersection points
-         intersect_points = IntersectionFinder.get_intersection( first.(contour_1), last.(contour_1), first.(contour_2), last.(contour_2) )
-         
-         # Store the intersection points in the image_position vector
-         for point in intersect_points
-            push!(image_position, point)
-         end
-      end
+function get_image(cosmology::Cosmology.AbstractCosmology, 
+                   lens::Lenses.AbstractLens, 
+                   θx::T, θy::T, z_s::Real, β::NTuple{2, <:Real};
+                   method::Symbol   = :contour,
+                   tol_images::Real = 1.0E-8,
+                   tol_refine::Real = 1.0E-3,
+                   tol_source::Real = 1.0E-6,
+                   max_levels::Int  = 20,
+                   max_newton::Int  = 20) where T <: Matrix{<:Real}
+   # Make sure the method is either :contour or :adaptive
+   if !(method === :contour || method === :adaptive)
+      throw(ArgumentError("Unknown method `:$method`; use `:contour` or `:adaptive`."))
    end
-   return image_position
+
+   # Lens mapping θ -> β on the full grid
+   ψx, ψy = get_deflection(cosmology, lens, θx, θy, z_s)
+   βx_grid = θx .- ψx
+   βy_grid = θy .- ψy
+
+   # Get images and return 
+   if method === :contour
+      return Lenses.ImageFinder.find_images_contour(θx, θy, βx_grid, βy_grid, β)
+   else
+      # Distance ratios are computed once and reused for every ray
+      _, adis_ij, adis_is = _distances(cosmology, lens, z_s)
+
+      # Lens equation, β = θ - α(θ), at a single point
+      function lens_map(x, y)
+         αx, αy = get_deflection(lens, Float64(x), Float64(y), adis_ij, adis_is)
+         return x - αx, y - αy
+      end
+
+      # Jacobian, A = ∂β/∂θ = I - ∂α/∂θ, as (A11, A12, A21, A22)
+      function lens_jac(x, y)
+         ψxx, ψyy, ψxy, ψyx = get_jacobian(lens, Float64(x), Float64(y), adis_ij, adis_is)
+         return 1.0 - ψxx, -ψxy, -ψyx, 1.0 - ψyy
+      end
+
+      return ImageFinder.find_images_adaptive(lens_map, lens_jac, θx, θy, βx_grid, βy_grid, β; 
+                                              tol_images = tol_images,
+                                              tol_refine = tol_refine,
+                                              tol_source = tol_source,
+                                              max_levels = max_levels,
+                                              max_newton = max_newton)
+   end
 end
 
 
@@ -715,7 +760,9 @@ system with cosmology and source redshift.
 # Returns
 - `image_map`: The image plane map corresponding to the given extended source.
 """
-function get_image(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, z_s::Real, β::T) where T <: Matrix{<:Real}
+function get_image(cosmology::Cosmology.AbstractCosmology, 
+                   lens::Lenses.AbstractLens, 
+                   θx::T, θy::T, z_s::Real, β::T) where T <: Matrix{<:Real}
    # Get the potential gradient
    ψx, ψy = get_deflection(cosmology, lens, θx, θy, z_s)
 

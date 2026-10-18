@@ -723,13 +723,13 @@ end
 
 """
     get_image(lens::AbstractLens, θx::T, θy::T, adis::Real, β::NTuple{2, Real};
-              method::Symbol  = :contour,
+              method::Symbol   = :contour,
               tol_images::Real = 1.0E-8,
               tol_refine::Real = 1.0E-3,
               tol_source::Real = 1.0E-6,
-              max_levels::Int = 20,
-              max_newton::Int = 20) where T <: AbstractMatrix{<:Real} --> Vector{NTuple{2, Real}}
-Calculate image positions for a given lens model and point source position, i.e., the solution of,
+              max_levels::Int  = 20,
+              max_newton::Int  = 20) where T <: AbstractMatrix{<:Real} --> Vector{NTuple{2, Real}}
+Calculate image positions for a given lens model and point source position, i.e., the solutions of,
 ```math
 \\pmb{β} - \\pmb{θ} + a_{\\rm dis} \\, \\pmb{α}(\\pmb{θ}) = 0,
 ```
@@ -739,11 +739,12 @@ is the distance ratio (i.e., ``D_{ds}/D_s``), and ``\\pmb{α}(\\pmb{θ})`` is th
 Currently, two methods are available:
 - `:contour`: Contour method (default). This method uses contour finding and intersection finding 
    to locate the image positions. The accuracy is limited by the grid resolution and can be slow for
-   large grids.
+   large grids. See [`Lenses.ImageFinder.find_images_contour`](@ref).
 
 - `:adaptive`: Adaptive method. This method splits every grid cell into two triangles and keeps only
-   those that contains ``\\pmb{β}`` in the source plane. After than, it recursively subdivides them 
-   until they are smaller than `tolerence`. 
+   those that contains ``\\pmb{β}`` in the source plane until we reach `tol_refine`. After that 
+   Newton-Raphson refine the image position until `tol_image`. The accuracy is independent of the 
+   grid resolution. See [`Lenses.ImageFinder.find_images_adaptive`](@ref).
 
 # Arguments
 - `lens`: Lens model.
@@ -780,7 +781,7 @@ function get_image(lens::AbstractLens, θx::T, θy::T, adis::Real, β::NTuple{2,
    βx_grid = θx .- adis .* ψx
    βy_grid = θy .- adis .* ψy
 
-   # Get images and retunr
+   # Get images and return
    if method == :contour
       return ImageFinder.find_images_contour(θx, θy, βx_grid, βy_grid, β)
    elseif method == :adaptive
