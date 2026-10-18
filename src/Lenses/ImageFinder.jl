@@ -123,6 +123,39 @@ end
    return Float64(a11 * a22 - a12 * a21)
 end
 
+# Estimate the non-linearity of the lens mapping at every grid node from second differences
+# (`c`, along x and y) and in every cell from the mixed difference (`m`); non-finite values → 0
+function _grid_curvature(βx::AbstractMatrix{<:Real}, βy::AbstractMatrix{<:Real})
+   ax1, ax2 = axes(βx, 1), axes(βx, 2)
+   
+   c = zeros(Float64, size(βx))
+   m = zeros(Float64, size(βx))
+   
+   i0, i1 = first(ax1), last(ax1)
+   j0, j1 = first(ax2), last(ax2)
+   @inbounds for j in ax2
+      @inbounds for i in ax1
+         ci = i - i0 + 1
+         cj = j - j0 + 1
+         if i0 < i < i1
+            v = hypot(βx[i+1, j] - 2βx[i, j] + βx[i-1, j], βy[i+1, j] - 2βy[i, j] + βy[i-1, j])
+            c[ci, cj] = max(c[ci, cj], _finite_or_zero(Float64(v)))
+         end
+         if j0 < j < j1
+            v = hypot(βx[i, j+1] - 2βx[i, j] + βx[i, j-1], βy[i, j+1] - 2βy[i, j] + βy[i, j-1])
+            c[ci, cj] = max(c[ci, cj], _finite_or_zero(Float64(v)))
+         end
+         if i < i1 && j < j1
+            v = hypot(βx[i+1, j+1] - βx[i+1, j] - βx[i, j+1] + βx[i, j],
+                      βy[i+1, j+1] - βy[i+1, j] - βy[i, j+1] + βy[i, j])
+            m[ci, cj] = _finite_or_zero(Float64(v))
+         end
+      end
+   end
+   return c, m
+end
+
+
 
 
 """
@@ -180,6 +213,30 @@ function find_images_adaptive(lens_map::F, lens_jac::G,
    # -----------------------------------------------------------------------------------------------
    #  Level 0: two triangles per grid cell
    # -----------------------------------------------------------------------------------------------
+   c, m = _grid_curvature(βx, βy)
+   active = _Tri[]
+
+   ax1, ax2 = axes(θx, 1), axes(θx, 2)
+   i0 = first(ax1) 
+   j0 = first(ax2)
+
+   @inbounds for j in j0:last(ax2)-1
+      @inbounds for i in i0:last(ax1)-1
+         ci = i - i0 + 1
+         cj = j - j0 + 1
+         δ  = cfac_f * max(c[ci, cj], c[ci+1, cj], c[ci, cj+1], c[ci+1, cj+1], m[ci, cj])
+
+         v00 = (Float64(θx[i,   j  ]), Float64(θy[i,   j  ]))
+         v10 = (Float64(θx[i+1, j  ]), Float64(θy[i+1, j  ]))
+         v01 = (Float64(θx[i,   j+1]), Float64(θy[i,   j+1]))
+         v11 = (Float64(θx[i+1, j+1]), Float64(θy[i+1, j+1]))
+         b00 = (Float64(βx[i,   j  ]), Float64(βy[i,   j  ]))
+         b10 = (Float64(βx[i+1, j  ]), Float64(βy[i+1, j  ]))
+         b01 = (Float64(βx[i,   j+1]), Float64(βy[i,   j+1]))
+         b11 = (Float64(βx[i+1, j+1]), Float64(βy[i+1, j+1]))
+         
+      end
+   end
 
 
 end
