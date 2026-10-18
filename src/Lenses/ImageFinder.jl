@@ -158,6 +158,15 @@ end
    return hypot(p[1] - (a[1] + s * dx), p[2] - (a[2] + s * dy))
 end
 
+# Is `p` inside triangle `t` (barycentric coordinates ≥ -margin)?
+@inline function _inside(p::_Pt, t::NTuple{3, _Pt}, margin::Float64)
+   (x1, y1), (x2, y2), (x3, y3) = t
+   d  = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3)
+   l1 = ((y2 - y3) * (p[1] - x3) + (x3 - x2) * (p[2] - y3)) / d
+   l2 = ((y3 - y1) * (p[1] - x3) + (x1 - x3) * (p[2] - y3)) / d
+   return (l1 >= -margin) && (l2 >= -margin) && (1.0 - l1 - l2 >= -margin)
+end
+
 # Estimate the non-linearity of the lens mapping at every grid node from second differences
 # (`c`, along x and y) and in every cell from the mixed difference (`m`); non-finite values → 0
 function _grid_curvature(βx::AbstractMatrix{<:Real}, βy::AbstractMatrix{<:Real})
@@ -369,7 +378,7 @@ function find_images_adaptive(lens_map::F, lens_jac::G,
    tol_β_f = Float64(tol_source)
    pad_f   = Float64(pad)
    cfac_f  = Float64(cfac)
-   tol_r_f = max(Float64(tol_refine), tol_f)
+   tol_r_f = max(Float64(tol_refine), tol_θ_f)
 
    # -----------------------------------------------------------------------------------------------
    #  Level 0: two triangles per grid cell
@@ -433,13 +442,13 @@ function find_images_adaptive(lens_map::F, lens_jac::G,
 
                # Smallest triangle: fall back to the best point available
                if is_last
-                  if in_t && r <= β_tol_f
+                  if in_t && r <= tol_β_f
                      push!(sols, (θn, r))
                   else
                      θc = _centroid(t.θ)
                      bc = _map(lens_map, θc)
                      rc = hypot(bc[1] - βs[1], bc[2] - βs[2])
-                     (isfinite(rc) && rc <= β_tol_f) && push!(sols, (θc, rc))
+                     (isfinite(rc) && rc <= tol_β_f) && push!(sols, (θc, rc))
                   end
                   continue
                end
@@ -464,7 +473,7 @@ function find_images_adaptive(lens_map::F, lens_jac::G,
    # -----------------------------------------------------------------------------------------------
    # Merge duplicates (keep the one with the smallest residual)
    # -----------------------------------------------------------------------------------------------
-   tol_merge = 10.0 * tol_f
+   tol_merge = 10.0 * tol_θ_f
    sort!(sols, by = last)
    images = _Pt[]
    for (p, _) in sols
