@@ -201,7 +201,7 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
    best_f = fill(-Inf, n_runs)
 
    # Progress bar setup and threaded execution
-   p = Progress(n_runs; dt=0.1, desc="Running Nelder-Mead Optimizer... ", showspeed=true, enabled=verbose)
+   p = Progress(n_runs; dt=1.0, desc="Running Nelder-Mead Optimizer... ", showspeed=true, enabled=verbose)
    live_chi2 = () -> [(:χ²_best, @sprintf("%.4f", -2 * maximum(best_f)))]
    @threads for i in 1:n_runs
       # Copying input ensures thread isolation
