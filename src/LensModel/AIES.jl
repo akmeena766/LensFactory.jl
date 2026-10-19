@@ -7,7 +7,7 @@ module AIES
 using Random
 using ProgressMeter
 using Base.Threads
-
+using Printf
 
 # --------------------------------------------------------------------------------------------------
 # Functions to export
