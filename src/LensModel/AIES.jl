@@ -131,7 +131,7 @@ function aies_runner(log_posterior::Function,
    # Best log-posterior seen so far; updated only on accepted moves. The χ² display is a closure, 
    # evaluated only when the bar redraws, so there is no per-step formatting cost.
    best_ll   = maximum(last_llhoods)
-   live_chi2 = () -> [(:χ²_best, @sprintf("%.4f", -2 * maximum(best_f)))]
+   live_chi2 = () -> [(:χ²_best, @sprintf("%.4f", -2 * maximum(best_ll)))]
    p = Progress((n_steps - 1) * n_walkers; dt=0.1, desc="Sampling Posterior (AIES)... ")
    for i in 2:n_steps
       for (active, inactive) in divisions
