@@ -8,6 +8,7 @@ using Base.Threads
 using ProgressMeter
 using JLD2
 using Dates
+using Printf
 
 
 # --------------------------------------------------------------------------------------------------
@@ -194,14 +195,29 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
    # Store results to check for convergence
    results = Vector{Union{Nothing, NamedTuple{(:θ, :f), Tuple{Vector{Float64}, Float64}}}}(nothing, n_runs)
 
+   # Best log-posterior seen so far by each run. Each thread writes only to its own slot (no locks, 
+   # no atomics) and the value is read only when the progress bar redraws, so the cost per 
+   # evaluation is a single scalar compare.
+   best_f = fill(-Inf, n_runs)
+
    # Progress bar setup and threaded execution
-   p = Progress(n_runs; dt=0.1, desc="Running Nelder-Mead Optimizer... ")
+   p = Progress(n_runs; dt=0.1, desc="Running Nelder-Mead Optimizer... ", showspeed=true)
+   live_chi2 = () -> [(:χ²_best, @sprintf("%.4f", -2 * maximum(best_f)))]
    @threads for i in 1:n_runs
       # Copying input ensures thread isolation
       θ0 = copy(θ_initial[i])
 
+      # Objective wrapper that records the best value seen by this run
+      function f_obj(x)
+         val = objective(model, x, param_ref)
+         if val > best_f[i]
+            best_f[i] = val
+         end
+         return val
+      end
+
       # Call optimizer
-      θ_opt, fmax, _, _, converged = nmsmax(x -> objective(model, x, param_ref), θ0; opt_cfg...)
+      θ_opt, fmax, _, _, converged = nmsmax(f_obj, θ0; opt_cfg...)
 
       # Write to the specific memory slot reserved for individual run
       if converged
@@ -209,7 +225,7 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
       end
       
       # Update progress bar
-      next!(p)
+      next!(p; showvalues = live_chi2, valuecolor = p.color)
    end
 
    # Filter out the 'nothing' entries (failed convergences) and collect
@@ -260,7 +276,7 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
          "| " * rpad(total_runs, 8) * 
          "| " * rpad("$(round(convergence_rate, digits=1))%", 15) * 
          "| " * rpad("$(round(stability_rate, digits=1))%", 13) * 
-         "| " * rpad(round(-best_val, digits=4), w) * 
+         "| " * rpad(round(-2.0 * best_val, digits=4), w) * 
          "|"
    
       line = "-" ^ length(col_h)

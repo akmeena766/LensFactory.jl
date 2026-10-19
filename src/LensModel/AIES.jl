@@ -128,6 +128,10 @@ function aies_runner(log_posterior::Function,
    # Progress bar tracks (n_steps - 1) × n_walkers walker-steps.
    # Row 1 is seed-filling only — no ticks for that.
    # -----------------------------------------------------------------------------------------------
+   # Best log-posterior seen so far; updated only on accepted moves. The χ² display is a closure, 
+   # evaluated only when the bar redraws, so there is no per-step formatting cost.
+   best_ll   = maximum(last_llhoods)
+   live_chi2 = () -> [(:χ²_best, @sprintf("%.4f", -2 * maximum(best_f)))]
    p = Progress((n_steps - 1) * n_walkers; dt=0.1, desc="Sampling Posterior (AIES)... ")
    for i in 2:n_steps
       for (active, inactive) in divisions
@@ -169,7 +173,7 @@ function aies_runner(log_posterior::Function,
             _llhood[i, walker]           = last_llhoods[walker]
             
             # Update the progress bar
-            next!(p)
+            next!(p; showvalues=live_chi2, valuecolor=p.color)
          end
       end
    end 
