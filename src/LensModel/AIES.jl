@@ -165,6 +165,11 @@ function aies_runner(log_posterior::Function, seeds::Vector{Vector{Float64}}, n_
             if log(rand(rng)) < log_ratio
                @views x[:, walker] .= new_positions[:, k]
                last_llhoods[walker] = new_ll[k]
+               
+               # This is to update the progress bar
+               if new_ll[k] > best_ll 
+                  best_ll = new_ll[k]
+               end
             end
 
             # Record results using the correct chain index
