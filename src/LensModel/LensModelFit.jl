@@ -201,7 +201,7 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
    best_f = fill(-Inf, n_runs)
 
    # Progress bar setup and threaded execution
-   p = Progress(n_runs; dt=0.1, desc="Running Nelder-Mead Optimizer... ", showspeed=true)
+   p = Progress(n_runs; dt=0.1, desc="Running Nelder-Mead Optimizer... ", showspeed=true, enabled=verbose)
    live_chi2 = () -> [(:χ²_best, @sprintf("%.4f", -2 * maximum(best_f)))]
    @threads for i in 1:n_runs
       # Copying input ensures thread isolation
@@ -356,7 +356,7 @@ function run_mcmc(model::ModelConfig, mcmc_config::MHConfig, param_ref::Dict{Tup
 end
 
 function run_mcmc(model::ModelConfig, mcmc_config::AIESConfig, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real}, θ_start::Vector{Vector{Float64}}, verbose::Bool)
-   return AIES.aies_runner(x -> log_posterior(model, x, param_ref), θ_start, mcmc_config.n_steps; a=mcmc_config.a)
+   return AIES.aies_runner(x -> log_posterior(model, x, param_ref), θ_start, mcmc_config.n_steps; verbose=verbose, a=mcmc_config.a)
 end
 
 function run_mcmc(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real}, θ_start::Union{Nothing, Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}}, verbose::Bool)   

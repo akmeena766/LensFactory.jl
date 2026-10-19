@@ -45,10 +45,9 @@ export acceptance_rate
 #   holds its own `Xoshiro` RNG (independently seeded from `rng`) to avoid data races.
 # - The MH acceptance step is kept sequential to preserve detailed balance.
 # """
-function aies_runner(log_posterior::Function, 
-                     seeds::Vector{Vector{Float64}}, 
-                     n_steps::Integer;
-                     a::Number               = 2.0, 
+function aies_runner(log_posterior::Function, seeds::Vector{Vector{Float64}}, n_steps::Integer;
+                     a::Number               = 2.0,
+                     verbose::Bool           = true,
                      rng::Random.AbstractRNG = Random.default_rng())
    # Determine dimensions from seeds
    n_walkers = length(seeds)
@@ -132,7 +131,7 @@ function aies_runner(log_posterior::Function,
    # evaluated only when the bar redraws, so there is no per-step formatting cost.
    best_ll   = maximum(last_llhoods)
    live_chi2 = () -> [(:χ²_best, @sprintf("%.4f", -2 * maximum(best_ll)))]
-   p = Progress((n_steps - 1) * n_walkers; dt=0.1, desc="Sampling Posterior (AIES)... ")
+   p = Progress((n_steps - 1) * n_walkers; dt=0.1, desc="Sampling Posterior (AIES)... ", showspeed=true, enabled=verbose)
    for i in 2:n_steps
       for (active, inactive) in divisions
          n_active = length(active)
