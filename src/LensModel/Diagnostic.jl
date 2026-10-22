@@ -12,6 +12,7 @@ using Printf
 # --------------------------------------------------------------------------------------------------
 # LensFactory modules to use
 # --------------------------------------------------------------------------------------------------
+using ..LensModelUtils: _burn_in_start
 
 
 # --------------------------------------------------------------------------------------------------
@@ -36,7 +37,7 @@ function calculate_gr(chains::Array{Float64, 3}; burn_in::Float64=0.2)
    end
 
    # Remove burn-in
-   start_idx = Int(floor(burn_in * n_steps)) + 1
+   start_idx = _burn_in_start(n_steps, burn_in)
    samples   = chains[start_idx:end, :, :]
 
    # Post burn in size
@@ -175,7 +176,7 @@ function autocorrelation(chains::Array{Float64, 3};
    n_steps, n_walkers, n_params = size(chains)
 
    # Calculate burn-in offset
-   start_idx         = max(1, Int(floor(n_steps * burn_in)) + 1)
+   start_idx         = _burn_in_start(n_steps, burn_in)
    post_burnin_steps = n_steps - start_idx + 1
    total_samples     = post_burnin_steps * n_walkers
 
@@ -272,7 +273,7 @@ function acceptance_rate(chains::Array{Float64, 3}; burn_in::Float64=0.2)
    n_steps, n_walkers, _ = size(chains)
    
    # Calculate burn-in offset
-   start_idx = max(1, Int(floor(n_steps * burn_in)) + 1)
+   start_idx = _burn_in_start(n_steps, burn_in)
 
    # Calculate per-walker acceptance
    # A rejection is an exact bitwise copy of the previous row, so checking

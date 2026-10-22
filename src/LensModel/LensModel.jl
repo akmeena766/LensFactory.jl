@@ -32,6 +32,7 @@ using .Likelihood
 
 include("./LensModelUtils.jl")
 using .LensModelUtils
+using .LensModelUtils: _burn_in_start
 
 include("./LensModelFit.jl")
 using .LensModelFit
@@ -104,7 +105,7 @@ function _posterior_samples(chains::Array{Float64, 3}, logL::Matrix{Float64};
    n_steps, n_chains, n_params = size(chains)
  
    # Remove burn-in
-   start_idx     = Int(floor(n_steps * burn_in)) + 1
+   start_idx     = _burn_in_start(n_steps, burn_in)
    burnin_chains = chains[start_idx:end, :, :]
    burnin_logL   = logL[start_idx:end, :]
    post_steps    = size(burnin_chains, 1)
@@ -273,7 +274,7 @@ function get_best_fit_parameters(results::Union{Vector{@NamedTuple{θ::Vector{Fl
       n_steps, n_chains, n_params = size(chains)
 
       # Remove Burn-in only
-      start_idx     = Int(floor(n_steps * burn_in)) + 1
+      start_idx     = _burn_in_start(n_steps, burn_in)
       burnin_chains = chains[start_idx:end, :, :]
       burnin_logL   = results[start_idx:end, :]
 
@@ -1530,7 +1531,7 @@ function error_models(data_jld2::JLD2.JLDFile;
    n_steps, n_chains, n_params = size(chains)
 
    # Discard burn-in
-   start_idx   = Int(floor(n_steps * burn_in)) + 1
+   start_idx     = _burn_in_start(n_steps, burn_in)
    post_chains = chains[start_idx:end, :, :]   # (post_steps, n_chains, n_params)
    post_logL   = logL[start_idx:end, :]        # (post_steps, n_chains)
 
@@ -1599,7 +1600,7 @@ function get_AIC(model::ModelConfig, logL::Matrix{Float64}; burn_in::Float64 = 0
    k = length(free_parameter_names(model))
 
    n_steps     = size(logL, 1)
-   start_idx   = Int(floor(n_steps * burn_in)) + 1
+   start_idx   = _burn_in_start(n_steps, burn_in)
    burnin_logL = logL[start_idx:end, :]
    best_logL   = maximum(burnin_logL)
 
@@ -1624,10 +1625,10 @@ function get_BIC(model::ModelConfig, logL::Matrix{Float64}, n_data::Int; burn_in
    # Get total number of free parameters
    k = length(free_parameter_names(model))
 
-   n_steps           = size(logL, 1)
-   start_idx         = Int(floor(n_steps * burn_in)) + 1
-   burnin_logL       = logL[start_idx:end, :]
-   best_logL         = maximum(burnin_logL)
+   n_steps     = size(logL, 1)
+   start_idx   = _burn_in_start(n_steps, burn_in)
+   burnin_logL = logL[start_idx:end, :]
+   best_logL   = maximum(burnin_logL)
 
    return -2.0 * best_logL + k * log(n_data)
 end

@@ -31,6 +31,20 @@ export lens_quantities_fd
 
 
 # --------------------------------------------------------------------------------------------------
+# MCMC burn-in
+# --------------------------------------------------------------------------------------------------
+# Index of the first MCMC step kept after discarding the first `burn_in` fraction of `n_steps`.
+# `burn_in` must be in [0, 1), which guarantees at least one step is kept.
+function _burn_in_start(n_steps::Integer, burn_in::Real)
+   if 0 <= burn_in < 1
+      return min(floor(Int, n_steps * burn_in) + 1, n_steps)
+   else
+      throw(ArgumentError("burn_in must be in [0, 1), got $burn_in"))
+   end
+end
+
+
+# --------------------------------------------------------------------------------------------------
 # Parameter-space → Physical-space transformation
 # --------------------------------------------------------------------------------------------------
 const PARAM_TRANSFORM = Dict{Symbol,Function}(   

@@ -180,7 +180,7 @@ function LensFactory.LensModel.plot_corner(chains, logL;
    free_parameter_names = free_parameter_names[plot_idx]
    
    # Remove Burn-in
-   start_idx = Int(floor(n_steps * burn_in)) + 1
+   start_idx = LensFactory.LensModel.LensModelUtils._burn_in_start(n_steps, burn_in)
    thinned_chain = chains[start_idx:thin:end, :, plot_idx]
 
    # Reshape the thinned chain into a flat array
@@ -307,7 +307,7 @@ function LensFactory.LensModel.plot_trace(chains;
    n_steps, n_chains, n_params = size(chains)
     
    # Calculate start index based on burn-in (slicing the 3rd dimension)
-   start_idx = max(1, Int(floor(n_steps * burn_in)) + 1)
+   start_idx = LensFactory.LensModel.LensModelUtils._burn_in_start(n_steps, burn_in)
    steps_range = start_idx:thin:n_steps
     
    # Create the figure
