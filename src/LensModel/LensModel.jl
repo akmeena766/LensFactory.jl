@@ -257,7 +257,7 @@ Get the best-fit parameters from the optimization or MCMC results.
 - `upper_err::Vector{Float64}`: Upper 1-sigma uncertainties (only if `with_errors=true`).
 """
 function get_best_fit_parameters(results::Union{Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, Matrix{Float64}}; 
-                                 chains::UnionArray{Float64, 3},
+                                 chains::Array{Float64, 3},
                                  free_parameter_names::Vector{Tuple{Symbol, Symbol}},
                                  burn_in::Float64     = 0.2,
                                  with_errors::Bool    = false,
