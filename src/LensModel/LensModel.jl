@@ -1391,7 +1391,10 @@ function _write_fits_header!(header::ImageHDU, model::ModelConfig;
 end
 
 """
-    save_best_fits(file_name::String; save_potential::Bool=true, save_deflection::Bool=true, save_kappa::Bool=true, save_gamma::Bool=true)
+    save_best_fits(file_name::String; save_potential::Bool  = true, 
+                                      save_deflection::Bool = true, 
+                                      save_kappa::Bool      = true, 
+                                      save_gamma::Bool      = true)
 Save fits files for the best-fit model based on the MCMC results stored in `file_name`. The user can
 choose which lensing quantities to save by setting the corresponding boolean flags.
 
@@ -1421,7 +1424,7 @@ function save_best_fits(data_jld2::JLD2.JLDFile;
    time   = data_jld2["Time"]
 
    # Get best-fit model
-   best_model, _ = get_best_model(model; mcmc_chains=chains, mcmc_logL=logL)
+   best_model, _ = get_best_model(model; chains=chains, logL=logL)
 
    # Generate grid
    FOV = model.observation.FOV
