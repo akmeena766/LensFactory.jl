@@ -223,7 +223,13 @@ end
 # Get best-fit parameters from the full optimization/MCMC results
 # --------------------------------------------------------------------------------------------------
 """
-    get_best_fit_parameters(results; chains=nothing, burn_in::Float64=0.2, with_errors::Bool=false, thin::Int64=1, print_table::Bool=false)
+    get_best_fit_parameters(results; 
+                            chains, 
+                            burn_in::Float64  = 0.2, 
+                            with_errors::Bool = false, 
+                            thin::Int64       = 1, 
+                            print_table::Bool = false,
+                            free_parameter_names)
 Get the best-fit parameters from the optimization or MCMC results.
 
 # Arguments
@@ -251,12 +257,12 @@ Get the best-fit parameters from the optimization or MCMC results.
 - `upper_err::Vector{Float64}`: Upper 1-sigma uncertainties (only if `with_errors=true`).
 """
 function get_best_fit_parameters(results::Union{Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, Matrix{Float64}}; 
-                             chains::Union{Array{Float64, 3}, Nothing}=nothing, 
-                             burn_in::Float64     = 0.2,
-                             with_errors::Bool    = false,
-                             thin::Int64          = 1,
-                             print_table::Bool    = false,
-                             free_parameter_names = nothing)
+                                 chains::UnionArray{Float64, 3},
+                                 free_parameter_names::Vector{Tuple{Symbol, Symbol}},
+                                 burn_in::Float64     = 0.2,
+                                 with_errors::Bool    = false,
+                                 thin::Int64          = 1,
+                                 print_table::Bool    = false)
    # Initialize outputs
    best_θ    = nothing
    best_logL = -Inf
@@ -1409,10 +1415,13 @@ function _write_best_fit_fits(path::String, data::AbstractMatrix, model::ModelCo
 end
 
 """
-    save_best_fits(file_name::String; save_potential::Bool  = true, 
-                                      save_deflection::Bool = true, 
-                                      save_kappa::Bool      = true, 
-                                      save_gamma::Bool      = true)
+    save_best_fits(file_name::String; 
+                   out_dir::String       = ".",
+                   burn_in::Float64      = 0.2,
+                   save_potential::Bool  = true, 
+                   save_deflection::Bool = true, 
+                   save_kappa::Bool      = true, 
+                   save_gamma::Bool      = true)
 Save fits files for the best-fit model based on the MCMC results stored in `file_name`. The user can
 choose which lensing quantities to save by setting the corresponding boolean flags.
 
