@@ -649,7 +649,10 @@ end
 # Get lensing quantities for the best-fit model
 # --------------------------------------------------------------------------------------------------
 """
-    get_best_model(model::ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64})
+    get_best_model(model::ModelConfig; 
+                   chains::Array{Float64, 3}, 
+                   logL::Matrix{Float64},
+                   burn_in::Float64 = 0.2)
 Get the best-fit lens model based on the MCMC results stored in `chains` and `logL`. The best-fit 
 parameters are determined by the minimum log-likelihood in `logL`.
 
@@ -665,16 +668,12 @@ parameters are determined by the minimum log-likelihood in `logL`.
 - `logL`: Log-likelihoohood correspodning to best-fit lens model.
 """
 function get_best_model(model::ModelConfig; 
-                        chains::Union{Array{Float64, 3}, Nothing} = nothing, 
-                        logL::Union{Matrix{Float64}, Nothing}     = nothing, 
-                        burn_in::Float64                          = 0.2)
-   # Get the best parameters based on minimum log-likelihood
-   if chains !== nothing && logL !== nothing
-      best_θ, best_logL = get_best_fit_parameters(logL; chains=chains, burn_in=burn_in)
-   else
-      error("Either optim_result or (mcmc_chains and mcmc_logL) must be provided.")
-   end
-
+                        chains::Array{Float64, 3}, 
+                        logL::Matrix{Float64}, 
+                        burn_in::Float64 = 0.2)
+   # Get best-fit model
+   best_θ, best_logL = get_best_fit_parameters(logL; chains=chains, burn_in=burn_in)
+   
    # Build best-fit lens model
    param_ref = Dict(p.key => p.refer for p in model.parameters)
    best_model, _, _ = _build_sample_model(model, best_θ, param_ref)
@@ -1387,7 +1386,25 @@ function _write_fits_header!(header::ImageHDU, model::ModelConfig;
    if time !== nothing
       write_key(header, "TIME", string(time), "Time of fit (UTC)")
    end
-   
+   return nothing
+end
+
+# FITS files written by `save_best_fits`, per lensing quantity
+const BEST_FIT_FILES = (potential  = ["potential.fits"],
+                        deflection = ["alpha_x.fits", "alpha_y.fits"],
+                        kappa      = ["kappa.fits"],
+                        gamma      = ["gamma1.fits", "gamma2.fits"])
+
+# Write a single FITS image with the standard LensFactory header
+function _write_best_fit_fits(path::String, data::AbstractMatrix, model::ModelConfig; date, time)
+   f = FITS(path, "w")
+   try
+      write(f, data)
+      _write_fits_header!(f[1], model; date, time)
+   finally
+      close(f)
+   end
+   return path
 end
 
 """
@@ -1408,9 +1425,11 @@ choose which lensing quantities to save by setting the corresponding boolean fla
 - `save_gamma::Bool=true`: Whether to save the shear maps as **gamma1.fits** and **gamma2.fits**
 
 # Returns
-- `nothing`: Saves FITS files to disk
+- `Vector{String}`: Paths of the FITS files written to disk
 """
 function save_best_fits(data_jld2::JLD2.JLDFile;
+                        out_dir::String       = ".",
+                        burn_in::Float64      = 0.2,
                         save_potential::Bool  = true,
                         save_deflection::Bool = true, 
                         save_kappa::Bool      = true, 
@@ -1424,84 +1443,53 @@ function save_best_fits(data_jld2::JLD2.JLDFile;
    time   = data_jld2["Time"]
 
    # Get best-fit model
-   best_model, _ = get_best_model(model; chains=chains, logL=logL)
+   best_model, _ = get_best_model(model; chains=chains, logL=logL, burn_in=burn_in)
 
    # Generate grid
    FOV = model.observation.FOV
    pixel_scale = model.observation.pixel_scale
    x_grid, y_grid = Lenses.get_meshgrid(0.5 * FOV[1], 0.5 * FOV[2], pixel_scale)
 
-   # Generate FITS file header
+   # Output directory
+   mkpath(out_dir)
+   out(name) = joinpath(out_dir, name)
+   written = String[]
+   
+   # Lensing potential
    if save_potential
-      # Calculate potential
       ψ = Lenses.get_potential(best_model, x_grid, y_grid)
-   
-      # Open new FITS file
-      f = FITS("./potential.fits", "w")
-      write(f, ψ)
-   
-      # Write header
-      hdu = f[1]
-      _write_fits_header!(hdu, model; date, time)
-      close(f)
+      push!(written, _write_best_fit_fits(out("potential.fits"), ψ, model; date, time))
    end
    
-
-   # Calculate deflection angles
+   # Deflection vector
    if save_deflection
-      # Calculate deflection map
       ψx, ψy = Lenses.get_deflection(best_model, x_grid, y_grid)
-
-      # Open new FITS file
-      f = FITS("./alpha_x.fits", "w")
-      write(f, ψx)
-      
-      hdu = f[1]
-      _write_fits_header!(hdu, model; date, time)
-      close(f)
-
-      f = FITS("./alpha_y.fits", "w")
-      write(f, ψy)
-      
-      hdu = f[1]
-      _write_fits_header!(hdu, model; date, time)      
-      close(f)
+      push!(written, _write_best_fit_fits(out("alpha_x.fits"), ψx, model; date, time))
+      push!(written, _write_best_fit_fits(out("alpha_y.fits"), ψy, model; date, time))
    end
 
-   # Calculate magnification
+   # Convergence and shear
    if save_kappa || save_gamma
       ψxx, ψyy, ψxy = Lenses.get_jacobian(best_model, x_grid, y_grid)
 
-      # Calculate and save convergence
       if save_kappa
-         # Open new FITS file
-         f = FITS("./kappa.fits", "w")
-         write(f, @. 0.5 * (ψxx + ψyy))
-      
-         hdu = f[1]
-         _write_fits_header!(hdu, model; date, time)      
-         close(f)
+         κ = @. 0.5 * (ψxx + ψyy)
+         push!(written, _write_best_fit_fits(out("kappa.fits"), κ, model; date, time))
       end
-      
-      # Calculate and save shear components
-      if save_gamma
-         # Open new FITS file
-         f = FITS("./gamma1.fits", "w")
-         write(f, @. 0.5 * (ψxx - ψyy))
-      
-         hdu = f[1]
-         _write_fits_header!(hdu, model; date, time)      
-         close(f)
 
-         f = FITS("./gamma2.fits", "w")
-         write(f, ψxy)
-      
-         hdu = f[1]
-         _write_fits_header!(hdu, model; date, time)      
-         close(f)
+      if save_gamma
+         γ1 = @. 0.5 * (ψxx - ψyy)
+         push!(written, _write_best_fit_fits(out("gamma1.fits"), γ1,  model; date, time))
+         push!(written, _write_best_fit_fits(out("gamma2.fits"), ψxy, model; date, time))
       end
    end
-   return nothing
+   return written
+end
+
+function save_best_fits(file_name::String; kwargs...)
+   jldopen(file_name, "r") do data_jld2
+      save_best_fits(data_jld2; kwargs...)
+   end
 end
 
 
