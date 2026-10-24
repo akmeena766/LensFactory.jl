@@ -48,6 +48,7 @@ export read_input
 export fit_model
 export free_parameter_names
 export get_best_fit_parameters
+export print_best_fit_model
 export get_best_fit_rms
 export get_best_model
 export get_cosmology
@@ -222,14 +223,31 @@ end
 # --------------------------------------------------------------------------------------------------
 # Get best-fit parameters from the full optimization/MCMC results
 # --------------------------------------------------------------------------------------------------
+function _quantile_errors(chains::Array{Float64, 3}, best_θ::Vector{Float64}, q_lo::Float64, q_hi::Float64;
+                          burn_in::Float64 = 0.2, 
+                          thin::Int64      = 1)
+
+   # Get the chain dimension
+   n_steps, _, n_params = size(chains)
+   start_idx  = _burn_in_start(n_steps, burn_in)
+   flat_chain = reshape(chains[start_idx:thin:end, :, :], :, n_params)
+
+   lower_err = zeros(n_params)
+   upper_err = zeros(n_params)
+   for i in 1:n_params
+      q_low, q_high = Statistics.quantile(view(flat_chain, :, i), [q_lo, q_hi])
+      lower_err[i]  = q_low  - best_θ[i]
+      upper_err[i]  = q_high - best_θ[i]
+   end
+   return lower_err, upper_err
+end
+
 """
     get_best_fit_parameters(results; 
                             chains, 
                             burn_in::Float64  = 0.2, 
                             with_errors::Bool = false, 
-                            thin::Int64       = 1, 
-                            print_table::Bool = false,
-                            free_parameter_names)
+                            thin::Int64       = 1)
 Get the best-fit parameters from the optimization or MCMC results.
 
 # Arguments
@@ -247,8 +265,6 @@ Get the best-fit parameters from the optimization or MCMC results.
    But it will only work if `chains` are provided.
 - `thin::Int64=1`: The thinning factor to apply to the MCMC chains while calculating parameter 
    uncertainties.
-- `print_table::Bool=false`: If `true`, then print the best-fit parameters along with [-1σ, +1σ] and
-   [-2σ, +2σ] ranges in a table format. This option is only available when `with_errors=true`.
 
 # Returns
 - `best_θ::Vector{Float64}`: Best-fit parameter values.
@@ -258,94 +274,98 @@ Get the best-fit parameters from the optimization or MCMC results.
 """
 function get_best_fit_parameters(results::Union{Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, Matrix{Float64}}; 
                                  chains::Array{Float64, 3},
-                                 free_parameter_names::Vector{Tuple{Symbol, Symbol}},
                                  burn_in::Float64     = 0.2,
                                  with_errors::Bool    = false,
-                                 thin::Int64          = 1,
-                                 print_table::Bool    = false)
-   # Initialize outputs
-   best_θ    = nothing
-   best_logL = -Inf
-
+                                 thin::Int64          = 1)
    # Case A: Input is from the Parallel Optimizer (Vector of NamedTuples)
    if results isa Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}
       # We already sorted the results in descending order of logL, so results[1] is the best fit
       best_run  = results[1]
-      best_θ    = best_run.θ
-      best_logL = best_run.f
-
-   # Case B: Input is from MCMC (χ² matrix)
-   elseif results isa Matrix{Float64} && chains !== nothing
-      # Get chain details 
-      n_steps, n_chains, n_params = size(chains)
-
-      # Remove Burn-in only
-      start_idx     = _burn_in_start(n_steps, burn_in)
-      burnin_chains = chains[start_idx:end, :, :]
-      burnin_logL   = results[start_idx:end, :]
-
-      # Get (step, chain) of the best logL by finding the index of the maximum value in the logL matrix
-      best_idx        = argmax(burnin_logL)
-      step, chain_num = best_idx[1], best_idx[2]
-      best_θ          = burnin_chains[step, chain_num, :]
-      best_logL       = burnin_logL[step, chain_num]
-
-      if with_errors
-         # Apply thinning to the chains if requested
-         if thin > 1
-            thinned_chains = burnin_chains[1:thin:end, :, :]
-         else 
-            thinned_chains = burnin_chains
-         end
-
-         # Reshape the thinned chain into a flat array
-         flat_chain = reshape(thinned_chains, :, n_params)
-
-         # Calculate (asymmetric) errors as we are defining errors relative to the Best-Fit value
-         lower_err  = zeros(n_params)
-         upper_err  = zeros(n_params)
-         lower_err2 = zeros(n_params)
-         upper_err2 = zeros(n_params)
-         for i in 1:n_params
-            # Get 16th and 84th percentiles of the posterior
-            q16, q84     = Statistics.quantile(flat_chain[:, i], [0.1587, 0.8413])
-            q2p30, q97p7 = Statistics.quantile(flat_chain[:, i], [0.0228, 0.9772])
-        
-            # Asymmetric error: distance from best-fit to the quantiles
-            lower_err[i] = q16 - best_θ[i]
-            upper_err[i] = q84 - best_θ[i]
-
-            lower_err2[i] = q2p30 - best_θ[i]
-            upper_err2[i] = q97p7 - best_θ[i]
-         end
-
-         if print_table
-            # Define header
-            header = @sprintf("| %-8s | %-10s | %-12s |   %-18s |   %-18s |", "Owner", "parameter", "Best-fit", "[-1σ, +1σ]", "[-2σ, +2σ]")
-            
-            # Print header
-            println("-"^length(header))
-            println(header)
-            println("-"^length(header))
-
-            # Run over parameters
-            for i in 1:n_params
-               owner = string(free_parameter_names[i][1])
-               child = string(free_parameter_names[i][2])
-               
-               @printf("| %-8s | %-10s | %-12.4f | [%+6.3f, %+6.3f]%-4s | [%+6.3f, %+6.3f]%-4s |\n", 
-                     owner, child, best_θ[i], lower_err[i], upper_err[i], "", lower_err2[i], upper_err2[i],"")
-            end
-            println("-"^length(header))
-         end
-         return best_θ, best_logL, lower_err, upper_err
-      end
-      return best_θ, best_logL     
-   else
-      error("Please provide either Optimization results or both MCMC logL and chains.")
+      return best_run.θ, best_run.f
    end
+
+   # Case B: Input is from MCMC (log-likelihood matrix)
+   n_steps = size(chains, 1)
+
+   # Remove Burn-in only
+   start_idx     = _burn_in_start(n_steps, burn_in)
+   burnin_chains = chains[start_idx:end, :, :]
+   burnin_logL   = results[start_idx:end, :]
+
+   # Get (step, chain) of the best logL by finding the index of the maximum value in the logL matrix
+   best_idx        = argmax(burnin_logL)
+   step, chain_num = best_idx[1], best_idx[2]
+   best_θ          = burnin_chains[step, chain_num, :]
+   best_logL       = burnin_logL[step, chain_num]
+
+   if with_errors
+      lower_err, upper_err = _quantile_errors(chains, best_θ, 0.1587, 0.8413; burn_in=burn_in, thin=thin)
+      return best_θ, best_logL, lower_err, upper_err
+   end
+   return best_θ, best_logL
 end
 
+
+"""
+    print_best_fit_model(logL::Matrix{Float64};
+                         chains::Array{Float64, 3},
+                         free_parameter_names::Vector{Tuple{Symbol, Symbol}},
+                         burn_in::Float64 = 0.2,
+                         thin::Int64      = 1,
+                         io::IO           = stdout)
+Print the best-fit parameters from the MCMC results along with their [-1σ, +1σ] and [-2σ, +2σ] 
+ranges in a table. The ranges are given relative to the best-fit value.
+
+# Arguments
+- `logL::Matrix{Float64}`: The log-likelihood values of the MCMC samples, with dimensions 
+   `(n_steps, n_chains)`.
+
+# Keyword Arguments
+- `chains`              : (Required) MCMC chains. The dimensions should be `(n_steps, n_chains, n_parameters)`.
+- `free_parameter_names`: (Required) `(owner, parameter)` names of the free parameters, in the same 
+   order as the chains, e.g. from [`free_parameter_names`](@ref)`(model)`.
+- `burn_in = 0.2`       : The fraction of MCMC chains to discard as burn-in.
+- `thin    = 1`         : The thinning factor to apply to the MCMC chains while calculating the ranges.
+- `io      = stdout`    : Where to print the table.
+
+# Returns
+- `nothing`
+"""
+function print_best_fit_model(logL::Matrix{Float64};
+                              chains::Array{Float64, 3},
+                              free_parameter_names::Vector{Tuple{Symbol, Symbol}},
+                              burn_in::Float64 = 0.2,
+                              thin::Int64      = 1,
+                              io::IO           = stdout)
+   n_params = size(chains, 3)
+   if length(free_parameter_names) != n_params
+      throw(ArgumentError("got $(length(free_parameter_names)) parameter names for $n_params " *
+                          "parameters in the chains"))
+   end
+
+   # Best-fit, 1σ and 2σ ranges
+   best_θ, _ = get_best_fit_parameters(logL; chains, burn_in)
+   lower_err,  upper_err  = _quantile_errors(chains, best_θ, 0.1587, 0.8413; burn_in, thin)
+   lower_err2, upper_err2 = _quantile_errors(chains, best_θ, 0.0228, 0.9772; burn_in, thin)
+
+
+   # Header
+   header = @sprintf("| %-8s | %-10s | %-12s |   %-18s |   %-18s |", 
+                     "Owner", "parameter", "Best-fit", "[-1σ, +1σ]", "[-2σ, +2σ]")
+   rule = "-"^length(header)
+   println(io, rule)
+   println(io, header)
+   println(io, rule)
+   
+   # One row per parameter
+   for i in 1:n_params
+      owner, child = string.(free_parameter_names[i])
+      @printf(io, "| %-8s | %-10s | %-12.4f | [%+6.3f, %+6.3f]%-4s | [%+6.3f, %+6.3f]%-4s |\n", 
+              owner, child, best_θ[i], lower_err[i], upper_err[i], "", lower_err2[i], upper_err2[i], "")
+   end
+   println(io, rule)
+   return nothing
+end
 
 # --------------------------------------------------------------------------------------------------
 # Calculate RMS for the best-fit model
