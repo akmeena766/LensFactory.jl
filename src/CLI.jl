@@ -9,6 +9,7 @@ Usage: LensFactory <command> [options]
 
 Commands:
   fit <input.yaml>    Run lens model fitting as configured in <input.yaml>
+  bestfit <results.jld2>  Write FITS maps of the best-fit model from a fit's results
 
 Global options:
   -h, --help          Show this message
