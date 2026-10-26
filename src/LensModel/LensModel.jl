@@ -559,7 +559,10 @@ end
 # Get best-fit cosmology
 # --------------------------------------------------------------------------------------------------
 """
-    get_cosmology(data_jld2::JLD2.JLDFile; burn_in::Float64=0.2, thin::Int64=1, with_errors::Bool=false)
+    get_cosmology(data_jld2::JLD2.JLDFile; 
+                  burn_in::Float64  = 0.2, 
+                  thin::Int64       = 1, 
+                  with_errors::Bool = false) --> Cosmology, 
 Extract the cosmology corresponding to the best-fit model. If `with_errors=true`, the cosmology is
 also constructed for every post-burn-in (thinned) posterior sample, excluding the best-fit sample,
 so that uncertainties on cosmology-dependent quantities can be derived from the sample
@@ -570,18 +573,15 @@ parameters are free in the fit.
 - `data_jld2::JLD2.JLDFile`: JLD2 data file containing the fit results.
  
 # Keyword Arguments
-- `burn_in::Float64=0.2`: The fraction of MCMC chains to discard as burn-in. Set to 0.0 when the
+- `burn_in     = 0.2`: The fraction of MCMC chains to discard as burn-in. Set to 0.0 when the
    input file was produced by [`error_models`](@ref), as those samples are already post-burn-in.
-- `thin::Int64=1`: The thinning factor applied (per chain) when selecting posterior samples. Only
-   used when `with_errors=true`.
-- `with_errors::Bool=false`: If `true`, also return the cosmology for every posterior sample.
+- `thin        = 1`: The thinning factor applied (per chain) when selecting posterior samples. 
+   Only used when `with_errors=true`.
+- `with_errors = false`: If `true`, also return the cosmology for every posterior sample.
  
 # Returns
-- If `with_errors=false`:
-   - `cosmo_best`: Cosmology corresponding to the best-fit parameters.
-- If `with_errors=true`:
-   - `cosmo_best`: Cosmology corresponding to the best-fit parameters.
-   - `cosmo_samples::Vector`: Cosmology for each posterior sample (best fit excluded).
+- If `with_errors=false` then only `cosmology` corresponding to the best-fit parameters. However, 
+   if `with_errors=true` then both best-fit cosmology and the errors.
 """
 function get_cosmology(data_jld2::JLD2.JLDFile;
                        burn_in::Float64  = 0.2,
