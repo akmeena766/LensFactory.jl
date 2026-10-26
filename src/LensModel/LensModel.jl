@@ -81,7 +81,8 @@ function plot_image_scatter end
 # --------------------------------------------------------------------------------------------------
 # Helper functions
 # --------------------------------------------------------------------------------------------------
-# Build a lens model from a single parameter vector `θ` (e.g., a best-fit or one posterior sample).
+# Internal function: Build a lens model from a single parameter vector `θ` (i.e., a best-fit or 
+# one posterior sample).
 function _build_sample_model(model::ModelConfig, θ::AbstractVector{Float64}, param_ref::Dict)
    # Replace free parameter values by the sample values
    pvals = LensModelUtils.param_dict(model, θ, param_ref)
@@ -95,10 +96,10 @@ function _build_sample_model(model::ModelConfig, θ::AbstractVector{Float64}, pa
    return lens, pvals, cosmo
 end
 
-# Flatten the post-burn-in MCMC chains and locate the best-fit sample. The best-fit sample is
-# determined on the unthinned post-burn-in chain, so `thin > 1` cannot skip the global best.
-# `sample_idx` contains the (per-chain step) thinned row indices into `flat_chains`, with the
-# best-fit sample removed.
+# Internal function: Flatten the post-burn-in MCMC chains and locate the best-fit sample.
+# The best-fit sample is determined on the unthinned post-burn-in chain, so `thin > 1` cannot
+# skip the global best. `sample_idx` contains the (per-chain step) thinned row indices into 
+# `flat_chains`, with the best-fit sample removed.
 function _posterior_samples(chains::Array{Float64, 3}, logL::Matrix{Float64};
                             burn_in::Float64 = 0.2, 
                             thin::Int64      = 1)
@@ -127,7 +128,7 @@ function _posterior_samples(chains::Array{Float64, 3}, logL::Matrix{Float64};
    return best_θ, best_logL, flat_chains, sample_idx
 end
 
-#
+# Internal function: Get source position from the lens model and distance ratio.
 function _get_source_position(lens::Lenses.AbstractLens, knot::LensModelIO.Knot, adis::Float64)
    # Knot positions and number of images
    x  = knot.x
@@ -183,21 +184,26 @@ end
 # Fit lens model
 # --------------------------------------------------------------------------------------------------
 """
-    fit_model(model::ModelConfig; save::Bool=true, file_name::Union{String, Nothing}=nothing)
+    fit_model(model::ModelConfig; 
+              save::Bool = true, 
+              file_name::Union{String, Nothing} = nothing)
 Performs lens model fitting using the given `model`.
 
 # Arguments
-- `model::ModelConfig`: The lens model configuration containing the observation, lens, source, and sampler details.
+- `model::ModelConfig`: The lens model configuration containing the observation, lens, source, 
+   and sampler details.
+
+# Keyword Arguments
 - `save::Bool=true`: Whether to save the MCMC results to a JLD2 file (default: true)
-   - `file_name::Union{String, Nothing}=nothing`: The name of the JLD2 file to save results. If no 
-      name is provided then a name will be generated based on the lens name and current date (i.e., 
-      LensName_DDMMYYYY.jld2).
+- `file_name::Union{String, Nothing}=nothing`: The name of the JLD2 file to save results. If no 
+   name is provided then a name will be generated based on the lens name and current date (i.e., 
+   LensName_DDMMYYYY.jld2).
 
 # Returns
 - `chains::Array{Float64, 3}`: The MCMC chains containing sampled parameter values
 - `log_posterior::Matrix{Float64}`: The log-posterior values corresponding to each sample in the chains
 """
-function fit_model(model::ModelConfig; save::Bool=true, file_name::Union{String, Nothing}=nothing)
+function fit_model(model::ModelConfig; save::Bool = true, file_name::Union{String, Nothing}=nothing)
    return LensModelFit._fit_model(model, save=save, file_name=file_name)
 end
 
@@ -210,10 +216,12 @@ end
 Get a vector of tuples containing the owner and name of each free parameter in the model.
 
 # Arguments
-- `model::ModelConfig`: The lens model configuration containing the observation, lens, source, and sampler details.
+- `model::ModelConfig`: The lens model configuration containing the observation, lens, source, and 
+   sampler details.
 
 # Returns
-- `Vector{Tuple{Symbol, Symbol}}`: A vector of tuples containing the owner and name of each free parameter.
+- `Vector{Tuple{Symbol, Symbol}}`: A vector of tuples containing the owner and name of each free 
+   parameter.
 """
 function free_parameter_names(model::ModelConfig)
    return [(p.owner, p.name) for p in model.parameters[model.free_param_idxs]]
@@ -243,34 +251,31 @@ function _quantile_errors(chains::Array{Float64, 3}, best_θ::Vector{Float64}, q
 end
 
 """
-    get_best_fit_parameters(results; 
-                            chains, 
+    get_best_fit_parameters(results::Union{Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, Matrix{Float64}}; 
+                            chains::Matrix{Float64}, 
                             burn_in::Float64  = 0.2, 
                             with_errors::Bool = false, 
-                            thin::Int64       = 1)
+                            thin::Int64       = 1) --> Vector{Float64}, Float64
 Get the best-fit parameters from the optimization or MCMC results.
 
 # Arguments
-- `results::Union{Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, Matrix{Float64}}`: The optimization or MCMC results.
-   - If `results::Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}`: It is assumed to be from the 
-      optimizer results, where each element is a named tuple containing the parameter vector (`θ`) 
-      and the χ² values (`f`).
-   - If `results::Matrix{Float64}`: It is assumed to be the χ² matrix corresponding to MCMC chains.
+- `results: The optimization or MCMC results. From optimizer we are assuming that we get 
+   `Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}`.
 
 # Keyword Arguments
-- `chains::Union{Array{Float64, 3}, Nothing}=nothing`: MCMC chains. The dimensions should be 
+- `chains      = nothing`: MCMC chains. The dimensions should be 
    `(n_steps, n_chains, n_parameters)`. This is only required when `results` is a `Matrix{Float64}`.
-- `burn_in::Float64=0.2`: The fraction of MCMC chains to discard as burn-in (default: 0.2).
-- `with_errors::Bool=false`: If `true`, then also return 1-sigma uncertainties for best-fit parameters.
-   But it will only work if `chains` are provided.
-- `thin::Int64=1`: The thinning factor to apply to the MCMC chains while calculating parameter 
+- `burn_in     = 0.2`: The fraction of MCMC chains to discard as burn-in (default: 0.2).
+- `with_errors = false`: If `true`, then also return 1-sigma uncertainties for best-fit 
+   parameters. But it will only work if `chains` are provided.
+- `thin        = 1`: The thinning factor to apply to the MCMC chains while calculating parameter 
    uncertainties.
 
 # Returns
-- `best_θ::Vector{Float64}`: Best-fit parameter values.
-- `log_posterior::Float64`: Log-posterior value corresponding to the best-fit parameters.
-- `lower_err::Vector{Float64}`: Lower 1-sigma uncertainties (only if `with_errors=true`).
-- `upper_err::Vector{Float64}`: Upper 1-sigma uncertainties (only if `with_errors=true`).
+- `best_θ` : Best-fit parameter values.
+- `logL`   : Log-posterior value corresponding to the best-fit parameters.
+- `low_err`: Lower 1-sigma uncertainties (only if `with_errors = true`).
+- `upp_err`: Upper 1-sigma uncertainties (only if `with_errors = true`).
 """
 function get_best_fit_parameters(results::Union{Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, Matrix{Float64}}; 
                                  chains::Array{Float64, 3},
@@ -371,20 +376,21 @@ end
 # Calculate RMS for the best-fit model
 # --------------------------------------------------------------------------------------------------
 """
-    get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64}; burn_in::Float64=0.2)
-Calculate the RMS of the best-fit model based on the MCMC results stored in `chains` and `logL`. The
-function prints a table showing the RMS for each knot image, as well as a global total RMS. If 
+    get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64}; 
+                     burn_in::Float64 = 0.2)
+Calculate the RMS of the best-fit model based on the MCMC results stored in `chains` and `logL`. 
+The function prints a table showing the RMS for each knot image, as well as a global total RMS. If 
 
 # Arguments
-- `model::ModelConfig`: The lens model configuration used for the MCMC fit.
-- `chains::Array{Float64, 3}`: The MCMC chains containing the sampled parameter values. The 
-   dimensions should be (n_steps, n_chains, n_parameters).
-- `logL::Matrix{Float64}`: The logL values corresponding to each sample in the MCMC chains. The 
-   dimensions should be (n_steps, n_steps).
+- `model` : The lens model configuration used for the MCMC fit.
+- `chains`: The MCMC chains containing the sampled parameter values. The dimensions should be 
+   (n_steps, n_chains, n_parameters).
+- `logL`  : The logL values corresponding to each sample in the MCMC chains. The dimensions should 
+   be (n_steps, n_steps).
 
 # Keyword Arguments
-- `burn_in::Float64=0.2`: The fraction of MCMC chains to discard as burn-in while determining 
-   best-fit lens model.
+- `burn_in = 0.2`: The fraction of MCMC chains to discard as burn-in while determining best-fit 
+   lens model.
 
 # Returns
 - `nothing`: Prints a table to the console with the RMS for each knot image, as well as total RMS.
