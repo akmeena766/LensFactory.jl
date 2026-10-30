@@ -54,7 +54,13 @@ end
 # --------------------------------------------------------------------------------------------------
 # Log-likelihood
 # --------------------------------------------------------------------------------------------------
+# Log-likelihood in the scheme used for the fit (called at every step of the fit)
 function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real})
+   return log_likelihood(model, θ, param_ref, model.sampler.scheme)
+end
+
+
+function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real}, scheme::Symbol)
    # Merge θ (free parameters) with param_ref (fixed parameters)
    pvals = LensModelUtils.param_dict(model, θ, param_ref)
 
@@ -69,7 +75,7 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
 
    # Calculate position likelihood
    logL = 0.0
-   if model.sampler.scheme == :SourcePlane
+   if scheme == :SourcePlane
       # Deflection and deformation tensor at the observed image positions
       αx_all, αy_all = LensModelUtils.lens_quantities_def(model, lens_model)
       A_all          = LensModelUtils.lens_quantities_jac(model, lens_model)
@@ -101,7 +107,7 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
          logL_td = Likelihood.logL_sourceplane_timedelay(model, adis, z_d, D_d, β_ind, β_mod, ψ_all, αx_all, αy_all)
          logL = logL + logL_td
       end
-   elseif model.sampler.scheme == :ImagePlane_fast
+   elseif scheme == :ImagePlane_fast
       # Deflection and deformation tensor at the observed image positions
       αx_all, αy_all = LensModelUtils.lens_quantities_def(model, lens_model)
       A_all          = LensModelUtils.lens_quantities_jac(model, lens_model)
@@ -128,8 +134,36 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
             logL = logL + logL_td
          end
       end
+   elseif scheme == :ImagePlane
+      # Deflection and deformation tensor at the observed image positions (model source position)
+      αx_all, αy_all = LensModelUtils.lens_quantities_def(model, lens_model)
+      A_all          = LensModelUtils.lens_quantities_jac(model, lens_model)
+
+      # Deflection on the image-plane grid (shared by all sources)
+      θx_grid, θy_grid = LensModelUtils.image_grid(model)
+      αx_grid, αy_grid = Lenses.get_deflection(lens_model, θx_grid, θy_grid)
+
+      # Position likelihood: all images of each model source are found on the grid and matched to
+      # the observed images
+      logL_position, β_mod, θ_mod, found = Likelihood.logL_imageplane(model, lens_model, adis, αx_all, αy_all, A_all, θx_grid, θy_grid, αx_grid, αy_grid)
+      logL = logL + logL_position
+
+      # Flux likelihood (exact magnification at the predicted images)
+      if model.source_config.use_flux
+         logL_flux = Likelihood.logL_imageplane_flux(model, lens_model, adis, θ_mod, found)
+         logL = logL + logL_flux
+      end
+
+      # Time-delay likelihood (exact Fermat potential at the predicted images)
+      if model.source_config.use_time_delay
+         # Lens redshift and angular-diameter distance, cached in Observation
+         z_d, D_d = _lens_distance(model, cosmo)
+
+         logL_td = Likelihood.logL_imageplane_timedelay(model, lens_model, adis, z_d, D_d, β_mod, θ_mod, found)
+         logL = logL + logL_td
+      end
    else
-      error("Unsupported sampling scheme: $(model.sampler.scheme)")
+      error("Unsupported sampling scheme: $(scheme)")
    end
    return logL
 end

@@ -49,6 +49,7 @@ export fit_model
 export free_parameter_names
 export get_best_fit_parameters
 export print_best_fit_model
+export get_logL
 export get_best_fit_rms
 export get_best_model
 export get_cosmology
@@ -126,6 +127,20 @@ function _posterior_samples(chains::Array{Float64, 3}, logL::Matrix{Float64};
    filter!(!=(best_idx), sample_idx)
  
    return best_θ, best_logL, flat_chains, sample_idx
+end
+
+# Internal function: Log-likelihood of the best-fit parameters `best_θ` in the requested `plane`
+# (`:fit`, `:source`, or `:image`). If that is the plane used for the fit, the stored value 
+# `best_logL` is returned as is, otherwise the log-likelihood is recomputed.
+function _best_logL_in_plane(model::ModelConfig, best_θ::Vector{Float64}, best_logL::Float64, plane::Symbol)
+   # Stored value is already in the requested plane
+   if LensModelFit._plane_scheme(model, plane) == model.sampler.scheme
+      return best_logL
+   end
+
+   # Recompute in the requested plane
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+   return LensModelFit.log_likelihood(model, best_θ, param_ref; plane = plane)
 end
 
 # Internal function: Get source position from the lens model and distance ratio.
@@ -370,6 +385,39 @@ function print_best_fit_model(logL::Matrix{Float64};
    end
    println(io, rule)
    return nothing
+end
+
+
+"""
+    get_logL(model::ModelConfig, θ::Vector{Float64}; 
+             scheme::Symbol) --> Float64
+Calculate the log-likelihood of the free-parameter values `θ` in a given plane, independently of
+the plane (`model.sampler.scheme`) used for the fit. This makes it possible, e.g., to check how well
+a source-plane best fit reproduces the observed image positions.
+
+# Arguments
+- `model`: The lens model configuration used for the fit (from [`read_input`](@ref)).
+- `θ`    : Values of the free parameters, in the same order as the chains (e.g., the best-fit 
+   parameters from [`get_best_fit_parameters`](@ref)).
+
+# Keyword Arguments
+- `scheme`: (Required) Sampling scheme used to compute the log-likelihood: `:SourcePlane`, 
+   `:ImagePlane_fast`, or `:ImagePlane` (same names as `sampling.scheme` in the input YAML).
+
+# Returns
+- `logL`: Log-likelihood of `θ` in the requested plane.
+"""
+function get_logL(model::ModelConfig, θ::Vector{Float64}; scheme::Symbol)
+   # Number of free parameters must match
+   n_free = length(free_parameter_names(model))
+   if length(θ) != n_free
+      throw(ArgumentError("got $(length(θ)) parameter values for $n_free free parameters"))
+   end
+
+   # Fixed parameter values
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+
+   return LensModelFit.log_likelihood(model, θ, param_ref, scheme)
 end
 
 # --------------------------------------------------------------------------------------------------
