@@ -63,6 +63,10 @@ end
 end
 
 @inline function _ψ̃xy(θx::T, θy::T) where T <: Real
+   θ2 = θx^2 + θy^2
+   if θ2 < eps(T)
+      return zero(T)
+   end
    return log(θx^2 + θy^2) / (2π)
 end
 
@@ -169,6 +173,61 @@ function jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, θxc::T, θyc::T, 
       end
    end
    return nothing
+end
+
+
+# --------------------------------------------------------------------------------------------------
+# Internal functions relevant for lens model fitting
+# --------------------------------------------------------------------------------------------------
+function _kernel!(Kψ::Union{Nothing, Matrix{<:Real}}, 
+                  Kαx::Union{Nothing, Matrix{<:Real}}, 
+                  Kαy::Union{Nothing, Matrix{<:Real}}, 
+                  Kψxx::Union{Nothing, Matrix{<:Real}}, 
+                  Kψyy::Union{Nothing, Matrix{<:Real}}, 
+                  Kψxy::Union{Nothing, Matrix{<:Real}},
+                  θx::AbstractVector{<:Real}, 
+                  θy::AbstractVector{<:Real}, 
+                  θxc::AbstractVector{<:Real}, 
+                  θyc::AbstractVector{<:Real}, 
+                  θpix::Real)
+   # Lengths
+   n  = length(θx)
+   nx = length(θxc)
+   ny = length(θyc)
+
+   # Input checks
+   if length(θy) != n
+      throw(ArgumentError("θx and θy must have the same length."))
+   end
+
+   if nx < 1 || ny < 1 || !(θpix > 0)
+      throw(ArgumentError("The grid needs at least one pixel and a positive pixel size."))
+   end
+
+   for K in (Kψ, Kαx, Kαy, Kψxx, Kψyy, Kψxy)
+      if K !== nothing && size(K) != (nx * ny, n)
+         throw(DimensionMismatch("Kernel matrices must be of size ($(nx * ny), $n); got $(size(K))."))
+      end
+   end
+   if n == 0
+      return nothing
+   end
+
+   # Corner coordinates along each axis (nx + 1 and ny + 1 of them)
+   h  = θpix / 2
+   cx = Vector{Float64}(undef, nx + 1)
+   cy = Vector{Float64}(undef, ny + 1)
+   @inbounds for a in 1:nx
+      cx[a] = θxc[a] - h
+   end
+   @inbounds for b in 1:ny
+      cy[b] = θyc[b] - h
+   end
+   cx[nx + 1] = θxc[nx] + h
+   cy[ny + 1] = θyc[ny] + h
+
+   
+
 end
 
 end
