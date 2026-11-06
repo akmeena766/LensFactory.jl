@@ -26,6 +26,7 @@ export param_dict
 export current_cosmology
 export adis_current
 export build_lens
+export build_kernel
 export lens_quantities
 export lens_quantities_fd
 
@@ -375,6 +376,88 @@ function lens_quantities_jac(model::ModelConfig, lens::Lenses.AbstractLens)
          # Increment
          kid = kid + 1
       end
+   end
+   return A_all
+end
+
+
+# --------------------------------------------------------------------------------------------------
+# Kernel of a pixel map (MaxEnt) and per-knot lensing quantities from it
+# --------------------------------------------------------------------------------------------------
+# Kernel of the pixel map at all knot positions, built once per fit. Returns
+#     (ψ, αx, αy, ψxx, ψyy, ψxy, ranges)
+# where each matrix has size (n_pixels, n_points): column i is the response of image point i to
+# every pixel with unit convergence (pixels in the order of vec of the nx × ny map). ranges[kid]
+# gives the columns of knot kid (sources first, then knots, as in lens_quantities_*). ψ is only
+# computed when time delays are used and is `nothing` otherwise.
+function build_kernel(model::ModelConfig)
+   # Get pixel grid
+   pixels = model.lens_config.pixels
+ 
+   # Stack all knot positions and remember which columns belong to each knot
+   θx     = Float64[]
+   θy     = Float64[]
+   ranges = UnitRange{Int64}[]
+   for src in model.source_config.sources
+      for knot in src.knots
+         first = length(θx) + 1
+         append!(θx, knot.x)
+         append!(θy, knot.y)
+         push!(ranges, first:length(θx))
+      end
+   end
+ 
+   # Allocate and fill the kernel matrices
+   n_pixel = length(pixels.κ)
+   n_point = length(θx)
+ 
+   if model.source_config.use_time_delay
+      Kψ = Matrix{Float64}(undef, n_pixel, n_point)
+   else
+      Kψ = nothing
+   end
+   Kαx  = Matrix{Float64}(undef, n_pixel, n_point)
+   Kαy  = Matrix{Float64}(undef, n_pixel, n_point)
+   Kψxx = Matrix{Float64}(undef, n_pixel, n_point)
+   Kψyy = Matrix{Float64}(undef, n_pixel, n_point)
+   Kψxy = Matrix{Float64}(undef, n_pixel, n_point)
+   Lenses.MultiPixelLens._kernel!(Kψ, Kαx, Kαy, Kψxx, Kψyy, Kψxy, θx, θy, pixels.x, pixels.y, pixels.pixel_scale)
+ 
+   return (ψ=Kψ, αx=Kαx, αy=Kαy, ψxx=Kψxx, ψyy=Kψyy, ψxy=Kψxy, ranges=ranges)
+end
+ 
+ 
+# Same outputs as the lens versions above, for the nx × ny convergence map κ, using the kernel K
+# from build_kernel: each quantity at all images is transpose(K) * vec(κ), split by knot.
+function lens_quantities_pot(model::ModelConfig, K::NamedTuple, κ::Matrix{Float64})
+   ψ = transpose(K.ψ) * vec(κ)
+   return [ψ[r] for r in K.ranges]
+end
+ 
+function lens_quantities_def(model::ModelConfig, K::NamedTuple, κ::Matrix{Float64})
+   # Pixels in kernel order (no copy)
+   κv = vec(κ)
+ 
+   # Lensing quantities
+   αx = transpose(K.αx) * κv
+   αy = transpose(K.αy) * κv
+   return [αx[r] for r in K.ranges], [αy[r] for r in K.ranges]
+end
+ 
+function lens_quantities_jac(model::ModelConfig, K::NamedTuple, κ::Matrix{Float64})
+   # Pixels in kernel order (no copy)
+   κv  = vec(κ)
+ 
+   # Lensing quantities
+   ψxx = transpose(K.ψxx) * κv
+   ψyy = transpose(K.ψyy) * κv
+   ψxy = transpose(K.ψxy) * κv
+ 
+   n_knots = length(K.ranges)
+   A_all   = Vector{NTuple{4, Vector{Float64}}}(undef, n_knots)
+   for kid in 1:n_knots
+      r = K.ranges[kid]
+      A_all[kid] = (ψxx[r], ψxy[r], ψxy[r], ψyy[r])
    end
    return A_all
 end

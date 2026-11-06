@@ -9,6 +9,7 @@ using ProgressMeter
 using JLD2
 using Dates
 using Printf
+using LinearAlgebra
 
 
 # --------------------------------------------------------------------------------------------------
@@ -169,6 +170,44 @@ function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict
 end
 
 
+# MaxEnt: log-likelihood of the nx × ny convergence map κ, using the kernel K from build_kernel and
+# the fixed distance ratios adis. Only image positions in the source plane are supported.
+function log_likelihood(model::ModelConfig, κ::Matrix{Float64}, K::NamedTuple, adis::Vector{Float64})
+   if model.sampler.scheme != :SourcePlane || model.source_config.use_flux || model.source_config.use_time_delay
+      error("MaxEnt supports only image positions in the source plane (no flux or time delays).")
+   end
+ 
+   # Deflection and deformation tensor at the observed image positions
+   αx_all, αy_all = LensModelUtils.lens_quantities_def(model, K, κ)
+   A_all          = LensModelUtils.lens_quantities_jac(model, K, κ)
+ 
+   # Calculate position likelihood
+   logL, _, _ = Likelihood.logL_sourceplane(model, adis, αx_all, αy_all, A_all)
+   return logL
+end
+
+
+# MaxEnt: gradient of log_likelihood with respect to κ (an nx × ny matrix like κ). The derivatives
+# with respect to the lens quantities at each image are spread over the pixels with the kernel.
+function log_likelihood_grad(model::ModelConfig, κ::Matrix{Float64}, K::NamedTuple, adis::Vector{Float64})
+   # Deflection and deformation tensor at the observed image positions
+   αx_all, αy_all = LensModelUtils.lens_quantities_def(model, K, κ)
+   A_all          = LensModelUtils.lens_quantities_jac(model, K, κ)
+ 
+   # Derivatives with respect to the lens quantities, one vector per knot
+   gαx, gαy, gψxx, gψyy, gψxy = Likelihood.logL_sourceplane_grad(model, adis, αx_all, αy_all, A_all)
+ 
+   # Kernel columns follow the knot order, so concatenating the knots gives one value per column
+   g = zeros(length(κ))
+   mul!(g, K.αx,  reduce(vcat, gαx),  1.0, 1.0)
+   mul!(g, K.αy,  reduce(vcat, gαy),  1.0, 1.0)
+   mul!(g, K.ψxx, reduce(vcat, gψxx), 1.0, 1.0)
+   mul!(g, K.ψyy, reduce(vcat, gψyy), 1.0, 1.0)
+   mul!(g, K.ψxy, reduce(vcat, gψxy), 1.0, 1.0)
+   return reshape(g, size(κ))
+end
+
+
 # --------------------------------------------------------------------------------------------------
 # Log-prior
 # --------------------------------------------------------------------------------------------------
@@ -177,6 +216,21 @@ function log_prior(model::ModelConfig, θ::Vector{Float64})
       (x < p.lower || x > p.upper) && return -Inf
    end
    return 0.0
+end
+
+
+# MaxEnt: entropy prior of the convergence map κ relative to the prior map κp, with the
+# regularisation weight alpha of the lens model (maximal, 0, when κ = κp)
+function log_prior(model::ModelConfig, κ::Matrix{Float64}, κp::Matrix{Float64})
+   α = model.lens_config.alpha
+   return -α * sum(@. κp - κ + κ * log(κ / κp))
+end
+
+
+# MaxEnt: gradient of log_prior with respect to κ
+function log_prior_grad(model::ModelConfig, κ::Matrix{Float64}, κp::Matrix{Float64})
+   α = model.lens_config.alpha
+   return @. -α * log(κ / κp)
 end
 
 
@@ -195,6 +249,17 @@ function log_posterior(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{
    
    # Return log-posterior
    return lp + logL
+end
+
+
+# MaxEnt: log-posterior of the convergence map κ and its gradient with respect to κ
+function log_posterior(model::ModelConfig, κ::Matrix{Float64}, κp::Matrix{Float64}, K::NamedTuple, adis::Vector{Float64})
+   return log_prior(model, κ, κp) + log_likelihood(model, κ, K, adis)
+end
+
+
+function log_posterior_grad(model::ModelConfig, κ::Matrix{Float64}, κp::Matrix{Float64}, K::NamedTuple, adis::Vector{Float64})
+   return log_prior_grad(model, κ, κp) + log_likelihood_grad(model, κ, K, adis)
 end
 
 
@@ -318,6 +383,12 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
    end
    return converged_results
 end
+
+
+function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real}, method_cfg::MaxEntOptimizer, opt_cfg::Dict{Symbol, Any}, verbose::Bool)
+   
+end
+
 
 # Main optimizer function (wrapper to use multiple dispatch)
 function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real}, verbose::Bool)

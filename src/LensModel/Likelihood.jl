@@ -18,6 +18,7 @@ using ..Lenses
 # Functions to export
 # --------------------------------------------------------------------------------------------------
 export logL_sourceplane
+export logL_sourceplane_grad
 export logL_sourceplane_flux
 export logL_sourceplane_timedelay
 export logL_imageplane_fast
@@ -279,6 +280,93 @@ function logL_sourceplane(model::ModelConfig,
    end
    return -0.5 * χ2_total, β_ind_s, β_mod_s
 end
+
+
+function logL_sourceplane_grad(model::ModelConfig, 
+                               adis::Vector{Float64}, 
+                               αx_all::Vector{Vector{Float64}}, 
+                               αy_all::Vector{Vector{Float64}}, 
+                               A_all::Vector{NTuple{4, Vector{Float64}}})
+   # Identity tuple
+   I4 = (1.0, 0.0, 0.0, 1.0)
+ 
+   # Gradient storage (kid-indexed, one entry per image)
+   n_knots = sum(length(src.knots) for src in model.source_config.sources)
+   gαx_all  = Vector{Vector{Float64}}(undef, n_knots)
+   gαy_all  = Vector{Vector{Float64}}(undef, n_knots)
+   gψxx_all = Vector{Vector{Float64}}(undef, n_knots)
+   gψyy_all = Vector{Vector{Float64}}(undef, n_knots)
+   gψxy_all = Vector{Vector{Float64}}(undef, n_knots)
+ 
+   sid = 1
+   kid = 1
+   for src in model.source_config.sources
+      # Distance ratio for this source
+      adis_value = adis[sid]
+ 
+      for knot in src.knots
+         # Knot positions and measurement errors
+         x  = knot.x
+         y  = knot.y
+         σx = knot.σx
+         σy = knot.σy
+         σθ = knot.σθ
+         n  = length(x)
+ 
+         # Deflection vector at the knot positions
+         αx = @. adis_value * αx_all[kid]
+         αy = @. adis_value * αy_all[kid]
+ 
+         # Deformation tensor at the knot positions
+         A = @. adis_value * A_all[kid]
+         for i in eachindex(A)
+            @. A[i] = I4[i] - A[i]
+         end
+ 
+         # Individual and weighted source positions (as in logL_sourceplane)
+         β_ind = @. tuple(x - αx, y - αy)
+         β_model, W_all, _ = _weighted_position(β_ind, A, σx, σy, σθ, n)
+         βx_model, βy_model = β_model
+ 
+         gαx  = Vector{Float64}(undef, n)
+         gαy  = Vector{Float64}(undef, n)
+         gψxx = Vector{Float64}(undef, n)
+         gψyy = Vector{Float64}(undef, n)
+         gψxy = Vector{Float64}(undef, n)
+         for i in 1:n
+            βx_i, βy_i = β_ind[i]
+            δβx = βx_i - βx_model
+            δβy = βy_i - βy_model
+ 
+            # w = W δβ
+            w11, w12, w21, w22 = W_all[i]
+            w1 = w11 * δβx + w12 * δβy
+            w2 = w21 * δβx + w22 * δβy
+ 
+            # s = μ δβ, with μ = A⁻¹
+            μ11, μ12, μ21, μ22 = _inverse(A[1][i], A[2][i], A[3][i], A[4][i])
+            s1 = μ11 * δβx + μ12 * δβy
+            s2 = μ21 * δβx + μ22 * δβy
+ 
+            gαx[i]  =  adis_value * w1
+            gαy[i]  =  adis_value * w2
+            gψxx[i] = -adis_value * s1 * w1
+            gψyy[i] = -adis_value * s2 * w2
+            gψxy[i] = -adis_value * (s1 * w2 + s2 * w1)
+         end
+ 
+         gαx_all[kid]  = gαx
+         gαy_all[kid]  = gαy
+         gψxx_all[kid] = gψxx
+         gψyy_all[kid] = gψyy
+         gψxy_all[kid] = gψxy
+         kid = kid + 1
+      end
+      sid = sid + 1
+   end
+   return gαx_all, gαy_all, gψxx_all, gψyy_all, gψxy_all
+end
+
 
 
 function logL_sourceplane_flux(model::ModelConfig, 
