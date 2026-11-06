@@ -166,7 +166,7 @@ function potential!(ψ::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θpix::T) wh
 end
 
 
-function deflection!(ψx::U, ψy::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θpix::T, nl::Int64) where {U<:Real, S<:Real, T<:Matrix{<:Real}}
+function deflection!(ψx::U, ψy::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θpix::T) where {U<:Real, S<:Real, T<:Matrix{<:Real}}
    # Get size of the multi-pixel lens
    nx, ny = size(κ)
 
@@ -189,7 +189,7 @@ function deflection!(ψx::U, ψy::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θ
    return ψx_up, ψy_up
 end
 
-function deflection!(ψx::U, ψy::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θpix::T, nl::Int64) where {U<:ROA, S<:ROA, T<:Matrix{<:Real}}
+function deflection!(ψx::U, ψy::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θpix::T) where {U<:ROA, S<:ROA, T<:Matrix{<:Real}}
    # Get size of the multi-pixel lens
    nx, ny = size(κ)
 
@@ -216,7 +216,7 @@ function deflection!(ψx::U, ψy::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θ
 end
 
 
-function jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θpix::T, nl::Int64) where {U<:Real, S<:Real, T<:Matrix{<:Real}}
+function jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θpix::T) where {U<:Real, S<:Real, T<:Matrix{<:Real}}
    # Get size of the multi-pixel lens
    nx, ny = size(κ)
 
@@ -241,7 +241,7 @@ function jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, θxc::T, θyc::T, 
    return ψxx_up, ψyy_up, ψxy_up
 end
 
-function jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θpix::T, nl::Int64) where {U<:ROA, S<:ROA, T<:Matrix{<:Real}}
+function jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, θxc::T, θyc::T, κ::T, θpix::T) where {U<:ROA, S<:ROA, T<:Matrix{<:Real}}
    # Get size of the multi-pixel lens
    nx, ny = size(κ)
 
