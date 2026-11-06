@@ -9,10 +9,8 @@ function _generate_map(map_dict::Dict, FOV::Vector, pixel_scale::Real)
    if map_type == :uniform
       # Use meshgrid to create the grid
       x_grid, y_grid = Lenses.get_meshgrid(0.5 * FOV[1], 0.5 * FOV[2], pixel_scale)
-      x_pos = vec(x_grid)
-      y_pos = vec(y_grid)
-      κ_map = fill(map_dict[:value], length(x_pos))
-      return x_pos, y_pos, κ_map
+      κ_map = fill(Float64(map_dict[:value]), size(x_grid))
+      return x_grid, y_grid, κ_map
    elseif map_type == :gaussian
       error("Gaussian map generation is not implemented yet.")
    elseif map_type == :custom
@@ -52,7 +50,10 @@ function _maxent(lens_dict::Dict, params::Vector{Parameter}, observation::Observ
       error("Default map is not provided for MaxEnt method.")
    end
    x_pos, y_pos, κ_map = _generate_map(default_map, FOV, pixel_scale)
-   multi_pixel_lens = PixelComponent(x_pos, y_pos, κ_map)
+   multi_pixel_lens = MultiPixelComponent(x           = x_pos, 
+                                          y           = y_pos, 
+                                          κ           = κ_map,
+                                          pixel_scale = pixel_scale)
 
    # Generate lens component
    for i in 1:n_lenses

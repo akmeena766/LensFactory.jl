@@ -107,7 +107,7 @@ end
    x::Matrix{Float64}
    y::Matrix{Float64}
    κ::Matrix{Float64}
-   pixel_size::Float64
+   pixel_scale::Float64
 end
 
 @kwdef struct MaxEntLens <: AbstractLensConfig
