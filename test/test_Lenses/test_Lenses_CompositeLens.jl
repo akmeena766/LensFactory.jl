@@ -35,9 +35,9 @@
    end
 
    # ---- A MultiPixelLens component is built correctly and matches a standalone one -----
-   mpx  = Lenses.init_MultiPixelLens(x_c=[0.0, 0.5], y_c=[0.0, 0.5], kappa=[1.0, 0.7], pixel_size=[1.0, 0.6])
-   cmpx = Lenses.init_CompositeLens([(lens=:MultiPixelLens, x_c=[0.0, 0.5], y_c=[0.0, 0.5],
-                                      kappa=[1.0, 0.7], pixel_size=[1.0, 0.6])])
+   mpx  = Lenses.init_MultiPixelLens(x_c=[0.0 0.0; 0.5 0.5], y_c=[0.0 0.5; 0.0 0.5], kappa=[1.0 0.7; 0.4 0.2], pixel_size=0.5)
+   cmpx = Lenses.init_CompositeLens([(lens=:MultiPixelLens, x_c=[0.0 0.0; 0.5 0.5], y_c=[0.0 0.5; 0.0 0.5],
+                                      kappa=[1.0 0.7; 0.4 0.2], pixel_size=0.5)])
    @test cmpx._components_[1]._lens_ == :MultiPixelLens
    @test Lenses.get_potential(cmpx, xt1, yt1)   ≈ Lenses.get_potential(mpx, xt1, yt1)   atol=1e-13
    @test Lenses.get_deflection(cmpx, xt1, yt1)[1] ≈ Lenses.get_deflection(mpx, xt1, yt1)[1] atol=1e-13

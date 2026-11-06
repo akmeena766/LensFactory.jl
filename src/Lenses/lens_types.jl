@@ -1078,10 +1078,9 @@ Initialize a Multi-component Pixel lens with the given parameters.
 """
 struct init_MultiPixelLens{T<:Real} <: AbstractLens
    _lens_::Symbol
-   n::Int64
-   x_c::Vector{T}
-   y_c::Vector{T}
-   kappa::Vector{T}
+   x_c::Matrix{T}
+   y_c::Matrix{T}
+   kappa::Matrix{T}
    pixel_size::T
 end
 function init_MultiPixelLens(; x_c::AbstractMatrix{<:Real}, 
@@ -1094,12 +1093,13 @@ function init_MultiPixelLens(; x_c::AbstractMatrix{<:Real},
    end
 
    T = promote_type(eltype(x_c), eltype(y_c), eltype(kappa), eltype(pixel_size))
-   x_c   = Vector{T}(x_c)
-   y_c   = Vector{T}(y_c)
-   kappa = Vector{T}(kappa)
-   pixel_size = Vector{T}(pixel_size)
+   x_c   = Matrix{T}(x_c)
+   y_c   = Matrix{T}(y_c)
+   kappa = Matrix{T}(kappa)
+   pixel_size = T(pixel_size)
    
-   return init_MultiPixelLens{T}(:MultiPixelLens, n, x_c, y_c, kappa, pixel_size)
+   MultiPixelLens._check_grid(x_c, y_c, pixel_size)
+   return init_MultiPixelLens{T}(:MultiPixelLens, x_c, y_c, kappa, pixel_size)
 end
 
 
