@@ -104,9 +104,10 @@ end
 end
 
 @kwdef struct PixelComponent <: AbstractLensConfig
-   x::Vector{Float64}
-   y::Vector{Float64}
-   κ::Vector{Float64}
+   x::Matrix{Float64}
+   y::Matrix{Float64}
+   κ::Matrix{Float64}
+   pixel_size::Float64
 end
 
 @kwdef struct MaxEntLens <: AbstractLensConfig

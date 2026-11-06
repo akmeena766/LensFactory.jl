@@ -305,8 +305,8 @@ function _kernel!(Kψ::Union{Nothing, Matrix{<:Real}},
                   Kψxy::Union{Nothing, Matrix{<:Real}},
                   θx::AbstractVector{<:Real}, 
                   θy::AbstractVector{<:Real}, 
-                  θxc::AbstractVector{<:Real}, 
-                  θyc::AbstractVector{<:Real}, 
+                  θxc::AbstractMatrix{<:Real}, 
+                  θyc::AbstractMatrix{<:Real}, 
                   θpix::Real)
    # Dimensions
    n      = length(θx)
