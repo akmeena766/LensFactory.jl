@@ -1064,17 +1064,17 @@ end
 
 
 """
-    init_MultiPixelLens(x_c        = Vector{<:Real}(), 
-                        y_c        = Vector{<:Real}(), 
-                        kappa      = Vector{<:Real}(),
-                        pixel_size = Vector{<:Real}())
+    init_MultiPixelLens(x_c::AbstractMatrix{<:Real}, 
+                        y_c::AbstractMatrix{<:Real}, 
+                        kappa::AbstractMatrix{<:Real}, 
+                        pixel_size::Real)
 Initialize a Multi-component Pixel lens with the given parameters.
 
 # Keyword Arguments
-- `x_c = Vector{<:Real}()`        : Vector of x-coordinates (in ``\\rm \\mathbf{arcseconds}``).
-- `y_c = Vector{<:Real}()`        : Vector of y-coordinates (in ``\\rm \\mathbf{arcseconds}``).
-- `kappa = Vector{<:Real}()`      : Vector of convergences (dimensionless).
-- `pixel_size = Vector{<:Real}()` : Vector of pixel sizes (in ``\\rm \\mathbf{arcseconds}``).
+- `x_c` : Matrix of pixel-centre x-coordinates (in ``\\rm \\mathbf{arcseconds}``).
+- `y_c` : Matrix of pixel-centre y-coordinates (in ``\\rm \\mathbf{arcseconds}``).
+- `kappa` : Matrix of convergences (dimensionless).
+- `pixel_size` : Pixel size (in ``\\rm \\mathbf{arcseconds}``).
 """
 struct init_MultiPixelLens{T<:Real} <: AbstractLens
    _lens_::Symbol
@@ -1082,12 +1082,15 @@ struct init_MultiPixelLens{T<:Real} <: AbstractLens
    x_c::Vector{T}
    y_c::Vector{T}
    kappa::Vector{T}
-   pixel_size::Vector{T}
+   pixel_size::T
 end
-function init_MultiPixelLens(; x_c=Vector{<:Real}(), y_c=Vector{<:Real}(), kappa=Vector{<:Real}(), pixel_size=Vector{<:Real}())
-   if !(length(x_c) == length(y_c) == length(kappa) == length(pixel_size))
-      throw(ArgumentError("x_c, y_c, kappa, pixel_size must all have the same length (one entry 
-      per component); got $(length(x_c)), $(length(y_c)), $(length(kappa)) and $(length(pixel_size))."))
+function init_MultiPixelLens(; x_c::AbstractMatrix{<:Real}, 
+                               y_c::AbstractMatrix{<:Real}, 
+                               kappa::AbstractMatrix{<:Real}, 
+                               pixel_size::Real)
+   if !(size(x_c) == size(y_c) == size(kappa))
+      throw(ArgumentError("x_c, y_c, kappa must all have the same length (one entry per pixel); 
+                           got $(length(x_c)), $(length(y_c)), $(length(kappa))."))
    end
 
    T = promote_type(eltype(x_c), eltype(y_c), eltype(kappa), eltype(pixel_size))
@@ -1096,7 +1099,6 @@ function init_MultiPixelLens(; x_c=Vector{<:Real}(), y_c=Vector{<:Real}(), kappa
    kappa = Vector{T}(kappa)
    pixel_size = Vector{T}(pixel_size)
    
-   n = length(x_c)
    return init_MultiPixelLens{T}(:MultiPixelLens, n, x_c, y_c, kappa, pixel_size)
 end
 
