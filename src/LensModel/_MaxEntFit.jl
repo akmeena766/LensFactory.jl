@@ -20,15 +20,15 @@ function _build_kernel(model::ModelConfig)
    n_point = length(θx)
    
    if model.source_config.use_time_delay
-      Kψ = Matrix{Float64}(undef, n_pix, n)
+      Kψ = Matrix{Float64}(undef, n_pixel, n_point)
    else
       Kψ = nothing
    end
-   Kαx  = Matrix{Float64}(undef, n_pix, n)
-   Kαy  = Matrix{Float64}(undef, n_pix, n)
-   Kψxx = Matrix{Float64}(undef, n_pix, n)
-   Kψyy = Matrix{Float64}(undef, n_pix, n)
-   Kψxy = Matrix{Float64}(undef, n_pix, n)
+   Kαx  = Matrix{Float64}(undef, n_pixel, n_point)
+   Kαy  = Matrix{Float64}(undef, n_pixel, n_point)
+   Kψxx = Matrix{Float64}(undef, n_pixel, n_point)
+   Kψyy = Matrix{Float64}(undef, n_pixel, n_point)
+   Kψxy = Matrix{Float64}(undef, n_pixel, n_point)
    Lenses.MultiPixelLens._kernel!(Kψ, Kαx, Kαy, Kψxx, Kψyy, Kψxy, θx, θy, pixels.x, pixels.y, pixels.pixel_scale)
 
    return (ψ=Kψ, αx=Kαx, αy=Kαy, ψxx=Kψxx, ψyy=Kψyy, ψxy=Kψxy, ranges=ranges)
@@ -66,6 +66,6 @@ function _lens_potential(K::NamedTuple, κ::Matrix{Float64})
 end
 
 
-function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real}, method_cfg::MaxEntOptimizer, opt_cfg::Dict{Symbol, Any})
+function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real}, method_cfg::MaxEntOptimizer, opt_cfg::Dict{Symbol, Any}, verbose::Bool)
    
 end
