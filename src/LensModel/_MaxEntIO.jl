@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------------------------------
 # Internal functions to read maximum entropy method
 # --------------------------------------------------------------------------------------------------
-function _generate_map(map_dict::Dict, FOV::Vector, pixel_scale::Real)
+function _generate_map(map_dict::Dict, FOV::Union{Vector{<:Real}, NTuple{2, <:Real}}, pixel_scale::Real)
    # Get map type
    map_type = Symbol(map_dict[:type])
 
@@ -50,10 +50,10 @@ function _maxent(lens_dict::Dict, params::Vector{Parameter}, observation::Observ
       error("Default map is not provided for MaxEnt method.")
    end
    x_pos, y_pos, κ_map = _generate_map(default_map, FOV, pixel_scale)
-   multi_pixel_lens = MultiPixelComponent(x           = x_pos, 
-                                          y           = y_pos, 
-                                          κ           = κ_map,
-                                          pixel_scale = pixel_scale)
+   multi_pixel_lens    = PixelComponent(x           = x_pos, 
+                                        y           = y_pos, 
+                                        κ           = κ_map,
+                                        pixel_scale = pixel_scale)
 
    # Generate lens component
    for i in 1:n_lenses
