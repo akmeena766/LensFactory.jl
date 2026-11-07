@@ -62,7 +62,7 @@ const CHI2_PEN_NOCONV = 1.0e8
 @inline function _inverse(a11, a12, a21, a22)
    det = a11*a22 - a12*a21
    if det == 0.0
-      @warn "Singular 2x2 matrix."
+      @warn "Singular 2x2 matrix." maxlog=1
       return 0.0, 0.0, 0.0, 0.0
    end
 

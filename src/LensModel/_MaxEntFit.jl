@@ -152,6 +152,7 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
    
    runs      = NamedTuple[]
    converged = false
+   κ_last    = κ
    for run in 1:method_cfg.n_runs
       # This run
       t_start = time()
@@ -167,6 +168,15 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
       lprior = log_prior(model, κ, κp)
       logL   = log_likelihood(model, κ, K, adis)
       lpost  = lprior + logL
+
+      # Relative change of the map from the previous run
+      if run > 1
+         change = sqrt(sum(abs2, κ .- κ_last) / sum(abs2, κ))
+      else
+         change = NaN
+      end
+      κ_last = κ
+
       push!(runs, (log_posterior  = lpost, 
                    log_likelihood = logL, 
                    log_prior      = lprior,
@@ -228,9 +238,9 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
    if verbose
       t_total = @sprintf("%.2f", sum(r.time for r in runs))
       if converged
-         summary = "Converged after $(length(runs)) runs in $(t_total) s (change ≤ $(method_cfg.tolerance))."
+         summary = "✅ Converged after $(length(runs)) runs in $(t_total) s (change ≤ $(method_cfg.tolerance))."
       else
-         summary = "Not converged after $(length(runs)) runs in $(t_total) s (n_runs = $(method_cfg.n_runs))."
+         summary = "❌ Not converged after $(length(runs)) runs in $(t_total) s (n_runs = $(method_cfg.n_runs))."
       end
       println(line)
       println(_table_row((summary,), (length(line) - 3,)))

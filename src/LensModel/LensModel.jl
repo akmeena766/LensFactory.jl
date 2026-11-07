@@ -140,7 +140,7 @@ function _best_logL_in_plane(model::ModelConfig, best_θ::Vector{Float64}, best_
 
    # Recompute in the requested plane
    param_ref = Dict(p.key => p.refer for p in model.parameters)
-   return LensModelFit.log_likelihood(model, best_θ, param_ref; plane = plane)
+   return LensModelFit.log_likelihood(model, best_θ, param_ref, plane)
 end
 
 # Internal function: Get source position from the lens model and distance ratio.
@@ -912,7 +912,10 @@ distribution.
    - `(αx_samples, αy_samples)`: Vectors with deflection components for each posterior sample
       (best fit excluded), where each element has the same shape as `θx`.
 """
-function get_deflection(data_jld2::JLD2.JLDFile, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{ROA, Vector{Int64}}
+function get_deflection(data_jld2::JLD2.JLDFile, θx::T, θy::T;
+                        burn_in::Float64  = 0.2, 
+                        thin::Int64       = 1, 
+                        with_errors::Bool = false) where T <: Union{ROA, Vector{Int64}}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))

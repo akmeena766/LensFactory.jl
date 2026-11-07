@@ -455,24 +455,14 @@ end
 # --------------------------------------------------------------------------------------------------
 # ---------------- Read Lens Model -----------------------------------------------------------------
 # --------------------------------------------------------------------------------------------------
-# Build lens model
+# Currently supported methods
 SUPPORTED_METHODS = Set([:Parametric, :MaxEnt])
-function LensConfig(method::Symbol; kwargs...)
-   if method == :Parametric
-      return ParametricConfig(; components = kwargs[:components], 
-                                galaxies    = kwargs[:galaxies], 
-                                multiplane  = kwargs[:multiplane], 
-                                z_lenses    = kwargs[:z_lenses])
-   elseif method == :MaxEnt
-      return MaxEntConfig(; pixel_size   = kwargs[:pixel_size])
-   else
-      error("Unsupported lens model method: $method. Supported methods are: $(SUPPORTED_METHODS).")
-   end
-end
+
 
 # Read lens model according to the specified method
 include("_ParametricIO.jl")
 include("_MaxEntIO.jl")
+
 
 # Read lens model according to the specified method
 function _lensmodel!(dict::Dict, params::Vector{Parameter}, observation::Observation, cosmo::Cosmology.AbstractCosmology)
