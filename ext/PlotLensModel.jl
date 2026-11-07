@@ -90,6 +90,7 @@ PARAM_NAME = Dict{Symbol, String}(:lens1 => "L1", :lens2 => "L2", :lens3 => "L3"
                                   :slope_core  => "\\beta",
                                   :slope_cut   => "\\alpha")
 
+# Internal function: Get parameter name
 function get_param_name(key::Symbol)
    # Check static dictionary first
    haskey(PARAM_NAME, key) && return PARAM_NAME[key]

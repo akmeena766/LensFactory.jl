@@ -765,6 +765,18 @@ Currently, two methods are available:
 - `image_position`: Vector of image positions (in ``\\rm \\mathbf{arcseconds``).
 """
 function get_image(lens::AbstractLens, θx::T, θy::T, adis::Real, β::NTuple{2, Real};
+                   method::Symbol = :contour, kwargs...) where T <: AbstractMatrix{<:Real}
+   # Make sure the method is either :contour or :adaptive (before the costly deflection)
+   if !(method === :contour || method === :adaptive)
+      throw(ArgumentError("Unknown method `:$method`; use `:contour` or `:adaptive`."))
+   end
+ 
+   # Deflection on the full grid, then find the images
+   ψx, ψy = get_deflection(lens, θx, θy)
+   return get_image(lens, θx, θy, ψx, ψy, adis, β; method = method, kwargs...)
+end
+
+function get_image(lens::AbstractLens, θx::T, θy::T, ψx::T, ψy::T, adis::Real, β::NTuple{2, Real};
                    method::Symbol   = :contour,
                    tol_images::Real = 1.0E-8,
                    tol_refine::Real = 1.0E-3,

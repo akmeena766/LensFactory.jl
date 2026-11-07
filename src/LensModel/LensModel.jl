@@ -292,7 +292,7 @@ Get the best-fit parameters from the optimization or MCMC results.
 - `low_err`: Lower 1-sigma uncertainties (only if `with_errors = true`).
 - `upp_err`: Upper 1-sigma uncertainties (only if `with_errors = true`).
 """
-function get_best_fit_parameters(results::Union{Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, Matrix{Float64}}; 
+function get_best_fit_parameters(results::Union{Vector{<:NamedTuple}, Matrix{Float64}}; 
                                  chains::Array{Float64, 3},
                                  burn_in::Float64     = 0.2,
                                  with_errors::Bool    = false,
@@ -423,45 +423,23 @@ end
 # --------------------------------------------------------------------------------------------------
 # Calculate RMS for the best-fit model
 # --------------------------------------------------------------------------------------------------
-"""
-    get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64}; 
-                     burn_in::Float64 = 0.2)
-Calculate the RMS of the best-fit model based on the MCMC results stored in `chains` and `logL`. 
-The function prints a table showing the RMS for each knot image, as well as a global total RMS. If 
-
-# Arguments
-- `model` : The lens model configuration used for the MCMC fit.
-- `chains`: The MCMC chains containing the sampled parameter values. The dimensions should be 
-   (n_steps, n_chains, n_parameters).
-- `logL`  : The logL values corresponding to each sample in the MCMC chains. The dimensions should 
-   be (n_steps, n_steps).
-
-# Keyword Arguments
-- `burn_in = 0.2`: The fraction of MCMC chains to discard as burn-in while determining best-fit 
-   lens model.
-
-# Returns
-- `nothing`: Prints a table to the console with the RMS for each knot image, as well as total RMS.
-"""
-function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64}; burn_in::Float64=0.2)
-   # Get the best parameters based on minimum logL
-   best_θ, _ = get_best_fit_parameters(logL; chains=chains, burn_in=burn_in)
-
-   # Get best-fit model, parameter values and cosmology
-   param_ref = Dict(p.key => p.refer for p in model.parameters)
-   best_model, pvals, cosmo = _build_sample_model(model, best_θ, param_ref)
-
-   # Get angular-diameter distance ratios
-   adis = LensModelUtils.adis_current(model, pvals, cosmo)
+function _best_rms(model::ModelConfig, lens::Lenses.AbstractLens, adis::Vector{Float64}; method::Symbol = :contour)
+   # Make sure the method is either :contour or :adaptive (before the costly deflection)
+   if !(method === :contour || method === :adaptive)
+      throw(ArgumentError("Unknown method `:$method`; use `:contour` or `:adaptive`."))
+   end
 
    # Generate grid
    FOV = model.observation.FOV
    pixel_scale = model.observation.pixel_scale
    x_grid, y_grid = Lenses.get_meshgrid(0.5 * FOV[1], 0.5 * FOV[2], pixel_scale)
 
+   # Deflection on the grid, computed once and used for every knot
+   αx_grid, αy_grid = Lenses.get_deflection(lens, x_grid, y_grid)
+
    # Calculate deformation at all image positions
-   αx_all, αy_all = LensModelUtils.lens_quantities_def(model, best_model)
-   A_all          = LensModelUtils.lens_quantities_jac(model, best_model)
+   αx_all, αy_all = LensModelUtils.lens_quantities_def(model, lens)
+   A_all          = LensModelUtils.lens_quantities_jac(model, lens)
 
    # Identity tuple
    I4 = (1.0, 0.0, 0.0, 1.0)
@@ -469,6 +447,8 @@ function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::M
    # Global RMS and image count variables
    global_sq_dist = 0.0
    global_count = 0
+   n_missing = 0
+   distances = Vector{Vector{Float64}}()
 
    # Helper for column padding
    col(txt, width) = rpad(string(txt), width)
@@ -531,7 +511,8 @@ function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::M
          βx_model, βy_model = β_model
 
          # Get image positions
-         predicted_image = Lenses.get_image(best_model, x_grid, y_grid, adis_value, (βx_model, βy_model))
+         predicted_image = Lenses.get_image(lens, x_grid, y_grid, αx_grid, αy_grid, adis_value, (βx_model, βy_model);
+                                            method = method)
 
          # Convert predicted to mutable arrays for iterative removal
          pred_x = Float64[p[1] for p in predicted_image]
@@ -543,11 +524,13 @@ function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::M
 
          # Store distances to print after matching is done for the whole knot
          results = []
+         knot_dist = fill(NaN, n)
          
          # Matching observed images to predicted images
          for i in 1:n
             if isempty(pred_x)
                push!(results, "MISSING")
+               n_missing = n_missing + 1
                continue
             end
 
@@ -568,6 +551,7 @@ function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::M
             knot_sq_dist += d2
             knot_count += 1
 
+            knot_dist[i] = dist
             push!(results, round(dist, digits=6))
 
             # Remove this candidate so it can't be matched twice
@@ -575,6 +559,8 @@ function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::M
             deleteat!(pred_y, best_idx)
          end
          
+         push!(distances, knot_dist)
+
          # Calculate RMS for this specific knot
          k_rms = knot_count > 0 ? round(sqrt(knot_sq_dist / knot_count), digits=6) : "N/A"
 
@@ -598,9 +584,64 @@ function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::M
    final_rms = global_count > 0 ? sqrt(global_sq_dist / global_count) : 0.0
    println("| GLOBAL TOTAL RMS: ", col(round(final_rms, digits=6), 50), " |")
    println("-"^72)
-   
-   return nothing
+
+   return (rms = final_rms, distances = distances, n_missing = n_missing)
 end
+
+
+"""
+    get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64}; 
+                     burn_in::Float64 = 0.2)
+Calculate the RMS of the best-fit model based on the MCMC results stored in `chains` and `logL`. 
+The function prints a table showing the RMS for each knot image, as well as a global total RMS. If 
+
+# Arguments
+- `model` : The lens model configuration used for the MCMC fit.
+- `chains`: The MCMC chains containing the sampled parameter values. The dimensions should be 
+   (n_steps, n_chains, n_parameters).
+- `logL`  : The logL values corresponding to each sample in the MCMC chains. The dimensions should 
+   be (n_steps, n_steps).
+
+# Keyword Arguments
+- `burn_in = 0.2`: The fraction of MCMC chains to discard as burn-in while determining best-fit 
+   lens model.
+
+# Returns
+- `nothing`: Prints a table to the console with the RMS for each knot image, as well as total RMS.
+"""
+function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64}; 
+                          burn_in::Float64 = 0.2,
+                          method::Symbol   = :contour)
+   # Get the best parameters based on minimum logL
+   best_θ, _ = get_best_fit_parameters(logL; chains=chains, burn_in=burn_in)
+
+   # Get best-fit model, parameter values and cosmology
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+   best_model, pvals, cosmo = _build_sample_model(model, best_θ, param_ref)
+
+   # Get angular-diameter distance ratios
+   adis = LensModelUtils.adis_current(model, pvals, cosmo)
+
+   return _best_rms(model, best_model, adis; method = method)
+end
+
+
+function get_best_fit_rms(model::ModelConfig, κ::Matrix{Float64}; method::Symbol = :contour)
+   # Pixel lens with the fitted convergence map
+   pixels = model.lens_config.pixels
+   lens   = Lenses.init_MultiPixelLens(x_c        = pixels.x, 
+                                       y_c        = pixels.y, 
+                                       kappa      = κ, 
+                                       pixel_size = pixels.pixel_scale)
+
+   # Angular-diameter distance ratios at the reference parameters (as in the fit)
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+   cosmo     = LensModelUtils.current_cosmology(model, param_ref)
+   adis      = LensModelUtils.adis_current(model, param_ref, cosmo)
+
+   return _best_rms(model, lens, adis; method = method)
+end
+
 
 
 # --------------------------------------------------------------------------------------------------
@@ -727,8 +768,85 @@ end
 
 
 # --------------------------------------------------------------------------------------------------
-# Get lensing quantities for the best-fit model
+# Get best-fit lens model
 # --------------------------------------------------------------------------------------------------
+# Internal function: Check if we are using :MaxEnt modelling
+function _is_maxent(model::ModelConfig)
+   if model.lens_config isa LensModelIO.MaxEntLens
+      return true
+   end
+   return false
+end
+
+# Internal function: MultiPixelLens for a convergence map κ on the pixel grid of the MaxEnt fit.
+function _build_maxent_model(model::ModelConfig, κ::AbstractMatrix{<:Real})
+   pixels = model.lens_config.pixels
+   if size(κ) != size(pixels.κ)
+      throw(ArgumentError("κ map has size $(size(κ)), but the MaxEnt pixel grid has size $(size(pixels.κ))."))
+   end
+   return Lenses.init_MultiPixelLens(x_c        = pixels.x,
+                                     y_c        = pixels.y,
+                                     kappa      = κ,
+                                     pixel_size = pixels.pixel_scale)
+end
+
+function _maxent_logL(model::ModelConfig, lens::Lenses.AbstractLens)
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+   cosmo     = LensModelUtils.current_cosmology(model, param_ref)
+   adis      = LensModelUtils.adis_current(model, param_ref, cosmo)
+ 
+   αx_all = Vector{Vector{Float64}}()
+   αy_all = Vector{Vector{Float64}}()
+   A_all  = Vector{NTuple{4, Vector{Float64}}}()
+   for src in model.source_config.sources
+      for knot in src.knots
+         αx, αy        = Lenses.get_deflection(lens, knot.x, knot.y)
+         ψxx, ψyy, ψxy = Lenses.get_jacobian(lens, knot.x, knot.y)
+         push!(αx_all, αx)
+         push!(αy_all, αy)
+         push!(A_all, (ψxx, ψxy, ψxy, ψyy))
+      end
+   end
+ 
+   logL, _, _ = Likelihood.logL_sourceplane(model, adis, αx_all, αy_all, A_all)
+   return logL
+end
+
+function _maxent_map(model::ModelConfig, optimizer::NamedTuple, run::Union{Symbol, Integer}, run_path::Union{Nothing, String})
+   runs   = optimizer.runs
+   n_runs = length(runs)
+ 
+   if run === :last
+      run_id = n_runs
+   elseif run === :best
+      run_id = argmax([r.log_likelihood for r in runs])
+   elseif run isa Integer
+      if !(1 <= run <= n_runs)
+         throw(ArgumentError("run = $run is outside the $n_runs MaxEnt runs in this result."))
+      end
+      run_id = Int64(run)
+   else
+      throw(ArgumentError("run must be :last, :best or a run number; got $(repr(run))."))
+   end
+ 
+   # The final map is stored with the result itself
+   if run_id == n_runs
+      return optimizer.κ, run_id
+   end
+ 
+   # Earlier runs: per-run files
+   if run_path === nothing
+      run_path = model.sampler.optimizer.MethodConfig.save_path
+   end
+   file = joinpath(run_path, "$(model.observation.lens)_MaxEnt_run$(run_id).jld2")
+   if !isfile(file)
+      throw(ArgumentError("Map of MaxEnt run $run_id not found at $file. Runs other than the last " *
+                          "need `save_runs: true`; pass `run_path` if the run files were moved."))
+   end
+   return JLD2.load(file, "κ"), run_id
+end
+
+
 """
     get_best_model(model::ModelConfig; 
                    chains::Array{Float64, 3}, 
@@ -748,9 +866,7 @@ parameters are determined by the minimum log-likelihood in `logL`.
 - `best_model`: Best-fit lens model constructed using the best-fit parameters.
 - `logL`: Log-likelihoohood correspodning to best-fit lens model.
 """
-function get_best_model(model::ModelConfig; 
-                        chains::Array{Float64, 3}, 
-                        logL::Matrix{Float64}, 
+function get_best_model(model::ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64};
                         burn_in::Float64 = 0.2)
    # Get best-fit model
    best_θ, best_logL = get_best_fit_parameters(logL; chains=chains, burn_in=burn_in)
@@ -758,11 +874,61 @@ function get_best_model(model::ModelConfig;
    # Build best-fit lens model
    param_ref = Dict(p.key => p.refer for p in model.parameters)
    best_model, _, _ = _build_sample_model(model, best_θ, param_ref)
-
    return best_model, best_logL
 end
 
 
+function get_best_model(model::ModelConfig, optimizer::Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}})
+   if isempty(optimizer)
+      throw(ArgumentError("No optimizer runs in `optimizer`."))
+   end
+
+   # Best converged run (results are stored best-first, but do not rely on the order)
+   best_run = optimizer[argmax([r.f for r in optimizer])]
+
+   # Build best-fit lens model
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+   best_model, _, _ = _build_sample_model(model, best_run.θ, param_ref)
+   return best_model, best_run.f
+end
+
+function get_best_model(model::ModelConfig, optimizer::NamedTuple{(:κ, :κp, :runs, :converged)};
+                        run::Union{Symbol, Integer} = :last,
+                        run_path::Union{Nothing, String} = nothing)
+   κ, _      = _maxent_map(model, optimizer, run, run_path)
+   best_model = _build_maxent_model(model, κ)
+   return best_model, _maxent_logL(model, best_model)
+end
+
+function get_best_model(data_jld2::JLD2.JLDFile; burn_in::Float64 = 0.2, kwargs...)
+   model = data_jld2["model"]
+   if _is_maxent(model)
+      return get_best_model(model, data_jld2["optimizer"]; kwargs...)
+   end
+ 
+   chains = data_jld2["chains"]
+   logL   = data_jld2["logL"]
+   if chains !== nothing && logL !== nothing
+      return get_best_model(model, chains, logL; burn_in=burn_in)
+   end
+ 
+   optimizer = data_jld2["optimizer"]
+   if optimizer === nothing
+      error("Neither MCMC chains nor optimizer results in this file.")
+   end
+   return get_best_model(model, optimizer)
+end
+
+function get_best_model(file_name::AbstractString; kwargs...)
+   return JLD2.jldopen(file_name, "r") do data_jld2
+      get_best_model(data_jld2; kwargs...)
+   end
+end
+
+
+# --------------------------------------------------------------------------------------------------
+# Get lensing quantities for the best-fit model
+# --------------------------------------------------------------------------------------------------
 """
     get_potential(best_model::Lenses.AbstractLens, θx::T, θy::T;
                   reference::Tuple{Float64, Float64} = (0.0, 0.0)) where T <: Union{Real, ROA}
