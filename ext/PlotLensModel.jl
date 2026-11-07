@@ -1,43 +1,16 @@
 # --------------------------------------------------------------------------------------------------
-# Calculate the density threshold values corresponding to specific cumulative 
-# probability contours (quantiles).
-#
-# Arguments
-# - `dens::` A multi-dimensional array or vector containing density values (e.g., from a KDE).
-#
-# Keyword Arguments
-# - `quantiles::Vector{Float64} = [0.393, 0.865, 0.989]`: A sorted list of target cumulative 
-# probabilities. 
-#
-# Returns
-# - `Vector{Float64}`: The threshold density values for each requested quantile, ordered the same 
-# as `quantiles`
+# Helper functions
 # --------------------------------------------------------------------------------------------------
+# Internal function: Calculate the density threshold values corresponding to specific cumulative 
+# probability contours (quantiles).
 function _get_levels(dens; quantiles=[0.393, 0.865, 0.989])
-   sorted_dens = sort(vec(dens), rev=true)
+   sorted_dens     = sort(vec(dens), rev=true)
    cumulative_dens = cumsum(sorted_dens) ./ sum(sorted_dens)
    return [sorted_dens[findfirst(x -> x >= q, cumulative_dens)] for q in quantiles]
 end
 
-# --------------------------------------------------------------------------------------------------
-# Turns the user-facing `param_indices` argument into a concrete vector of
-# integer positions into `free_parameter_names` / the third dimension of `chains`.
-#
-# Arguments
-# - `free_parameter_names::Vector{Tuple{Symbol, Symbol}}`: list of free parameter names.
-#
-# Arguments
-# - `param_ids`: can be:
-#   - `Nothing`:                       every parameter
-#   - `Symbol`:                        filter by component (1st tuple element), e.g. :lens1
-#   - `Vector{Symbol}`:                filter by component (1st tuple element), e.g. :lens1 
-#                                      or `[:lens1, :lens3]`
-#   - `Vector{Tuple{Symbol, Symbol}}`: exact matches, e.g. [(:lens1, :eps), (:lens2, :mass)]
-#   - `Vector{Int64}`:                 direct positions, e.g. [1, 3, 5]
-#
-# Returns
-# - `Vector{Int64}`: indices corresponding to `free_parameter_names` based on `param_ids`
-# --------------------------------------------------------------------------------------------------
+# Internal function: Turns the user-facing `param_indices` argument into a concrete vector of
+# integer positions into `free_parameter_names` (i.e., the third dimension of `chains`).
 function _resolve_param_indices(free_parameter_names::AbstractVector{Tuple{Symbol, Symbol}}, 
                                 param_ids::Union{Nothing, Symbol, AbstractVector{Symbol}, AbstractVector{Int64}, AbstractVector{Tuple{Symbol, Symbol}}})
    # Get total number of free parameters
@@ -72,9 +45,7 @@ function _resolve_param_indices(free_parameter_names::AbstractVector{Tuple{Symbo
    return idx
 end
 
-# --------------------------------------------------------------------------------------------------
-# Corner Plot
-# --------------------------------------------------------------------------------------------------
+
 PARAM_NAME = Dict{Symbol, String}(:lens1 => "L1", :lens2 => "L2", :lens3 => "L3", :lens4 => "L4", 
                                   :lens5 => "L5", :lens6 => "L6", :lens7 => "L7", :lens8 => "L8", 
                                   :lens9 => "L9", :lens10 => "L10",
@@ -89,9 +60,8 @@ PARAM_NAME = Dict{Symbol, String}(:lens1 => "L1", :lens2 => "L2", :lens3 => "L3"
                                   :slope_sigma => "\\lambda",
                                   :slope_core  => "\\beta",
                                   :slope_cut   => "\\alpha")
-
-# Internal function: Get parameter name
-function get_param_name(key::Symbol)
+# Internal function: Get parameter name from PARAM_NAME
+function _get_param_name(key::Symbol)
    # Check static dictionary first
    haskey(PARAM_NAME, key) && return PARAM_NAME[key]
    
@@ -126,6 +96,32 @@ function get_param_name(key::Symbol)
    error("Unknown parameter name: $key")
 end
 
+# Internal function: generate ellipse for given parameters
+function _ellipse(ex::RV, ey::RV, eθ::RV; x0::RV=0.0, y0::RV=0.0, n::Int64=100)
+   # Numer of points
+   t = range(0, 2π, length=n)
+
+   # Generate points
+   x = ex .* cos.(t)
+   y = ey .* sin.(t)
+
+   # Rotate
+   θ_rad = deg2rad(eθ)
+   x_rot = x .* cos(θ_rad) - y .* sin(θ_rad)
+   y_rot = x .* sin(θ_rad) + y .* cos(θ_rad)
+
+   # Translate
+   x_rot .+= x0
+   y_rot .+= y0
+
+   return x_rot, y_rot
+end
+
+
+
+# --------------------------------------------------------------------------------------------------
+# Corner Plot
+# --------------------------------------------------------------------------------------------------
 """
     LensFactory.LensModel.plot_corner(chains, logL; free_parameter_names=nothing,
                                                     burn_in::Float64  = 0.3,
@@ -206,18 +202,18 @@ function LensFactory.LensModel.plot_corner(chains, logL;
       title_str = L"%$(round(best_θ[i], digits=2))^{+ %$(round(upper_err[i], digits=2))}_{%$(round(lower_err[i], digits=2))}"
       
       for j in 1:i
-         owner_i = get_param_name(free_parameter_names[i][1])
-         param_i = get_param_name(free_parameter_names[i][2])
+         owner_i = _get_param_name(free_parameter_names[i][1])
+         param_i = _get_param_name(free_parameter_names[i][2])
 
-         owner_j = get_param_name(free_parameter_names[j][1])
-         param_j = get_param_name(free_parameter_names[j][2])
+         owner_j = _get_param_name(free_parameter_names[j][1])
+         param_j = _get_param_name(free_parameter_names[j][2])
 
          p_name_i = LaTeXString("\$$owner_i: $param_i\$")
          p_name_j = LaTeXString("\$$owner_j: $param_j\$")
 
          ax = Axis(fig[i, j];
                   xtickalign = 1, ytickalign = 1,
-                  xticksize = 2, yticksize = 2,
+                  xticksize  = 2, yticksize  = 2,
                   xticklabelsize = tick_size, 
                   yticklabelsize = tick_size,
                   xgridvisible = false, ygridvisible = false,
@@ -279,6 +275,9 @@ function LensFactory.LensModel.plot_corner(chains, logL;
 end
 
 
+# --------------------------------------------------------------------------------------------------
+# Plot trace from mcmc chains
+# --------------------------------------------------------------------------------------------------
 """
     LensFactory.LensModel.plot_trace(chains)
 Generates trace plots for the given MCMC chains.
@@ -348,94 +347,36 @@ function LensFactory.LensModel.plot_trace(chains;
 end
 
 
-function _ellipse(ex::RV, ey::RV, eθ::RV; x0::RV=0.0, y0::RV=0.0, n::Int64=100)
-   # Numer of points
-   t = range(0, 2π, length=n)
-
-   # Generate points
-   x = ex .* cos.(t)
-   y = ey .* sin.(t)
-
-   # Rotate
-   θ_rad = deg2rad(eθ)
-   x_rot = x .* cos(θ_rad) - y .* sin(θ_rad)
-   y_rot = x .* sin(θ_rad) + y .* cos(θ_rad)
-
-   # Translate
-   x_rot .+= x0
-   y_rot .+= y0
-
-   return x_rot, y_rot
-end
-
-"""
-    LensFactory.LensModel.plot_best_model(model, chains, logL)
-Generates a plot comparing the observed image positions with the predicted image positions from the best-fit lens model.
-
-# Arguments
-- `model`: The lens model configuration.
-- `chains`: MCMC chains of shape (n_steps, n_chains, n_params).
-- `logL`: Log-likelihood values corresponding to the chains, of shape (n_steps, n_chains).
-
-# Keyword arguments
-- two_panel::Bool = false`: Whether to create a two-panel plot with source plane on the left and image plane on the right.
-- `source::Union{Nothing, Integer} = nothing`: Which system to plot. `nothing` plots every system and
-   draws the critical curves/caustics at the redshift `z_s`. An integer plots only that system and
-   draws the critical curves/caustics at that system's own angular-diameter distance ratio, in which
-   case `z_s` is ignored.
-- `z_s::RV = 1.5`: Source redshift.
-- `plot_error::Bool = true`: Whether to plot the error ellipses for the observed image positions.
-- `plot_critical::Bool = true`: Whether to plot the critical curves.
-   - `critical_tan_kws::NamedTuple = (color=:red, linewidth=2, linestyle=:solid)`: Keyword arguments for plotting the tangential critical curve.
-   - `critical_rad_kws::NamedTuple = (color=:red, linewidth=2, linestyle=:dash)`: Keyword arguments for plotting the radial critical curve.
-- `plot_caustics::Bool = true`: Whether to plot the caustics.
-   - `caustic_tan_kws::NamedTuple = (color=:green, linewidth=2, linestyle=:solid)`: Keyword arguments for plotting the tangential caustic.
-   - `caustic_rad_kws::NamedTuple = (color=:green, linewidth=2, linestyle=:dash)`: Keyword arguments for plotting the radial caustic.
-- `save_plot::Bool = true`: Whether to save the plot as "best_model.png".
-   - `plot_name::String = "./best_model.png"`: Filename for saving the plot.
-   - `resolution::Int64 = 2`: Resolution for saving the plot.
-
-# Returns
-- A Makie figure object containing the comparison plot.
-"""
-function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig, 
-                                              chains::Array{Float64, 3}, 
-                                              logL::Matrix{Float64};
-                                              two_panel::Bool = false,
-                                              source::Union{Nothing, Int64} = nothing,
-                                              z_s::RV = 1.5,
-                                              plot_errors::Bool = true,
-                                              plot_critical::Bool = true,
-                                              critical_rad_kws::NamedTuple = (color=:red, linewidth=2, linestyle=:dash),
-                                              critical_tan_kws::NamedTuple = (color=:red, linewidth=2, linestyle=:solid),
-                                              plot_caustics::Bool = true,
-                                              caustic_tan_kws::NamedTuple = (color=:green, linewidth=2, linestyle=:solid),
-                                              caustic_rad_kws::NamedTuple = (color=:green, linewidth=2, linestyle=:dash),
-                                              save_plot::Bool = true,
-                                              plot_name::String = "./best_model.png",
-                                              resolution::Int64 = 2)
-   # Get the best parameters based on minimum log-likelihood
-   best_θ, _ = LensFactory.LensModel.get_best_fit_parameters(logL; chains=chains)
-
-   # Get list of parameters for the lens model
-   param_ref = Dict(p.key => p.refer for p in model.parameters)
-   
-   # Replace free parameter values by best-fit values
-   pvals = LensFactory.LensModel.LensModelUtils.param_dict(model, best_θ, param_ref)
-   
-   # Update cosmology
-   cosmo = LensFactory.LensModel.LensModelUtils.current_cosmology(model, pvals)
-   
-   # Get best-fit model
-   best_model = LensFactory.LensModel.LensModelUtils.build_lens(model, pvals, cosmo)
+# --------------------------------------------------------------------------------------------------
+# Plot best model for one or multiple sources
+# --------------------------------------------------------------------------------------------------
+function _plot_best_model(model::LensModel.ModelConfig, best_model::Lenses.AbstractLens, adis::Vector{Float64}, cosmo;
+                          two_panel::Bool               = false,
+                          method::Symbol                = :contour,
+                          source::Union{Nothing, Int64} = nothing,
+                          z_s::Real                     = 1.5,
+                          plot_errors::Bool             = true,
+                          plot_critical::Bool           = true,
+                          critical_rad_kws::NamedTuple  = (color=:red, linewidth=2, linestyle=:dash),
+                          critical_tan_kws::NamedTuple  = (color=:red, linewidth=2, linestyle=:solid),
+                          plot_caustics::Bool           = true,
+                          caustic_tan_kws::NamedTuple   = (color=:green, linewidth=2, linestyle=:solid),
+                          caustic_rad_kws::NamedTuple   = (color=:green, linewidth=2, linestyle=:dash),
+                          save_plot::Bool               = true,
+                          plot_name::String             = "./best_model.png",
+                          resolution::Int64             = 2)
+   # Make sure the method is either :contour or :adaptive (before the costly grid evaluations)
+   if !(method === :contour || method === :adaptive)
+      throw(ArgumentError("Unknown method `:$method`; use `:contour` or `:adaptive`."))
+   end
 
    # Generate grid
    FOV = model.observation.FOV
    pixel_scale = model.observation.pixel_scale
    x_grid, y_grid = Lenses.get_meshgrid(0.5 * FOV[1], 0.5 * FOV[2], pixel_scale)
 
-   # Get angular-diameter distance ratios
-   adis = LensFactory.LensModel.adis_current(model, pvals, cosmo)
+   # Deflection on the grid, computed once and used for every knot
+   αx_grid, αy_grid = Lenses.get_deflection(best_model, x_grid, y_grid)
 
    # Systems to plot: a single system, or all of them
    n_sources = length(model.source_config.sources)
@@ -465,7 +406,6 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
       ax2 = Axis(fig[1, 2])
       ax = (ax1, ax2)
       
-
       # Set axis labels and limits
       ax[1].xlabel = L"θ_1~\text{(in arcseconds)}"
       ax[1].ylabel = L"θ_2~\text{(in arcseconds)}"
@@ -558,7 +498,8 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
          end
 
          # Get image positions
-         predicted_image = Lenses.get_image(best_model, x_grid, y_grid, adis_value, (βx_model, βy_model))
+         predicted_image = Lenses.get_image(best_model, x_grid, y_grid, αx_grid, αy_grid, adis_value, 
+                                            (βx_model, βy_model); method = method)
 
          # Plot predicted image positions
          scatter!(ax[2], first.(predicted_image), last.(predicted_image); markersize  = 20,
@@ -584,9 +525,12 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
          adis_crit = adis[source]
       end      
 
+      # Jacobian on the grid, computed once and used for critical curves and caustics
+      ψxx, ψyy, ψxy = Lenses.get_jacobian(best_model, x_grid, y_grid)
+      
       if plot_critical
          # Get critical curves
-         critical_tan, critical_rad = Lenses.get_critical_curve(best_model, x_grid, y_grid, adis_crit)
+         critical_tan, critical_rad = Lenses.get_critical_curve(x_grid, y_grid, adis_crit, ψxx, ψyy, ψxy)
 
          # Plot tangential critical curve
          for curve in critical_tan
@@ -601,7 +545,7 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
 
       if plot_caustics
          # Get caustics
-         caustic_tan, caustic_rad = Lenses.get_caustic(best_model, x_grid, y_grid, adis_crit)
+         caustic_tan, caustic_rad = Lenses.get_caustic(best_model, x_grid, y_grid, adis_crit, ψxx, ψyy, ψxy)
 
          # Plot tangential caustic
          for curve in caustic_tan
@@ -633,7 +577,6 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
       axislegend(ax[2])
    end
 
-
    if save_plot
       save(plot_name, fig, px_per_unit=resolution)
    end
@@ -641,6 +584,84 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
 end
 
 
+"""
+    LensFactory.LensModel.plot_best_model(model, chains, logL)
+Generates a plot comparing the observed image positions with the predicted image positions from the best-fit lens model.
+
+# Arguments
+- `model`: The lens model configuration.
+- `chains`: MCMC chains of shape (n_steps, n_chains, n_params).
+- `logL`: Log-likelihood values corresponding to the chains, of shape (n_steps, n_chains).
+
+# Keyword arguments
+- two_panel::Bool = false`: Whether to create a two-panel plot with source plane on the left and image plane on the right.
+- `source::Union{Nothing, Integer} = nothing`: Which system to plot. `nothing` plots every system and
+   draws the critical curves/caustics at the redshift `z_s`. An integer plots only that system and
+   draws the critical curves/caustics at that system's own angular-diameter distance ratio, in which
+   case `z_s` is ignored.
+- `z_s::RV = 1.5`: Source redshift.
+- `plot_error::Bool = true`: Whether to plot the error ellipses for the observed image positions.
+- `plot_critical::Bool = true`: Whether to plot the critical curves.
+   - `critical_tan_kws::NamedTuple = (color=:red, linewidth=2, linestyle=:solid)`: Keyword arguments for plotting the tangential critical curve.
+   - `critical_rad_kws::NamedTuple = (color=:red, linewidth=2, linestyle=:dash)`: Keyword arguments for plotting the radial critical curve.
+- `plot_caustics::Bool = true`: Whether to plot the caustics.
+   - `caustic_tan_kws::NamedTuple = (color=:green, linewidth=2, linestyle=:solid)`: Keyword arguments for plotting the tangential caustic.
+   - `caustic_rad_kws::NamedTuple = (color=:green, linewidth=2, linestyle=:dash)`: Keyword arguments for plotting the radial caustic.
+- `save_plot::Bool = true`: Whether to save the plot as "best_model.png".
+   - `plot_name::String = "./best_model.png"`: Filename for saving the plot.
+   - `resolution::Int64 = 2`: Resolution for saving the plot.
+
+# Returns
+- A Makie figure object containing the comparison plot.
+"""
+function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig, 
+                                              chains::Array{Float64, 3}, 
+                                              logL::Matrix{Float64};
+                                              kwargs...)
+   # Get the best parameters based on minimum log-likelihood
+   best_θ, _ = LensFactory.LensModel.get_best_fit_parameters(logL; chains=chains)
+
+   # Get list of parameters for the lens model
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+   
+   # Replace free parameter values by best-fit values
+   pvals = LensFactory.LensModel.LensModelUtils.param_dict(model, best_θ, param_ref)
+   
+   # Update cosmology
+   cosmo = LensFactory.LensModel.LensModelUtils.current_cosmology(model, pvals)
+   
+   # Get best-fit model
+   best_model = LensFactory.LensModel.LensModelUtils.build_lens(model, pvals, cosmo)
+
+   # Get angular-diameter distance ratios
+   adis = LensFactory.LensModel.adis_current(model, pvals, cosmo)
+
+   return _plot_best_model(model, best_model, adis, cosmo; kwargs...)
+end
+
+
+function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig, optimizer::NamedTuple;
+                                              kwargs...)
+   # Best-fit pixel lens
+   best_model, _ = LensFactory.LensModel.get_best_model(model, optimizer)
+
+   # Get list of parameters for the lens model
+   param_ref = Dict(p.key => p.refer for p in model.parameters)
+
+   # Get cosmology
+   cosmo     = LensFactory.LensModel.LensModelUtils.current_cosmology(model, param_ref)
+   
+   # Get angular-diameter distance ratios
+   adis      = LensFactory.LensModel.adis_current(model, param_ref, cosmo)
+
+   return _plot_best_model(model, best_model, adis, cosmo; kwargs...)
+end
+
+
+
+# --------------------------------------------------------------------------------------------------
+# Plot image scatter in (x, y) plane
+# --------------------------------------------------------------------------------------------------
 function LensFactory.LensModel.plot_image_scatter(model::LensModel.ModelConfig,
                                                   chains::Array{Float64, 3},
                                                   logL::Matrix{Float64};
