@@ -1,4 +1,40 @@
 # --------------------------------------------------------------------------------------------------
+# Helper functions
+# --------------------------------------------------------------------------------------------------
+_table_row(cells, widths) = join("| " * rpad(cell, w) for (cell, w) in zip(cells, widths)) * "|"
+
+function _smooth_map(map::Matrix{Float64}, σ::Float64)
+   if σ <= 0
+      return copy(map)
+   end
+ 
+   # Normalised 1D Gaussian weights, truncated at 3σ
+   h = ceil(Int64, 3 * σ)
+   w = [exp(-0.5 * (k / σ)^2) for k in -h:h]
+   w = w ./ sum(w)
+ 
+   nx, ny = size(map)
+   tmp = similar(map)
+   out = similar(map)
+   @inbounds for j in 1:ny, i in 1:nx
+      s = 0.0
+      for k in -h:h
+         s = s + w[k + h + 1] * map[clamp(i + k, 1, nx), j]
+      end
+      tmp[i, j] = s
+   end
+   @inbounds for j in 1:ny, i in 1:nx
+      s = 0.0
+      for k in -h:h
+         s = s + w[k + h + 1] * tmp[i, clamp(j + k, 1, ny)]
+      end
+      out[i, j] = s
+   end
+   return out
+end
+
+
+# --------------------------------------------------------------------------------------------------
 # Log-likelihood
 # --------------------------------------------------------------------------------------------------
 function log_likelihood(model::ModelConfig, κ::Matrix{Float64}, K::NamedTuple, adis::Vector{Float64})
@@ -82,41 +118,8 @@ end
 
 
 # --------------------------------------------------------------------------------------------------
-# Log-prior
+# Optimizer run
 # --------------------------------------------------------------------------------------------------
-_table_row(cells, widths) = join("| " * rpad(cell, w) for (cell, w) in zip(cells, widths)) * "|"
-
-function _smooth_map(map::Matrix{Float64}, σ::Float64)
-   if σ <= 0
-      return copy(map)
-   end
- 
-   # Normalised 1D Gaussian weights, truncated at 3σ
-   h = ceil(Int64, 3 * σ)
-   w = [exp(-0.5 * (k / σ)^2) for k in -h:h]
-   w = w ./ sum(w)
- 
-   nx, ny = size(map)
-   tmp = similar(map)
-   out = similar(map)
-   @inbounds for j in 1:ny, i in 1:nx
-      s = 0.0
-      for k in -h:h
-         s = s + w[k + h + 1] * map[clamp(i + k, 1, nx), j]
-      end
-      tmp[i, j] = s
-   end
-   @inbounds for j in 1:ny, i in 1:nx
-      s = 0.0
-      for k in -h:h
-         s = s + w[k + h + 1] * tmp[i, clamp(j + k, 1, ny)]
-      end
-      out[i, j] = s
-   end
-   return out
-end
-
-
 function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real}, method_cfg::MaxEntOptimizer, opt_cfg::Dict{Symbol, Any}, verbose::Bool)
    # Angular-diameter distance ratios at the reference parameters (fixed during the fit)
    cosmo = LensModelUtils.current_cosmology(model, param_ref)
@@ -223,13 +226,15 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
    end
 
    if verbose
-      println(line)
       t_total = @sprintf("%.2f", sum(r.time for r in runs))
       if converged
-         println("Converged after $(length(runs)) runs in $(t_total) s (change ≤ $(method_cfg.tolerance)).")
+         summary = "Converged after $(length(runs)) runs in $(t_total) s (change ≤ $(method_cfg.tolerance))."
       else
-         println("Not converged after $(length(runs)) runs in $(t_total) s (n_runs = $(method_cfg.n_runs)).")
+         summary = "Not converged after $(length(runs)) runs in $(t_total) s (n_runs = $(method_cfg.n_runs))."
       end
+      println(line)
+      println(_table_row((summary,), (length(line) - 3,)))
+      println(line)
    end
 
    # Map and prior of the last run
