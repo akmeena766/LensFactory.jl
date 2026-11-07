@@ -1,3 +1,89 @@
+# --------------------------------------------------------------------------------------------------
+# Log-likelihood
+# --------------------------------------------------------------------------------------------------
+function log_likelihood(model::ModelConfig, κ::Matrix{Float64}, K::NamedTuple, adis::Vector{Float64})
+   if model.sampler.scheme != :SourcePlane || model.source_config.use_flux || model.source_config.use_time_delay
+      error("MaxEnt supports only image positions in the source plane (no flux or time delays).")
+   end
+ 
+   # Deflection and deformation tensor at the observed image positions
+   αx_all, αy_all = LensModelUtils.lens_quantities_def(model, K, κ)
+   A_all          = LensModelUtils.lens_quantities_jac(model, K, κ)
+ 
+   # Calculate position likelihood
+   logL, _, _ = Likelihood.logL_sourceplane(model, adis, αx_all, αy_all, A_all)
+   return logL
+end
+
+
+# MaxEnt: gradient of log_likelihood with respect to κ (an nx × ny matrix like κ). The derivatives
+# with respect to the lens quantities at each image are spread over the pixels with the kernel.
+function log_likelihood_grad(model::ModelConfig, κ::Matrix{Float64}, K::NamedTuple, adis::Vector{Float64})
+   # Deflection and deformation tensor at the observed image positions
+   αx_all, αy_all = LensModelUtils.lens_quantities_def(model, K, κ)
+   A_all          = LensModelUtils.lens_quantities_jac(model, K, κ)
+ 
+   # Derivatives with respect to the lens quantities, one vector per knot
+   gαx, gαy, gψxx, gψyy, gψxy = Likelihood.logL_sourceplane_grad(model, adis, αx_all, αy_all, A_all)
+ 
+   # Kernel columns follow the knot order, so concatenating the knots gives one value per column
+   g = zeros(length(κ))
+   mul!(g, K.αx,  reduce(vcat, gαx),  1.0, 1.0)
+   mul!(g, K.αy,  reduce(vcat, gαy),  1.0, 1.0)
+   mul!(g, K.ψxx, reduce(vcat, gψxx), 1.0, 1.0)
+   mul!(g, K.ψyy, reduce(vcat, gψyy), 1.0, 1.0)
+   mul!(g, K.ψxy, reduce(vcat, gψxy), 1.0, 1.0)
+   return reshape(g, size(κ))
+end
+
+
+
+# --------------------------------------------------------------------------------------------------
+# Log-prior
+# --------------------------------------------------------------------------------------------------
+function log_prior(model::ModelConfig, κ::Matrix{Float64}, κp::Matrix{Float64})
+   α = model.lens_config.alpha
+   return -α * sum(@. κp - κ + κ * log(κ / κp))
+end
+
+
+function log_prior_grad(model::ModelConfig, κ::Matrix{Float64}, κp::Matrix{Float64})
+   α = model.lens_config.alpha
+   return @. -α * log(κ / κp)
+end
+
+
+
+# --------------------------------------------------------------------------------------------------
+# Posterior (may return -Inf)
+# --------------------------------------------------------------------------------------------------
+# MaxEnt: log-posterior of the convergence map κ and its gradient with respect to κ
+function log_posterior(model::ModelConfig, κ::Matrix{Float64}, κp::Matrix{Float64}, K::NamedTuple, adis::Vector{Float64})
+   return log_prior(model, κ, κp) + log_likelihood(model, κ, K, adis)
+end
+
+
+function log_posterior_grad(model::ModelConfig, κ::Matrix{Float64}, κp::Matrix{Float64}, K::NamedTuple, adis::Vector{Float64})
+   return log_prior_grad(model, κ, κp) + log_likelihood_grad(model, κ, K, adis)
+end
+
+
+function _neg_log_posterior(model::ModelConfig, θ::Vector{Float64}, κp::Matrix{Float64}, K::NamedTuple, adis::Vector{Float64})
+   κ = exp.(reshape(θ, size(κp)))
+   return -log_posterior(model, κ, κp, K, adis)
+end
+
+
+function _neg_log_posterior_grad!(G::Vector{Float64}, model::ModelConfig, θ::Vector{Float64}, κp::Matrix{Float64}, K::NamedTuple, adis::Vector{Float64})
+   κ = exp.(reshape(θ, size(κp)))
+   G .= vec(-log_posterior_grad(model, κ, κp, K, adis) .* κ)
+   return G
+end
+
+
+
+_table_row(cells, widths) = join("| " * rpad(cell, w) for (cell, w) in zip(cells, widths)) * "|"
+
 function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real}, method_cfg::MaxEntOptimizer, opt_cfg::Dict{Symbol, Any}, verbose::Bool)
    # Angular-diameter distance ratios at the reference parameters (fixed during the fit)
    cosmo = LensModelUtils.current_cosmology(model, param_ref)
@@ -32,7 +118,88 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
    runs      = NamedTuple[]
    converged = false
    for run in 1:method_cfg.n_runs
+      # This run
       t_start = time()
+      res = Optim.optimize(θ      -> _neg_log_posterior(model, θ, κp, K, adis),
+                           (G, θ) -> _neg_log_posterior_grad!(G, model, θ, κp, K, adis),
+                           vec(log.(κ)), 
+                           method, 
+                           options)
+      t_run = time() - t_start
+
+      # Result of this run
+      κ      = exp.(reshape(Optim.minimizer(res), size(κp)))
+      lprior = log_prior(model, κ, κp)
+      logL   = log_likelihood(model, κ, K, adis)
+      lpost  = lprior + logL
+      push!(runs, (log_posterior  = lpost, 
+                   log_likelihood = logL, 
+                   log_prior      = lprior,
+                   iterations     = Optim.iterations(res), 
+                   converged      = Optim.converged(res),
+                   time           = t_run))
       
+      # Save this run
+      if method_cfg.save_runs
+         mkpath(method_cfg.save_path)
+         jldsave(joinpath(method_cfg.save_path, "$(model.observation.lens)_MaxEnt_run$(run).jld2");
+                 κ = κ, κp = κp, run = runs[end])
+      end
+
+      # Relative change of the log-posterior from the previous run
+      if run > 1
+         previous = runs[end - 1].log_posterior
+         change   = abs(lpost - previous) / abs(previous)
+      else
+         change   = NaN
+      end
+
+      if verbose
+         if Optim.converged(res)
+            run_converged = "yes"
+         else
+            run_converged = "no"
+         end
+
+         if run > 1
+            run_change = @sprintf("%.2e", change)
+         else
+            run_change = "-"
+         end
+         row = (run, 
+                Optim.iterations(res), 
+                run_converged, 
+                @sprintf("%.4f", -2.0 * logL),
+                @sprintf("%.4f", lprior), 
+                @sprintf("%.4f", lpost), 
+                run_change,
+                @sprintf("%.2f", t_run))
+         println(_table_row(row, widths))
+      end
+
+      # Stop when the log-posterior no longer changes between runs
+      if run > 1 && change <= method_cfg.tolerance
+         converged = true
+         break
+      end
+
+      # Smoothed result: prior and starting map of the next run
+      if run < method_cfg.n_runs
+         κp = _smooth_map(κ, method_cfg.smoothing)
+         κ  = copy(κp)
+      end
    end
+
+   if verbose
+      println(line)
+      t_total = @sprintf("%.2f", sum(r.time for r in runs))
+      if converged
+         println("Converged after $(length(runs)) runs in $(t_total) s (change ≤ $(method_cfg.tolerance)).")
+      else
+         println("Not converged after $(length(runs)) runs in $(t_total) s (n_runs = $(method_cfg.n_runs)).")
+      end
+   end
+
+   # Map and prior of the last run
+   return (κ = κ, κp = κp, runs = runs, converged = converged)
 end

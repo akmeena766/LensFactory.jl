@@ -159,7 +159,7 @@ end
    save_runs::Bool
    save_path::String
    smoothing::Float64
-   tolerence::Float64
+   tolerance::Float64
 end
 
 @kwdef struct OptimizerConfig <: AbstractOptimizerConfig
