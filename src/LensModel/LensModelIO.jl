@@ -975,7 +975,14 @@ function _optimizer!(sampling_dict::Dict, method::Symbol)
                                             n_runs    = Int64(get(config[method],   :n_runs,    10000)),
                                             tolerance = Float64(get(config[method], :tolerance, 1e-3)))
    elseif method == :MaxEnt
-      method_config = MaxEntOptimizer(; n_runs        = Int64(get(config[method],   :n_runs,        10)),
+      # Get number of runs
+      n_runs = get(config[method], :n_runs, 100)
+
+      # Check the type and value of n_runs
+      if !(n_runs isa Integer && n_runs >= 1)
+         error("sampling[:optimizer][:MaxEnt][:n_runs] must be a positive integer; got $(n_runs).")
+      end
+      method_config = MaxEntOptimizer(; n_runs        = Int64(n_runs),
                                         save_runs     = Bool(get(config[method],    :save_runs,     false)),
                                         save_path     = String(get(config[method],  :save_path,     "./")),
                                         smoothing     = Float64(get(config[method], :smoothing,     2.0)),

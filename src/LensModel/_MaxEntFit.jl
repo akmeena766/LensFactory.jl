@@ -182,6 +182,7 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
                    log_prior      = lprior,
                    iterations     = Optim.iterations(res), 
                    converged      = Optim.converged(res),
+                   change         = change,
                    time           = t_run))
       
       # Save this run
@@ -214,7 +215,7 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
          println(_table_row(row, widths))
       end
 
-      # Stop when the log-posterior no longer changes between runs
+      # Stop when the map no longer changes between runs
       if run > 1 && change <= method_cfg.tolerance
          converged = true
          break
