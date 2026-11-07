@@ -1064,6 +1064,9 @@ function _sampling!(dict::Dict, method::Symbol)
 
    # Get MCMC details
    mcmc_params = _mcmc!(sampling_dict)
+   if method == :MaxEnt && mcmc_params !== nothing
+      error("MCMC is not supported for the MaxEnt method; disable sampling[:mcmc].")
+   end
 
    return SamplerConfig(
       scheme    = scheme,

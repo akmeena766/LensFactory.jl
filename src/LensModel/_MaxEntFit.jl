@@ -81,8 +81,41 @@ function _neg_log_posterior_grad!(G::Vector{Float64}, model::ModelConfig, θ::Ve
 end
 
 
-
+# --------------------------------------------------------------------------------------------------
+# Log-prior
+# --------------------------------------------------------------------------------------------------
 _table_row(cells, widths) = join("| " * rpad(cell, w) for (cell, w) in zip(cells, widths)) * "|"
+
+function _smooth_map(map::Matrix{Float64}, σ::Float64)
+   if σ <= 0
+      return copy(map)
+   end
+ 
+   # Normalised 1D Gaussian weights, truncated at 3σ
+   h = ceil(Int64, 3 * σ)
+   w = [exp(-0.5 * (k / σ)^2) for k in -h:h]
+   w = w ./ sum(w)
+ 
+   nx, ny = size(map)
+   tmp = similar(map)
+   out = similar(map)
+   @inbounds for j in 1:ny, i in 1:nx
+      s = 0.0
+      for k in -h:h
+         s = s + w[k + h + 1] * map[clamp(i + k, 1, nx), j]
+      end
+      tmp[i, j] = s
+   end
+   @inbounds for j in 1:ny, i in 1:nx
+      s = 0.0
+      for k in -h:h
+         s = s + w[k + h + 1] * tmp[i, clamp(j + k, 1, ny)]
+      end
+      out[i, j] = s
+   end
+   return out
+end
+
 
 function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real}, method_cfg::MaxEntOptimizer, opt_cfg::Dict{Symbol, Any}, verbose::Bool)
    # Angular-diameter distance ratios at the reference parameters (fixed during the fit)
@@ -97,8 +130,7 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
    if any(<=(0.0), κp)
       error("The default map must be positive in every pixel.")
    end
-   κ     = copy(κp)
-   nx_ny = size(κp)
+   κ = copy(κp)
 
    # L-BFGS settings (sampling[:optimizer][:LBFGS])
    method  = Optim.LBFGS(linesearch   = Optim.LineSearches.HagerZhang())
@@ -106,15 +138,15 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
                            f_reltol   = Float64(get(opt_cfg, :tolerance, 1e-6)))
 
    # Results table: header now, one row per run
-   cols = (("Run", 5), ("Iterations", 12), ("Converged", 11), ("χ²", 14), ("Log-prior", 14), 
-           ("Log-posterior", 15), ("Change", 10), ("Time (s)", 10))
-   line = "-" ^ sum(w + 2 for (_, w) in cols)
+   names  = ("Run", "Iterations", "Converged", "χ²", "Log-prior", "Log-posterior", "Change", "Time (s)")
+   widths = (5, 12, 11, 14, 14, 15, 10, 10)
+   line   = "-" ^ length(_table_row(names, widths))
    if verbose
       println(line)
-      println(join("| " * rpad(name, w) for (name, w) in cols) * "|")
+      println(_table_row(names, widths))
       println(line)
    end
-
+   
    runs      = NamedTuple[]
    converged = false
    for run in 1:method_cfg.n_runs
