@@ -979,7 +979,7 @@ function _optimizer!(sampling_dict::Dict, method::Symbol)
                                         save_runs     = Bool(get(config[method],    :save_runs,     false)),
                                         save_path     = String(get(config[method],  :save_path,     "./")),
                                         smoothing     = Float64(get(config[method], :smoothing,     2.0)),
-                                        tolerance     = Float64(get(config[method], :tolerance,     1e-4)))
+                                        tolerance     = Float64(get(config[method], :tolerance,     1e-3)))
    else
       error("Unknown method $method in sampling[:optimizer]")
    end

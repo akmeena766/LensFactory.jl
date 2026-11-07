@@ -191,14 +191,6 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
                  κ = κ, κp = κp, run = runs[end])
       end
 
-      # Relative change of the log-posterior from the previous run
-      if run > 1
-         previous = runs[end - 1].log_posterior
-         change   = abs(lpost - previous) / abs(previous)
-      else
-         change   = NaN
-      end
-
       if verbose
          if Optim.converged(res)
             run_converged = "yes"
