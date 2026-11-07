@@ -1,71 +1,38 @@
-function _build_kernel(model::ModelConfig)
-   # Get pixel grid
-   pixels = model.lens_config.pixels
-
-   # Stack all knot positions and remember which columns belong to each knot
-   θx     = Float64[]
-   θy     = Float64[]
-   ranges = UnitRange{Int64}[]
-   for src in model.source_config.sources
-      for knot in src.knots
-         first = length(θx) + 1
-         append!(θx, knot.x)
-         append!(θy, knot.y)
-         push!(ranges, first:length(θx))
-      end
-   end
-
-   # Allocate and fill the kernel matrices
-   n_pixel = length(pixels.κ)
-   n_point = length(θx)
-   
-   if model.source_config.use_time_delay
-      Kψ = Matrix{Float64}(undef, n_pixel, n_point)
-   else
-      Kψ = nothing
-   end
-   Kαx  = Matrix{Float64}(undef, n_pixel, n_point)
-   Kαy  = Matrix{Float64}(undef, n_pixel, n_point)
-   Kψxx = Matrix{Float64}(undef, n_pixel, n_point)
-   Kψyy = Matrix{Float64}(undef, n_pixel, n_point)
-   Kψxy = Matrix{Float64}(undef, n_pixel, n_point)
-   Lenses.MultiPixelLens._kernel!(Kψ, Kαx, Kαy, Kψxx, Kψyy, Kψxy, θx, θy, pixels.x, pixels.y, pixels.pixel_scale)
-
-   return (ψ=Kψ, αx=Kαx, αy=Kαy, ψxx=Kψxx, ψyy=Kψyy, ψxy=Kψxy, ranges=ranges)
-end
-
-
-function _lens_quantities(K::NamedTuple, κ::Matrix{Float64})
-   # pixels in kernel order (no copy)
-   κv  = vec(κ)
-
-   # Lensing quantities
-   αx  = transpose(K.αx)  * κv
-   αy  = transpose(K.αy)  * κv
-   ψxx = transpose(K.ψxx) * κv
-   ψyy = transpose(K.ψyy) * κv
-   ψxy = transpose(K.ψxy) * κv
-
-   n_knots = length(K.ranges)
-   αx_all  = Vector{Vector{Float64}}(undef, n_knots)
-   αy_all  = Vector{Vector{Float64}}(undef, n_knots)
-   A_all   = Vector{NTuple{4, Vector{Float64}}}(undef, n_knots)
-   for kid in 1:n_knots
-      r = K.ranges[kid]
-      αx_all[kid] = αx[r]
-      αy_all[kid] = αy[r]
-      A_all[kid]  = (ψxx[r], ψxy[r], ψxy[r], ψyy[r])
-   end
-   return αx_all, αy_all, A_all
-end
-
-
-function _lens_potential(K::NamedTuple, κ::Matrix{Float64})
-   ψ = transpose(K.ψ) * vec(κ)
-   return [ψ[r] for r in K.ranges]
-end
-
-
 function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real}, method_cfg::MaxEntOptimizer, opt_cfg::Dict{Symbol, Any}, verbose::Bool)
-   
+   # Angular-diameter distance ratios at the reference parameters (fixed during the fit)
+   cosmo = LensModelUtils.current_cosmology(model, param_ref)
+   adis  = LensModelUtils.adis_current(model, param_ref, cosmo)
+
+   # Kernel at the observed image positions (built once)
+   K = LensModelUtils.build_kernel(model)
+
+   # Default map: prior and starting map of the first run
+   κp = copy(model.lens_config.pixels.κ)
+   if any(<=(0.0), κp)
+      error("The default map must be positive in every pixel.")
+   end
+   κ     = copy(κp)
+   nx_ny = size(κp)
+
+   # L-BFGS settings (sampling[:optimizer][:LBFGS])
+   method  = Optim.LBFGS(linesearch   = Optim.LineSearches.HagerZhang())
+   options = Optim.Options(iterations = Int64(get(opt_cfg, :iterations, 1000)),
+                           f_reltol   = Float64(get(opt_cfg, :tolerance, 1e-6)))
+
+   # Results table: header now, one row per run
+   cols = (("Run", 5), ("Iterations", 12), ("Converged", 11), ("χ²", 14), ("Log-prior", 14), 
+           ("Log-posterior", 15), ("Change", 10), ("Time (s)", 10))
+   line = "-" ^ sum(w + 2 for (_, w) in cols)
+   if verbose
+      println(line)
+      println(join("| " * rpad(name, w) for (name, w) in cols) * "|")
+      println(line)
+   end
+
+   runs      = NamedTuple[]
+   converged = false
+   for run in 1:method_cfg.n_runs
+      t_start = time()
+      
+   end
 end

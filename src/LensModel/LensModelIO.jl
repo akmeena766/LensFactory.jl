@@ -155,9 +155,11 @@ end
 end
 
 @kwdef struct MaxEntOptimizer <: AbstractOptimizerConfig
-   n_runs::Float64
+   n_runs::Int64
    save_runs::Bool
    save_path::String
+   smoothing::Float64
+   tolerence::Float64
 end
 
 @kwdef struct OptimizerConfig <: AbstractOptimizerConfig
@@ -985,7 +987,9 @@ function _optimizer!(sampling_dict::Dict, method::Symbol)
    elseif method == :MaxEnt
       method_config = MaxEntOptimizer(; n_runs        = Int64(get(config[method],   :n_runs,        10)),
                                         save_runs     = Bool(get(config[method],    :save_runs,     false)),
-                                        save_path     = String(get(config[method],  :save_path,     "./")))
+                                        save_path     = String(get(config[method],  :save_path,     "./")),
+                                        smoothing     = Float64(get(config[method], :smoothing,     2.0)),
+                                        tolerance     = Float64(get(config[method], :tolerance,     1e-4)))
    else
       error("Unknown method $method in sampling[:optimizer]")
    end

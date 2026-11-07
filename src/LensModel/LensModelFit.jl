@@ -10,6 +10,7 @@ using JLD2
 using Dates
 using Printf
 using LinearAlgebra
+import Optim
 
 
 # --------------------------------------------------------------------------------------------------
