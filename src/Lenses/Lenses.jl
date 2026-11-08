@@ -758,7 +758,7 @@ Currently, two methods are available:
 - `tol_images = 1.0E-8`  : (`:adaptive` only) Target size of refined triangles (in ``\\rm \\mathbf{arcseconds}``).
 - `tol_refine = 1.0E-3`  : (`:adaptive` only) Target size at which Newton-Raphson takes over (in ``\\rm \\mathbf{arcseconds}``).
 - `tol_source = 1.0E-6`  : (`:adaptive` only) Target source-plane residual (in ``\\rm \\mathbf{arcseconds}``).
-- `max_levels = 20`      : (`:adaptive` only) Maximum allowed source-plane residual (in ``\\rm \\mathbf{arcseconds}``).
+- `max_levels = 20`      : (`:adaptive` only) Maximum number of subdivision levels.
 - `max_newton = 20`      : (`:adaptive` only) Maximum number of Newton iterations.
 
 # Returns

@@ -809,7 +809,7 @@ function init_tNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::Real; x_c::R
    elseif isfinite(x_s)
       c = θ_vir / x_s
    else
-      throw(ArgumentError("Provide concentration (c) or scale radius (x_s) in **parameter_NFWLens**."))
+      throw(ArgumentError("Provide concentration (c) or scale radius (x_s) in **parameter_tNFWLens**."))
    end
    # 3D characteristic density
    ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
