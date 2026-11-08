@@ -1247,12 +1247,14 @@ function get_radial_profile(kappa::T, θx::T, θy::T;
       
       # Geometric mean as bin center for log binning
       centers = sqrt.(edges[1:end-1] .* edges[2:end])
-   else
+   elseif bin_type == :linear
       # Bin edges
       edges = collect(range(start=θ_min, stop=θ_max, length=n_bin))
       
       # Arithmetic mean of bin edges
       centers = (edges[1:end-1] .+ edges[2:end]) ./ 2.0
+   else
+      throw(ArgumentError("bin_type must be :log or :linear, got :$bin_type"))
    end
 
    # Efficient binning with StatsBase
@@ -1288,7 +1290,7 @@ redshift, then divide the output mass values by ``a_{\\rm dis}``.
 - `bin_type = :log`: Type of radial binning (i.e., `:log` or `:linear`).
 
 # Returns
-- `Edge`: Radial outer edges (in ``\\rm \\mathbf{arcseconds}``).
+- `edge`: Radial outer edges (in ``\\rm \\mathbf{arcseconds}``).
 - `mass`: Cumulative mass (in ``\\rm \\mathbf{M_\\odot}``).
 """
 function get_mass_profile(kappa::T, θx::T, θy::T, D_d::Float64; 
@@ -1428,7 +1430,7 @@ end
 # Parameter functions for various lenses
 # --------------------------------------------------------------------------------------------------
 """
-    parameter_NFWLens(; cosmology::Cosmology.AbstractCosmology = nothing, 
+    parameter_NFWLens(; cosmology::Cosmology.AbstractCosmology, 
                         z_d::Real  = NaN, 
                         mass::Real = NaN, 
                         x_s::Real  = NaN, 
@@ -1447,7 +1449,7 @@ will be overwritten.**
 # Returns
 - Named tuple of NFW lens parameters.
 """
-function parameter_NFWLens(; cosmology::Cosmology.AbstractCosmology = nothing, 
+function parameter_NFWLens(; cosmology::Cosmology.AbstractCosmology, 
                              z_d::Real  = NaN, 
                              mass::Real = NaN, 
                              x_s::Real  = NaN, 
@@ -1483,7 +1485,7 @@ end
 
 
 """
-    parameter_gNFWLens(; cosmology::Cosmology.AbstractCosmology = nothing, 
+    parameter_gNFWLens(; cosmology::Cosmology.AbstractCosmology, 
                          z_d::Real  = NaN, 
                          mass::Real = NaN, 
                          x_s::Real  = NaN, 
@@ -1504,7 +1506,7 @@ will be overwritten.**
 # Returns
 - Named tuple of gNFW lens parameters.
 """
-function parameter_gNFWLens(; cosmology::Cosmology.AbstractCosmology=nothing, 
+function parameter_gNFWLens(; cosmology::Cosmology.AbstractCosmology, 
                               z_d::Real  = NaN, 
                               mass::Real = NaN, 
                               x_s::Real  = NaN, 
@@ -1552,7 +1554,7 @@ end
 
 
 """
-    parameter_EinastoLens(; cosmology::Cosmology.AbstractCosmology=nothing, 
+    parameter_EinastoLens(; cosmology::Cosmology.AbstractCosmology, 
                             z_d::Real  = NaN, 
                             mass::Real = NaN, 
                             x_s::Real  = NaN, 
@@ -1573,7 +1575,7 @@ or the scale radius `x_s`. **If both are provided, `c` will be used to calculate
 # Returns
 - Named tuple of Einasto lens parameters.
 """
-function parameter_EinastoLens(; cosmology::Cosmology.AbstractCosmology=nothing, 
+function parameter_EinastoLens(; cosmology::Cosmology.AbstractCosmology, 
                                  z_d::Real  = NaN, 
                                  mass::Real = NaN, 
                                  x_s::Real  = NaN, 
