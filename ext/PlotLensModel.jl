@@ -494,7 +494,7 @@ function _plot_best_model(model::LensModel.ModelConfig, best_model::Lenses.Abstr
                                                 color       = :transparent, 
                                                 strokecolor = :dodgerblue, 
                                                 strokewidth = 2, 
-                                                label       = L"β_\text{model}")
+                                                label       = first_plot ? L"β_\text{model}" : nothing)
          end
 
          # Get image positions

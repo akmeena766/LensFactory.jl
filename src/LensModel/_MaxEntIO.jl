@@ -14,7 +14,35 @@ function _generate_map(map_dict::Dict, FOV::Union{Vector{<:Real}, NTuple{2, <:Re
    elseif map_type == :gaussian
       error("Gaussian map generation is not implemented yet.")
    elseif map_type == :custom
-      return readdlm(map_dict[:file], comments=true, comment_char='#')
+      # Check if file exist
+      _require(map_dict, :file)
+      file = String(map_dict[:file])
+      if !isfile(file)
+         error("Custom default map file not found: $file")
+      end
+
+      x_grid, y_grid, κ_map = JLD2.jldopen(file, "r") do f
+         for key in ("x", "y", "kappa")
+            if !haskey(f, key)
+               error("Custom default map $file must contain `x`, `y` and `kappa` (found: $(join(keys(f), ", "))).")
+            end
+         end
+         Matrix{Float64}(f["x"]), Matrix{Float64}(f["y"]), Matrix{Float64}(f["kappa"])
+      end
+
+      # Same shape for all three
+      if !(size(x_grid) == size(y_grid) == size(κ_map))
+         error("In $file, x, y and kappa must have the same size; got $(size(x_grid)), $(size(y_grid)), $(size(κ_map)).")
+      end
+
+      # Regular grid in get_meshgrid layout with spacing pixel_scale (throws ArgumentError otherwise)
+      Lenses.MultiPixelLens._check_grid(x_grid, y_grid, pixel_scale)
+
+      # Positive map (required by the entropy prior)
+      if any(v -> !(v > 0.0) || !isfinite(v), κ_map)
+         error("Custom default map in $file must be finite and positive in every pixel.")
+      end
+      return x_grid, y_grid, κ_map
    else
       error("Unsupported default map type: $map_type")
    end

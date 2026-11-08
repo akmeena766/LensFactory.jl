@@ -118,17 +118,17 @@ function get_meshgrid(θx::Real, θy::Real, dθ::Real)
    end
 
    # Number of pixels along x- and y-directions
-   nx = floor(Int, 2.0 * θx / dθ + 1)
-   ny = floor(Int, 2.0 * θy / dθ + 1)
+   nx = floor(Int, 2.0 * θx / dθ + 1.0 + 1.0E-9)
+   ny = floor(Int, 2.0 * θy / dθ + 1.0 + 1.0E-9)
 
    # Initialize an empty nx x ny grid
    grid_x = Matrix{T}(undef, nx, ny)
    grid_y = Matrix{T}(undef, nx, ny)
 
    # Filling the empty grid with positions
-   @inbounds for j = 1:ny     # Loop over y-dimension (i.e., columns)
+   @inbounds for j = 1:ny
       y_val = - θy + (j - 1.0) * dθ
-      @inbounds for i = 1:nx  # Loop over y-dimension (i.e., rows)
+      @inbounds for i = 1:nx
          grid_x[i, j] = - θx + (i - 1.0) * dθ
          grid_y[i, j] = y_val
       end
