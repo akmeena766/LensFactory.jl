@@ -892,9 +892,14 @@ function get_best_model(model::ModelConfig, optimizer::Vector{@NamedTuple{θ::Ve
    return best_model, best_run.f
 end
 
-function get_best_model(model::ModelConfig, optimizer::NamedTuple{(:κ, :κp, :runs, :converged)};
-                        run::Union{Symbol, Integer} = :last,
+function get_best_model(model::ModelConfig, optimizer::NamedTuple;
+                        run::Union{Symbol, Integer}      = :last,
                         run_path::Union{Nothing, String} = nothing)
+   # Check of the relevant key exist
+   if !haskey(optimizer, :kappa)
+      throw(ArgumentError("`optimizer` is not a MaxEnt result (no `kappa` field)."))
+   end
+   
    κ, _      = _maxent_map(model, optimizer, run, run_path)
    best_model = _build_maxent_model(model, κ)
    return best_model, _maxent_logL(model, best_model)
