@@ -79,13 +79,15 @@ end
 # --------------------------------------------------------------------------------------------------
 function log_prior(model::ModelConfig, κ::Matrix{Float64}, κp::Matrix{Float64})
    α = model.lens_config.alpha
-   return -α * sum(@. κp - κ + κ * log(κ / κp))
+   Δ2 = model.lens_config.pixels.pixel_scale^2
+   return -α * Δ2 * sum(@. κp - κ + κ * log(κ / κp))
 end
 
 
 function log_prior_grad(model::ModelConfig, κ::Matrix{Float64}, κp::Matrix{Float64})
    α = model.lens_config.alpha
-   return @. -α * log(κ / κp)
+   Δ2 = model.lens_config.pixels.pixel_scale^2
+   return @. -α * Δ2 * log(κ / κp)
 end
 
 
@@ -226,7 +228,7 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
 
       # Smoothed result: prior and starting map of the next run
       if run < method_cfg.n_runs
-         κp = _smooth_map(κ, method_cfg.smoothing)
+         κp = _smooth_map(κ, method_cfg.smoothing / pixels.pixel_scale)
          κ  = copy(κp)
       end
    end
