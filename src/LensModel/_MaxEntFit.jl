@@ -189,7 +189,7 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
       if method_cfg.save_runs
          mkpath(method_cfg.save_path)
          jldsave(joinpath(method_cfg.save_path, "$(model.observation.lens)_MaxEnt_run$(run).jld2");
-                 κ = κ, κp = κp, run = runs[end])
+                 kappa = κ, prior = κp, run = runs[end])
       end
 
       if verbose
@@ -241,5 +241,5 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
    end
 
    # Map and prior of the last run
-   return (κ = κ, κp = κp, runs = runs, converged = converged)
+   return (kappa = κ, prior = κp, runs = runs, converged = converged)
 end
