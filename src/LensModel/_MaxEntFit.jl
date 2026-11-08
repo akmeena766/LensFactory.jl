@@ -128,8 +128,11 @@ function run_optimizer(model::ModelConfig, param_ref::Dict{Tuple{Symbol,Symbol},
    # Kernel at the observed image positions (built once)
    K = LensModelUtils.build_kernel(model)
 
+   # Pixel grid of the map (stored with every run and with the result)
+   pixels = model.lens_config.pixels
+   
    # Default map: prior and starting map of the first run
-   κp = copy(model.lens_config.pixels.κ)
+   κp = copy(pixels.κ)
    if any(<=(0.0), κp)
       error("The default map must be positive in every pixel.")
    end
