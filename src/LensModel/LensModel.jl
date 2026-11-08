@@ -831,7 +831,7 @@ function _maxent_map(model::ModelConfig, optimizer::NamedTuple, run::Union{Symbo
  
    # The final map is stored with the result itself
    if run_id == n_runs
-      return optimizer.κ, run_id
+      return optimizer.kappa, run_id
    end
  
    # Earlier runs: per-run files
@@ -843,7 +843,7 @@ function _maxent_map(model::ModelConfig, optimizer::NamedTuple, run::Union{Symbo
       throw(ArgumentError("Map of MaxEnt run $run_id not found at $file. Runs other than the last " *
                           "need `save_runs: true`; pass `run_path` if the run files were moved."))
    end
-   return JLD2.load(file, "κ"), run_id
+   return JLD2.load(file, "kappa"), run_id
 end
 
 
