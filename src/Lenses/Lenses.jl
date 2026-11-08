@@ -1229,7 +1229,7 @@ function get_radial_profile(kappa::T, θx::T, θy::T;
    # Get the radial 1D grid based the input 2D grid and origin. If origin is not provided, then the 
    # largest value pixel will be chosen as the center.
    if origin === nothing
-      px, py = argmax(kappa).I
+      px, py = argmax(replace(kappa, NaN => -Inf)).I
       x0, y0 = θx[px, py], θy[px, py]
    else
       x0, y0 = origin
