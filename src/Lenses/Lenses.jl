@@ -789,7 +789,6 @@ function get_image(lens::AbstractLens, θx::T, θy::T, ψx::T, ψy::T, adis::Rea
    end
 
    # Lens mapping θ -> β on the full grid
-   ψx, ψy = get_deflection(lens, θx, θy)
    βx_grid = θx .- adis .* ψx
    βy_grid = θy .- adis .* ψy
 
