@@ -255,7 +255,7 @@ ngx, ngy = size(grid_x)
          @test length(edges)   == 40
          @test length(centers) == 39
          @test length(profile) == 39
-         @test all(p -> p == 0.0 || isapprox(p, 0.5; atol=1e-12), profile)
+         @test all(p -> isnan(p) || isapprox(p, 0.5; atol=1e-12), profile)
          @test all(centers .> 0.0)
          @test issorted(edges)
       end
