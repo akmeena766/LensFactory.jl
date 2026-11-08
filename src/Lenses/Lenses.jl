@@ -1259,14 +1259,13 @@ function get_radial_profile(kappa::T, θx::T, θy::T;
    kappa_clean = replace(kappa, NaN => 0.0)
    h_sum = fit(Histogram, vec(θ), weights(vec(kappa_clean)), edges)
    h_count = fit(Histogram, vec(θ), edges)
-   profile = [count > 0 ? s / count : 0.0 for (s, count) in zip(h_sum.weights, h_count.weights)]
+   profile = [count > 0 ? s / count : NaN for (s, count) in zip(h_sum.weights, h_count.weights)]
    return centers, profile, edges
 end
 
 
 """
-    get_mass_profile(kappa::T, θx::T, θy::T, 
-                     D_d::Real; 
+    get_mass_profile(kappa::T, θx::T, θy::T, D_d::Real; 
                      origin::Union{Tuple{Float64, Float64}, Nothing} = nothing, 
                      n_bin::Int64     = 50, 
                      bin_type::Symbol = :log) where T <: Matrix{<:Real} --> Tuple{Vector{Float64}, Vector{Float64}}
@@ -1289,30 +1288,43 @@ redshift, then divide the output mass values by ``a_{\\rm dis}``.
 - `bin_type = :log`: Type of radial binning (i.e., `:log` or `:linear`).
 
 # Returns
-- `centers`: Radial centers (in ``\\rm \\mathbf{arcseconds}``).
-- `mass`   : Cumulative mass (in ``\\rm \\mathbf{M_\\odot}``).
+- `Edge`: Radial outer edges (in ``\\rm \\mathbf{arcseconds}``).
+- `mass`: Cumulative mass (in ``\\rm \\mathbf{M_\\odot}``).
 """
 function get_mass_profile(kappa::T, θx::T, θy::T, D_d::Float64; 
                           origin::Union{Tuple{Float64, Float64}, Nothing} = nothing, 
                           n_bin::Int64     = 50, 
                           bin_type::Symbol = :log) where T <: Matrix{<:Real}
-   # Calculate convergence radial profile (in units of Σ_cr)
-   centers, profile, edges = get_radial_profile(kappa, θx, θy; origin=origin, n_bin=n_bin, bin_type=bin_type)
+   if origin === nothing
+      px, py = argmax(replace(kappa, NaN => -Inf)).I
+      x0, y0 = θx[px, py], θy[px, py]
+   else
+      x0, y0 = origin
+   end
 
-   # Get critical density for a source at z = ∞
+   # Pixel size
+   dθ = abs(θx[2, 1] - θx[1, 1])
+   r  = vec(@. sqrt((θx - x0)^2 + (θy - y0)^2))
+   k  = vec(replace(kappa, NaN => 0.0))
+   p  = sortperm(r); r = r[p]; k = k[p]
+
+   # Get critical density at Dds/Ds = 1
    Σ_cr = get_critical_density(D_d, 1.0, 1.0; unit=:msun_arcsec2)
-
-   # Mass profile unit conversion (Σ_cr --> M⊙/arcsec^2)
-   profile .= profile .* Σ_cr
+   csum = cumsum(k) .* (dθ^2 * Σ_cr)
 
    # Calcualte bin areas
-   θ_in  = edges[1:end-1]
-   θ_out = edges[2:end]
-   bin_areas = @. π * (θ_out^2 - θ_in^2)
-
-   # Cumulative mass sum
-   mass = cumsum(profile .* bin_areas)
-   return edges[2:end], mass
+   θ_max = maximum(r)
+   if bin_type == :log
+      edges = 10.0 .^ range(log10(dθ), log10(θ_max), length=n_bin)
+   elseif bin_type == :linear
+      edges = collect(range(dθ, θ_max, length=n_bin))
+   else
+      throw(ArgumentError("bin_type must be :log or :linear, got :$bin_type"))
+   end
+   
+   R = edges[2:end]
+   M = [(i = searchsortedlast(r, Ri)) == 0 ? 0.0 : csum[i] for Ri in R]
+   return R, M
 end
 
 
