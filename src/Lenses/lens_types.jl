@@ -592,7 +592,7 @@ function init_NFWLens(cosmology::Cosmology.AbstractCosmology, z_d::Real; x_c::Re
    elseif isfinite(x_s)
       c = θ_vir / x_s
    else
-      throw(ArgumentError("Provide concentration (c) or scale radius (x_s) in **parameter_NFWLens**."))
+      throw(ArgumentError("Provide concentration (c) or scale radius (x_s) in **init_NFWLens**."))
    end
    # 3D characteristic density
    ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
@@ -666,7 +666,7 @@ function init_eNFWMDLens(cosmology::Cosmology.AbstractCosmology, z_d::Real; x_c:
    elseif isfinite(x_s)
       c = θ_vir / x_s
    else
-      throw(ArgumentError("Provide concentration (c) or scale radius (x_s) in **parameter_NFWLens**."))
+      throw(ArgumentError("Provide concentration (c) or scale radius (x_s) in **init_NFWLens**."))
    end
    # 3D characteristic density
    ρ_s = (Δ_z / 3.0) * ρ_cz * c^3 / (log(1.0 + c) - (c / (1.0 + c)))
@@ -857,7 +857,7 @@ struct init_gNFWLens{T<:Real} <: AbstractLens
 end
 function init_gNFWLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, k_s::Real=NaN, x_s::Real=NaN, n::Real=1.0)
    if !(0.0 < n < 2.0)
-      throw(ArgumentError("Slope parameter outside allowed range n ∈ (0, 2) in **parameter_gNFWLens**."))
+      throw(ArgumentError("Slope parameter outside allowed range n ∈ (0, 2) in **init_gNFWLens**."))
    end
 
    D_d, x_c, y_c, k_s, x_s, n = promote(D_d, x_c, y_c, k_s, x_s, n)
@@ -867,7 +867,7 @@ end
 function init_gNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::Real; x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_s::Real=NaN, c::Real=NaN, n::Real=1.0)
    # Check for valid slope parameter
    if !(0.0 < n < 2.0)
-      throw(ArgumentError("Slope parameter outside allowed range n ∈ (0, 2) in **parameter_gNFWLens**."))
+      throw(ArgumentError("Slope parameter outside allowed range n ∈ (0, 2) in **init_gNFWLens**."))
    end
 
    # Integrand function for mass calculation
@@ -893,7 +893,7 @@ function init_gNFWLens(cosmology::Cosmology.AbstractCosmology, z_d::Real; x_c::R
    elseif isfinite(x_s)
       c = θ_vir / x_s
    else
-      throw(ArgumentError("Provide at least c or x_s in **parameter_gNFWLens**."))
+      throw(ArgumentError("Provide at least c or x_s in **init_gNFWLens**."))
    end
    mass_c, _ = quadgk(x -> integrand(x, n), 0, c)
    
@@ -964,7 +964,7 @@ function init_EinastoLens(cosmology::Cosmology.AbstractCosmology, z_d::Real; x_c
    elseif isfinite(x_s)
       c = θ_vir / x_s
    else
-      throw(ArgumentError("Provide at least c or x_s in **parameter_EinastoLens**."))
+      throw(ArgumentError("Provide at least c or x_s in **init_EinastoLens**."))
    end
    Pax, _ = gamma_inc(3.0 / n, (2.0 / n) * c^n)
    mass_e = (1.0 / n) * (n / 2.0)^(3.0 / n) * gamma(3.0 / n) * Pax

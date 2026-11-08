@@ -247,7 +247,7 @@ ngx, ngy = size(grid_x)
    end
 
    @testset "get_*_profile" begin
-      # Constant convergence map ⇒ radial profile is flat (empty bins return 0)
+      # Constant convergence map ⇒ radial profile is flat
       κ_const = fill(0.5, size(grid_x))
       for bin_type in (:linear, :log)
          centers, profile, edges = Lenses.get_radial_profile(κ_const, grid_x, grid_y;

@@ -336,10 +336,6 @@ end
                          pad::Real           = 0.1,
                          cfac::Real          = 1.0,
                          max_candidates::Int = 100_000) --> Vector{NTuple{2, Float64}}
-Find the solutions ``\\pmb{θ}`` of the lens equation ``\\pmb{β}(\\pmb{θ}) = \\pmb{β}`` on a grid
-as the intersection points of the zero contours of ``β_x(\\pmb{θ}) - β_x`` and
-``β_y(\\pmb{θ}) - β_y``. The contours are traced with marching squares and intersected as
-piecewise-linear curves, so the accuracy is set by the grid resolution.
 
 # Arguments
 - `θx`, `θy`: Image-plane grid (same layout as `Lenses.get_meshgrid`).
