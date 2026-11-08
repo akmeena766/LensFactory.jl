@@ -336,14 +336,52 @@ end
                          pad::Real           = 0.1,
                          cfac::Real          = 1.0,
                          max_candidates::Int = 100_000) --> Vector{NTuple{2, Float64}}
+Find the solutions ``\\pmb{θ}`` of the lens equation ``\\pmb{β}(\\pmb{θ}) = \\pmb{β}``. Each grid
+cell is split into two triangles, and triangles whose source-plane image can contain ``\\pmb{β}`` 
+are subdivided recursively. Once a triangle is smaller than `tol_refine` (and does not straddle a
+critical curve), Newton-Raphson refines the image position until the source-plane residual is below
+`tol_source`. The accuracy is independent of the grid resolution.
 
 # Arguments
+- `lens_map`: `(x, y) -> (βx, βy)`, the lens equation at a single point.
+- `lens_jac`: `(x, y) -> (A11, A12, A21, A22)`, its Jacobian ``∂\\pmb{β}/∂\\pmb{θ}``.
 - `θx`, `θy`: Image-plane grid (same layout as `Lenses.get_meshgrid`).
 - `βx`, `βy`: Grid mapped to the source plane.
 - `β`: Source position.
 
+# Keyword Arguments
+- `tol_images = 1.0E-8`: Smallest triangle size (longest edge, in ``\\rm \\mathbf{arcseconds}``).
+   Triangles are not subdivided below this size; also sets the duplicate-merging distance
+   (`10 * tol_images`).
+- `tol_refine = 1.0E-3`: Triangle size (in ``\\rm \\mathbf{arcseconds}``) below which Newton-Raphson
+   is attempted. Larger values hand over to Newton earlier (faster); smaller values make the
+   starting point safer near critical curves.
+- `tol_source = 1.0E-6`: Largest source-plane residual (in ``\\rm \\mathbf{arcseconds}``) for a
+   point to be accepted as an image.
+- `max_levels = 20`: Maximum number of subdivision levels below the initial grid.
+- `max_newton = 20`: Maximum number of Newton iterations per candidate. With `0`, no Newton step is
+   taken and triangles are refined down to `tol_images` / `max_levels`.
+- `pad = 0.1`: Fractional padding of the containment tests (bounding box and barycentric
+   coordinates), and of the check that a Newton solution lies inside its triangle.
+- `cfac = 1.0`: Safety factor multiplying the curvature-based tolerance ``δ``. Increase it if images
+   are missed near strongly curved regions (e.g. close to critical curves); decrease it to keep
+   fewer candidate triangles.
+- `max_candidates = 100_000`: Maximum number of candidate triangles at any level. Exceeding it
+   raises an error, which usually means the solutions are not isolated points (e.g. an Einstein
+   ring for a source exactly behind an axisymmetric lens).
+
 # Returns
-- `Vector{NTuple{2, Float64}}`: Image positions as `(x, y)` tuples.
+- `Vector{NTuple{2, Float64}}`: Image positions as `(x, y)` tuples (in ``\\rm \\mathbf{arcseconds}``).
+   The order is by increasing source-plane residual, not by position or parity.
+
+# Throws
+- `ArgumentError` if the four grids do not share the same axes, the grid is smaller than ``2 × 2``,
+   any of `tol_images`, `tol_refine`, `tol_source` is not positive, or `max_levels` / `max_newton`
+   is negative.
+- `ErrorException` if the number of candidate triangles exceeds `max_candidates`.
+
+See also [`find_images_contour`](@ref) and [`Lenses.get_image`](@ref), which builds `lens_map` and
+`lens_jac` from a lens model.
 """
 function find_images_adaptive(lens_map::F, lens_jac::G,
                               θx::T, θy::T, βx::T, βy::T, β::NTuple{2, Real};
