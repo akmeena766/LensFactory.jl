@@ -604,7 +604,7 @@ function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::M
                           burn_in::Float64 = 0.2,
                           method::Symbol   = :contour)
    # Get the best parameters based on minimum logL
-   best_θ, _ = get_best_fit_parameters(logL; chains=chains, burn_in=burn_in)
+   best_θ, _ = get_best_fit_parameters(chains, logL; burn_in=burn_in)
 
    # Get best-fit model, parameter values and cosmology
    param_ref = Dict(p.key => p.refer for p in model.parameters)
@@ -742,7 +742,7 @@ function get_adis(data_jld2::JLD2.JLDFile; source_id::Union{Int64, Symbol} = :al
    end
 
    # Get the best parameters based on maximum log-likelihood
-   best_θ, _ = get_best_fit_parameters(logL; chains=chains, burn_in=burn_in)
+   best_θ, _ = get_best_fit_parameters(chains, logL; burn_in=burn_in)
  
    # Best-fit parameter values and cosmology (no lens model needed)
    param_ref = Dict(p.key => p.refer for p in model.parameters)
@@ -839,9 +839,7 @@ end
 
 
 """
-    get_best_model(model::ModelConfig; 
-                   chains::Array{Float64, 3}, 
-                   logL::Matrix{Float64},
+    get_best_model(model::ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64};
                    burn_in::Float64 = 0.2)
 Get the best-fit lens model based on the MCMC results stored in `chains` and `logL`. The best-fit 
 parameters are determined by the minimum log-likelihood in `logL`.
@@ -860,7 +858,7 @@ parameters are determined by the minimum log-likelihood in `logL`.
 function get_best_model(model::ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64};
                         burn_in::Float64 = 0.2)
    # Get best-fit model
-   best_θ, best_logL = get_best_fit_parameters(logL; chains=chains, burn_in=burn_in)
+   best_θ, best_logL = get_best_fit_parameters(chains, logL; burn_in=burn_in)
    
    # Build best-fit lens model
    param_ref = Dict(p.key => p.refer for p in model.parameters)
@@ -1411,7 +1409,7 @@ function get_source_position(data_jld2::JLD2.JLDFile; source_id::Union{Symbol, I
    end
 
    # Get the best parameters based on maximum log-likelihood
-   best_θ, _ = get_best_fit_parameters(logL; chains=chains, burn_in=burn_in)
+   best_θ, _ = get_best_fit_parameters(chains, logL; burn_in=burn_in)
  
    # Build the best-fit lens model, parameter values and cosmology
    param_ref = Dict(p.key => p.refer for p in model.parameters)
@@ -1452,7 +1450,9 @@ end
 
 
 """
-    predict_image(jld2_file::JLD2.JLDFile, θx::T, θy::T, z_s::Float64; unit::Symbol=:RA_DEC) where T <: Union{Real, Vector{Float64}}
+    predict_image(jld2_file::JLD2.JLDFile, θx::T, θy::T, z_s::Float64; 
+                  unit::Symbol     = :RA_DEC
+                  burn_in::Float64 = 0.2) where T <: Union{Real, Vector{Float64}}
 Predict counter-image positions, magnifications and time delays based on the best-fit lens model.
 The function can take either a single observed image or multiple observed images of the same system.
 If multiple images are provided then the function will calculate the barycentric source position and
@@ -1474,7 +1474,10 @@ then predict the counter-image positions, magnifications and time delays.
    The table is sorted based on the time delay and at the end also contains the best-fit model 
    predicted source position.
 """
-function predict_image(data_jld2::JLD2.JLDFile, θx::T, θy::T, z_s::Float64; unit::Symbol=:RA_DEC) where T <: Union{Real, Vector{Float64}}
+function predict_image(data_jld2::JLD2.JLDFile, θx::T, θy::T, z_s::Float64; 
+                       unit::Symbol     = :RA_DEC,
+                       burn_in::Float64 = 0.2,
+                       thin::Int64      = 1) where T <: Union{Real, Vector{Float64}}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
@@ -1486,7 +1489,7 @@ function predict_image(data_jld2::JLD2.JLDFile, θx::T, θy::T, z_s::Float64; un
    logL   = data_jld2["logL"]
 
    # Get best-fit lens model
-   best_model, _ = get_best_model(model; chains=chains, logL=logL)
+   best_model, _ = get_best_model(model, chains, logL; burn_in=burn_in)
 
    # Construct grid
    FOV = model.observation.FOV
@@ -1494,7 +1497,7 @@ function predict_image(data_jld2::JLD2.JLDFile, θx::T, θy::T, z_s::Float64; un
    x_grid, y_grid = Lenses.get_meshgrid(0.5 * FOV[1], 0.5 * FOV[2], pixel_scale)
 
    # Get (best-fit) cosmology
-   best_θ, _ = get_best_fit_parameters(logL; chains=chains)
+   best_θ, _ = get_best_fit_parameters(chains, logL; burn_in=burn_in, thin=thin)
    param_ref = Dict(p.key => p.refer for p in model.parameters)
    pvals     = LensModelUtils.param_dict(model, best_θ, param_ref)
    cosmo     = LensModelUtils.current_cosmology(model, pvals)

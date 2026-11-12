@@ -162,11 +162,10 @@ function LensFactory.LensModel.plot_corner(chains, logL;
    n_params = length(plot_idx)
    
    # Get best-fit parameter and errors
-   best_θ_all, _, lower_err_all, upper_err_all = LensFactory.LensModel.get_best_fit_parameters(logL; 
-                                                   chains       = chains, 
-                                                    with_errors = true, 
-                                                    burn_in     = burn_in, 
-                                                    thin        = thin)
+   best_θ_all, _, lower_err_all, upper_err_all = LensFactory.LensModel.get_best_fit_parameters(chains, logL; 
+                                                 with_errors = true, 
+                                                 burn_in     = burn_in, 
+                                                 thin        = thin)
 
    # Get best-fit and errors for selected parameters
    best_θ    = best_θ_all[plot_idx]
@@ -619,7 +618,7 @@ function LensFactory.LensModel.plot_best_model(model::LensModel.ModelConfig,
                                               logL::Matrix{Float64};
                                               kwargs...)
    # Get the best parameters based on minimum log-likelihood
-   best_θ, _ = LensFactory.LensModel.get_best_fit_parameters(logL; chains=chains)
+   best_θ, _ = LensFactory.LensModel.get_best_fit_parameters(chains, logL)
 
    # Get list of parameters for the lens model
    param_ref = Dict(p.key => p.refer for p in model.parameters)
@@ -674,7 +673,7 @@ function LensFactory.LensModel.plot_image_scatter(model::LensModel.ModelConfig,
                                                                             strokecolor = :black, 
                                                                             strokewidth = 2))
    # Get the best parameters based on minimum log-likelihood
-   best_θ, _ = LensFactory.LensModel.get_best_fit_parameters(logL; chains=chains)
+   best_θ, _ = LensFactory.LensModel.get_best_fit_parameters(chains, logL)
  
    # Get list of parameters for the lens model
    param_ref = Dict(p.key => p.refer for p in model.parameters)
