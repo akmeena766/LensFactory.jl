@@ -292,7 +292,7 @@ function get_best_fit_parameters(chains::Array{Float64, 3}, logL::Matrix{Float64
                                  with_errors::Bool = false,
                                  thin::Int64       = 1)
    # Remove Burn-in only
-   start_idx   = _burn_in_start(n_steps, burn_in)
+   start_idx   = _burn_in_start(size(chains, 1), burn_in)
    burnin_logL = @view logL[start_idx:end, :]
 
    # Get (step, chain) of the best logL by finding the index of the maximum value in the logL matrix
