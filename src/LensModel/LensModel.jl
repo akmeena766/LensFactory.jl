@@ -1497,7 +1497,7 @@ function predict_image(data_jld2::JLD2.JLDFile, θx::T, θy::T, z_s::Float64;
    x_grid, y_grid = Lenses.get_meshgrid(0.5 * FOV[1], 0.5 * FOV[2], pixel_scale)
 
    # Get (best-fit) cosmology
-   best_θ, _ = get_best_fit_parameters(chains, logL; burn_in=burn_in, thin=thin)
+   best_θ, _ = get_best_fit_parameters(chains, logL; burn_in=burn_in)
    param_ref = Dict(p.key => p.refer for p in model.parameters)
    pvals     = LensModelUtils.param_dict(model, best_θ, param_ref)
    cosmo     = LensModelUtils.current_cosmology(model, pvals)
