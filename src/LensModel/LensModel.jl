@@ -266,25 +266,20 @@ function _quantile_errors(chains::Array{Float64, 3}, best_θ::Vector{Float64}, q
 end
 
 """
-    get_best_fit_parameters(results::Union{Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, Matrix{Float64}}; 
-                            chains::Matrix{Float64}, 
+    get_best_fit_parameters(chains::Array{Float64, 3}, logL::Matrix{Float64};
                             burn_in::Float64  = 0.2, 
                             with_errors::Bool = false, 
                             thin::Int64       = 1) --> Vector{Float64}, Float64
 Get the best-fit parameters from the optimization or MCMC results.
 
 # Arguments
-- `results: The optimization or MCMC results. From optimizer we are assuming that we get 
-   `Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}`.
+- `chains`: 
+- `logL`  :
 
 # Keyword Arguments
-- `chains      = nothing`: MCMC chains. The dimensions should be 
-   `(n_steps, n_chains, n_parameters)`. This is only required when `results` is a `Matrix{Float64}`.
 - `burn_in     = 0.2`: The fraction of MCMC chains to discard as burn-in (default: 0.2).
-- `with_errors = false`: If `true`, then also return 1-sigma uncertainties for best-fit 
-   parameters. But it will only work if `chains` are provided.
-- `thin        = 1`: The thinning factor to apply to the MCMC chains while calculating parameter 
-   uncertainties.
+- `with_errors = false`: If `true`, then also return 1-sigma uncertainties for best-fit parameters.
+- `thin        = 1`: The thinning factor to apply to the MCMC chains while calculating parameter uncertainties.
 
 # Returns
 - `best_θ` : Best-fit parameter values.
@@ -292,30 +287,17 @@ Get the best-fit parameters from the optimization or MCMC results.
 - `low_err`: Lower 1-sigma uncertainties (only if `with_errors = true`).
 - `upp_err`: Upper 1-sigma uncertainties (only if `with_errors = true`).
 """
-function get_best_fit_parameters(results::Union{Vector{<:NamedTuple}, Matrix{Float64}}; 
-                                 chains::Array{Float64, 3},
-                                 burn_in::Float64     = 0.2,
-                                 with_errors::Bool    = false,
-                                 thin::Int64          = 1)
-   # Case A: Input is from the Parallel Optimizer (Vector of NamedTuples)
-   if results isa Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}
-      # We already sorted the results in descending order of logL, so results[1] is the best fit
-      best_run  = results[1]
-      return best_run.θ, best_run.f
-   end
-
-   # Case B: Input is from MCMC (log-likelihood matrix)
-   n_steps = size(chains, 1)
-
+function get_best_fit_parameters(chains::Array{Float64, 3}, logL::Matrix{Float64};
+                                 burn_in::Float64  = 0.2,
+                                 with_errors::Bool = false,
+                                 thin::Int64       = 1)
    # Remove Burn-in only
-   start_idx     = _burn_in_start(n_steps, burn_in)
-   burnin_chains = chains[start_idx:end, :, :]
-   burnin_logL   = results[start_idx:end, :]
+   start_idx   = _burn_in_start(n_steps, burn_in)
+   burnin_logL = @view logL[start_idx:end, :]
 
    # Get (step, chain) of the best logL by finding the index of the maximum value in the logL matrix
-   best_idx        = argmax(burnin_logL)
-   step, chain_num = best_idx[1], best_idx[2]
-   best_θ          = burnin_chains[step, chain_num, :]
+   step, chain_num = Tuple(argmax(burnin_logL))
+   best_θ          = chains[start_idx + step - 1, chain_num, :]
    best_logL       = burnin_logL[step, chain_num]
 
    if with_errors
@@ -327,8 +309,19 @@ end
 
 
 """
-    print_best_fit_model(logL::Matrix{Float64};
-                         chains::Array{Float64, 3},
+    get_best_fit_parameters(optimizer::Vector{<:NamedTuple})
+"""
+function get_best_fit_parameters(optimizer::Vector{<:NamedTuple})
+   if isempty(optimizer)
+      throw(ArgumentError("No optimizer runs in `optimizer`."))
+   end
+   best_run = optimizer[argmax([r.f for r in optimizer])]
+   return best_run.θ, best_run.f
+end
+
+
+"""
+    print_best_fit_model(chains::Array{Float64, 3}, logL::Matrix{Float64};
                          free_parameter_names::Vector{Tuple{Symbol, Symbol}},
                          burn_in::Float64 = 0.2,
                          thin::Int64      = 1,
@@ -337,11 +330,10 @@ Print the best-fit parameters from the MCMC results along with their [-1σ, +1σ
 ranges in a table. The ranges are given relative to the best-fit value.
 
 # Arguments
-- `logL::Matrix{Float64}`: The log-likelihood values of the MCMC samples, with dimensions 
-   `(n_steps, n_chains)`.
+- `chains`:
+- `logL`  : The log-likelihood values of the MCMC samples, with dimensions `(n_steps, n_chains)`.
 
 # Keyword Arguments
-- `chains`              : (Required) MCMC chains. The dimensions should be `(n_steps, n_chains, n_parameters)`.
 - `free_parameter_names`: (Required) `(owner, parameter)` names of the free parameters, in the same 
    order as the chains, e.g. from [`free_parameter_names`](@ref)`(model)`.
 - `burn_in = 0.2`       : The fraction of MCMC chains to discard as burn-in.
@@ -351,8 +343,7 @@ ranges in a table. The ranges are given relative to the best-fit value.
 # Returns
 - `nothing`
 """
-function print_best_fit_model(logL::Matrix{Float64};
-                              chains::Array{Float64, 3},
+function print_best_fit_model(chains::Array{Float64, 3}, logL::Matrix{Float64};
                               free_parameter_names::Vector{Tuple{Symbol, Symbol}},
                               burn_in::Float64 = 0.2,
                               thin::Int64      = 1,
@@ -364,7 +355,7 @@ function print_best_fit_model(logL::Matrix{Float64};
    end
 
    # Best-fit, 1σ and 2σ ranges
-   best_θ, _ = get_best_fit_parameters(logL; chains, burn_in)
+   best_θ, _ = get_best_fit_parameters(chains, logL; burn_in)
    lower_err,  upper_err  = _quantile_errors(chains, best_θ, 0.1587, 0.8413; burn_in, thin)
    lower_err2, upper_err2 = _quantile_errors(chains, best_θ, 0.0228, 0.9772; burn_in, thin)
 
@@ -1701,7 +1692,7 @@ function save_best_fits(data_jld2::JLD2.JLDFile;
    time   = data_jld2["Time"]
 
    # Get best-fit model
-   best_model, _ = get_best_model(model; chains=chains, logL=logL, burn_in=burn_in)
+   best_model, _ = get_best_model(model, chains, logL; burn_in=burn_in)
 
    # Generate grid
    FOV = model.observation.FOV
