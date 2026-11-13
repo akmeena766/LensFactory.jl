@@ -273,8 +273,10 @@ end
 Get the best-fit parameters from the optimization or MCMC results.
 
 # Arguments
-- `chains`: 
-- `logL`  :
+- `chains`: The MCMC chains containing the sampled parameter values. The dimensions should be 
+   (n_steps, n_chains, n_parameters).
+- `logL`  : The logL values corresponding to each sample in the MCMC chains. The dimensions should 
+   be (n_steps, n_chains).
 
 # Keyword Arguments
 - `burn_in     = 0.2`: The fraction of MCMC chains to discard as burn-in (default: 0.2).
@@ -330,8 +332,10 @@ Print the best-fit parameters from the MCMC results along with their [-1σ, +1σ
 ranges in a table. The ranges are given relative to the best-fit value.
 
 # Arguments
-- `chains`:
-- `logL`  : The log-likelihood values of the MCMC samples, with dimensions `(n_steps, n_chains)`.
+- `chains`: The MCMC chains containing the sampled parameter values. The dimensions should be 
+   (n_steps, n_chains, n_parameters).
+- `logL`  : The logL values corresponding to each sample in the MCMC chains. The dimensions should 
+   be (n_steps, n_chains).
 
 # Keyword Arguments
 - `free_parameter_names`: (Required) `(owner, parameter)` names of the free parameters, in the same 
@@ -591,7 +595,7 @@ The function prints a table showing the RMS for each knot image, as well as a gl
 - `chains`: The MCMC chains containing the sampled parameter values. The dimensions should be 
    (n_steps, n_chains, n_parameters).
 - `logL`  : The logL values corresponding to each sample in the MCMC chains. The dimensions should 
-   be (n_steps, n_steps).
+   be (n_steps, n_chains).
 
 # Keyword Arguments
 - `burn_in = 0.2`: The fraction of MCMC chains to discard as burn-in while determining best-fit 
@@ -842,14 +846,14 @@ end
     get_best_model(model::ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64};
                    burn_in::Float64 = 0.2)
 Get the best-fit lens model based on the MCMC results stored in `chains` and `logL`. The best-fit 
-parameters are determined by the minimum log-likelihood in `logL`.
+parameters are determined by the maximum log-likelihood in `logL`.
 
 # Arguments
 - `model::ModelConfig`: The lens model configuration used for the MCMC fit.
 - `chains::Array{Float64, 3}`: The MCMC chains containing the sampled parameter values. The 
    dimensions should be (n_steps, n_chains, n_parameters).
 - `logL::Matrix{Float64}`: The log-likelihood values corresponding to each sample in the MCMC chains.
-   The dimensions should be (n_steps, n_steps).
+   The dimensions should be (n_steps, n_chains).
 
 # Returns
 - `best_model`: Best-fit lens model constructed using the best-fit parameters.
@@ -1451,7 +1455,7 @@ end
 
 """
     predict_image(jld2_file::JLD2.JLDFile, θx::T, θy::T, z_s::Float64; 
-                  unit::Symbol     = :RA_DEC
+                  unit::Symbol     = :RA_DEC,
                   burn_in::Float64 = 0.2) where T <: Union{Real, Vector{Float64}}
 Predict counter-image positions, magnifications and time delays based on the best-fit lens model.
 The function can take either a single observed image or multiple observed images of the same system.
@@ -1465,9 +1469,10 @@ then predict the counter-image positions, magnifications and time delays.
 - `z_s::Float64`: Source redshift.
 
 # Keyword Arguments
-- `unit::Symbol=:RA_DEC`: Unit of the input coordinates. 
+- `unit = :RA_DEC`: Unit of the input coordinates. 
    - `:RA_DEC`: (θx, θy) are assumed to be in RA/DEC (in degrees).
    - `:arcsec`: (θx, θy) are assumed to be in arcseconds.
+- `burn_in = 0.2` : The fraction of MCMC chains to discard as burn-in (default: 0.2). 
 
 # Returns
 - `nothing`: Prints the counter-image positions, magnifications and time delays in a table format.
@@ -1476,8 +1481,7 @@ then predict the counter-image positions, magnifications and time delays.
 """
 function predict_image(data_jld2::JLD2.JLDFile, θx::T, θy::T, z_s::Float64; 
                        unit::Symbol     = :RA_DEC,
-                       burn_in::Float64 = 0.2,
-                       thin::Int64      = 1) where T <: Union{Real, Vector{Float64}}
+                       burn_in::Float64 = 0.2) where T <: Union{Real, Vector{Float64}}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
