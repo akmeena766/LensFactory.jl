@@ -270,7 +270,7 @@ end
                             burn_in::Float64  = 0.2, 
                             with_errors::Bool = false, 
                             thin::Int64       = 1) --> Vector{Float64}, Float64
-Get the best-fit parameters from the optimization or MCMC results.
+Get the best-fit parameters from MCMC results.
 
 # Arguments
 - `chains`: The MCMC chains containing the sampled parameter values. The dimensions should be 
@@ -311,7 +311,20 @@ end
 
 
 """
-    get_best_fit_parameters(optimizer::Vector{<:NamedTuple})
+    get_best_fit_parameters(optimizer::Vector{<:NamedTuple}) --> Vector{Float64}, Float64
+Get the best-fit parameters from the optimization results. The best-fit run is the one with the 
+maximum logL among all optimizer runs.
+
+# Arguments
+- `optimizer`: The optimization results, one `NamedTuple` per optimizer run, each with fields `θ` 
+   (the optimized parameter values) and `f` (the logL value at `θ`).
+
+# Returns
+- `best_θ`: Best-fit parameter values.
+- `logL`  : logL value corresponding to the best-fit parameters.
+
+# Throws
+- `ArgumentError`: If `optimizer` is empty.
 """
 function get_best_fit_parameters(optimizer::Vector{<:NamedTuple})
    if isempty(optimizer)
