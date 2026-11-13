@@ -620,7 +620,7 @@ The function prints a table showing the RMS for each knot image, as well as a gl
 function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64}; 
                           burn_in::Float64 = 0.2,
                           method::Symbol   = :contour)
-   # Get the best parameters based on minimum logL
+   # Get the best parameters based on maximum logL
    best_θ, _ = get_best_fit_parameters(chains, logL; burn_in=burn_in)
 
    # Get best-fit model, parameter values and cosmology
