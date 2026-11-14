@@ -127,48 +127,43 @@ end
 # --------------------------------------------------------------------------------------------------
 # Time series diagnostics
 # --------------------------------------------------------------------------------------------------
-# """
-#     autocorrelation(chains; param_names, burn_in)
-# Compute and print the Integrated Autocorrelation Time (IAT / τ) and Effective
-# Sample Size (ESS) for each free parameter across all walkers.
- 
-# # Arguments
-# - `chains::Array{Float64, 3}`: MCMC chain array of shape `(n_steps, n_walkers, n_params)`,
-#    as returned by `aies_runner`.
- 
-# # Keyword Arguments
-# - `param_names::Union{Vector{Tuple{Symbol, Symbol}}, Nothing} = nothing`: optional vector
-#   of `(owner, param)` tuples identifying each parameter column. If `nothing`, labels default to
-#   `"Lens"` / `"theta_i"`.
-# - `burn_in::Float64 = 0.2`: fraction of steps to discard as burn-in before computing statistics. 
-#    `start_idx = floor(n_steps * burn_in) + 1`.
- 
-# # Returns
-# - `nothing`: Prints a formatted table with one row per parameter and the following columns:
+# τ = 1 + 2 Σ_{k=1}^{K} ρ_k, where ρ_k = Σ_t z_t z_{t+k} / Σ_t z_t² (z = x - mean(x)) and K is the
+# last lag before ρ first becomes ≤ 0 (or `max_lag` if it never does). Lags are computed one at a
+# time and the loop stops at the first non-positive ρ_k, so a well-mixed chain only needs a few lags.
+function _integrated_autocorr_time(x::AbstractVector{Float64}, max_lag::Int)
+   n = length(x)
+   μ = sum(x) / n
+   z = x .- μ
+   c0 = 0.0
+   @inbounds @simd for t in 1:n
+      c0 += z[t] * z[t]
+   end
+   c0 == 0.0 && return 1.0
 
-# ```
-# | Owner | Parameter | Tau (τ) | ESS | ESS % |
-# ```
- 
-# - `Owner`     : First element of the `param_names` tuple (e.g. `:SIE`, `:src`).
-# - `Parameter` : Second element of the `param_names` tuple (e.g. `:b`, `:x`).
-# - `Tau (τ)`   : Average IAT across walkers. Values >> 1 indicate strong autocorrelation;
-#                 τ ≈ 1 means nearly independent samples.
-# - `ESS`       : Effective Sample Size = total post-burn-in samples / τ.
-# - `ESS %`     : ESS as a percentage of total post-burn-in samples.
- 
-# # Notes
-# - IAT is estimated per walker and averaged, avoiding artificial decorrelation
-#   from flattening walkers into a single chain.
-# - Autocorrelation is truncated at the first negative lag (Sokal windowing,
-#   simplified). This is conservative — a full automated-windowing estimator
-#   can be substituted later for very long chains.
-# - Lags are capped at `min(N ÷ 5, 2000)` where `N` is the post-burn-in length
-#   per walker — the standard recommendation beyond which lag estimates become
-#   noise-dominated.
-# - A healthy ESS% is typically > 1–2%. Very low values (< 0.5%) suggest the
-#   chain needs more steps or the sampler is poorly mixed.
-# """
+   acc = 0.0
+   for k in 1:min(max_lag, n - 1)
+      ck = 0.0
+      @inbounds @simd for t in 1:(n - k)
+         ck += z[t] * z[t + k]
+      end
+      ρ = ck / c0
+      ρ <= 0.0 && break
+      acc += ρ
+   end
+   return 1.0 + 2.0 * acc
+end
+
+
+# Compute and print the Integrated Autocorrelation Time (IAT / τ) and Effective Sample Size (ESS) 
+# for each free parameter across all walkers.
+# - IAT is estimated per walker and averaged, avoiding artificial decorrelation from flattening 
+#   walkers into a single chain.
+# - Autocorrelation is truncated at the first negative lag (Sokal windowing, simplified). This is 
+#   conservative — a full automated-windowing estimator can be substituted later for very long chains.
+# - Lags are capped at `min(N ÷ 5, 2000)` where `N` is the post-burn-in length per walker — the 
+#   standard recommendation beyond which lag estimates become noise-dominated.
+# - A healthy ESS% is typically > 1–2%. Very low values (< 0.5%) suggest the chain needs more steps 
+#   or the sampler is poorly mixed.
 function autocorrelation(chains::Array{Float64, 3}; 
                          free_param_names::Union{Vector{Tuple{Symbol, Symbol}}, Nothing} = nothing, 
                          burn_in::Float64                                                = 0.2)
@@ -184,40 +179,27 @@ function autocorrelation(chains::Array{Float64, 3};
    avg_taus = zeros(Float64, n_params)
    ess_vals = zeros(Float64, n_params)
 
+   # -- Per-walker IAT, computed in parallel -------------------------------------------------------
+   # Every (walker, parameter) pair is independent; each iteration writes only to its own slot.
+   taus = Matrix{Float64}(undef, n_walkers, n_params)
+   @threads for k in 1:(n_walkers * n_params)
+      w, i = fldmod1(k, n_walkers)
+      @views chain_data = chains[start_idx:end, w, i]
+
+      # Limit lags to N/5 — beyond this, estimates are noise-dominated.
+      max_lag = min(length(chain_data) ÷ 5, 2000)
+      taus[w, i] = _integrated_autocorr_time(chain_data, max_lag)
+   end
+
+
+
    # -- Printing the UI ----------------------------------------------------------------------------
    println("\n" * "-"^78)
    @printf("| %-14s | %-16s | %-12s | %-12s | %-8s |\n", "Owner", "Parameter", "Tau (τ)", "ESS", "ESS [%]")
    println("-"^78)
 
    for i in 1:n_params
-      tau_total = 0.0
-      
-      # Calculate τ per chain to avoid artificial "jumps" from flattening
-      for w in 1:n_walkers
-         @views chain_data = chains[start_idx:end, w, i]
-         
-         # Limit lags to N/5 — the standard recommendation beyond which
-         # autocorrelation estimates become unreliable due to sample noise.
-         max_lag = min(length(chain_data) ÷ 5, 2000)
-         ac      = StatsBase.autocor(chain_data, 0:max_lag)
-         
-         # Integrated Autocorrelation Time (IAT)
-         # Truncate at the first negative lag to avoid noise inflation.
-         # Note: for very noisy chains this may truncate early; a full
-         # automated-windowing estimator (Sokal 1989) can be added later.
-         idx     = findfirst(val -> val <= 0.0, ac)
-         stop_at = isnothing(idx) ? length(ac) : idx - 1
-         
-         # Tau formula: 1 + 2 * sum(autocorrelations)
-         if stop_at < 2
-            tau_w = 1.0
-         else
-            tau_w = 1.0 + 2.0 * sum(@view ac[2:stop_at])
-         end
-         tau_total += tau_w
-      end
-      
-      avg_tau = tau_total / n_walkers
+      avg_tau = sum(@view taus[:, i]) / n_walkers
       ess     = total_samples / avg_tau
       ess_per = (ess / total_samples) * 100
       
@@ -234,40 +216,11 @@ function autocorrelation(chains::Array{Float64, 3};
 end
 
 
-# """
-#     acceptance_rate(chains; burn_in)
-# Compute and print the acceptance rate for each walker, along with an ensemble
-# sparkline and sampler health guidance.
- 
-# # Arguments
-# - `chains::Array{Float64, 3}` : MCMC chain array of shape `(n_steps, n_walkers, n_params)`,
-#   as returned by `aies_runner`.
- 
-# # Keyword Arguments
-# - `burn_in::Float64 = 0.2` : fraction of steps to discard before computing rates.
-#   `start_idx = floor(n_steps * burn_in) + 1`.
- 
-# # Returns
-# `nothing`: Prints a diagnostic panel with the following sections:
- 
-# - `Overall Average Rate` : mean acceptance rate across all walkers (%).
-# - `Lowest Walker Rate`   : minimum acceptance rate across walkers (%).
-# - `Highest Walker Rate`  : maximum acceptance rate across walkers (%).
-# - `Ensemble Spread`      : sparkline (`▁` to `█`) showing per-walker acceptance
-#                            visually. Each block maps 12.5% of acceptance rate.
-#                            `▁` indicates near-zero acceptance; `█` indicates ~100%.
-# - `Status`               : health guidance based on the average rate:
-#     - `< 15%`  → LOW  — chain is stiff, consider decreasing stretch parameter `a`.
-#     - `> 50%`  → HIGH — steps are too small, consider increasing `a`.
-#     - `15–50%` → HEALTHY — sampler is mixing well.
- 
-# # Notes
-# - Acceptance is detected by checking whether any parameter changed between
-#   consecutive steps. A rejected proposal is an exact bitwise copy of the
-#   previous row, so `any(chains[s, w, :] .!= chains[s-1, w, :])` is unambiguous.
-# - Healthy AIES acceptance rates typically fall in the range `[20%, 40%]` for
-#   well-conditioned posteriors.
-# """
+# Compute and print the acceptance rate for each walker, along with an ensemble sparkline and 
+# sampler health guidance. Acceptance is detected by checking whether any parameter changed between 
+# consecutive steps. A rejected proposal is an exact bitwise copy of the previous row, so 
+# `any(chains[s, w, :] .!= chains[s-1, w, :])` is unambiguous. A healthy AIES acceptance rates 
+# typically fall in the range `[20%, 40%]` for well-conditioned posteriors.
 function acceptance_rate(chains::Array{Float64, 3}; burn_in::Float64=0.2)
    # Dimension
    n_steps, n_walkers, _ = size(chains)
