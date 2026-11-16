@@ -380,7 +380,7 @@ critical curve), Newton-Raphson refines the image position until the source-plan
    is negative.
 - `ErrorException` if the number of candidate triangles exceeds `max_candidates`.
 
-See also [`find_images_contour`](@ref) and [`Lenses.get_image`](@ref), which builds `lens_map` and
+See also [`find_images_contour`](@ref) and [`LensFactory.Lenses.get_image`](@ref), which builds `lens_map` and
 `lens_jac` from a lens model.
 """
 function find_images_adaptive(lens_map::F, lens_jac::G,

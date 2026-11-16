@@ -48,6 +48,7 @@ include("./MultiPJELens.jl")
 
 # Point-source image finder module
 include("./ImageFinder.jl")
+using .ImageFinder
 
 
 # --------------------------------------------------------------------------------------------------

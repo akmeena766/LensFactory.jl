@@ -11,6 +11,7 @@ LensModel.fit_model
 LensModel.free_parameter_names
 LensModel.get_best_fit_parameters
 LensModel.print_best_fit_model
+LensModel.get_logL
 LensModel.get_cosmology
 LensModel.get_adis
 LensModel.get_best_model
