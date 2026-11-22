@@ -1165,7 +1165,7 @@ function init_MultiPJELens(; x_c = Vector{<:Real}(), y_c = Vector{<:Real}(), v_d
 
    # Make sure we have non-zero ellipticity
    if !all(EPS_MIN .<= eps .< 1.0)
-      throw(ArgumentError("MultiPJELens requires 1e-6 ≤ eps < 1 for every component."))
+      throw(ArgumentError("MultiPJELens requires $EPS_MIN ≤ eps < 1 for every component."))
    end
 
    n = length(x_c)
