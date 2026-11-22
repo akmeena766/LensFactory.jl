@@ -58,4 +58,17 @@
    @test jacc[2][2] ≈ jac2[2] atol=1e-15 rtol=1e-15
    @test jacc[3][1] ≈ jac1[3] atol=1e-15 rtol=1e-15
    @test jacc[3][2] ≈ jac2[3] atol=1e-15 rtol=1e-15
+
+   @testset "SIS lens: lens centre on a grid node" begin
+      lens = Lenses.init_SISLens(v_d=200.0)
+      @test all(Lenses.get_deflection(lens, 0.0, 0.0) .== 0.0)
+      
+      # odd grid containing (0, 0)
+      gx, gy = Lenses.get_meshgrid(1.0, 1.0, 0.05)
+      ψx, ψy = Lenses.get_deflection(lens, gx, gy)
+      @test all(isfinite, ψx) && all(isfinite, ψy)
+
+      @test Lenses.get_magnification_source(lens, gx, gy, 0.5) isa Matrix{Float64}
+      @test Lenses.get_image(lens, gx, gy, 0.5, ones(size(gx))) isa Matrix{Float64}
+   end
 end

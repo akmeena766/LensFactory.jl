@@ -94,6 +94,17 @@ function plot_magnification_map end
 function plot_magnification_profile end
 
 
+# --------------------------------------------------------------------------------------------------
+# Internal functions to be used
+# --------------------------------------------------------------------------------------------------
+# Convert a (fractional) pixel coordinate to an Int64 index. Non-finite or huge values (e.g., from a
+# NaN deflection) map to 0, which is always outside the grid, instead of throwing InexactError.
+@inline _to_pixel(x::Real) = (isfinite(x) && abs(x) < 1.0E15) ? round(Int64, x) : Int64(0)
+
+
+# --------------------------------------------------------------------------------------------------
+# Generate meshgrid
+# --------------------------------------------------------------------------------------------------
 """
     get_meshgrid(θx::Real, θy::Real, dθ::Real) --> Tuple(Matrix{<:Real}, Matrix{<:Real})
 Generate a meshgrid of coordinates on which various quantities can be evaluated. At present, this 
@@ -708,8 +719,8 @@ function get_magnification_source(lens::AbstractLens, θx::T, θy::T, adis::Real
             βy = PolygonOps.bilinear_interpolation(rand_x[k], rand_y[k], θy) - adis * ψy_interp
 
             # Get the corresponding pixel values
-            βx_p = round(Int64, βx/pixel_h + 0.5*nx + 0.5)
-            βy_p = round(Int64, βy/pixel_h + 0.5*ny + 0.5)
+            βx_p = _to_pixel(βx/pixel_h + 0.5*nx + 0.5)
+            βy_p = _to_pixel(βy/pixel_h + 0.5*ny + 0.5)
 
             # make sure pixel position is within bounds
             if (1 <= βx_p <= nx) && (1 <= βy_p <= ny)
@@ -778,12 +789,15 @@ function get_image(lens::AbstractLens, θx::T, θy::T, adis::Real, β::NTuple{2,
 end
 
 function get_image(lens::AbstractLens, θx::T, θy::T, ψx::T, ψy::T, adis::Real, β::NTuple{2, Real};
-                   method::Symbol   = :contour,
-                   tol_images::Real = 1.0E-8,
-                   tol_refine::Real = 1.0E-3,
-                   tol_source::Real = 1.0E-6,
-                   max_levels::Int  = 20,
-                   max_newton::Int  = 20) where T <: AbstractMatrix{<:Real}
+                   method::Symbol      = :contour,
+                   tol_images::Real    = 1.0E-8,
+                   tol_refine::Real    = 1.0E-3,
+                   tol_source::Real    = 1.0E-6,
+                   max_levels::Int     = 20,
+                   max_newton::Int     = 20,
+                   pad::Real           = 0.1,
+                   cfac::Real          = 1.0,
+                   max_candidates::Int = 100_000) where T <: AbstractMatrix{<:Real}
    # Make sure the method is either :contour or :adaptive
    if !(method === :contour || method === :adaptive)
       throw(ArgumentError("Unknown method `:$method`; use `:contour` or `:adaptive`."))
@@ -809,11 +823,14 @@ function get_image(lens::AbstractLens, θx::T, θy::T, ψx::T, ψy::T, adis::Rea
          return 1.0 - adis * ψxx, -adis * ψxy, -adis * ψxy, 1.0 - adis * ψyy
       end
       return ImageFinder.find_images_adaptive(lens_map, lens_jac, θx, θy, βx_grid, βy_grid, β; 
-                                              tol_images = tol_images,
-                                              tol_refine = tol_refine,
-                                              tol_source = tol_source,
-                                              max_levels = max_levels,
-                                              max_newton = max_newton)
+                                              tol_images     = tol_images,
+                                              tol_refine     = tol_refine,
+                                              tol_source     = tol_source,
+                                              max_levels     = max_levels,
+                                              max_newton     = max_newton,
+                                              pad            = pad,
+                                              cfac           = cfac,
+                                              max_candidates = max_candidates)
    else
       throw(ArgumentError("Invalid $method. Choose either :contour or :adaptive."))
    end
@@ -863,8 +880,8 @@ function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::T) whe
          βy = θy[i, j] - adis * ψy[i, j]
 
          # Get pixel position from radians
-         pixel_x = round(Int64, βx / pixel_h + 0.5*nx + 0.5)
-         pixel_y = round(Int64, βy / pixel_h + 0.5*ny + 0.5)
+         pixel_x = _to_pixel(βx / pixel_h + 0.5*nx + 0.5)
+         pixel_y = _to_pixel(βy / pixel_h + 0.5*ny + 0.5)
 
          # make sure pixel position is within bounds
          if (1 <= pixel_x <= nx) && (1 <= pixel_y <= ny)

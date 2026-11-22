@@ -78,9 +78,10 @@ end
 function deflection!(ψx::U, ψy::U, θx::S, θy::S, θxc::T, θyc::T, v_d::T) where {U<:Real, S<:Real, T<:Real}
    θE = 4π * (v_d * 1.0E3 / CONST_C)^2 / ANGLE_ARCSEC
 
+   # The max is added to take care of NaN at (0, 0)
    dx = θx - θxc
    dy = θy - θyc
-   dr = sqrt(dx^2 + dy^2)
+   dr = max(sqrt(dx^2 + dy^2), eps(typeof(dx)))
    
    ψx_up = ψx + θE * dx / dr
    ψy_up = ψy + θE * dy / dr
@@ -110,9 +111,10 @@ function deflection!(ψx::U, ψy::U, θx::S, θy::S, θxc::T, θyc::T, v_d::T) w
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
+         # The max is added to take care of NaN at (0, 0)
          dx = θx[i, j] - θxc
          dy = θy[i, j] - θyc
-         dr = sqrt(dx^2 + dy^2)
+         dr = max(sqrt(dx^2 + dy^2), eps(typeof(dx)))
 
          ψx[i, j] = ψx[i, j] + θE * dx / dr
          ψy[i, j] = ψy[i, j] + θE * dy / dr
