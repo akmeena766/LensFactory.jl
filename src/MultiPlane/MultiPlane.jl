@@ -65,7 +65,7 @@ end
 # Main functions
 # --------------------------------------------------------------------------------------------------
 # Core method with precomputed distance ratios (used by the lens-modeling likelihood)
-function get_potential(lens::Lenses.AbstractLens, θx::T, θy::T, adis_ij::Matrix{Float64}, adis_is::Vector{Float64}) where T <: Real
+function get_potential(lens::Lenses.AbstractLens, θx::Real, θy::Real, adis_ij::Matrix{Float64}, adis_is::Vector{Float64})
    # Initialize zero potential value
    ψ = 0.0
 
@@ -105,7 +105,7 @@ end
                   lens::Lenses.AbstractLens, 
                   θx::T, θy::T, z_s::Real) where T <: Real
 """
-function get_potential(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, z_s::Real) where T <: Real
+function get_potential(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::Real, θy::Real, z_s::Real)
    # Get distance and distance ratios
    D_ij, adis_ij, adis_is = _distances(cosmology, lens, z_s)
 
@@ -174,7 +174,7 @@ end
 
 
 # Core method with precomputed distance ratios (used by the lens-modeling likelihood)
-function get_deflection(lens::Lenses.AbstractLens, θx::T, θy::T, adis_ij::Matrix{Float64}, adis_is::Vector{Float64}) where T <: Real
+function get_deflection(lens::Lenses.AbstractLens, θx::Real, θy::Real, adis_ij::Matrix{Float64}, adis_is::Vector{Float64})
    # Initialize zero-valued deflection components
    ψx = 0.0
    ψy = 0.0
@@ -212,7 +212,7 @@ end
                    lens::Lenses.AbstractLens, 
                    θx::T, θy::T, z_s::Real) where T <: Real
 """
-function get_deflection(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, z_s::Real) where T <: Real
+function get_deflection(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::Real, θy::Real, z_s::Real)
    # Get distance and distance ratios
    D_ij, adis_ij, adis_is = _distances(cosmology, lens, z_s)
 
@@ -281,7 +281,7 @@ end
 
 
 # Core method with precomputed distance ratios (used by the lens-modeling likelihood)
-function get_jacobian(lens::Lenses.AbstractLens, θx::T, θy::T, adis_ij::Matrix{Float64}, adis_is::Vector{Float64}) where T <: Real
+function get_jacobian(lens::Lenses.AbstractLens, θx::Real, θy::Real, adis_ij::Matrix{Float64}, adis_is::Vector{Float64})
    # Initialize zero valued deformation tensor components
    ψrr = zeros(2, 2)
 
@@ -325,7 +325,7 @@ end
                  lens::Lenses.AbstractLens, 
                  θx::T, θy::T, z_s::Real) where T <: Real
 """
-function get_jacobian(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, z_s::Real) where T <: Real
+function get_jacobian(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::Real, θy::Real, z_s::Real)
    # Get distance and distance ratios
    D_ij, adis_ij, adis_is = _distances(cosmology, lens, z_s)
    
@@ -409,7 +409,7 @@ function get_jacobian(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abstr
 end
 
 
-function get_time_delay(lens::Lenses.AbstractLens, θx::T, θy::T, β::NTuple{2, Real}, adis_ij::Matrix{Float64}, D_ij::Matrix{Float64}) where T <: Real
+function get_time_delay(lens::Lenses.AbstractLens, θx::Real, θy::Real, β::NTuple{2, Real}, adis_ij::Matrix{Float64}, D_ij::Matrix{Float64})
    # Initialize zero-valued time delay function
    ϕ = 0.0
 
@@ -468,7 +468,7 @@ end
                    lens::Lenses.AbstractLens, 
                    θx::T, θy::T, z_s::Real, β::NTuple{2, <:Real}) where T <: Real
 """
-function get_time_delay(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::T, θy::T, z_s::Real, β::NTuple{2, Real}) where T <: Real
+function get_time_delay(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::Real, θy::Real, z_s::Real, β::NTuple{2, Real})
    # Get distance matrix
    D_ij, adis_ij, adis_is = _distances(cosmology, lens, z_s)
 
