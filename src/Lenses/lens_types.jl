@@ -395,7 +395,7 @@ function init_SIELens(; x_c::Real=0.0, y_c::Real=0.0, v_d::Real=NaN, x_s::Real=N
    x_c, y_c, v_d, x_s, eps, pa = promote(x_c, y_c, v_d, x_s, eps, pa)
    
    if !(EPS_MIN <= eps < 1.0)
-      throw(ArgumentError("SIELens requires an elliptical profile, $(EPS_MIN) ≤ eps < 1 (got eps = $eps)."))
+      throw(ArgumentError("SIELens requires $(EPS_MIN) ≤ eps < 1 (got eps = $eps)."))
    end
 
    T = typeof(x_c)
@@ -437,7 +437,7 @@ function init_PJELens(; x_c::Real=0.0, y_c::Real=0.0, v_d::Real=NaN, x_s::Real=N
    
    # Make sure that ϵ is non-zero
    if !(EPS_MIN <= eps < 1.0)
-      throw(ArgumentError("PJELens requires $EPS_MIN ≤ eps < 1 for every component (got eps = $eps)."))
+      throw(ArgumentError("PJELens requires $EPS_MIN ≤ eps < 1 (got eps = $eps)."))
    end
 
    T = typeof(x_c)
