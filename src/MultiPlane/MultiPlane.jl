@@ -34,29 +34,53 @@ function plot_image_plane end
 # Helper functions
 # --------------------------------------------------------------------------------------------------
 function _distances(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, z_s::Real)
-   # Vector of all redshift (including observer and source)
-   z_all = [0; lens.z_d; z_s]
-   
-   # Pre-compute distance ratios
-   n_p = lens.n_p
-   D_ij = zeros(n_p+2, n_p+2)
-   adis_ij = Matrix{Float64}(undef, n_p, n_p)
-   adis_is = Vector{Float64}(undef, n_p)
+   if !(isfinite(z_s) && z_s > 0)
+      throw(ArgumentError("Source redshift must be positive and finite, got z_s = $z_s."))
+   end
 
-   # Fill empty distance matrix
-   for i in 1:n_p+2
-      for j in i+1:n_p+2
-         D_ij[i, j] = Cosmology.angular_diameter_distance(cosmology, z_all[i], z_all[j])
+   # Get number of lens planes and lens redshifts
+   n_p = lens.n_p
+   z_d = lens.z_d
+
+   # Planes strictly in front of the source (z_d is sorted). Planes at or behind the source
+   # do not deflect it: their weight adis_is is zero, as in the likelihood.
+   n_f = count(<(z_s), z_d)
+
+   # Observer-plane and plane-plane distances (index 1 = observer, 2..n_p+1 = planes)
+   z_p = [0; z_d]
+   D_p = zeros(n_p+1, n_p+1)
+   for i in 1:n_p+1
+      for j in i+1:n_p+1
+         D_p[i, j] = Cosmology.angular_diameter_distance(cosmology, z_p[i], z_p[j])
       end
    end
 
-   # Fill distance ratio matrix and vector
+   # Observer-source and plane-source distances (only planes in front of the source)
+   D_os = Cosmology.angular_diameter_distance(cosmology, 0.0, z_s)
+   D_ps = zeros(n_p)
+   for ni in 1:n_f
+      D_ps[ni] = Cosmology.angular_diameter_distance(cosmology, z_d[ni], z_s)
+   end
+
+   # Distance ratio matrix and vector (adis_is is zero for planes behind the source)
+   adis_ij = zeros(n_p, n_p)
+   adis_is = zeros(n_p)
    for ni in 1:n_p
       for nj in 1:ni-1
-         adis_ij[nj, ni] = D_ij[nj+1, ni+1] / D_ij[1, ni+1]
+         adis_ij[nj, ni] = D_p[nj+1, ni+1] / D_p[1, ni+1]
       end
-      adis_is[ni] = D_ij[ni+1, n_p+2] / D_ij[1, n_p+2]
+      adis_is[ni] = D_ps[ni] / D_os
    end
+
+   # Distance matrix truncated to the observer, the n_f planes in front, and the source.
+   # The time-delay code infers the number of planes from its size.
+   D_ij = zeros(n_f+2, n_f+2)
+   D_ij[1:n_f+1, 1:n_f+1] = D_p[1:n_f+1, 1:n_f+1]
+   D_ij[1, n_f+2] = D_os
+   for ni in 1:n_f
+      D_ij[ni+1, n_f+2] = D_ps[ni]
+   end
+
    return D_ij, adis_ij, adis_is
 end
 
@@ -500,11 +524,11 @@ function get_time_delay(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abs
    # Initialize zero-valued time delay function
    ϕ = zero(θx)
 
-   # Get the number of lens planes
-   n_p = lens.n_p
-
    # Get distance matrix
    D_ij, adis_ij, adis_is = _distances(cosmology, lens, z_s)
+
+   # Number of lens planes in front of the source
+   n_p = size(D_ij, 1) - 2
 
    # Temporary deflection vector for each lens plane
    ψ_vec = zeros(2, n_p)
@@ -637,8 +661,8 @@ function get_magnification_source(cosmology::Cosmology.AbstractCosmology, lens::
             βy = PolygonOps.bilinear_interpolation(rand_x[k], rand_y[k], θy) - PolygonOps.bilinear_interpolation(rand_x[k], rand_y[k], ψy)
 
             # Get the corresponding pixel values
-            βx_p = round(Int64, βx/pixel_h + 0.5*nx + 0.5)
-            βy_p = round(Int64, βy/pixel_h + 0.5*ny + 0.5)
+            βx_p = Lenses._to_pixel(βx/pixel_h + 0.5*nx + 0.5)
+            βy_p = Lenses._to_pixel(βy/pixel_h + 0.5*ny + 0.5)
 
             # make sure pixel position is within bounds
             if (1 <= βx_p <= nx) && (1 <= βy_p <= ny)
@@ -794,8 +818,8 @@ function get_image(cosmology::Cosmology.AbstractCosmology,
          βy = θy[i, j] - ψy[i, j]
 
          # Get pixel position from radians
-         pixel_x = round(Int64, βx / pixel_h + 0.5*nx + 0.5)
-         pixel_y = round(Int64, βy / pixel_h + 0.5*ny + 0.5)
+         pixel_x = Lenses._to_pixel(βx / pixel_h + 0.5*nx + 0.5)
+         pixel_y = Lenses._to_pixel(βy / pixel_h + 0.5*ny + 0.5)
 
          # make sure pixel position is within bounds
          if (1 <= pixel_x <= nx) && (1 <= pixel_y <= ny)
