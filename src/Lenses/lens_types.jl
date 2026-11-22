@@ -81,7 +81,7 @@ struct init_PlummerLens{T<:Real} <: AbstractLens
    x_s::T
 end
 function init_PlummerLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_s::Real=NaN)
-   D_d, x_c, y_c, mass, x_s = promote(D_d, x_c, y_c, mass, x_s)
+   D_d, x_c, y_c, mass, x_s = float.(promote(D_d, x_c, y_c, mass, x_s))
    T = typeof(D_d)
    return init_PlummerLens{T}(:PlummerLens, D_d, x_c, y_c, mass, x_s)
 end
@@ -106,7 +106,7 @@ struct init_SISLens{T<:Real} <: AbstractLens
    v_d::T
 end
 function init_SISLens(; x_c::Real=0.0, y_c::Real=0.0, v_d::Real=NaN)
-   x_c, y_c, v_d = promote(x_c, y_c, v_d)
+   x_c, y_c, v_d = float.(promote(x_c, y_c, v_d))
    T = typeof(x_c)
    return init_SISLens{T}(:SISLens, x_c, y_c, v_d)
 end
@@ -133,7 +133,7 @@ struct init_NSISPLens{T<:Real} <: AbstractLens
    x_s::T
 end
 function init_NSISPLens(; x_c::Real=0.0, y_c::Real=0.0, v_d::Real=NaN, x_s::Real=NaN)
-   x_c, y_c, v_d, x_s = promote(x_c, y_c, v_d, x_s)
+   x_c, y_c, v_d, x_s = float.(promote(x_c, y_c, v_d, x_s))
    T = typeof(x_c)
    return init_NSISPLens{T}(:NSISPLens, x_c, y_c, v_d, x_s)
 end
@@ -160,7 +160,7 @@ struct init_NSISMDLens{T<:Real} <: AbstractLens
    x_s::T
 end
 function init_NSISMDLens(; x_c::Real=0.0, y_c::Real=0.0, v_d::Real=NaN, x_s::Real=NaN)
-   x_c, y_c, v_d, x_s = promote(x_c, y_c, v_d, x_s)
+   x_c, y_c, v_d, x_s = float.(promote(x_c, y_c, v_d, x_s))
    T = typeof(x_c)
    return init_NSISMDLens{T}(:NSISMDLens, x_c, y_c, v_d, x_s)
 end
@@ -190,7 +190,7 @@ struct init_GaussianLens{T<:Real} <: AbstractLens
    x_s::T
 end
 function init_GaussianLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_s::Real=NaN)
-   D_d, x_c, y_c, mass, x_s = promote(D_d, x_c, y_c, mass, x_s)
+   D_d, x_c, y_c, mass, x_s = float.(promote(D_d, x_c, y_c, mass, x_s))
    T = typeof(D_d)
    return init_GaussianLens{T}(:GaussianLens, D_d, x_c, y_c, mass, x_s)
 end
@@ -223,7 +223,7 @@ struct init_SersicLens{T<:Real} <: AbstractLens
    n::T
 end
 function init_SersicLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_e::Real=NaN, n::Real=4.0)
-   D_d, x_c, y_c, mass, x_e, n = promote(D_d, x_c, y_c, mass, x_e, n)
+   D_d, x_c, y_c, mass, x_e, n = float.(promote(D_d, x_c, y_c, mass, x_e, n))
    T = typeof(D_d)
    return init_SersicLens{T}(:SersicLens, D_d, x_c, y_c, mass, x_e, n)
 end
@@ -249,7 +249,7 @@ struct init_PixelLens{T<:Real} <: AbstractLens
    pixel_size::T
 end
 function init_PixelLens(; x_c::Real=0.0, y_c::Real=0.0, kappa::Real=NaN, pixel_size::Real=NaN)
-   x_c, y_c, kappa, pixel_size = promote(x_c, y_c, kappa, pixel_size)
+   x_c, y_c, kappa, pixel_size = float.(promote(x_c, y_c, kappa, pixel_size))
    T = typeof(x_c)
    return init_PixelLens{T}(:PixelLens, x_c, y_c, kappa, pixel_size)
 end
@@ -273,7 +273,7 @@ struct init_ExternalEffects{T<:Real} <: AbstractLens
    angle::T
 end
 function init_ExternalEffects(; kappa::Real=NaN, gamma::Real=NaN, angle::Real=NaN)
-   kappa, gamma, angle = promote(kappa, gamma, angle)
+   kappa, gamma, angle = float.(promote(kappa, gamma, angle))
    T = typeof(kappa)
    return init_ExternalEffects{T}(:ExternalEffects, kappa, gamma, angle)
 end
@@ -294,7 +294,7 @@ struct init_ExternalEffects3{T<:Real} <: AbstractLens
    angle::T
 end
 function init_ExternalEffects3(; delta::Real=NaN, angle::Real=NaN)
-   delta, angle = promote(delta, angle)
+   delta, angle = float.(promote(delta, angle))
    T = typeof(delta)
    return init_ExternalEffects3{T}(:ExternalEffects3, delta, angle)
 end
@@ -326,7 +326,7 @@ struct init_Multipole{T<:Real} <: AbstractLens
    n::T
 end
 function init_Multipole(; delta::Real=NaN, angle::Real=NaN, m::Int64=2, n::Real=2.0)
-   delta, angle, n = promote(delta, angle, n)
+   delta, angle, n = float.(promote(delta, angle, n))
    T = typeof(delta)
    return init_Multipole{T}(:Multipole, delta, angle, m, n)
 end
@@ -359,7 +359,7 @@ struct init_PIEPLens{T<:Real} <: AbstractLens
    pa::T
 end
 function init_PIEPLens(; x_c::Real=0.0, y_c::Real=0.0, v_d::Real=NaN, x_s::Real=NaN, eps::Real=NaN, pa::Real=NaN)
-   x_c, y_c, v_d, x_s, eps, pa = promote(x_c, y_c, v_d, x_s, eps, pa)
+   x_c, y_c, v_d, x_s, eps, pa = float.(promote(x_c, y_c, v_d, x_s, eps, pa))
    T = typeof(x_c)
    return init_PIEPLens{T}(:PIEPLens, x_c, y_c, v_d, x_s, eps, pa)
 end
@@ -392,7 +392,7 @@ struct init_SIELens{T<:Real} <: AbstractLens
    pa::T
 end
 function init_SIELens(; x_c::Real=0.0, y_c::Real=0.0, v_d::Real=NaN, x_s::Real=NaN, eps::Real=NaN, pa::Real=NaN)
-   x_c, y_c, v_d, x_s, eps, pa = promote(x_c, y_c, v_d, x_s, eps, pa)
+   x_c, y_c, v_d, x_s, eps, pa = float.(promote(x_c, y_c, v_d, x_s, eps, pa))
    
    if !(EPS_MIN <= eps < 1.0)
       throw(ArgumentError("SIELens requires $(EPS_MIN) ≤ eps < 1 (got eps = $eps)."))
@@ -433,7 +433,7 @@ struct init_PJELens{T<:Real} <: AbstractLens
    pa::T
 end
 function init_PJELens(; x_c::Real=0.0, y_c::Real=0.0, v_d::Real=NaN, x_s::Real=NaN, x_t::Real=NaN, eps::Real=NaN, pa::Real=NaN)
-   x_c, y_c, v_d, x_s, x_t, eps, pa = promote(x_c, y_c, v_d, x_s, x_t, eps, pa)
+   x_c, y_c, v_d, x_s, x_t, eps, pa = float.(promote(x_c, y_c, v_d, x_s, x_t, eps, pa))
    
    # Make sure that ϵ is non-zero
    if !(EPS_MIN <= eps < 1.0)
@@ -469,7 +469,7 @@ struct init_HernquistLens{T<:Real} <: AbstractLens
    x_s::T
 end
 function init_HernquistLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_s::Real=NaN)
-   D_d, x_c, y_c, mass, x_s = promote(D_d, x_c, y_c, mass, x_s)
+   D_d, x_c, y_c, mass, x_s = float.(promote(D_d, x_c, y_c, mass, x_s))
    T = typeof(D_d)
    return init_HernquistLens{T}(:HernquistLens, D_d, x_c, y_c, mass, x_s)
 end
@@ -506,7 +506,7 @@ struct init_eHernquistMDLens{T<:Real} <: AbstractLens
    pa::T
 end
 function init_eHernquistMDLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_s::Real=NaN, eps::Real=NaN, pa::Real=NaN)
-   D_d, x_c, y_c, mass, x_s, eps, pa = promote(D_d, x_c, y_c, mass, x_s, eps, pa)
+   D_d, x_c, y_c, mass, x_s, eps, pa = float.(promote(D_d, x_c, y_c, mass, x_s, eps, pa))
    T = typeof(D_d)
    return init_eHernquistMDLens{T}(:eHernquistMDLens, D_d, x_c, y_c, mass, x_s, eps, pa)
 end
@@ -543,7 +543,7 @@ struct init_aHernquistLens{T<:Real} <: AbstractLens
    pa::T
 end
 function init_aHernquistLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN, x_s::Real=NaN, eps::Real=NaN, pa::Real=NaN)
-   D_d, x_c, y_c, mass, x_s, eps, pa = promote(D_d, x_c, y_c, mass, x_s, eps, pa)
+   D_d, x_c, y_c, mass, x_s, eps, pa = float.(promote(D_d, x_c, y_c, mass, x_s, eps, pa))
    T = typeof(D_d)
    return init_aHernquistLens{T}(:aHernquistLens, D_d, x_c, y_c, mass, x_s, eps, pa)
 end
@@ -580,7 +580,7 @@ struct init_NFWLens{T<:Real} <: AbstractLens
    x_s::T
 end
 function init_NFWLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, k_s::Real=NaN, x_s::Real=NaN)
-   D_d, x_c, y_c, k_s, x_s = promote(D_d, x_c, y_c, k_s, x_s)
+   D_d, x_c, y_c, k_s, x_s = float.(promote(D_d, x_c, y_c, k_s, x_s))
    T = typeof(D_d)
    return init_NFWLens{T}(:NFWLens, D_d, x_c, y_c, k_s, x_s)
 end
@@ -654,7 +654,7 @@ struct init_eNFWMDLens{T<:Real} <: AbstractLens
 end
 function init_eNFWMDLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, k_s::Real=NaN, x_s::Real=NaN, eps::Real=NaN, pa::Real=NaN)
    # promote the input arguments
-   D_d, x_c, y_c, k_s, x_s, eps, pa = promote(D_d, x_c, y_c, k_s, x_s, eps, pa)
+   D_d, x_c, y_c, k_s, x_s, eps, pa = float.(promote(D_d, x_c, y_c, k_s, x_s, eps, pa))
    T = typeof(D_d)
    return init_eNFWMDLens{T}(:eNFWMDLens, D_d, x_c, y_c, k_s, x_s, eps, pa)
 end
@@ -727,7 +727,7 @@ struct init_aNFWLens{T<:Real} <: AbstractLens
    pa::T
 end
 function init_aNFWLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, k_s::Real=NaN, x_s::Real=NaN, eps::Real=NaN, pa::Real=NaN)
-   D_d, x_c, y_c, k_s, x_s, eps, pa = promote(D_d, x_c, y_c, k_s, x_s, eps, pa)
+   D_d, x_c, y_c, k_s, x_s, eps, pa = float.(promote(D_d, x_c, y_c, k_s, x_s, eps, pa))
    T = typeof(D_d)
    return init_aNFWLens{T}(:aNFWLens, D_d, x_c, y_c, k_s, x_s, eps, pa)
 end
@@ -797,7 +797,7 @@ struct init_tNFWLens{T<:Real} <: AbstractLens
    x_t::T
 end
 function init_tNFWLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, k_s::Real=NaN, x_s::Real=NaN, x_t::Real=NaN)
-   D_d, x_c, y_c, k_s, x_s, x_t = promote(D_d, x_c, y_c, k_s, x_s, x_t)
+   D_d, x_c, y_c, k_s, x_s, x_t = float.(promote(D_d, x_c, y_c, k_s, x_s, x_t))
    T = typeof(D_d)
    return init_tNFWLens{T}(:tNFWLens, D_d, x_c, y_c, k_s, x_s, x_t)
 end
@@ -871,7 +871,7 @@ function init_gNFWLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, k_s::Real=
       throw(ArgumentError("Slope parameter outside allowed range n ∈ (0, 2) in **init_gNFWLens**."))
    end
 
-   D_d, x_c, y_c, k_s, x_s, n = promote(D_d, x_c, y_c, k_s, x_s, n)
+   D_d, x_c, y_c, k_s, x_s, n = float.(promote(D_d, x_c, y_c, k_s, x_s, n))
    T = typeof(D_d)
    return init_gNFWLens{T}(:gNFWLens, D_d, x_c, y_c, k_s, x_s, n)
 end
@@ -952,7 +952,7 @@ struct init_EinastoLens{T<:Real} <: AbstractLens
    n::T
 end
 function init_EinastoLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, k_s::Real=NaN, x_s::Real=NaN, n::Real=0.2)
-   D_d, x_c, y_c, k_s, x_s, n = promote(D_d, x_c, y_c, k_s, x_s, n)
+   D_d, x_c, y_c, k_s, x_s, n = float.(promote(D_d, x_c, y_c, k_s, x_s, n))
    T = typeof(D_d)
    return init_EinastoLens{T}(:EinastoLens, D_d, x_c, y_c, k_s, x_s, n)
 end
