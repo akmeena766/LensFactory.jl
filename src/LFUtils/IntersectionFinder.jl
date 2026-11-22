@@ -40,14 +40,9 @@ function get_intersection(x1::AbstractVector{<:Real}, y1::AbstractVector{<:Real}
     # Based on: https://www.mathworks.com/matlabcentral/fileexchange/11837-fast-and-robust-curve-intersections
     # Python implementation: https://github.com/sukhbinder/intersection/tree/master/intersect
     # Check if curve-1 is consistent
-    if !(length(x1) > 1) || !(length(y1) > 1) || length(x1) == length(y1) || 
-        throw(ArgumentError("Incompatible input axes for input vectors."))
-    end
-    
-    # Check if curve-2 is consistent
-    if !(length(x2) > 1) || !(length(y2) > 1) || length(x2) == length(y2) || 
-        throw(ArgumentError("Incompatible input axes for input vectors."))
-    end    
+    if length(x1) < 2 || length(x1) != length(y1) || length(x2) < 2 || length(x2) != length(y2)
+        throw(ArgumentError("Each curve needs at least 2 points, with x and y of equal length."))
+    end 
 
     # Number of line segments in both curves
     n1 = length(x1) - 1

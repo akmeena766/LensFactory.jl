@@ -496,13 +496,13 @@ end
 # 
 # --------------------------------------------------------------------------------------------------
 """
-    get_time_delay(lens::AbstractLens, θx::T, θy::T, 
+    get_time_delay(lens::AbstractLens, θx::Real, θy::Real, 
                    adis::Real, 
                    z_d::Real, 
                    D_d::Real, 
-                   β::NTuple{2, Real}) where T <: Real --> Real
+                   β::NTuple{2, Real}) --> Real
 """
-function get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Real, z_d::Real, D_d::Real, β::NTuple{2, Real}) where T <: Real
+function get_time_delay(lens::AbstractLens, θx::Real, θy::Real, adis::Real, z_d::Real, D_d::Real, β::NTuple{2, Real})
    # Constant multiplicative factor
    constant_factor =  (1.0 + z_d) / CONST_C * (D_d / adis) * ANGLE_ARCSEC^2
 
@@ -515,7 +515,7 @@ function get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Real, z_d::Rea
 end
 
 """
-    get_time_delay(lens::AbstractLens, θx::T, θy::T, 
+    get_time_delay(lens::AbstractLens, θx::Real, θy::Real, 
                    adis::Real, 
                    z_d::Real, 
                    D_d::Real, 
@@ -551,10 +551,9 @@ function get_time_delay(lens::AbstractLens, θx::T, θy::T, adis::Real, z_d::Rea
 end
 
 """
-    get_kappa_gamma(lens::AbstractLens, θx::T, θy::T, 
-                    adis::Real) where T <: Real --> Real
+    get_kappa_gamma(lens::AbstractLens, θx::Real, θy::Real, adis::Real) --> Real
 """
-function get_kappa_gamma(lens::AbstractLens, θx::T, θy::T, adis::Real) where T <: Real
+function get_kappa_gamma(lens::AbstractLens, θx::Real, θy::Real, adis::Real)
    # Get the jacobian components
    ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
 
@@ -611,10 +610,9 @@ end
 
 
 """
-    get_magnification_image(lens::AbstractLens, θx::T, θy::T, 
-                            adis::Real) where T <: Real --> Real
+    get_magnification_image(lens::AbstractLens, θx::Real, θy::Real, adis::Real) --> Real
 """
-function get_magnification_image(lens::AbstractLens, θx::T, θy::T, adis::Real) where T <: Real
+function get_magnification_image(lens::AbstractLens, θx::Real, θy::Real, adis::Real)
    # Get the jacobian components
    ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
 
