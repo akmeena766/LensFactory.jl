@@ -696,12 +696,15 @@ Currently, two methods are available:
 function get_image(cosmology::Cosmology.AbstractCosmology, 
                    lens::Lenses.AbstractLens, 
                    θx::T, θy::T, z_s::Real, β::NTuple{2, <:Real};
-                   method::Symbol   = :contour,
-                   tol_images::Real = 1.0E-8,
-                   tol_refine::Real = 1.0E-3,
-                   tol_source::Real = 1.0E-6,
-                   max_levels::Int  = 20,
-                   max_newton::Int  = 20) where T <: Matrix{<:Real}
+                   method::Symbol      = :contour,
+                   tol_images::Real    = 1.0E-8,
+                   tol_refine::Real    = 1.0E-3,
+                   tol_source::Real    = 1.0E-6,
+                   max_levels::Int     = 20,
+                   max_newton::Int     = 20,
+                   pad::Real           = 0.1,
+                   cfac::Real          = 1.0,
+                   max_candidates::Int = 100_000) where T <: Matrix{<:Real}
    # Make sure the method is either :contour or :adaptive
    if !(method === :contour || method === :adaptive)
       throw(ArgumentError("Unknown method `:$method`; use `:contour` or `:adaptive`."))
@@ -732,11 +735,14 @@ function get_image(cosmology::Cosmology.AbstractCosmology,
       end
 
       return ImageFinder.find_images_adaptive(lens_map, lens_jac, θx, θy, βx_grid, βy_grid, β; 
-                                              tol_images = tol_images,
-                                              tol_refine = tol_refine,
-                                              tol_source = tol_source,
-                                              max_levels = max_levels,
-                                              max_newton = max_newton)
+                                              tol_images     = tol_images,
+                                              tol_refine     = tol_refine,
+                                              tol_source     = tol_source,
+                                              max_levels     = max_levels,
+                                              max_newton     = max_newton,
+                                              pad            = pad,
+                                              cfac           = cfac,
+                                              max_candidates = max_candidates)
    end
 end
 
