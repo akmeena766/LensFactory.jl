@@ -52,7 +52,7 @@ struct init_PointLens{T<:Real} <: AbstractLens
    mass::T
 end
 function init_PointLens(; D_d::Real=NaN, x_c::Real=0.0, y_c::Real=0.0, mass::Real=NaN)
-   D_d, x_c, y_c, mass = promote(D_d, x_c, y_c, mass)
+   D_d, x_c, y_c, mass = float.(promote(D_d, x_c, y_c, mass))
    T = typeof(D_d)
    return init_PointLens{T}(:PointLens, D_d, x_c, y_c, mass)
 end
