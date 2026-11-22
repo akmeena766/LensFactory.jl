@@ -393,6 +393,11 @@ struct init_SIELens{T<:Real} <: AbstractLens
 end
 function init_SIELens(; x_c::Real=0.0, y_c::Real=0.0, v_d::Real=NaN, x_s::Real=NaN, eps::Real=NaN, pa::Real=NaN)
    x_c, y_c, v_d, x_s, eps, pa = promote(x_c, y_c, v_d, x_s, eps, pa)
+   
+   if !(EPS_MIN <= eps < 1.0)
+      throw(ArgumentError("SIELens requires an elliptical profile, $(EPS_MIN) ≤ eps < 1 (got eps = $eps)."))
+   end
+
    T = typeof(x_c)
    return init_SIELens{T}(:SIELens, x_c, y_c, v_d, x_s, eps, pa)
 end
@@ -429,6 +434,12 @@ struct init_PJELens{T<:Real} <: AbstractLens
 end
 function init_PJELens(; x_c::Real=0.0, y_c::Real=0.0, v_d::Real=NaN, x_s::Real=NaN, x_t::Real=NaN, eps::Real=NaN, pa::Real=NaN)
    x_c, y_c, v_d, x_s, x_t, eps, pa = promote(x_c, y_c, v_d, x_s, x_t, eps, pa)
+   
+   # Make sure that ϵ is non-zero
+   if !(EPS_MIN <= eps < 1.0)
+      throw(ArgumentError("PJELens requires $EPS_MIN ≤ eps < 1 for every component (got eps = $eps)."))
+   end
+
    T = typeof(x_c)
    return init_PJELens{T}(:PJELens, x_c, y_c, v_d, x_s, x_t, eps, pa)
 end
@@ -1151,6 +1162,11 @@ function init_MultiPJELens(; x_c = Vector{<:Real}(), y_c = Vector{<:Real}(), v_d
    x_t  = Vector{T}(x_t)
    eps  = Vector{T}(eps)
    pa   = Vector{T}(pa)
+
+   # Make sure we have non-zero ellipticity
+   if !all(EPS_MIN .<= eps .< 1.0)
+      throw(ArgumentError("MultiPJELens requires 1e-6 ≤ eps < 1 for every component."))
+   end
 
    n = length(x_c)
    return init_MultiPJELens(:MultiPJELens, n, x_c, y_c, v_d, x_s, x_t, eps, pa)

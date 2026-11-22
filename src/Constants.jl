@@ -64,4 +64,10 @@ const YEAR2DAY    = 365.25                          # Number of days in one year
 const DAY2HOUR    = 24.0                            # Number of hours in one day
 const DAY2SECOND  = 86400.0                         # Number of seconds in one day
 
+
+# --------------------------------------------------------------------------------------------------
+# Constants used in the code
+# --------------------------------------------------------------------------------------------------
+EPS_MIN = 1.0E-6
+
 end
