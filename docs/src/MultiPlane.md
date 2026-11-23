@@ -46,13 +46,13 @@ plane, and the lens planes are sorted in increasing redshift.
 
 ```@docs
 Lenses.init_MultiPlaneLens
-MultiPlane.get_potential
-MultiPlane.get_deflection
-MultiPlane.get_jacobian
-MultiPlane.get_time_delay
-MultiPlane.get_magnification_image
-MultiPlane.get_magnification_source
-MultiPlane.get_image
-MultiPlane.get_critical_curve
-MultiPlane.get_caustic
+Lenses.get_potential(::Cosmology.AbstractCosmology, ::Lenses.AbstractLens, ::Real, ::Real, ::Real)
+Lenses.get_deflection(::Cosmology.AbstractCosmology, ::Lenses.AbstractLens, ::Real, ::Real, ::Real)
+Lenses.get_jacobian(::Cosmology.AbstractCosmology, ::Lenses.AbstractLens, ::Real, ::Real, ::Real)
+Lenses.get_time_delay(::Cosmology.AbstractCosmology, ::Lenses.AbstractLens, ::Real, ::Real, ::Real, ::NTuple{2, Real})
+Lenses.get_magnification_image(::Cosmology.AbstractCosmology, ::Lenses.AbstractLens, ::T, ::T, ::Real) where T <: Union{Real, LensFactory.Constants.ROA} 
+Lenses.get_magnification_source(::Cosmology.AbstractCosmology, ::Lenses.AbstractLens, ::T, ::T, ::Real) where T <: Matrix{<:Real}
+Lenses.get_image(::Cosmology.AbstractCosmology, ::Lenses.AbstractLens, ::T, ::T, ::Real, ::T) where T <: Matrix{<:Real}
+Lenses.get_critical_curve(::Cosmology.AbstractCosmology, ::Lenses.AbstractLens, ::T, ::T, ::Real) where T <: Matrix{<:Real}
+Lenses.get_caustic(::Cosmology.AbstractCosmology, ::Lenses.AbstractLens, ::T, ::T, ::Real) where T <: Matrix{<:Real}
 ```
