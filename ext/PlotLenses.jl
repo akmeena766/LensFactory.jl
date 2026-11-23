@@ -103,7 +103,7 @@ end
 
 
 """
-    LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Matrix{<:RV}, θy::Matrix{<:RV}, adis::Float64;
+    LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Matrix{<:RV}, θy::Matrix{<:RV}, adis::Real;
                                         two_panel::Bool               = false,
                                         plot_critical::Bool           = true,
                                         critical_tan_kws::NamedTuple  = (color=:red, linewidth=2, linestyle=:solid),
@@ -151,7 +151,7 @@ end
 - `fig`: A Makie figure object containing the image plane plot.
 - `ax`: The axis object of the plot for further customization.
 """
-function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Matrix{<:RV}, θy::Matrix{<:RV}, adis::Float64;
+function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Matrix{<:RV}, θy::Matrix{<:RV}, adis::Real;
                            two_panel::Bool              = false,
                            figure_size::NTuple{2, Real} = (500, 500),
                            figure_padding::Int64        = 15,
@@ -303,13 +303,13 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Mat
 end
 
 """
-    LensFactory.Lenses.plot_surface_density(lens::Lenses.AbstractLens, θx::Matrix{<:RV}, θy::Matrix{<:RV}, adis::Float64)
+    LensFactory.Lenses.plot_surface_density(lens::Lenses.AbstractLens, θx::Matrix{<:RV}, θy::Matrix{<:RV}, adis::Real)
 
 # Arguments
 - `lens::Lenses.AbstractLens` -- The lens model to plot
 - `θx::Matrix{<:RV}` -- x-coordinates grid
 - `θy::Matrix{<:RV}` -- y-coordinates grid
-- `adis::Float64` -- Distance ratio ``(D_{ds}/D_s)`` for the lens system
+- `adis::Real` -- Distance ratio ``(D_{ds}/D_s)`` for the lens system
 
 # Keyword arguments
 - `D_d::Float64 = NaN` -- Angular diameter distance to the lens (required if `unit != :convergence`)
@@ -326,7 +326,7 @@ end
 - `fig`: A Makie figure object containing the surface density plot.
 - `ax`: The axis object of the plot for further customization.
 """
-function LensFactory.Lenses.plot_surface_density(lens::Lenses.AbstractLens, θx::Matrix{<:RV}, θy::Matrix{<:RV}, adis::Float64; 
+function LensFactory.Lenses.plot_surface_density(lens::Lenses.AbstractLens, θx::Matrix{<:RV}, θy::Matrix{<:RV}, adis::Real; 
                               D_d::Float64               = NaN,
                               unit::Symbol               = :kg_m2,
                               figure_size::NTuple{2, RV} = (500, 400),
@@ -402,13 +402,13 @@ end
 
 
 """
-    LensFactory.Lenses.plot_magnification_map(lens::Lenses.AbstractLens, θx::Matrix{<:RV}, θy::Matrix{<:RV}, adis::Float64)
+    LensFactory.Lenses.plot_magnification_map(lens::Lenses.AbstractLens, θx::Matrix{<:RV}, θy::Matrix{<:RV}, adis::Real)
 
 # Arguments
 - `lens::Lenses.AbstractLens` -- The lens model to plot
 - `θx::Matrix{<:RV}` -- x-coordinates grid
 - `θy::Matrix{<:RV}` -- y-coordinates grid
-- `adis::Float64` -- Distance ratio ``(D_{ds}/D_s)`` for the lens system
+- `adis::Real` -- Distance ratio ``(D_{ds}/D_s)`` for the lens system
 
 # Keyword arguments
 - `plane::Symbol = :image` -- Whether to plot |μ| map in `:image` or `:source` plane
@@ -423,7 +423,7 @@ end
 - `fig`: A Makie figure object containing the magnification map.
 - `ax`: The axis object of the plot for further customization.
 """
-function LensFactory.Lenses.plot_magnification_map(lens::Lenses.AbstractLens, θx::Matrix{<:RV}, θy::Matrix{<:RV}, adis::Float64;
+function LensFactory.Lenses.plot_magnification_map(lens::Lenses.AbstractLens, θx::Matrix{<:RV}, θy::Matrix{<:RV}, adis::Real;
                               plane::Symbol = :image,
                               rays_per_pixel::Int64 = 1,
                               figure_size::NTuple{2, RV} = (500, 400),
@@ -470,13 +470,13 @@ end
 
 
 """
-    LensFactory.Lenses.plot_magnification_profile(lens::Lenses.AbstractLens, θx::Matrix{<:RV}, θy::Matrix{<:RV}, adis::Float64)
+    LensFactory.Lenses.plot_magnification_profile(lens::Lenses.AbstractLens, θx::Matrix{<:RV}, θy::Matrix{<:RV}, adis::Real)
 
 # Arguments
 - `lens::Lenses.AbstractLens` -- The lens model to plot
 - `θx::Matrix{<:RV}` -- x-coordinates grid
 - `θy::Matrix{<:RV}` -- y-coordinates grid
-- `adis::Float64` -- Distance ratio ``(D_{ds}/D_s)`` for the lens system
+- `adis::Real` -- Distance ratio ``(D_{ds}/D_s)`` for the lens system
 
 # Keyword arguments
 - `plane::Symbol = :image` -- Whether to plot |μ| map in `:image` or `:source` plane
@@ -493,7 +493,7 @@ end
 - `fig`: A Makie figure object containing the magnification profile plot.
 - `ax`: The axis object of the plot for further customization.
 """
-function LensFactory.Lenses.plot_magnification_profile(lens::Lenses.AbstractLens, θx::Matrix{<:RV}, θy::Matrix{<:RV}, adis::Float64;
+function LensFactory.Lenses.plot_magnification_profile(lens::Lenses.AbstractLens, θx::Matrix{<:RV}, θy::Matrix{<:RV}, adis::Real;
                               plane::Symbol = :image,
                               rays_per_pixel::Int64 = 1,
                               mu_range::StepRange{<:RV, <:RV} = 1:5:500,

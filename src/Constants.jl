@@ -23,7 +23,7 @@ const ROA = Union{AbstractVector{<:Real},AbstractMatrix{<:Real}}
 # Natural constants
 # --------------------------------------------------------------------------------------------------
 const CONST_C = 299792458.0                         # Speed of light value (in m/s)
-const CONST_G = 6.6743E-11                          # Gravitational constant (in m^3 kg/s^2)
+const CONST_G = 6.6743E-11                          # Gravitational constant (in m^3/kg/s^2)
 
 
 # --------------------------------------------------------------------------------------------------

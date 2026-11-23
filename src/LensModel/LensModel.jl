@@ -210,7 +210,7 @@ Performs lens model fitting using the given `model`.
 # Keyword Arguments
 - `save      = true`   : Whether to save the MCMC results to a JLD2 file (default: true)
 - `file_name = nothing`: The name of the JLD2 file to save results. If no  name is provided then a 
-   name will be generated based on the lens name and current date (i.e., LensName_DDMMYYYY.jld2).
+   name will be generated based on the lens name and current date (i.e., LensName_YYYYMMDD.jld2).
 
 # Returns
 A named tuple `(optimizer, chains, logL)`, with the same content as the saved file:

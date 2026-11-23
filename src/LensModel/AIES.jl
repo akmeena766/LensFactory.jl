@@ -13,8 +13,6 @@ using Printf
 # Functions to export
 # --------------------------------------------------------------------------------------------------
 export aies_runner
-export autocorrelation
-export acceptance_rate
 
 # """
 #     aies_runner(log_posterior, seeds, n_steps, a, rng) -> (chain, llhood)

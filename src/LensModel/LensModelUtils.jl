@@ -27,7 +27,9 @@ export current_cosmology
 export adis_current
 export build_lens
 export build_kernel
-export lens_quantities
+export lens_quantities_pot
+export lens_quantities_def
+export lens_quantities_jac
 export lens_quantities_fd
 
 

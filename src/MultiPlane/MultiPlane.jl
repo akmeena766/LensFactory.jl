@@ -17,9 +17,15 @@ using ..LFUtils
 # --------------------------------------------------------------------------------------------------
 # Function to export
 # --------------------------------------------------------------------------------------------------
+export get_potential
 export get_deflection
 export get_jacobian
 export get_time_delay
+export get_magnification_image
+export get_magnification_source
+export get_image
+export get_critical_curve
+export get_caustic
 
 
 # --------------------------------------------------------------------------------------------------
