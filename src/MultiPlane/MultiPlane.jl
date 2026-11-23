@@ -746,13 +746,13 @@ function get_image(cosmology::Cosmology.AbstractCosmology,
 
       # Lens equation, β = θ - α(θ), at a single point
       function lens_map(x, y)
-         αx, αy = get_deflection(lens, Float64(x), Float64(y), adis_ij, adis_is)
+         αx, αy = _get_deflection(lens, Float64(x), Float64(y), adis_ij, adis_is)
          return x - αx, y - αy
       end
 
       # Jacobian, A = ∂β/∂θ = I - ∂α/∂θ, as (A11, A12, A21, A22)
       function lens_jac(x, y)
-         ψxx, ψyy, ψxy, ψyx = get_jacobian(lens, Float64(x), Float64(y), adis_ij, adis_is)
+         ψxx, ψyy, ψxy, ψyx = _get_jacobian(lens, Float64(x), Float64(y), adis_ij, adis_is)
          return 1.0 - ψxx, -ψxy, -ψyx, 1.0 - ψyy
       end
 
