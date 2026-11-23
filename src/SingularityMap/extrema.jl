@@ -192,7 +192,7 @@ function _minima!(nmin::Int64, rmin::T, e1::T, nex::Int64, rex::T) where T <: Ma
                   if i1 ≠ 0 || i2 ≠ 0
                      j1 = i1 + i
                      j2 = i2 + j
-                     if e1[i, j] > e1[j1, j2]
+                     if e1[i, j] < e1[j1, j2]
                         l = l + 1
                      end
                   end
