@@ -46,55 +46,57 @@ function _resolve_param_indices(free_parameter_names::AbstractVector{Tuple{Symbo
 end
 
 
-PARAM_NAME = Dict{Symbol, String}(:lens1 => "L1", :lens2 => "L2", :lens3 => "L3", :lens4 => "L4", 
-                                  :lens5 => "L5", :lens6 => "L6", :lens7 => "L7", :lens8 => "L8", 
-                                  :lens9 => "L9", :lens10 => "L10",
-                                  :x_c => "x_c", :y_c => "y_c", :eps => "\\epsilon", :pa => "\\phi", 
-                                  :x_s => "x_s", :x_t => "x_t",
-                                  :v_d => "v_d", :mass => "\\log[M]", :c => "c",
-                                  :gamma => "\\gamma", :angle => "\\theta", :delta => "\\delta",
-                                  :ref_sigma => "\\sigma_{\\star}", 
-                                  :ref_core => "\\theta_{c,\\star}", 
-                                  :ref_cut => "\\theta_{t,\\star}",
+PARAM_NAME = Dict{Symbol, String}(:x_c         => "x_c", 
+                                  :y_c         => "y_c", 
+                                  :eps         => "\\epsilon", 
+                                  :pa          => "\\phi", 
+                                  :x_s         => "x_s", 
+                                  :x_t         => "x_t",
+                                  :v_d         => "v_d", 
+                                  :mass        => "\\log[M]", 
+                                  :c           => "c",
+                                  :kappa       => "\\kappa",
+                                  :gamma       => "\\gamma", 
+                                  :angle       => "\\theta", 
+                                  :delta       => "\\delta",
+                                  :ref_sigma   => "\\sigma_{\\star}", 
+                                  :ref_core    => "\\theta_{c,\\star}", 
+                                  :ref_cut     => "\\theta_{t,\\star}",
                                   :ref_mag     => "m_{\\star}",
                                   :slope_sigma => "\\lambda",
                                   :slope_core  => "\\beta",
-                                  :slope_cut   => "\\alpha")
+                                  :slope_cut   => "\\alpha",
+                                  :cosmology   => "\\mathrm{Cosmo}", 
+                                  :H0          => "H_0", 
+                                  :w           => "w",
+                                  :Omega_m0    => "\\Omega_{m}", 
+                                  :Omega_r0    => "\\Omega_{r}", 
+                                  :Omega_w0    => "\\Omega_{w}")
+
+# Numbered names: prefix => function of the number
+const PARAM_PATTERN = (
+   "lens"    => n -> "L_{$n}",
+   "source"  => n -> "S_{$n}",
+   "scaling" => n -> "L_{$n}^{\\star}",
+   "adis"    => n -> "a_{dis}",
+   "zs"      => n -> "z_{s}",
+)
+
 # Internal function: Get parameter name from PARAM_NAME
 function _get_param_name(key::Symbol)
    # Check static dictionary first
    haskey(PARAM_NAME, key) && return PARAM_NAME[key]
    
-   # Match :lensN pattern
-   m = match(r"^lens(\d+)$", string(key))
-   if m !== nothing
-      n = m.captures[1]
-      return "L$n"
-   end
-
-   # Match :sourceN pattern
-   m = match(r"^source(\d+)$", string(key))
-   if m !== nothing
-      n = m.captures[1]
-      return "S$n"
-   end
-
-   # Match :adisN pattern
-   m = match(r"^adis(\d+)$", string(key))
-   if m !== nothing
-      n = m.captures[1]
-      return "a_{dis}"
-   end
-
-   # Match :scalingN pattern
-   m = match(r"^scaling(\d+)$", string(key))
-   if m !== nothing
-      n = m.captures[1]
-      return "L_{$n}^{\\star}"
+   name = string(key)
+   for (prefix, label) in PARAM_PATTERN
+      m = match(Regex("^$(prefix)(\\d+)\$"), name)
+      m !== nothing && return label(m.captures[1])
    end
    
-   error("Unknown parameter name: $key")
+   # Fallback: raw name as upright text, underscores escaped for LaTeX
+   return "\\mathrm{" * replace(name, "_" => "\\_") * "}"
 end
+
 
 # Internal function: generate ellipse for given parameters
 function _ellipse(ex::RV, ey::RV, eθ::RV; x0::RV=0.0, y0::RV=0.0, n::Int64=100)
@@ -661,9 +663,8 @@ end
 # --------------------------------------------------------------------------------------------------
 # Plot image scatter in (x, y) plane
 # --------------------------------------------------------------------------------------------------
-function LensFactory.LensModel.plot_image_scatter(model::LensModel.ModelConfig,
-                                                  chains::Array{Float64, 3},
-                                                  logL::Matrix{Float64};
+function LensFactory.LensModel.plot_image_scatter(model::LensModel.ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64};
+                                                  method::Symbol         = :contour,
                                                   save_plot::Bool        = true,
                                                   plot_name::String      = "./predicted_scatter.png",
                                                   resolution::Int64      = 2,
@@ -705,6 +706,7 @@ function LensFactory.LensModel.plot_image_scatter(model::LensModel.ModelConfig,
    # Collect residuals across every knot/image
    dx_all = Float64[]
    dy_all = Float64[]
+   n_missing = 0
 
    sid = 1
    kid = 1
@@ -741,7 +743,7 @@ function LensFactory.LensModel.plot_image_scatter(model::LensModel.ModelConfig,
          βx_model, βy_model = β_model
  
          # Predicted image positions
-         predicted_image = Lenses.get_image(best_model, x_grid, y_grid, adis_value, (βx_model, βy_model))
+         predicted_image = Lenses.get_image(best_model, x_grid, y_grid, adis_value, (βx_model, βy_model); method=method)
 
          # Convert predicted to mutable arrays for iterative removal
          pred_x = Float64[p[1] for p in predicted_image]
@@ -750,7 +752,7 @@ function LensFactory.LensModel.plot_image_scatter(model::LensModel.ModelConfig,
          # Matching observed images to predicted images
          for i in 1:n
             if isempty(pred_x)
-               push!(results, "MISSING")
+               n_missing = n_missing + 1
                continue
             end
 
@@ -761,9 +763,6 @@ function LensFactory.LensModel.plot_image_scatter(model::LensModel.ModelConfig,
 
             # Find the closest predicted image index
             best_idx = argmin(dist_sq)
-
-            d2 = dist_sq[best_idx]
-            dist = sqrt(d2)
 
             # Residuals (observed - predicted), assumed same ordering/length as knot.x, knot.y
             push!(dx_all, x[i] - pred_x[best_idx])
@@ -776,6 +775,11 @@ function LensFactory.LensModel.plot_image_scatter(model::LensModel.ModelConfig,
          kid = kid + 1
       end
       sid = sid + 1
+   end
+
+   # Throw warning if images are missing
+   if n_missing > 0
+      @warn "$n_missing observed image(s) have no predicted counterpart and are not shown."
    end
 
    # Initialize figure

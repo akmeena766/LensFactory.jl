@@ -32,14 +32,11 @@ function potential!(ψ::U, θx::S, θy::S, δ::T, ϕ::T) where {U<:Real, S<:Real
    cos_phi = cos(ϕ)
    sin_phi = sin(ϕ)
    
-   # Get radial coordinate
-   r = sqrt(θx^2 + θy^2)
+   # Rotated coordinates
+   u = + θx * cos_phi + θy * sin_phi
+   v = - θx * sin_phi + θy * cos_phi
 
-   # cos(θ - ϕ) and sin(θ - ϕ)
-   cos_value = (θx * cos_phi + θy * sin_phi) / r
-   sin_value = (θy * cos_phi - θx * sin_phi) / r
-
-   ψ_up = ψ + δ * r^3 * cos_value * sin_value^2
+   ψ_up = ψ + δ * u * v^2
    return ψ_up
 end
 
@@ -64,16 +61,11 @@ function potential!(ψ::U, θx::S, θy::S, δ::T, ϕ::T) where {U<:ROA, S<:ROA, 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
-         # Get radial coordinate
-         dx = θx[i, j]
-         dy = θy[i, j]
-         r = sqrt(dx^2 + dy^2)
-
-         # cos(θ - ϕ) and sin(θ - ϕ)
-         cos_value = (dx * cos_phi + dy * sin_phi) / r
-         sin_value = (dy * cos_phi - dx * sin_phi) / r
-
-         ψ[i, j] = ψ[i, j] + δ * r^3 * cos_value * sin_value^2
+         # Rotated coordinates
+         u = + θx[i, j] * cos_phi + θy[i, j] * sin_phi
+         v = - θx[i, j] * sin_phi + θy[i, j] * cos_phi
+ 
+         ψ[i, j] = ψ[i, j] + δ * u * v^2
       end
    end
 end
@@ -84,26 +76,21 @@ end
 """
 function deflection!(ψx::U, ψy::U, θx::S, θy::S, δ::T, ϕ::T) where {U<:Real, S<:Real, T<:Real}
    # Precompute angles
-   ϕ = deg2rad(ϕ)
-   cos_phi = cos(ϕ)
-   sin_phi = sin(ϕ)
-   
-   # Get radial coordinate
-   r = sqrt(θx^2 + θy^2)
-
-   # cos(θ - ϕ) and sin(θ - ϕ)
-   cos_value = (θx * cos_phi + θy * sin_phi) / r
-   sin_value = (θy * cos_phi - θx * sin_phi) / r
-
-   # cos3(θ - ϕ) and sin3(θ - ϕ)
-   cos_3value = 4.0 * cos_value^3 - 3.0 * cos_value
-   sin_3value = 3.0 * sin_value - 4.0 * sin_value^3
-
-   # Deflection
-   term1 = 3.0 * (cos_value - cos_3value)
-   term2 = (sin_value - 3.0 * sin_3value)
-   ψx_up = ψx + 0.25 * δ * r * (term1 * θx + term2 * θy)
-   ψy_up = ψy + 0.25 * δ * r * (term1 * θy - term2 * θx)
+   ϕ_rad = deg2rad(ϕ)
+   cos_phi = cos(ϕ_rad)
+   sin_phi = sin(ϕ_rad)
+ 
+   # Rotated coordinates
+   u = + θx * cos_phi + θy * sin_phi
+   v = - θx * sin_phi + θy * cos_phi
+ 
+   # Deflection in the rotated frame
+   ψu = δ * v^2
+   ψv = 2.0 * δ * u * v
+ 
+   # Rotate back
+   ψx_up = ψx + ψu * cos_phi - ψv * sin_phi
+   ψy_up = ψy + ψu * sin_phi + ψv * cos_phi
    return ψx_up, ψy_up
 end
 
@@ -123,33 +110,27 @@ to SIS lens model and update the deflection in place.
 """
 function deflection!(ψx::U, ψy::U, θx::S, θy::S, δ::T, ϕ::T) where {U<:ROA, S<:ROA, T<:Real}
    # Precompute angles
-   ϕ = deg2rad(ϕ)
-   cos_phi = cos(ϕ)
-   sin_phi = sin(ϕ)
-   
+   ϕ_rad = deg2rad(ϕ)
+   cos_phi = cos(ϕ_rad)
+   sin_phi = sin(ϕ_rad)
+ 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
-         # Get radial coordinate
-         dx = θx[i, j]
-         dy = θy[i, j]
-         r = sqrt(dx^2 + dy^2)
-
-         # cos(θ - ϕ) and sin(θ - ϕ)
-         cos_value = (dx * cos_phi + dy * sin_phi) / r
-         sin_value = (dy * cos_phi - dx * sin_phi) / r
-
-         # cos3(θ - ϕ) and sin3(θ - ϕ)
-         cos_3value = 4.0 * cos_value^3 - 3.0 * cos_value
-         sin_3value = 3.0 * sin_value - 4.0 * sin_value^3
-
-         # Deflection
-         term1 = 3.0 * (cos_value - cos_3value)
-         term2 = (sin_value - 3.0 * sin_3value)
-         ψx[i, j] = ψx[i, j] + 0.25 * δ * r * (term1 * dx + term2 * dy)
-         ψy[i, j] = ψy[i, j] + 0.25 * δ * r * (term1 * dy - term2 * dx)
+         # Rotated coordinates
+         u = + θx[i, j] * cos_phi + θy[i, j] * sin_phi
+         v = - θx[i, j] * sin_phi + θy[i, j] * cos_phi
+ 
+         # Deflection in the rotated frame
+         ψu = δ * v^2
+         ψv = 2.0 * δ * u * v
+ 
+         # Rotate back
+         ψx[i, j] = ψx[i, j] + ψu * cos_phi - ψv * sin_phi
+         ψy[i, j] = ψy[i, j] + ψu * sin_phi + ψv * cos_phi
       end
    end
+   return nothing
 end
 
 
@@ -158,27 +139,24 @@ end
 """
 function jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, δ::T, ϕ::T) where {U<:Real, S<:Real, T<:Real}
    # Precompute angles
-   ϕ = deg2rad(ϕ)
-   cos_phi = cos(ϕ)
-   sin_phi = sin(ϕ)
-   
-   # Get radial coordinate
-   r = sqrt(θx^2 + θy^2)
-
-   # cos(θ - ϕ) and sin(θ - ϕ)
-   cos_value = (θx * cos_phi + θy * sin_phi) / r
-   sin_value = (θy * cos_phi - θx * sin_phi) / r
-
-   # cos3(θ - ϕ) and sin3(θ - ϕ)
-   cos_3value = 4.0 * cos_value^3 - 3.0 * cos_value
-   sin_3value = 3.0 * sin_value - 4.0 * sin_value^3
-
-   # Jacobian
-   term1 = 3.0 * (cos_value - cos_3value)
-   term2 = (sin_value - 3.0 * sin_3value)
-   ψxx_up = ψxx + 0.25 * δ * ((r^2 + θx^2) * term1 + 4.0 * θx * θy * term2 - θy^2 * (cos_value - 9.0 * cos_3value)) / r
-   ψyy_up = ψyy + 0.25 * δ * ((r^2 + θy^2) * term1 - 4.0 * θx * θy * term2 - θx^2 * (cos_value - 9.0 * cos_3value)) / r
-   ψxy_up = ψxy + 0.25 * δ * (θx * θy * term1 - 2.0 * (θx^2 - θy^2) * term2 + θx * θy * (cos_value - 9.0 * cos_3value)) / r
+   ϕ_rad = deg2rad(ϕ)
+   cos_phi = cos(ϕ_rad)
+   sin_phi = sin(ϕ_rad)
+   sin_2phi = sin(2.0 * ϕ_rad)
+   cos_2phi = cos(2.0 * ϕ_rad)
+ 
+   # Rotated coordinates
+   u = + θx * cos_phi + θy * sin_phi
+   v = - θx * sin_phi + θy * cos_phi
+ 
+   # Jacobian in the rotated frame (ψ_uu = 0)
+   ψvv = 2.0 * δ * u
+   ψuv = 2.0 * δ * v
+ 
+   # Rotate back
+   ψxx_up = ψxx + ψvv * sin_phi^2 - ψuv * sin_2phi
+   ψyy_up = ψyy + ψvv * cos_phi^2 + ψuv * sin_2phi
+   ψxy_up = ψxy - 0.5 * sin_2phi * ψvv + cos_2phi * ψuv
    return ψxx_up, ψyy_up, ψxy_up
 end
 
@@ -199,34 +177,30 @@ to SIS lens model and update the jacobian in place.
 """
 function jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, δ::T, ϕ::T) where {U<:ROA, S<:ROA, T<:Real}
    # Precompute angles
-   ϕ = deg2rad(ϕ)
-   cos_phi = cos(ϕ)
-   sin_phi = sin(ϕ)
-   
+   ϕ_rad = deg2rad(ϕ)
+   cos_phi = cos(ϕ_rad)
+   sin_phi = sin(ϕ_rad)
+   sin_2phi = sin(2.0 * ϕ_rad)
+   cos_2phi = cos(2.0 * ϕ_rad)
+ 
    ax1, ax2 = axes(θx, 1), axes(θx, 2)
    @inbounds for j in ax2
       @inbounds for i in ax1
-         # Get radial coordinate
-         dx = θx[i, j]
-         dy = θy[i, j]
-         r = sqrt(dx^2 + dy^2)
-
-         # cos(θ - ϕ) and sin(θ - ϕ)
-         cos_value = (dx * cos_phi + dy * sin_phi) / r
-         sin_value = (dy * cos_phi - dx * sin_phi) / r
-
-         # cos3(θ - ϕ) and sin3(θ - ϕ)
-         cos_3value = 4.0 * cos_value^3 - 3.0 * cos_value
-         sin_3value = 3.0 * sin_value - 4.0 * sin_value^3
-
-         # Jacobian
-         term1 = 3.0 * (cos_value - cos_3value)
-         term2 = (sin_value - 3.0 * sin_3value)
-         ψxx[i, j] = ψxx[i, j] + 0.25 * δ * ((r^2 + dx^2) * term1 + 4.0 * dx * dy * term2 - dy^2 * (cos_value - 9.0 * cos_3value)) / r
-         ψyy[i, j] = ψyy[i, j] + 0.25 * δ * ((r^2 + dy^2) * term1 - 4.0 * dx * dy * term2 - dx^2 * (cos_value - 9.0 * cos_3value)) / r
-         ψxy[i, j] = ψxy[i, j] + 0.25 * δ * (dx * dy * term1 - 2.0 * (dx^2 - dy^2) * term2 + dx * dy * (cos_value - 9.0 * cos_3value)) / r
+         # Rotated coordinates
+         u = + θx[i, j] * cos_phi + θy[i, j] * sin_phi
+         v = - θx[i, j] * sin_phi + θy[i, j] * cos_phi
+ 
+         # Jacobian in the rotated frame (ψ_uu = 0)
+         ψvv = 2.0 * δ * u
+         ψuv = 2.0 * δ * v
+ 
+         # Rotate back
+         ψxx[i, j] = ψxx[i, j] + ψvv * sin_phi^2 - ψuv * sin_2phi
+         ψyy[i, j] = ψyy[i, j] + ψvv * cos_phi^2 + ψuv * sin_2phi
+         ψxy[i, j] = ψxy[i, j] - 0.5 * sin_2phi * ψvv + cos_2phi * ψuv
       end
    end
+   return nothing
 end
 
 end
