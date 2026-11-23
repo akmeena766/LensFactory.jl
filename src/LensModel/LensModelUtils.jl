@@ -86,29 +86,6 @@ function θ_random(model::ModelConfig)
    return θ
 end
 
-function θ_grid(model::ModelConfig, max_runs::Int64)
-   fps = free_parameters(model)
-   nd = length(fps)
-   
-   # Automatically determine points per dimension
-   n_per_dim = ceil(Int, max_runs^(1/nd))
-   total = n_per_dim^nd
-
-   # Generate grid
-   θ_grid = Vector{Vector{Float64}}(undef, total)
-   for idx in 1:total
-      θ = Vector{Float64}(undef, nd)
-      i = idx - 1
-      for (k, p) in enumerate(fps)
-         ik = i % n_per_dim
-         i ÷= n_per_dim
-         θ[k] = p.lower + (ik / (n_per_dim - 1)) * (p.upper - p.lower)
-      end
-      θ_grid[idx] = θ
-   end
-   return θ_grid
-end
-
 function θ_lhs(model::ModelConfig, max_runs::Int64)
    fps = free_parameters(model)
    nd = length(fps)
@@ -135,12 +112,10 @@ function θ_initializer(model::ModelConfig; run_mode::Symbol=:random, n_runs::In
       return [θ_reference(model) .+ 1e-3 .* randn(length(model.free_param_idxs)) for _ in 1:n_runs]
    elseif run_mode === :random
       return [θ_random(model) for _ in 1:n_runs]
-   elseif run_mode === :grid
-      return θ_grid(model, n_runs)
    elseif run_mode === :lhs
       return θ_lhs(model, n_runs)
    else
-      error("Unknown run_mode: $run_mode")
+      error("Unknown run_mode: $run_mode. Use :reference, :jitter, :random or :lhs.")
    end
 
 end

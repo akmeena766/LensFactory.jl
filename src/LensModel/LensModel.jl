@@ -1683,17 +1683,20 @@ end
                    save_deflection::Bool = true, 
                    save_kappa::Bool      = true, 
                    save_gamma::Bool      = true)
-Save fits files for the best-fit model based on the MCMC results stored in `file_name`. The user can
-choose which lensing quantities to save by setting the corresponding boolean flags.
+Save fits files for the best-fit model stored in `file_name`. The best fit is taken from the MaxEnt
+map for a MaxEnt fit, otherwise from the MCMC chains if present, otherwise from the best optimizer
+run. The user can choose which lensing quantities to save by setting the corresponding boolean flags.
 
 # Arguments
-- `file_name::String`: Path to the JLD2 file containing the MCMC results
+- `file_name`: Path to the JLD2 file containing the MCMC results
 
 # Keyword Arguments
-- `save_potential::Bool=true`: Whether to save the lensing potential as **potential.fits**
-- `save_deflection::Bool=true`: Whether to save the deflection angles as **alpha\\_x.fits** and **alpha\\_y.fits**
-- `save_kappa::Bool=true`: Whether to save the convergence map as **kappa.fits**
-- `save_gamma::Bool=true`: Whether to save the shear maps as **gamma1.fits** and **gamma2.fits**
+- `out_dir          = . ` : Directory to write the FITS files to
+- `burn_in         = 0.2` : Fraction of MCMC steps to discard (ignored without chains)
+- `save_potential  = true`: Whether to save the lensing potential as **potential.fits**
+- `save_deflection = true`: Whether to save the deflection angles as **alpha\\_x.fits** and **alpha\\_y.fits**
+- `save_kappa      = true`: Whether to save the convergence map as **kappa.fits**
+- `save_gamma      = true`: Whether to save the shear maps as **gamma1.fits** and **gamma2.fits**
 
 # Returns
 - `Vector{String}`: Paths of the FITS files written to disk
@@ -1708,13 +1711,11 @@ function save_best_fits(data_jld2::JLD2.JLDFile;
 
    # Load the chains and logL from the file
    model  = data_jld2["model"]
-   chains = data_jld2["chains"]
-   logL   = data_jld2["logL"]
    date   = data_jld2["Date"]
    time   = data_jld2["Time"]
 
    # Get best-fit model
-   best_model, _ = get_best_model(model, chains, logL; burn_in=burn_in)
+   best_model, _ = get_best_model(data_jld2; burn_in=burn_in)
 
    # Generate grid
    FOV = model.observation.FOV
