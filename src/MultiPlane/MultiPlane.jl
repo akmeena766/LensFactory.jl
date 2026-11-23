@@ -92,7 +92,7 @@ function _distances(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abstrac
    return D_ij, adis_ij, adis_is
 end
 
-function _get_potential(lens::Lenses.AbstractLens, θx::Real, θy::Real, adis_ij::Matrix{Float64}, adis_is::Vector{Float64})
+function _get_potential(lens::Lenses.AbstractLens, θx::Real, θy::Real, adis_ij::Matrix{<:Real}, adis_is::Vector{<:Real})
    # Initialize zero potential value
    ψ = 0.0
 
@@ -126,7 +126,7 @@ function _get_potential(lens::Lenses.AbstractLens, θx::Real, θy::Real, adis_ij
    return ψ
 end
 
-function _get_deflection(lens::Lenses.AbstractLens, θx::Real, θy::Real, adis_ij::Matrix{Float64}, adis_is::Vector{Float64})
+function _get_deflection(lens::Lenses.AbstractLens, θx::Real, θy::Real, adis_ij::Matrix{<:Real}, adis_is::Vector{<:Real})
    # Initialize zero-valued deflection components
    ψx = 0.0
    ψy = 0.0
@@ -159,7 +159,7 @@ function _get_deflection(lens::Lenses.AbstractLens, θx::Real, θy::Real, adis_i
 end
 
 
-function _get_jacobian(lens::Lenses.AbstractLens, θx::Real, θy::Real, adis_ij::Matrix{Float64}, adis_is::Vector{Float64})
+function _get_jacobian(lens::Lenses.AbstractLens, θx::Real, θy::Real, adis_ij::Matrix{<:Real}, adis_is::Vector{<:Real})
    # Initialize zero valued deformation tensor components
    ψrr = zeros(2, 2)
 
@@ -197,7 +197,7 @@ function _get_jacobian(lens::Lenses.AbstractLens, θx::Real, θy::Real, adis_ij:
    return ψrr[1, 1], ψrr[2, 2], ψrr[1, 2], ψrr[2, 1]
 end
 
-function _get_time_delay(lens::Lenses.AbstractLens, θx::Real, θy::Real, β::NTuple{2, Real}, adis_ij::Matrix{Float64}, D_ij::Matrix{Float64})
+function _get_time_delay(lens::Lenses.AbstractLens, θx::Real, θy::Real, β::NTuple{2, Real}, adis_ij::Matrix{<:Real}, D_ij::Matrix{<:Real})
    # Initialize zero-valued time delay function
    ϕ = 0.0
 

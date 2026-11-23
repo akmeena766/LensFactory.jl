@@ -90,10 +90,10 @@ end
 end
 
 @inline function _weighted_position(β_ind::Vector{NTuple{2, Float64}},
-                                    A::NTuple{4, Vector{Float64}}, 
-                                    σx::Vector{Float64}, 
-                                    σy::Vector{Float64}, 
-                                    θ::Vector{Float64}, 
+                                    A::NTuple{4, Vector{<:Real}}, 
+                                    σx::Vector{<:Real}, 
+                                    σy::Vector{<:Real}, 
+                                    θ::Vector{<:Real}, 
                                     n::Int64)
    # Weight matrix: W = Σᵢ μᵢᵀ * Sᵢ⁻¹ * μᵢ
    sumW11 = 0.0
@@ -207,10 +207,10 @@ end
 # Source plane likelihood functions
 # --------------------------------------------------------------------------------------------------
 function logL_sourceplane(model::ModelConfig, 
-                          adis::Vector{Float64}, 
-                          αx_all::Vector{Vector{Float64}}, 
-                          αy_all::Vector{Vector{Float64}}, 
-                          A_all::Vector{NTuple{4, Vector{Float64}}})
+                          adis::Vector{<:Real}, 
+                          αx_all::Vector{Vector{<:Real}}, 
+                          αy_all::Vector{Vector{<:Real}}, 
+                          A_all::Vector{NTuple{4, Vector{<:Real}}})
    # Initialize chi2 for position
    χ2_total = 0.0
 
@@ -283,20 +283,20 @@ end
 
 
 function logL_sourceplane_grad(model::ModelConfig, 
-                               adis::Vector{Float64}, 
-                               αx_all::Vector{Vector{Float64}}, 
-                               αy_all::Vector{Vector{Float64}}, 
-                               A_all::Vector{NTuple{4, Vector{Float64}}})
+                               adis::Vector{<:Real}, 
+                               αx_all::Vector{Vector{<:Real}}, 
+                               αy_all::Vector{Vector{<:Real}}, 
+                               A_all::Vector{NTuple{4, Vector{<:Real}}})
    # Identity tuple
    I4 = (1.0, 0.0, 0.0, 1.0)
  
    # Gradient storage (kid-indexed, one entry per image)
    n_knots = sum(length(src.knots) for src in model.source_config.sources)
-   gαx_all  = Vector{Vector{Float64}}(undef, n_knots)
-   gαy_all  = Vector{Vector{Float64}}(undef, n_knots)
-   gψxx_all = Vector{Vector{Float64}}(undef, n_knots)
-   gψyy_all = Vector{Vector{Float64}}(undef, n_knots)
-   gψxy_all = Vector{Vector{Float64}}(undef, n_knots)
+   gαx_all  = Vector{Vector{<:Real}}(undef, n_knots)
+   gαy_all  = Vector{Vector{<:Real}}(undef, n_knots)
+   gψxx_all = Vector{Vector{<:Real}}(undef, n_knots)
+   gψyy_all = Vector{Vector{<:Real}}(undef, n_knots)
+   gψxy_all = Vector{Vector{<:Real}}(undef, n_knots)
  
    sid = 1
    kid = 1
@@ -328,11 +328,11 @@ function logL_sourceplane_grad(model::ModelConfig,
          β_model, W_all, _ = _weighted_position(β_ind, A, σx, σy, σθ, n)
          βx_model, βy_model = β_model
  
-         gαx  = Vector{Float64}(undef, n)
-         gαy  = Vector{Float64}(undef, n)
-         gψxx = Vector{Float64}(undef, n)
-         gψyy = Vector{Float64}(undef, n)
-         gψxy = Vector{Float64}(undef, n)
+         gαx  = Vector{<:Real}(undef, n)
+         gαy  = Vector{<:Real}(undef, n)
+         gψxx = Vector{<:Real}(undef, n)
+         gψyy = Vector{<:Real}(undef, n)
+         gψxy = Vector{<:Real}(undef, n)
          for i in 1:n
             βx_i, βy_i = β_ind[i]
             δβx = βx_i - βx_model
@@ -370,14 +370,14 @@ end
 
 
 function logL_sourceplane_flux(model::ModelConfig, 
-                               adis::Vector{Float64}, 
+                               adis::Vector{<:Real}, 
                                β_ind_all::Vector{Vector{NTuple{2, Float64}}},
                                β_mod_all::Vector{NTuple{2, Float64}},
-                               A_all::Vector{NTuple{4, Vector{Float64}}},
-                               A_xp_all::Vector{NTuple{4, Vector{Float64}}},
-                               A_xm_all::Vector{NTuple{4, Vector{Float64}}},
-                               A_yp_all::Vector{NTuple{4, Vector{Float64}}},
-                               A_ym_all::Vector{NTuple{4, Vector{Float64}}},
+                               A_all::Vector{NTuple{4, Vector{<:Real}}},
+                               A_xp_all::Vector{NTuple{4, Vector{<:Real}}},
+                               A_xm_all::Vector{NTuple{4, Vector{<:Real}}},
+                               A_yp_all::Vector{NTuple{4, Vector{<:Real}}},
+                               A_ym_all::Vector{NTuple{4, Vector{<:Real}}},
                                h_fd::Float64)
    # Initialize chi2 for parity
    χ2_total = 0.0
@@ -427,7 +427,7 @@ function logL_sourceplane_flux(model::ModelConfig,
          #   dμ/dx = −(1/detA²)·d(detA)/dx   (signed μ = 1/detA)
          m_src = 0.0
          wsum  = 0.0
-         dm = Vector{Float64}(undef, n)
+         dm = Vector{<:Real}(undef, n)
          for i in 1:n
             # Skip unmeasured images (marked with sigma <= 0)
             if σm[i] <= 0.0
@@ -497,14 +497,14 @@ end
 
 
 function logL_sourceplane_timedelay(model::ModelConfig, 
-                                    adis::Vector{Float64}, 
+                                    adis::Vector{<:Real}, 
                                     z_d::Float64, 
                                     D_d::Float64, 
                                     β_ind_all::Vector{Vector{NTuple{2, Float64}}},
                                     β_mod_all::Vector{NTuple{2, Float64}},
-                                    ψ_all::Vector{Vector{Float64}},
-                                    αx_all::Vector{Vector{Float64}}, 
-                                    αy_all::Vector{Vector{Float64}})
+                                    ψ_all::Vector{Vector{<:Real}},
+                                    αx_all::Vector{Vector{<:Real}}, 
+                                    αy_all::Vector{Vector{<:Real}})
    # Initialize chi2
    χ2_total = 0.0
 
@@ -542,7 +542,7 @@ function logL_sourceplane_timedelay(model::ModelConfig,
          # Best-fit time delay value
          Δt_0 = 0.0
          wsum = 0.0
-         td_fit_approx = Vector{Float64}(undef, n)
+         td_fit_approx = Vector{<:Real}(undef, n)
          pref = constant_factor / adis_value
          for i in 1:n
             # Skip unmeasured images (marked with sigma <= 0)
@@ -588,10 +588,10 @@ end
 # --------------------------------------------------------------------------------------------------
 function logL_imageplane_fast(model::ModelConfig, 
                               lens::AbstractLens,
-                              adis::Vector{Float64}, 
-                              αx_all::Vector{Vector{Float64}}, 
-                              αy_all::Vector{Vector{Float64}}, 
-                              A_all::Vector{NTuple{4, Vector{Float64}}})
+                              adis::Vector{<:Real}, 
+                              αx_all::Vector{Vector{<:Real}}, 
+                              αy_all::Vector{Vector{<:Real}}, 
+                              A_all::Vector{NTuple{4, Vector{<:Real}}})
    # Initialize chi2 for position
    χ2_total = 0.0
 
@@ -684,7 +684,7 @@ end
 
 function logL_imageplane_fast_flux(model::ModelConfig,
                               lens::AbstractLens,
-                              adis::Vector{Float64},
+                              adis::Vector{<:Real},
                               θ_mod_all::Vector{Vector{NTuple{2, Float64}}})
    # Initialize chi2 for flux
    χ2_total = 0.0
@@ -713,7 +713,7 @@ function logL_imageplane_fast_flux(model::ModelConfig,
          # Best-fit (profiled) source magnitude from exact magnifications at θ_model
          m_src = 0.0
          wsum  = 0.0
-         dm = Vector{Float64}(undef, n)
+         dm = Vector{<:Real}(undef, n)
          for i in 1:n
             # Skip unmeasured images (marked with sigma <= 0)
             if σm[i] <= 0.0
@@ -763,7 +763,7 @@ end
 
 function logL_imageplane_fast_timedelay(model::ModelConfig,
                                    lens::AbstractLens,
-                                   adis::Vector{Float64},
+                                   adis::Vector{<:Real},
                                    z_d::Float64,
                                    D_d::Float64,
                                    β_mod_all::Vector{NTuple{2, Float64}},
@@ -800,7 +800,7 @@ function logL_imageplane_fast_timedelay(model::ModelConfig,
          # Best-fit arrival-time zero-point
          Δt_0 = 0.0
          wsum = 0.0
-         td_fit = Vector{Float64}(undef, n)
+         td_fit = Vector{<:Real}(undef, n)
          for i in 1:n
             # Skip unmeasured images (marked with sigma <= 0)
             if σ_Δt[i] <= 0.0

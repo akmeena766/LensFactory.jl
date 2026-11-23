@@ -281,7 +281,7 @@ end
 
 
 # Extract parameter values
-function _extract_param_range(x::Union{Int64, Float64, Dict})::Tuple{Real, Real, Real}
+function _extract_param_range(x::Union{Real, Dict})::Tuple{Real, Real, Real}
    # Extract parameter values in case of Int64 or Float64
    if x isa Union{Int64,Float64}
       val = x
@@ -311,7 +311,7 @@ end
 
 
 # Build all multi-plane distance (ratio) matrices - for static_ADD case
-function _multiplane_ADD(cosmo::Cosmology.AbstractCosmology, z_d::Vector{Float64}, z_s::Vector{Float64})
+function _multiplane_ADD(cosmo::Cosmology.AbstractCosmology, z_d::Vector{<:Real}, z_s::Vector{<:Real})
    # Sorted unique plane redshifts (must match the grouping in Lenses.init_MultiPlaneLens)
    z_p = sort(unique(z_d))
    n_p = length(z_p)

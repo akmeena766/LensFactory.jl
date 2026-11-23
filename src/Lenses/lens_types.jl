@@ -1317,7 +1317,7 @@ end
 # Physical (plane-frame) position at plane `k` of a ray that arrives at the observed angle (θx, θy).
 # `planes` must already hold the physical (corrected) lenses for indices 1 .. k-1. `αx` / `αy` are
 # caller-provided scratch buffers (length >= k-1) reused across calls to avoid per-call allocation.
-function _raytrace_to_plane!(αx::Vector{Float64}, αy::Vector{Float64}, planes::AbstractVector, adis_ij::AbstractMatrix, k::Int, θx::Real, θy::Real)
+function _raytrace_to_plane!(αx::Vector{<:Real}, αy::Vector{<:Real}, planes::AbstractVector, adis_ij::AbstractMatrix, k::Int, θx::Real, θy::Real)
    # For the first plane the observed position is the physical position
    if k == 1 
       return float(θx), float(θy)
@@ -1351,7 +1351,7 @@ end
 # so each plane is constructed only ONCE (no build-then-rebuild). Returns a NamedTuple with x_c/y_c
 # replaced by their physical (plane-frame) values; NamedTuples without a centre are returned
 # unchanged. `planes` must already hold the physical (corrected) planes 1 .. k-1.
-function _update_centre(nt::NamedTuple, planes::AbstractVector, adis_ij::AbstractMatrix, k::Int, αx::Vector{Float64}, αy::Vector{Float64})
+function _update_centre(nt::NamedTuple, planes::AbstractVector, adis_ij::AbstractMatrix, k::Int, αx::Vector{<:Real}, αy::Vector{<:Real})
    if !haskey(nt, :x_c) || !haskey(nt, :y_c)
       return nt
    end

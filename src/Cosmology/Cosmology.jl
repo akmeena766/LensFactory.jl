@@ -613,7 +613,7 @@ Valid for flat, open, and closed models and any `w`.
 """
 function zs2adis(cosmology::AbstractCosmology, z_d::Real, z_s::Real; 
                  dC::Union{Nothing, Real} = nothing, 
-                 atol::Float64 = DIST_ATOL, 
+                 atol::Real = DIST_ATOL, 
                  rtol::Real = DIST_RTOL)
    # Check z_s > zd
    if z_s <= z_d

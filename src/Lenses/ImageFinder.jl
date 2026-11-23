@@ -86,7 +86,7 @@ end
    return _isfinite(t[1]) && _isfinite(t[2]) && _isfinite(t[3])
 end
 
-@inline function _finite_or_zero(x::Float64)
+@inline function _finite_or_zero(x::Real)
    return isfinite(x) ? x : 0.0
 end
 
@@ -159,7 +159,7 @@ end
 end
 
 # Is `p` inside triangle `t` (barycentric coordinates ≥ -margin)?
-@inline function _inside(p::_Pt, t::NTuple{3, _Pt}, margin::Float64)
+@inline function _inside(p::_Pt, t::NTuple{3, _Pt}, margin::Real)
    (x1, y1), (x2, y2), (x3, y3) = t
    d  = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3)
    l1 = ((y2 - y3) * (p[1] - x3) + (x3 - x2) * (p[2] - y3)) / d
@@ -207,7 +207,7 @@ end
 # touching a singular lens centre) are always kept, so that images arbitrarily close to the 
 # singularity can still be found, unless all their vertices are non-finite (e.g., inside a region 
 # where the mapping is undefined).
-@inline function _keep(t::_Tri, β::_Pt, pad::Float64)
+@inline function _keep(t::_Tri, β::_Pt, pad::Real)
    # If any vertex is non-finite, keep the triangle unless all are non-finite.
    # This allows finding images near singularities.
    if !_isfinite(t.β)
@@ -254,7 +254,7 @@ end
 
 # Split a triangle into four congruent children using its edge midpoints. The error estimate of the
 # children is updated from the measured non-linearity along the parent edges.
-@inline function _subdivide(t::_Tri, lens_map::F, cfac::Float64) where F
+@inline function _subdivide(t::_Tri, lens_map::F, cfac::Real) where F
    a, b, c = t.θ
    A, B, C = t.β
    ab, bc, ca = _mid(a, b), _mid(b, c), _mid(c, a)
@@ -274,7 +274,7 @@ end
 # Newton-Raphson for β(θ) = β. The step is damped (halved) until the source-plane residual
 # decreases, and the iterate is never allowed to move further than `R` from the starting point.
 # Returns the best point and its residual.
-function _newton(lens_map::F, lens_jac::G, θ0::_Pt, β::_Pt, R::Float64, max_iter::Int) where {F, G}
+function _newton(lens_map::F, lens_jac::G, θ0::_Pt, β::_Pt, R::Real, max_iter::Int) where {F, G}
    # Initial guess
    x, y = θ0
 

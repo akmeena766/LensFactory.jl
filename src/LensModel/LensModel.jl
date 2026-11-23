@@ -84,7 +84,7 @@ function plot_image_scatter end
 # --------------------------------------------------------------------------------------------------
 # Internal function: Build a lens model from a single parameter vector `θ` (i.e., a best-fit or 
 # one posterior sample).
-function _build_sample_model(model::ModelConfig, θ::AbstractVector{Float64}, param_ref::Dict)
+function _build_sample_model(model::ModelConfig, θ::AbstractVector{<:Real}, param_ref::Dict)
    # Replace free parameter values by the sample values
    pvals = LensModelUtils.param_dict(model, θ, param_ref)
  
@@ -144,7 +144,7 @@ function _best_logL_in_plane(model::ModelConfig, best_θ::Vector{<:Real}, best_l
 end
 
 # Internal function: Get source position from the lens model and distance ratio.
-function _get_source_position(lens::Lenses.AbstractLens, knot::LensModelIO.Knot, adis::Float64)
+function _get_source_position(lens::Lenses.AbstractLens, knot::LensModelIO.Knot, adis::Real)
    # Knot positions and number of images
    x  = knot.x
    y  = knot.y
@@ -1481,7 +1481,7 @@ then predict the counter-image positions, magnifications and time delays.
 - `data_jld2::JLD2.JLDFile`: JLD2 data file containing the fit results.
 - `θx`: x-coordinate(s) of the observed image position(s).
 - `θy`: y-coordinate(s) of the observed image position(s).
-- `z_s::Float64`: Source redshift.
+- `z_s::Real`: Source redshift.
 
 # Keyword Arguments
 - `unit = :RA_DEC`: Unit of the input coordinates. 
