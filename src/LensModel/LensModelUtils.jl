@@ -126,7 +126,7 @@ end
 # --------------------------------------------------------------------------------------------------
 # Parameter dictionary (θ -> pvals)
 # --------------------------------------------------------------------------------------------------
-function param_dict(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real})
+function param_dict(model::ModelConfig, θ::Vector{<:Real}, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real})
    # Make a copy of the reference dictionary
    pvals = copy(param_ref)
 

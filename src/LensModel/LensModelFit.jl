@@ -325,7 +325,7 @@ end
 # --------------------------------------------------------------------------------------------------
 # Run MCMC
 # --------------------------------------------------------------------------------------------------
-function get_unique_seeds(results::Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, n_walkers::Int64, tol::Float64=1E-2)
+function get_unique_seeds(results::Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, n_walkers::Int64, tol::Real=1E-2)
    # Sort by log-posterior (highest/best first)
    # results should be a vector of structs/objects with .θ and .f (log-posterior)
    sorted_res = sort(results, by = x -> x.f, rev = true)
@@ -363,7 +363,7 @@ function get_unique_seeds(results::Vector{@NamedTuple{θ::Vector{Float64}, f::Fl
    return seeds
 end
 
-function get_best_seeds(results::Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, n_walkers::Int64; jitter::Float64=0.001)
+function get_best_seeds(results::Vector{@NamedTuple{θ::Vector{Float64}, f::Float64}}, n_walkers::Int64; jitter::Real=0.001)
    # Sort by log-posterior (highest/best first)
    # results should be a vector of structs/objects with .θ and .f (log-posterior)
    sorted_res = sort(results, by = x -> x.f, rev = true)

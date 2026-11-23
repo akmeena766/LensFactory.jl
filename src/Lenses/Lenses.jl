@@ -1224,7 +1224,7 @@ end
 
 """
     get_radial_profile(kappa::T, θx::T, θy::T; 
-                       origin::Union{Tuple{Float64, Float64}, Nothing} = nothing, 
+                       origin::Union{NTuple{2, Real}, Nothing} = nothing, 
                        n_bin::Int64     = 50, 
                        bin_type::Symbol = :log) --> Tuple(Vector{Real}, Vector{Real}, Vector{Real})
 Calculate the radial convergence profile. To convert it into physicsal units, multiply it by the 
@@ -1247,7 +1247,7 @@ critical density ``Σ_{\\rm cr}``.
 - `edges`  : Radial bin edges (in ``\\rm \\mathbf{arcseconds}``).
 """
 function get_radial_profile(kappa::T, θx::T, θy::T; 
-                            origin::Union{Tuple{Float64, Float64}, Nothing} = nothing, 
+                            origin::Union{NTuple{2, Real}, Nothing} = nothing, 
                             n_bin::Int64     = 50, 
                             bin_type::Symbol = :log) where T <: Matrix{<:Real}
    # Get the radial 1D grid based the input 2D grid and origin. If origin is not provided, then the 
@@ -1292,7 +1292,7 @@ end
 
 """
     get_mass_profile(kappa::T, θx::T, θy::T, D_d::Real; 
-                     origin::Union{Tuple{Float64, Float64}, Nothing} = nothing, 
+                     origin::Union{NTuple{2, Real}, Nothing} = nothing, 
                      n_bin::Int64     = 50, 
                      bin_type::Symbol = :log) where T <: Matrix{<:Real} --> Tuple{Vector{Float64}, Vector{Float64}}
 Calculate the cumulative mass enclosed within a given angular radius ``θ`` for a given lens model. 
@@ -1318,7 +1318,7 @@ redshift, then divide the output mass values by ``a_{\\rm dis}``.
 - `mass`: Cumulative mass (in ``\\rm \\mathbf{M_\\odot}``).
 """
 function get_mass_profile(kappa::T, θx::T, θy::T, D_d::Real; 
-                          origin::Union{Tuple{Float64, Float64}, Nothing} = nothing, 
+                          origin::Union{NTuple{2, Real}, Nothing} = nothing, 
                           n_bin::Int64     = 50, 
                           bin_type::Symbol = :log) where T <: Matrix{<:Real}
    if origin === nothing

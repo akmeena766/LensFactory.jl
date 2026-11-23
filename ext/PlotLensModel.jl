@@ -126,7 +126,7 @@ end
 # --------------------------------------------------------------------------------------------------
 """
     LensFactory.LensModel.plot_corner(chains, logL; free_parameter_names=nothing,
-                                                    burn_in::Float64  = 0.3,
+                                                    burn_in::Real  = 0.2,
                                                     thin::Int64       = 100,
                                                     save_plot::Bool   = true,
                                                     plot_name::String = "./corner.png",
@@ -139,7 +139,7 @@ Generates a corner plot for the given MCMC chains and log-likelihood values.
 
 # Keyword arguments
 - `free_parameter_names=nothing`: Optional list of parameter names for labeling the axes.
-- `burn_in::Float64 = 0.3`: Fraction of the initial samples to discard as burn-in.
+- `burn_in::Real = 0.2`: Fraction of the initial samples to discard as burn-in.
 - `thinn::Int64     = 100`: Interval for thinning the chains to reduce autocorrelation.
 - `save_plot::Bool  = true`: Whether to save the plot as "corner.png".
    - `plot_name::String = "./corner.png"`: Filename for saving the plot.
@@ -151,7 +151,7 @@ Generates a corner plot for the given MCMC chains and log-likelihood values.
 function LensFactory.LensModel.plot_corner(chains, logL; 
                                            free_parameter_names = nothing,
                                            plot_parameters      = nothing,
-                                           burn_in::Float64     = 0.3,
+                                           burn_in::Real     = 0.2,
                                            thin::Int64          = 100,
                                            save_plot::Bool      = true,
                                            plot_name::String    = "./corner.png",
@@ -288,7 +288,7 @@ Generates trace plots for the given MCMC chains.
 
 # Keyword arguments
 - `free_parameter_names = nothing`: Optional list of parameter names for labeling the axes.
-- `burn_in::Float64 = 0.0`: Fraction of the initial samples to discard as burn-in.
+- `burn_in::Real = 0.0`: Fraction of the initial samples to discard as burn-in.
 - `thin::Int64 = 1`: Interval for thinning the chains to reduce autocorrelation.
 - `save_plot::Bool = true`: Whether to save the plot as "corner_optimizer.png".
    - `plot_name::String = "./trace.png"`: Filename for saving the plot.
@@ -299,7 +299,7 @@ Generates trace plots for the given MCMC chains.
 """
 function LensFactory.LensModel.plot_trace(chains; 
                               free_parameter_names=nothing, 
-                              burn_in::Float64  = 0.0,
+                              burn_in::Real  = 0.0,
                               thin::Int64       = 1,
                               save_plot::Bool   = true, 
                               plot_name::String = "./trace.png", 

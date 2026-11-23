@@ -49,7 +49,7 @@ _mcmc_method(model::ModelConfig) = model.sampler.mcmc === nothing ? nothing : mo
 
 
 function calculate_gr(chains::Array{Float64, 3}; 
-                      burn_in::Float64               = 0.2,
+                      burn_in::Real               = 0.2,
                       method::Union{Symbol, Nothing} = nothing)
    _warn_if_ensemble(method)
 
@@ -90,14 +90,14 @@ function calculate_gr(chains::Array{Float64, 3};
 end
 
 
-function calculate_gr(model::ModelConfig, chains::Array{Float64, 3}; burn_in::Float64 = 0.2)
+function calculate_gr(model::ModelConfig, chains::Array{Float64, 3}; burn_in::Real = 0.2)
    return calculate_gr(chains; burn_in = burn_in, method = _mcmc_method(model))
 end
 
 
 function print_gr_report(chains::Array{Float64, 3}; 
                          free_param_names               = nothing, 
-                         burn_in::Float64               = 0.2,
+                         burn_in::Real               = 0.2,
                          method::Union{Nothing, Symbol} = nothing)
    # Calculate R̂
    r_hats = calculate_gr(chains; burn_in=burn_in, method = method)
@@ -205,7 +205,7 @@ end
 #   or the sampler is poorly mixed.
 function autocorrelation(chains::Array{Float64, 3}; 
                          free_param_names::Union{Vector{Tuple{Symbol, Symbol}}, Nothing} = nothing, 
-                         burn_in::Float64                                                = 0.2)
+                         burn_in::Real                                                = 0.2)
    # Dimension
    n_steps, n_walkers, n_params = size(chains)
 
@@ -260,7 +260,7 @@ end
 # consecutive steps. A rejected proposal is an exact bitwise copy of the previous row, so 
 # `any(chains[s, w, :] .!= chains[s-1, w, :])` is unambiguous. A healthy AIES acceptance rates 
 # typically fall in the range `[20%, 40%]` for well-conditioned posteriors.
-function acceptance_rate(chains::Array{Float64, 3}; burn_in::Float64=0.2)
+function acceptance_rate(chains::Array{Float64, 3}; burn_in::Real=0.2)
    # Dimension
    n_steps, n_walkers, _ = size(chains)
    

@@ -312,7 +312,7 @@ end
 - `adis::Real` -- Distance ratio ``(D_{ds}/D_s)`` for the lens system
 
 # Keyword arguments
-- `D_d::Float64 = NaN` -- Angular diameter distance to the lens (required if `unit != :convergence`)
+- `D_d::Real = NaN` -- Angular diameter distance to the lens (required if `unit != :convergence`)
 - `unit::Symbol = :kg_m2` -- Unit for surface density. Options are :convergence, :kg_m2, :msun_pc2, :msun_arcsec2
 - `figure_size::NTuple{2, RV} = (500, 400)`
 - `heatmap_kws::NamedTuple = (colormap=:cubehelix, colorrange=(0, 6))`
@@ -327,7 +327,7 @@ end
 - `ax`: The axis object of the plot for further customization.
 """
 function LensFactory.Lenses.plot_surface_density(lens::Lenses.AbstractLens, θx::Matrix{<:RV}, θy::Matrix{<:RV}, adis::Real; 
-                              D_d::Float64               = NaN,
+                              D_d::Real               = NaN,
                               unit::Symbol               = :kg_m2,
                               figure_size::NTuple{2, RV} = (500, 400),
                               heatmap_kws::NamedTuple    = (colormap=:cubehelix, colorrange=(0, 6)),
@@ -482,7 +482,7 @@ end
 - `plane::Symbol = :image` -- Whether to plot |μ| map in `:image` or `:source` plane
 - `rays_per_pixel::Int64 = 1` -- Only relevant if `plane = :source`
 - `mu_range::StepRange{<:RV, <:RV} = 1:5:500`
-- `unit::Float64 = ANGLE_ARCMIN^2`
+- `unit::Real = ANGLE_ARCMIN^2`
 - `figure_size::NTuple{2, RV} = (500, 400)`
 - `plot_kws::NamedTuple = (color=:black, linewidth=2, linestyle=:solid)`
 - `save_plot::Bool = false`
@@ -497,7 +497,7 @@ function LensFactory.Lenses.plot_magnification_profile(lens::Lenses.AbstractLens
                               plane::Symbol = :image,
                               rays_per_pixel::Int64 = 1,
                               mu_range::StepRange{<:RV, <:RV} = 1:5:500,
-                              unit::Float64 = ANGLE_ARCMIN^2,
+                              unit::Real = ANGLE_ARCMIN^2,
                               figure_size::NTuple{2, RV} = (500, 400),
                               plot_kws::NamedTuple = (color=:black, linewidth=2, linestyle=:solid),
                               save_plot::Bool = false,

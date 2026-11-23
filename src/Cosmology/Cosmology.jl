@@ -613,7 +613,8 @@ Valid for flat, open, and closed models and any `w`.
 """
 function zs2adis(cosmology::AbstractCosmology, z_d::Real, z_s::Real; 
                  dC::Union{Nothing, Real} = nothing, 
-                 atol::Float64 = DIST_ATOL, rtol::Float64 = DIST_RTOL)
+                 atol::Float64 = DIST_ATOL, 
+                 rtol::Real = DIST_RTOL)
    # Check z_s > zd
    if z_s <= z_d
       error("zs2adis requires z_s > z_d (got zs = $z_s, z_d = $z_d).")
@@ -656,7 +657,9 @@ Calculate the source redshift (``z_s``) from the distance ratio (``a_{\\rm dis}`
 # Returns
 - `z_s`    : Redshift of the source.
 """
-function adis2zs(cosmology::AbstractCosmology, z_d::Real, adis::Real; max_iter::Int64=10000, tol::Float64=1E-6)
+function adis2zs(cosmology::AbstractCosmology, z_d::Real, adis::Real; 
+                 max_iter::Int64 = 10000, 
+                 tol::Real       = 1E-6)
    # Source low and high redshift bounds
    z_l = z_d + 1E-6
    z_u = 100.0

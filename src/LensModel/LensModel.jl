@@ -102,7 +102,7 @@ end
 # skip the global best. `sample_idx` contains the (per-chain step) thinned row indices into 
 # `flat_chains`, with the best-fit sample removed.
 function _posterior_samples(chains::Array{Float64, 3}, logL::Matrix{Float64};
-                            burn_in::Float64 = 0.2, 
+                            burn_in::Real = 0.2, 
                             thin::Int64      = 1)
    # Get chain details
    n_steps, n_chains, n_params = size(chains)
@@ -249,7 +249,7 @@ end
 # Get best-fit parameters from the full optimization/MCMC results
 # --------------------------------------------------------------------------------------------------
 function _quantile_errors(chains::Array{Float64, 3}, best_θ::Vector{Float64}, q_lo::Float64, q_hi::Float64;
-                          burn_in::Float64 = 0.2, 
+                          burn_in::Real = 0.2, 
                           thin::Int64      = 1)
 
    # Get the chain dimension
@@ -269,7 +269,7 @@ end
 
 """
     get_best_fit_parameters(chains::Array{Float64, 3}, logL::Matrix{Float64};
-                            burn_in::Float64  = 0.2, 
+                            burn_in::Real  = 0.2, 
                             with_errors::Bool = false, 
                             thin::Int64       = 1) --> Vector{Float64}, Float64
 Get the best-fit parameters from MCMC results.
@@ -292,7 +292,7 @@ Get the best-fit parameters from MCMC results.
 - `upp_err`: Upper 1-sigma uncertainties (only if `with_errors = true`).
 """
 function get_best_fit_parameters(chains::Array{Float64, 3}, logL::Matrix{Float64};
-                                 burn_in::Float64  = 0.2,
+                                 burn_in::Real  = 0.2,
                                  with_errors::Bool = false,
                                  thin::Int64       = 1)
    # Remove Burn-in only
@@ -340,7 +340,7 @@ end
 """
     print_best_fit_model(chains::Array{Float64, 3}, logL::Matrix{Float64};
                          free_parameter_names::Vector{Tuple{Symbol, Symbol}},
-                         burn_in::Float64 = 0.2,
+                         burn_in::Real = 0.2,
                          thin::Int64      = 1,
                          io::IO           = stdout)
 Print the best-fit parameters from the MCMC results along with their [-1σ, +1σ] and [-2σ, +2σ] 
@@ -364,7 +364,7 @@ ranges in a table. The ranges are given relative to the best-fit value.
 """
 function print_best_fit_model(chains::Array{Float64, 3}, logL::Matrix{Float64};
                               free_parameter_names::Vector{Tuple{Symbol, Symbol}},
-                              burn_in::Float64 = 0.2,
+                              burn_in::Real = 0.2,
                               thin::Int64      = 1,
                               io::IO           = stdout)
    n_params = size(chains, 3)
@@ -399,7 +399,7 @@ end
 
 
 """
-    get_logL(model::ModelConfig, θ::Vector{Float64}; 
+    get_logL(model::ModelConfig, θ::Vector{<:Real}; 
              scheme::Symbol) --> Float64
 Calculate the log-likelihood of the free-parameter values `θ` in a given plane, independently of
 the plane (`model.sampler.scheme`) used for the fit. This makes it possible, e.g., to check how well
@@ -417,7 +417,7 @@ a source-plane best fit reproduces the observed image positions.
 # Returns
 - `logL`: Log-likelihood of `θ` in the requested plane.
 """
-function get_logL(model::ModelConfig, θ::Vector{Float64}; scheme::Symbol)
+function get_logL(model::ModelConfig, θ::Vector{<:Real}; scheme::Symbol)
    # Number of free parameters must match
    n_free = length(free_parameter_names(model))
    if length(θ) != n_free
@@ -601,7 +601,7 @@ end
 
 """
     get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64}; 
-                     burn_in::Float64 = 0.2)
+                     burn_in::Real = 0.2)
 Calculate the RMS of the best-fit model based on the MCMC results stored in `chains` and `logL`. 
 The function prints a table showing the RMS for each knot image, as well as a global total RMS. If 
 
@@ -620,7 +620,7 @@ The function prints a table showing the RMS for each knot image, as well as a gl
 - `nothing`: Prints a table to the console with the RMS for each knot image, as well as total RMS.
 """
 function get_best_fit_rms(model::ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64}; 
-                          burn_in::Float64 = 0.2,
+                          burn_in::Real = 0.2,
                           method::Symbol   = :contour)
    # Get the best parameters based on maximum logL
    best_θ, _ = get_best_fit_parameters(chains, logL; burn_in=burn_in)
@@ -659,7 +659,7 @@ end
 # --------------------------------------------------------------------------------------------------
 """
     get_cosmology(data_jld2::JLD2.JLDFile; 
-                  burn_in::Float64  = 0.2, 
+                  burn_in::Real  = 0.2, 
                   thin::Int64       = 1, 
                   with_errors::Bool = false) --> Cosmology, 
 Extract the cosmology corresponding to the best-fit model. If `with_errors=true`, the cosmology is
@@ -683,7 +683,7 @@ parameters are free in the fit.
    if `with_errors=true` then both best-fit cosmology and the errors.
 """
 function get_cosmology(data_jld2::JLD2.JLDFile;
-                       burn_in::Float64  = 0.2,
+                       burn_in::Real  = 0.2,
                        thin::Int64       = 1,
                        with_errors::Bool = false)
    # Load the model, chains and logL from the input file
@@ -724,7 +724,7 @@ end
 # Get best-fit distance ratio for a source
 # --------------------------------------------------------------------------------------------------
 """
-    get_adis(data_jld2::JLD2.JLDFile, source_id::Int64; burn_in::Float64=0.2)
+    get_adis(data_jld2::JLD2.JLDFile, source_id::Int64; burn_in::Real=0.2)
 Calculate the distance ratio a_dis = Dls/Dos of source `source_id` for the best-fit model stored 
 in `data_jld2`. If the source redshift (or the distance ratio itself) is a free parameter of the 
 fit, or if any cosmological parameter is free, the returned value corresponds to the best-fit 
@@ -735,7 +735,7 @@ sample. Otherwise, it is simply the fixed input value.
 - `source_id::Int64`: Index of the source, as ordered in the input file.
  
 # Keyword Arguments
-- `burn_in::Float64=0.2`: The fraction of MCMC chains to discard as burn-in while determining the
+- `burn_in::Real=0.2`: The fraction of MCMC chains to discard as burn-in while determining the
    best-fit model. Set to 0.0 when the input file was produced by [`error_models`](@ref), as those
    samples are already post-burn-in.
  
@@ -743,7 +743,7 @@ sample. Otherwise, it is simply the fixed input value.
 - `adis::Float64`: Distance ratio Dls/Dos of the requested source.
 """
 function get_adis(data_jld2::JLD2.JLDFile; source_id::Union{Int64, Symbol} = :all,
-                                           burn_in::Float64                = 0.2)
+                                           burn_in::Real                = 0.2)
    # Check if correct source id is given
    if source_id != :all && (typeof(source_id) != Int64)
       throw(ArgumentError("Invalid source_id. Must be :all or an Int64 > 0."))
@@ -859,7 +859,7 @@ end
 
 """
     get_best_model(model::ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64};
-                   burn_in::Float64 = 0.2)
+                   burn_in::Real = 0.2)
 Get the best-fit lens model based on the MCMC results stored in `chains` and `logL`. The best-fit 
 parameters are determined by the maximum log-likelihood in `logL`.
 
@@ -875,7 +875,7 @@ parameters are determined by the maximum log-likelihood in `logL`.
 - `logL`: Log-likelihoohood correspodning to best-fit lens model.
 """
 function get_best_model(model::ModelConfig, chains::Array{Float64, 3}, logL::Matrix{Float64};
-                        burn_in::Float64 = 0.2)
+                        burn_in::Real = 0.2)
    # Get best-fit model
    best_θ, best_logL = get_best_fit_parameters(chains, logL; burn_in=burn_in)
    
@@ -913,7 +913,7 @@ function get_best_model(model::ModelConfig, optimizer::NamedTuple;
    return best_model, _maxent_logL(model, best_model)
 end
 
-function get_best_model(data_jld2::JLD2.JLDFile; burn_in::Float64 = 0.2, kwargs...)
+function get_best_model(data_jld2::JLD2.JLDFile; burn_in::Real = 0.2, kwargs...)
    model = data_jld2["model"]
    if _is_maxent(model)
       return get_best_model(model, data_jld2["optimizer"]; kwargs...)
@@ -944,10 +944,10 @@ end
 # --------------------------------------------------------------------------------------------------
 """
     get_potential(best_model::Lenses.AbstractLens, θx::T, θy::T;
-                  reference::Tuple{Float64, Float64} = (0.0, 0.0)) where T <: Union{Real, ROA}
+                  reference::NTuple{2, Real} = (0.0, 0.0)) where T <: Union{Real, ROA}
 """
 function get_potential(lens_model::Lenses.AbstractLens, θx::T, θy::T; 
-                       reference::Tuple{Float64, Float64} = (0.0, 0.0)) where T <: Union{Real, ROA}
+                       reference::NTuple{2, Real} = (0.0, 0.0)) where T <: Union{Real, ROA}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
@@ -964,7 +964,7 @@ end
 
 """
     get_potential(data_jld2::JLD2.JLDFile, θx::T, θy::T; 
-                  burn_in::Float64  = 0.2, 
+                  burn_in::Real  = 0.2, 
                   thin::Int64       = 1, 
                   with_errors::Bool = false) where T <: Union{Real, ROA}
 Calculate the lensing potential at the given coordinates `(θx, θy)` for the best-fit model. If
@@ -993,7 +993,7 @@ distribution.
       each element has the same shape as `θx`.
 """
 function get_potential(data_jld2::JLD2.JLDFile, θx::T, θy::T;
-                       burn_in::Float64  = 0.2, 
+                       burn_in::Real  = 0.2, 
                        thin::Int64       = 1, 
                        with_errors::Bool = false) where T <: Union{Real, ROA}
    # Check if the input coordinates are of the same size
@@ -1041,10 +1041,10 @@ end
 
 """
     get_deflection(best_model::Lenses.AbstractLens, θx::T, θy::T; 
-                   reference::Tuple{Float64, Float64}=(0.0, 0.0)) where T <: Union{Real, ROA}
+                   reference::NTuple{2, Real}=(0.0, 0.0)) where T <: Union{Real, ROA}
 """
 function get_deflection(best_model::Lenses.AbstractLens, θx::T, θy::T; 
-                        reference::Tuple{Float64, Float64} = (0.0, 0.0)) where T <: Union{Real, ROA}
+                        reference::NTuple{2, Real} = (0.0, 0.0)) where T <: Union{Real, ROA}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
@@ -1062,7 +1062,7 @@ end
 
 """
     get_deflection(data_jld2::JLD2.JLDFile, θx::T, θy::T; 
-                   burn_in::Float64  = 0.2, 
+                   burn_in::Real  = 0.2, 
                    thin::Int64       = 1, 
                    with_errors::Bool = false) where T <: Union{Real, ROA}
 Calculate the lensing deflection at the given coordinates `(θx, θy)` for the best-fit model. If
@@ -1092,7 +1092,7 @@ distribution.
       (best fit excluded), where each element has the same shape as `θx`.
 """
 function get_deflection(data_jld2::JLD2.JLDFile, θx::T, θy::T;
-                        burn_in::Float64  = 0.2, 
+                        burn_in::Real  = 0.2, 
                         thin::Int64       = 1, 
                         with_errors::Bool = false) where T <: Union{Real, ROA}
    # Check if the input coordinates are of the same size
@@ -1142,7 +1142,7 @@ end
     get_jacobian(best_model::Lenses.AbstractLens, θx::T, θy::T; unit::Symbol=:RA_DEC) where T <: Union{Real, ROA}
 """
 function get_jacobian(best_model::Lenses.AbstractLens, θx::T, θy::T; 
-                      reference::Tuple{Float64, Float64} = (0.0, 0.0)) where T <: Union{Real, ROA}
+                      reference::NTuple{2, Real} = (0.0, 0.0)) where T <: Union{Real, ROA}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
@@ -1161,7 +1161,7 @@ end
 
 """
     get_jacobian(data_jld2::JLD2.JLDFile, θx::T, θy::T; 
-                 burn_in::Float64  = 0.2, 
+                 burn_in::Real  = 0.2, 
                  thin::Int64       = 1, 
                  with_errors::Bool = false) where T <: Union{Real, ROA}
 Calculate the Jacobian (i.e., deformation tensor) at the given coordinates `(θx, θy)` for the
@@ -1175,7 +1175,7 @@ from the sample distribution.
 - `θy`: y-coordinates (DEC in degrees).
  
 # Keyword Arguments
-- `burn_in::Float64=0.2`: The fraction of MCMC chains to discard as burn-in. Set to 0.0 when the
+- `burn_in::Real=0.2`: The fraction of MCMC chains to discard as burn-in. Set to 0.0 when the
    input file was produced by [`error_models`](@ref), as those samples are already post-burn-in.
 - `thin::Int64=1`: The thinning factor applied (per chain) when selecting posterior samples. Only
    used when `with_errors=true`.
@@ -1192,7 +1192,7 @@ from the sample distribution.
       posterior sample (best fit excluded), where each element has the same shape as `θx`.
 """
 function get_jacobian(data_jld2::JLD2.JLDFile, θx::T, θy::T; 
-                      burn_in::Float64  = 0.2,
+                      burn_in::Real  = 0.2,
                       thin::Int64       = 1,
                       with_errors::Bool = false) where T <: Union{Real, ROA}
    # Check if the input coordinates are of the same size
@@ -1242,10 +1242,10 @@ end
 
 """
     get_magnification_image(best_model::Lenses.AbstractLens, θx::T, θy::T, adis::Real; 
-                            reference::Tuple{Float64, Float64} = (0.0, 0.0)) where T <: Union{Real, ROA}
+                            reference::NTuple{2, Real} = (0.0, 0.0)) where T <: Union{Real, ROA}
 """
 function get_magnification_image(best_model::Lenses.AbstractLens, θx::T, θy::T, adis::Real; 
-                                 reference::Tuple{Float64, Float64} = (0.0, 0.0)) where T <: Union{Real, ROA}
+                                 reference::NTuple{2, Real} = (0.0, 0.0)) where T <: Union{Real, ROA}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
@@ -1264,7 +1264,7 @@ end
 
 """
     get_magnification_image(data_jld2::JLD2.JLDFile, θx::T, θy::T, z_s::Real; 
-                            burn_in::Float64  = 0.2, 
+                            burn_in::Real  = 0.2, 
                             thin::Int64       = 1, 
                             with_errors::Bool = false) where T <: Union{RV, ROA}
 Calculate the magnification at the given coordinates `(θx, θy)` for a source at redshift `z_s`
@@ -1283,7 +1283,7 @@ This preserves the correlations between lens and cosmological parameters in the 
 - `z_s::Float64`: Source redshift.
  
 # Keyword Arguments
-- `burn_in::Float64=0.2`: The fraction of MCMC chains to discard as burn-in. Set to 0.0 when the
+- `burn_in::Real=0.2`: The fraction of MCMC chains to discard as burn-in. Set to 0.0 when the
    input file was produced by [`error_models`](@ref), as those samples are already post-burn-in.
 - `thin::Int64=1`: The thinning factor applied (per chain) when selecting posterior samples. Only
    used when `with_errors=true`.
@@ -1298,7 +1298,7 @@ This preserves the correlations between lens and cosmological parameters in the 
       element has the same shape as `θx`.
 """
 function get_magnification_image(data_jld2::JLD2.JLDFile, θx::T, θy::T, z_s::Real;
-                                 burn_in::Float64  = 0.2,
+                                 burn_in::Real  = 0.2,
                                  thin::Int64       = 1,
                                  with_errors::Bool = false) where T <: Union{Real, ROA}
    # Check if the input coordinates are of the same size
@@ -1359,7 +1359,7 @@ end
 
 """
     get_source_position(data_jld2::JLD2.JLDFile, source_id::Int64, knot_id; 
-                        burn_in::Float64 = 0.2, 
+                        burn_in::Real = 0.2, 
                         unit::Symbol     = :arcsec)
 Calculate the weighted source position of knot `knot_id` of source `source_id` for the best-fit 
 lens model stored in `data_jld2`.
@@ -1370,7 +1370,7 @@ lens model stored in `data_jld2`.
 - `knot_id::Int64`: Index of the knot within that source, as ordered in the input file.
 
 # Keyword Arguments
-- `burn_in::Float64=0.2`: The fraction of MCMC chains to discard as burn-in while determining the
+- `burn_in::Real=0.2`: The fraction of MCMC chains to discard as burn-in while determining the
    best-fit lens model. Set to 0.0 when the input file was produced by [`error_models`](@ref), as
    those samples are already post-burn-in.
 - `unit::Symbol=:arcsec`: Unit of the returned source position.
@@ -1382,7 +1382,7 @@ lens model stored in `data_jld2`.
 """
 function get_source_position(data_jld2::JLD2.JLDFile; source_id::Union{Symbol, Int64} = :all, 
                                                       knot_id::Union{Symbol, Int64}   = :all, 
-                                                      burn_in::Float64                = 0.2, 
+                                                      burn_in::Real                = 0.2, 
                                                       unit::Symbol                    = :arcsec)
    # Everything that can be checked without the file is checked before the file is opened, so that
    # a mistyped argument does not cost a model build first
@@ -1469,9 +1469,9 @@ end
 
 
 """
-    predict_image(jld2_file::JLD2.JLDFile, θx::T, θy::T, z_s::Float64; 
+    predict_image(jld2_file::JLD2.JLDFile, θx::T, θy::T, z_s::Real; 
                   unit::Symbol     = :RA_DEC,
-                  burn_in::Float64 = 0.2) where T <: Union{Real, Vector{Float64}}
+                  burn_in::Real = 0.2) where T <: Union{Real, Vector{Float64}}
 Predict counter-image positions, magnifications and time delays based on the best-fit lens model.
 The function can take either a single observed image or multiple observed images of the same system.
 If multiple images are provided then the function will calculate the barycentric source position and
@@ -1494,9 +1494,9 @@ then predict the counter-image positions, magnifications and time delays.
    The table is sorted based on the time delay and at the end also contains the best-fit model 
    predicted source position.
 """
-function predict_image(data_jld2::JLD2.JLDFile, θx::T, θy::T, z_s::Float64; 
+function predict_image(data_jld2::JLD2.JLDFile, θx::T, θy::T, z_s::Real; 
                        unit::Symbol     = :RA_DEC,
-                       burn_in::Float64 = 0.2) where T <: Union{Real, Vector{Float64}}
+                       burn_in::Real = 0.2) where T <: Union{Real, Vector{<:Real}}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
@@ -1678,7 +1678,7 @@ end
 """
     save_best_fits(file_name::String; 
                    out_dir::String       = ".",
-                   burn_in::Float64      = 0.2,
+                   burn_in::Real      = 0.2,
                    save_potential::Bool  = true, 
                    save_deflection::Bool = true, 
                    save_kappa::Bool      = true, 
@@ -1703,7 +1703,7 @@ run. The user can choose which lensing quantities to save by setting the corresp
 """
 function save_best_fits(data_jld2::JLD2.JLDFile;
                         out_dir::String       = ".",
-                        burn_in::Float64      = 0.2,
+                        burn_in::Real      = 0.2,
                         save_potential::Bool  = true,
                         save_deflection::Bool = true, 
                         save_kappa::Bool      = true, 
@@ -1771,7 +1771,7 @@ end
 """
     error_models(data_jld2::JLD2.JLDFile; 
                  n_samples:: Int64 = 1000,
-                 burn_in::Float64  = 0.2,
+                 burn_in::Real  = 0.2,
                  out_file::String  = "")
 Extracts posterior samples and best-fit values from the MCMC chains stored in a JLD2 file.
 
@@ -1790,7 +1790,7 @@ Extracts posterior samples and best-fit values from the MCMC chains stored in a 
 """
 function error_models(data_jld2::JLD2.JLDFile; 
                       n_samples:: Int64 = 1000,
-                      burn_in::Float64  = 0.2,
+                      burn_in::Real  = 0.2,
                       out_file::String  = "")
    # Load data from the JLD2 file
    Date   = data_jld2["Date"]
@@ -1851,7 +1851,7 @@ end
 # --------------------------------------------------------------------------------------------------
 """
     get_AIC(model::ModelConfig, chains::Array{Float64,3}, logL::Matrix{Float64};
-            burn_in::Float64 = 0.2)
+            burn_in::Real = 0.2)
 Compute the Akaike Information Criterion (AIC) for a fitted LensFactory model.
 ```math
    \\rm{AIC} = -2 \\ln L + 2 k
@@ -1866,7 +1866,7 @@ Compute the Akaike Information Criterion (AIC) for a fitted LensFactory model.
 # Returns
 - `Float64`: The AIC value for the model.
 """
-function get_AIC(model::ModelConfig, logL::Matrix{Float64}; burn_in::Float64 = 0.2)
+function get_AIC(model::ModelConfig, logL::Matrix{Float64}; burn_in::Real = 0.2)
    # Get total number of free parameters
    k = length(free_parameter_names(model))
 
@@ -1880,7 +1880,7 @@ end
 
 """
     get_BIC(model::ModelConfig, chains::Array{Float64,3}, logL::Matrix{Float64}, n_data::Int; 
-            burn_in::Float64 = 0.2)
+            burn_in::Real = 0.2)
 Compute the Bayesian Information Criterion (BIC) for a fitted LensFactory model.
 ```math
    \\rm{BIC} = -2 \\ln L + k \\ln(n)
@@ -1892,7 +1892,7 @@ Compute the Bayesian Information Criterion (BIC) for a fitted LensFactory model.
 - `n_data`  : Total number of observed constraints
 - `burn_in` : Fraction of chain to discard as burn-in (default 0.2)
 """
-function get_BIC(model::ModelConfig, logL::Matrix{Float64}, n_data::Int; burn_in::Float64 = 0.2)
+function get_BIC(model::ModelConfig, logL::Matrix{Float64}, n_data::Int; burn_in::Real = 0.2)
    # Get total number of free parameters
    k = length(free_parameter_names(model))
 

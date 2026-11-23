@@ -103,7 +103,7 @@ Algorithm to determine if a point is in the given polygon. Taken from [sym101004
    - 0: outside
    - -1: on the edge
 """
-function hao_sun(point::Vector{Float64}, polygon::Vector{Vector{Float64}})
+function hao_sun(point::Vector{<:Real}, polygon::Vector{<:Vector{<:Real}})
    k = 0
 
    xp = point[1]
@@ -230,7 +230,7 @@ Fits an ellipse to a set of points (x, y) using the least squares method with a 
 - `ry`: The semi-minor axis length of the ellipse
 - `θ`: The rotation angle of the ellipse (in degrees)
 """
-function fit_ellipse(x::Vector{Float64}, y::Vector{Float64})
+function fit_ellipse(x::Vector{<:Real}, y::Vector{<:Real})
    # --- Normalize ---
    mx = Statistics.mean(x)
    my = Statistics.mean(y)

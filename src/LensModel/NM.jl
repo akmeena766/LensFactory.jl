@@ -50,8 +50,8 @@ export nmsmax
 #  - C. T. Kelley, Iterative Methods for Optimization, SIAM, 1999.
 # """
 function nmsmax(fun, x; 
-                       tolerance::Float64      = 1e-3,
-                       target_f::Float64       = Inf,
+                       tolerance::Real      = 1e-3,
+                       target_f::Real       = Inf,
                        iterations::Real        = Inf,
                        max_evals::Real         = Inf,
                        initial_simplex::Symbol = :regular,
