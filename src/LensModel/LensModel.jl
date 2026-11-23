@@ -201,22 +201,24 @@ end
 """
     fit_model(model::ModelConfig; 
               save::Bool = true, 
-              file_name::Union{String, Nothing} = nothing)
+              file_name::Union{String, Nothing} = nothing) --> NamedTuple
 Performs lens model fitting using the given `model`.
 
 # Arguments
-- `model::ModelConfig`: The lens model configuration containing the observation, lens, source, 
-   and sampler details.
+- `model`: The lens model configuration containing the observation, lens, source, and sampler details.
 
 # Keyword Arguments
-- `save::Bool=true`: Whether to save the MCMC results to a JLD2 file (default: true)
-- `file_name::Union{String, Nothing}=nothing`: The name of the JLD2 file to save results. If no 
-   name is provided then a name will be generated based on the lens name and current date (i.e., 
-   LensName_DDMMYYYY.jld2).
+- `save      = true`   : Whether to save the MCMC results to a JLD2 file (default: true)
+- `file_name = nothing`: The name of the JLD2 file to save results. If no  name is provided then a 
+   name will be generated based on the lens name and current date (i.e., LensName_DDMMYYYY.jld2).
 
 # Returns
-- `chains::Array{Float64, 3}`: The MCMC chains containing sampled parameter values
-- `log_posterior::Matrix{Float64}`: The log-posterior values corresponding to each sample in the chains
+A named tuple `(optimizer, chains, logL)`, with the same content as the saved file:
+- `optimizer`: Optimizer results (`nothing` if the optimizer is disabled). 
+   - For the parametric method, a vector of `(θ, f)` runs sorted by decreasing log-posterior
+   - For MaxEnt, the named tuple with `kappa`, `prior`, `x`, `y`, `runs`, `converged`
+- `chains`   : MCMC chains of shape `(n_steps, n_chains, n_params)` (`nothing` if MCMC is disabled).
+- `logL`     : Log-posterior of every sample, of shape `(n_steps, n_chains)` (`nothing` if MCMC is disabled).
 """
 function fit_model(model::ModelConfig; save::Bool = true, file_name::Union{String, Nothing}=nothing)
    return LensModelFit._fit_model(model, save=save, file_name=file_name)

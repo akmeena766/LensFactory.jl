@@ -428,7 +428,12 @@ function _fit_model(model::ModelConfig; save::Bool=true, file_name::Union{String
    # Extract sampler
    sampler = model.sampler
    verbose = sampler.verbose
-   
+
+   # Nothing to do
+   if sampler.optimizer === nothing && sampler.mcmc === nothing
+      error("Neither optimizer nor MCMC enabled.")
+   end
+
    # Freeze reference once
    param_ref = Dict(p.key => p.refer for p in model.parameters)
 
@@ -445,11 +450,6 @@ function _fit_model(model::ModelConfig; save::Bool=true, file_name::Union{String
       chains, logL = run_mcmc(model, param_ref, θ_start, verbose)
    end
 
-   # Nothing to do
-   if sampler.optimizer === nothing && sampler.mcmc === nothing
-      error("Neither optimizer nor MCMC enabled.")
-   end
-
    # Save best fit
    if save
       if file_name === nothing
@@ -463,7 +463,7 @@ function _fit_model(model::ModelConfig; save::Bool=true, file_name::Union{String
                          chains    = chains,
                          logL      = logL)
    end
-   return nothing
+   return (optimizer = θ_start, chains = chains, logL = logL)
 end
 
 end
