@@ -132,7 +132,7 @@ end
 # Internal function: Log-likelihood of the best-fit parameters `best_θ` in the requested `plane`
 # (`:fit`, `:source`, or `:image`). If that is the plane used for the fit, the stored value 
 # `best_logL` is returned as is, otherwise the log-likelihood is recomputed.
-function _best_logL_in_plane(model::ModelConfig, best_θ::Vector{Float64}, best_logL::Float64, plane::Symbol)
+function _best_logL_in_plane(model::ModelConfig, best_θ::Vector{<:Real}, best_logL::Float64, plane::Symbol)
    # Stored value is already in the requested plane
    if LensModelFit._plane_scheme(model, plane) == model.sampler.scheme
       return best_logL
@@ -433,7 +433,7 @@ end
 # --------------------------------------------------------------------------------------------------
 # Calculate RMS for the best-fit model
 # --------------------------------------------------------------------------------------------------
-function _best_rms(model::ModelConfig, lens::Lenses.AbstractLens, adis::Vector{Float64}; method::Symbol = :contour)
+function _best_rms(model::ModelConfig, lens::Lenses.AbstractLens, adis::Vector{<:Real}; method::Symbol = :contour)
    # Make sure the method is either :contour or :adaptive (before the costly deflection)
    if !(method === :contour || method === :adaptive)
       throw(ArgumentError("Unknown method `:$method`; use `:contour` or `:adaptive`."))

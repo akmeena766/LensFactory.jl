@@ -77,7 +77,7 @@ end
 # Get parameter values
 # --------------------------------------------------------------------------------------------------
 function θ_reference(model::ModelConfig)
-   getfield.(free_parameters(model), :refer)
+   return Float64.(getfield.(free_parameters(model), :refer))
 end
 
 function θ_random(model::ModelConfig)

@@ -54,12 +54,12 @@ end
 # Log-likelihood
 # --------------------------------------------------------------------------------------------------
 # Log-likelihood in the scheme used for the fit (called at every step of the fit)
-function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real})
+function log_likelihood(model::ModelConfig, θ::Vector{<:Real}, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real})
    return log_likelihood(model, θ, param_ref, model.sampler.scheme)
 end
 
 
-function log_likelihood(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real}, scheme::Symbol)
+function log_likelihood(model::ModelConfig, θ::Vector{<:Real}, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real}, scheme::Symbol)
    # Merge θ (free parameters) with param_ref (fixed parameters)
    pvals = LensModelUtils.param_dict(model, θ, param_ref)
 
@@ -171,7 +171,7 @@ end
 # --------------------------------------------------------------------------------------------------
 # Log-prior
 # --------------------------------------------------------------------------------------------------
-function log_prior(model::ModelConfig, θ::Vector{Float64})
+function log_prior(model::ModelConfig, θ::Vector{<:Real})
    @inbounds for (x, p) in zip(θ, free_parameters(model))
       (x < p.lower || x > p.upper) && return -Inf
    end
@@ -182,7 +182,7 @@ end
 # --------------------------------------------------------------------------------------------------
 # Posterior (may return -Inf)
 # --------------------------------------------------------------------------------------------------
-function log_posterior(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real})
+function log_posterior(model::ModelConfig, θ::Vector{<:Real}, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real})
    # Calculate log-prior (returns -Inf if any parameter is out of bounds)
    lp = log_prior(model, θ)
    if lp == -Inf
@@ -200,18 +200,9 @@ end
 # --------------------------------------------------------------------------------------------------
 # Optimizer-safe objective (finite value)
 # --------------------------------------------------------------------------------------------------
-function objective(model::ModelConfig, θ::Vector{Float64}, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real})
-   # Calculate log-prior (returns a large negative value if any parameter is out of bounds)
-   lp = log_prior(model, θ)
-   if lp == -Inf
-      return -1e300
-   end
-
-   # Calculate log-likelihood
-   logL = log_likelihood(model, θ, param_ref)
-   
-   # Return negative log-posterior
-   return lp + logL
+function objective(model::ModelConfig, θ::Vector{<:Real}, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real})
+   lp = log_posterior(model, θ, param_ref)
+   return isfinite(lp) ? lp : -1e300
 end
 
 
