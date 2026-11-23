@@ -31,7 +31,6 @@ export MaxEntLens
 export ParametricOptimizer
 export MaxEntOptimizer
 export OptimizerConfig
-export MHConfig
 export AIESConfig
 export SamplerConfig
 
@@ -173,13 +172,6 @@ end
 # --------------------------------------------------------------------------------------------------
 # Abstract type: MCMC
 # --------------------------------------------------------------------------------------------------
-# Metropolis-Hastings (MH) sampler
-@kwdef struct MHConfig <: AbstractMCMCConfig
-   n_walkers::Int64
-   n_steps::Int64
-   n_adapt::Int64
-end
-
 # Affine-Invariant Ensemble Sampler (AIES)
 @kwdef struct AIESConfig <: AbstractMCMCConfig
    n_walkers::Int64
@@ -1024,11 +1016,7 @@ function _mcmc!(sampling_dict::Dict)
 
    # Get MCMC method config details and set defaults if missing
    method_config = nothing
-   if method == :MH
-      method_config = MHConfig(; n_walkers = Int64(get(config, :n_walkers, 1)),
-                                 n_steps   = Int64(get(config, :n_steps,   100000)),
-                                 n_adapt   = Int64(get(config, :n_adapt,   div(n_steps, 10))))
-   elseif method == :AIES
+   if method == :AIES
       method_config = AIESConfig(; n_walkers = Int64(get(config,   :n_walkers, 100)),
                                    n_steps   = Int64(get(config,   :n_steps,   100000)),
                                    a         = Float64(get(config, :a,         2.0))

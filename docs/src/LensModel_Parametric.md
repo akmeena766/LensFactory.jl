@@ -40,6 +40,6 @@ sampling:
   mcmc:
     enabled: true
     AIES:
-      n_chains: 12
+      n_walkers: 12
       n_steps: 500000
 ```

@@ -19,9 +19,6 @@ import Optim
 include("./NM.jl")
 using .NM
 
-include("./MH.jl")
-using .MH
-
 include("./AIES.jl")
 using .AIES
 
@@ -391,10 +388,6 @@ function get_best_seeds(results::Vector{@NamedTuple{θ::Vector{Float64}, f::Floa
     ]
     
     return seeds
-end
-
-function run_mcmc(model::ModelConfig, mcmc_config::MHConfig, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real}, θ_start::Vector{Vector{Float64}}, verbose::Bool)
-   return MH.mh_runner(x -> log_posterior(model, x, param_ref), θ_start, mcmc_config.n_steps, mcmc_config.n_adapt, verbose)
 end
 
 function run_mcmc(model::ModelConfig, mcmc_config::AIESConfig, param_ref::Dict{Tuple{Symbol,Symbol}, <:Real}, θ_start::Vector{Vector{Float64}}, verbose::Bool)

@@ -25,9 +25,33 @@ export acceptance_rate
 
 
 # --------------------------------------------------------------------------------------------------
+# Internal functions
+# --------------------------------------------------------------------------------------------------
+function _warn_if_ensemble(method::Union{Nothing, Symbol})
+   if method in ENSEMBLE_SAMPLERS
+      @warn "The chains come from the ensemble sampler $method, whose walkers are not independent. " *
+            "The Gelman-Rubin statistic assumes independent chains, so R-hat is only a rough " *
+            "indicator here. Use `autocorrelation` to assess convergence."
+   end
+   return nothing
+end
+
+
+# --------------------------------------------------------------------------------------------------
 # Gelman-Rubin diagnostic
 # --------------------------------------------------------------------------------------------------
-function calculate_gr(chains::Array{Float64, 3}; burn_in::Float64=0.2)
+# Samplers whose chains are not independent (Gelman-Rubin is not valid across them)
+const ENSEMBLE_SAMPLERS = Set([:AIES])
+
+# Sampler that produced the chains of a model (`nothing` if MCMC was disabled)
+_mcmc_method(model::ModelConfig) = model.sampler.mcmc === nothing ? nothing : model.sampler.mcmc.method
+
+
+function calculate_gr(chains::Array{Float64, 3}; 
+                      burn_in::Float64               = 0.2,
+                      method::Union{Symbol, Nothing} = nothing)
+   _warn_if_ensemble(method)
+
    # Dimensions
    n_steps, n_chains, n_params = size(chains)
    
@@ -64,9 +88,18 @@ function calculate_gr(chains::Array{Float64, 3}; burn_in::Float64=0.2)
    return R_hat
 end
 
-function print_gr_report(chains::Array{Float64, 3}; free_param_names=nothing, burn_in=0.2)
+
+function calculate_gr(model::ModelConfig, chains::Array{Float64, 3}; burn_in::Float64 = 0.2)
+   return calculate_gr(chains; burn_in = burn_in, method = _mcmc_method(model))
+end
+
+
+function print_gr_report(chains::Array{Float64, 3}; 
+                         free_param_names               = nothing, 
+                         burn_in::Float64               = 0.2,
+                         method::Union{Nothing, Symbol} = nothing)
    # Calculate R̂
-   r_hats = calculate_gr(chains, burn_in=burn_in)
+   r_hats = calculate_gr(chains; burn_in=burn_in, method = method)
    n_params = length(r_hats)
 
    # Table Formatting
@@ -121,6 +154,11 @@ function print_gr_report(chains::Array{Float64, 3}; free_param_names=nothing, bu
         println("| " * rpad("⚠️  WARNING: High variance detected between chains.", inner_width) * " |")
     end
    println(border * "\n")
+end
+
+
+function print_gr_report(model::ModelConfig, chains::Array{Float64, 3}; kwargs...)
+   return print_gr_report(chains; method = _mcmc_method(model), kwargs...)
 end
 
 
