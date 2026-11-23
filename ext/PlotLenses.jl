@@ -179,7 +179,7 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Mat
          elseif isa(source, Matrix{<:RV})
             heatmap!(ax1, θx[:,1], θy[1,:], source, colormap=source_kws.heatmap)
          else
-            ArgumentError("Invalid source type: $(typeof(source)). Must be NTuple{2, Real} or Matrix{<:Real}.")
+            throw(ArgumentError("Invalid source type: $(typeof(source)). Must be NTuple{2, Real} or Matrix{<:Real}."))
          end
       end
 
@@ -212,7 +212,7 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Mat
          elseif isa(source, Matrix{<:RV})
             heatmap!(ax2, θx[:,1], θy[1,:], image, colormap=image_kws.heatmap)
          else
-            ArgumentError("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}.")
+            throw(ArgumentError("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}."))
          end
       end
 
@@ -257,7 +257,7 @@ function LensFactory.Lenses.plot_image_plane(lens::Lenses.AbstractLens, θx::Mat
             heatmap!(ax, θx[:,1], θy[1,:], source, colormap=source_kws.heatmap, alpha=1.0)                                       
             heatmap!(ax, θx[:,1], θy[1,:], image, colormap=image_kws.heatmap, alpha=0.8)
          else
-            ArgumentError("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}.")
+            throw(ArgumentError("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}."))
          end
       end
 
@@ -350,7 +350,7 @@ function LensFactory.Lenses.plot_surface_density(lens::Lenses.AbstractLens, θx:
    elseif unit == :msun_arcsec2
       cb_label = L"\text{Log_{10} Σ (in M}_{\odot}\text{/arcsec}^2\text{)}"
    else
-      ArgumentError("Invalid unit: $unit. Must be :convergence or :kg_m2 or :msun_pc2 or :msun_arcsec2.")
+      throw(ArgumentError("Invalid unit: $unit. Must be :convergence or :kg_m2 or :msun_pc2 or :msun_arcsec2."))
    end
 
    # Get critical density
@@ -437,7 +437,7 @@ function LensFactory.Lenses.plot_magnification_map(lens::Lenses.AbstractLens, θ
    elseif plane == :source
       μ = Lenses.get_magnification_source(lens, θx, θy, adis, rays_per_pixel=rays_per_pixel)
    else
-      ArgumentError("Invalid plane: $plane. Must be :image or :source.")
+      throw(ArgumentError("Invalid plane: $plane. Must be :image or :source."))
    end
 
    # Initialize empty figure
@@ -509,7 +509,7 @@ function LensFactory.Lenses.plot_magnification_profile(lens::Lenses.AbstractLens
    elseif plane == :source
       μ = Lenses.get_magnification_source(lens, θx, θy, adis, rays_per_pixel=rays_per_pixel)
    else
-      ArgumentError("Invalid plane: $plane. Must be :image or :source.")
+      throw(ArgumentError("Invalid plane: $plane. Must be :image or :source."))
    end
 
    # Pixel size

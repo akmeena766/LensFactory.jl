@@ -183,7 +183,7 @@ function autocorrelation(chains::Array{Float64, 3};
    # Every (walker, parameter) pair is independent; each iteration writes only to its own slot.
    taus = Matrix{Float64}(undef, n_walkers, n_params)
    Threads.@threads for k in 1:(n_walkers * n_params)
-      w, i = fldmod1(k, n_walkers)
+      i, w = fldmod1(k, n_walkers)
       @views chain_data = chains[start_idx:end, w, i]
 
       # Limit lags to N/5 — beyond this, estimates are noise-dominated.

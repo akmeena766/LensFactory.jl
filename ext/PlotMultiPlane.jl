@@ -53,7 +53,7 @@ function LensFactory.MultiPlane.plot_image_plane(cosmology::Cosmology.AbstractCo
          elseif isa(source, Matrix{<:RV})
             heatmap!(ax1, θx[:,1], θy[1,:], source, colormap=source_kws.heatmap)
          else
-            error("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}.")
+            throw(ArgumentError("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}."))
          end
       end
 
@@ -89,7 +89,7 @@ function LensFactory.MultiPlane.plot_image_plane(cosmology::Cosmology.AbstractCo
          elseif isa(source, Matrix{<:RV})
             heatmap!(ax2, θx[:,1], θy[1,:], image, colormap=image_kws.heatmap)
          else
-            ArgumentError("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}.")
+            throw(ArgumentError("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}."))
          end
       end
 
@@ -136,7 +136,7 @@ function LensFactory.MultiPlane.plot_image_plane(cosmology::Cosmology.AbstractCo
             heatmap!(ax, θx[:,1], θy[1,:], source, colormap=source_kws.heatmap, alpha=1.0)                                    
             heatmap!(ax, θx[:,1], θy[1,:], image, colormap=image_kws.heatmap, alpha=0.8)
          else
-            error("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}.")
+            throw(ArgumentError("Invalid source type: $(typeof(source)). Must be NTuple{2, RV} or Matrix{<:RV}."))
          end
       end
 
