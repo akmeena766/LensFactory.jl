@@ -859,7 +859,7 @@ inverse ray shooting (IRS) to construct the image plane map.
 # Returns
 - `img` : Image positions (in ``\\rm \\mathbf{arcseconds}``).
 """
-function get_image(lens::AbstractLens, θx::T, θy::T, adis::Float64, β::T) where T <: Matrix{<:Real}
+function get_image(lens::AbstractLens, θx::T, θy::T, adis::Real, β::T) where T <: Matrix{<:Real}
    # Get the potential gradient
    ψx, ψy = get_deflection(lens, θx, θy)
 
@@ -899,7 +899,7 @@ end
 
 
 """
-    get_critical_curve(θx::T, θy::T, adis::Float64,
+    get_critical_curve(θx::T, θy::T, adis::Real,
                        ψxx::T, ψyy::T, ψxy::T) where T <: Matrix{<:Real} --> Tuple{Vector{Vector{Vector{Float64}}}, Vector{Vector{Vector{Float64}}}}
 Calculate critical curves from a deformation tensor that has already been computed. For this 
 function, no lens is needed.
@@ -916,7 +916,7 @@ function, no lens is needed.
 - `critical_tan`: Tangential critical curve(s).
 - `critical_rad`: Radial critical curve(s).
 """
-function get_critical_curve(θx::T, θy::T, adis::Float64, ψxx::T, ψyy::T, ψxy::T) where T <: Matrix{<:Real}
+function get_critical_curve(θx::T, θy::T, adis::Real, ψxx::T, ψyy::T, ψxy::T) where T <: Matrix{<:Real}
    # Convergence and shear components, scaled out of place so the caller keeps its tensor
    κ  = 0.5 .* adis .* (ψxx .+ ψyy)
    γ1 = 0.5 .* adis .* (ψxx .- ψyy)
@@ -946,7 +946,7 @@ algorithm to find the zero eigenvalue contours.
 - `crit_tan`: Tangential critical curves (in ``\\rm \\mathbf{arcseconds}``).
 - `crit_rad`: Radial critical curves (in ``\\rm \\mathbf{arcseconds}``).
 """
-function get_critical_curve(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:Real}
+function get_critical_curve(lens::AbstractLens, θx::T, θy::T, adis::Real) where T <: Matrix{<:Real}
    # Get the jacobian components
    ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
 
@@ -968,7 +968,7 @@ end
 
 
 """
-    get_caustic(lens::AbstractLens, θx::T, θy::T, adis::Float64, 
+    get_caustic(lens::AbstractLens, θx::T, θy::T, adis::Real, 
                 ψxx::T, ψyy::T, ψxy::T) where T <: Matrix{<:Real} --> Tuple{Vector{Vector{Vector{Float64}}}, Vector{Vector{Vector{Float64}}}}
 Calculate caustics for a given lens model. The function first gets the critical curves and then 
 maps them to the source plane using the lens equation. **The functon runs over all tangential 
@@ -987,7 +987,7 @@ and radial critical curves.**
 - `caustics_tan`: Tangential caustics (in ``\\rm \\mathbf{arcseconds}``).
 - `caustics_rad`: Radial caustics (in ``\\rm \\mathbf{arcseconds}``).
 """
-function get_caustic(lens::AbstractLens, θx::T, θy::T, adis::Float64, 
+function get_caustic(lens::AbstractLens, θx::T, θy::T, adis::Real, 
                      ψxx::T, ψyy::T, ψxy::T) where T <: Matrix{<:Real}
    # Calculate critical curves
    critical_tan, critical_rad = get_critical_curve(θx, θy, adis, ψxx, ψyy, ψxy)
@@ -1016,7 +1016,7 @@ critical curves.**
 - `caus_tan`: Tangential caustic curves (in ``\\rm \\mathbf{arcseconds}``).
 - `caus_rad`: Radial caustic curves (in ``\\rm \\mathbf{arcseconds}``).
 """
-function get_caustic(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:Real}
+function get_caustic(lens::AbstractLens, θx::T, θy::T, adis::Real) where T <: Matrix{<:Real}
    # Get deformation tensor components
    ψxx, ψyy, ψxy = get_jacobian(lens, θx, θy)
    
@@ -1071,7 +1071,7 @@ Again, it is important to note that we are running over all tangential critical 
 # Returns
 - `θ_E` : Einstein angle (in ``\\rm \\mathbf{arcseconds}``).
 """
-function get_einstein_angle(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:Real}
+function get_einstein_angle(lens::AbstractLens, θx::T, θy::T, adis::Real) where T <: Matrix{<:Real}
    return sqrt(get_critical_area(lens, θx, θy, adis) / π)
 end
 
@@ -1153,7 +1153,7 @@ end
 
 
 """
-    get_image_multiplicity(lens::AbstractLens, θx::T, θy::T, adis::Float64;
+    get_image_multiplicity(lens::AbstractLens, θx::T, θy::T, adis::Real;
                            source::Union{Nothing, NTuple{2, Real}} = nothing,
                            n_far::Int    = 1,
                            verbose::Bool = true) where T <: Matrix{<:Real}
@@ -1189,7 +1189,7 @@ corresponding caustics are open and are dropped from the count.
 # Returns
 - `N`: Number of images, either for the requested source position or over the whole grid.
 """
-function get_image_multiplicity(lens::AbstractLens, θx::T, θy::T, adis::Float64;
+function get_image_multiplicity(lens::AbstractLens, θx::T, θy::T, adis::Real;
                                 source::Union{Nothing, NTuple{2, Real}} = nothing,
                                 n_far::Int    = 1,
                                 verbose::Bool = true) where T <: Matrix{<:Real}
@@ -1316,7 +1316,7 @@ redshift, then divide the output mass values by ``a_{\\rm dis}``.
 - `edge`: Radial outer edges (in ``\\rm \\mathbf{arcseconds}``).
 - `mass`: Cumulative mass (in ``\\rm \\mathbf{M_\\odot}``).
 """
-function get_mass_profile(kappa::T, θx::T, θy::T, D_d::Float64; 
+function get_mass_profile(kappa::T, θx::T, θy::T, D_d::Real; 
                           origin::Union{Tuple{Float64, Float64}, Nothing} = nothing, 
                           n_bin::Int64     = 50, 
                           bin_type::Symbol = :log) where T <: Matrix{<:Real}

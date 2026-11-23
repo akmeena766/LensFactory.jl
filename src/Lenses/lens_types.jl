@@ -25,6 +25,7 @@ export init_EinastoLens
 export init_MultiPlummerLens
 export init_MultiGaussianLens
 export init_MultiPJELens
+export init_MultiPixelLens
 export init_CompositeLens
 export init_MultiPlaneLens
 
