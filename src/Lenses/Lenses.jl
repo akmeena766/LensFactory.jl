@@ -955,7 +955,7 @@ end
 
 
 # Map a set of critical curves into the source plane
-function _map_to_source(lens::AbstractLens, curves::Vector{<:Vector{<:Vector{Float64}}}, adis::Float64)
+function _map_to_source(lens::AbstractLens, curves::Vector{<:Vector{<:Vector{Float64}}}, adis::Real)
    caustics = Vector{Vector{Vector{Float64}}}(undef, length(curves))
    for (idx, curve) in enumerate(curves)
       ψ_x, ψ_y = get_deflection(lens, first.(curve), last.(curve))
@@ -1039,7 +1039,7 @@ algorithm to calculate the area.
 # Returns
 - `area`: Total angular area enclosed by tangential critical curves (in ``\\rm \\mathbf{arcseconds^2}``).
 """
-function get_critical_area(lens::AbstractLens, θx::T, θy::T, adis::Float64) where T <: Matrix{<:Real}
+function get_critical_area(lens::AbstractLens, θx::T, θy::T, adis::Real) where T <: Matrix{<:Real}
    # Get tangential critical curves
    critical_tan, _ = get_critical_curve(lens, θx, θy, adis)
 
