@@ -64,7 +64,6 @@ makedocs(
             "LFUtils"        => "LFUtils.md",
             "Plot Extension" => [
                         "General"       => "PlotExt_Lenses.md",
-                        "Multi-Plane"   => "PlotExt_MultiPlane.md",
                         "Lens Modeling" => "PlotExt_LensModel.md"
                         ],
             "Publications"   => "Publications.md",
