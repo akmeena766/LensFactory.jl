@@ -19,6 +19,17 @@ export gnomonic_offsets_radec
 
 
 # --------------------------------------------------------------------------------------------------
+# Internal functions
+# --------------------------------------------------------------------------------------------------
+# Element type of the array outputs. The conversion constant is a Float64, so the result is at least
+# Float64; abstract element types (e.g., a Vector{Real} read from YAML) also fall back to Float64.
+@inline function _output_eltype(ref1::Real, ref2::Real, a::ROA, b::ROA)
+   T = float(promote_type(typeof(ref1), typeof(ref2), eltype(a), eltype(b), Float64))
+   return isconcretetype(T) ? T : Float64
+end
+
+
+# --------------------------------------------------------------------------------------------------
 # Gnomonic projection offsets (north up, east left)
 # --------------------------------------------------------------------------------------------------
 """
