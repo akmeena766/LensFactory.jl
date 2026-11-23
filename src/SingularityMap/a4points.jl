@@ -10,11 +10,11 @@ function _a4points!(na4::S, ra4::T, e::T, na3::S, ra3::T, nex::S, rex::T, nmax::
    l2::Int64  = 0
    ie1::Int64 = 0
    ie2::Int64 = 0
-   isv  = zeros(Int64,   round(Int64, nx*ny/8))
-   ev   = zeros(Float64, round(Int64, nx*ny/8))
-   rd4  = zeros(Float64, 2, round(Int64, nx*ny/8))
-   link = zeros(Int64,   2, round(Int64, nx*ny/8))
-   rt   = zeros(Float64, 2, round(Int64, nx*ny/8))
+   isv  = zeros(Int64,   round(Int64, 2*nx*ny))
+   ev   = zeros(Float64, round(Int64, 2*nx*ny))
+   rd4  = zeros(Float64, 2, round(Int64, 2*nx*ny))
+   link = zeros(Int64,   2, round(Int64, 2*nx*ny))
+   rt   = zeros(Float64, 2, round(Int64, 2*nx*ny))
 
    for i in 1:na3
       j1 = floor(Int64, ra3[1, i])

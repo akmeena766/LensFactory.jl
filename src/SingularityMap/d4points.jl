@@ -10,7 +10,7 @@ function _d4points(nd4::Int64, rd4::Matrix{Float64}, ddf::Array{Float64,3})
    x2 = zeros(Float64, 4)
    y1 = zeros(Float64, 4)
    y2 = zeros(Float64, 4)
-   rtemp = zeros(Float64, 2, round(Int64, nx*ny/8))
+   rtemp = zeros(Float64, 2, round(Int64, 2*nx*ny))
 
    ax1, ax2 = axes(ddf, 2)[10:end-9], axes(ddf, 3)[10:end-9]
    @inbounds for j in ax2
