@@ -758,15 +758,15 @@ function get_image(cosmology::Cosmology.AbstractCosmology,
          return 1.0 - ψxx, -ψxy, -ψyx, 1.0 - ψyy
       end
 
-      return ImageFinder.find_images_adaptive(lens_map, lens_jac, θx, θy, βx_grid, βy_grid, β; 
-                                              tol_images     = tol_images,
-                                              tol_refine     = tol_refine,
-                                              tol_source     = tol_source,
-                                              max_levels     = max_levels,
-                                              max_newton     = max_newton,
-                                              pad            = pad,
-                                              cfac           = cfac,
-                                              max_candidates = max_candidates)
+      return Lenses.ImageFinder.find_images_adaptive(lens_map, lens_jac, θx, θy, βx_grid, βy_grid, β; 
+                                                     tol_images     = tol_images,
+                                                     tol_refine     = tol_refine,
+                                                     tol_source     = tol_source,
+                                                     max_levels     = max_levels,
+                                                     max_newton     = max_newton,
+                                                     pad            = pad,
+                                                     cfac           = cfac,
+                                                     max_candidates = max_candidates)
    end
 end
 

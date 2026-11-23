@@ -28,7 +28,7 @@ function potential!(ψ::U, θx::S, θy::S, ϵ::T, θϵ::T, m::Int64, n::T) where
 
    # Handle origin
    if dr == 0.0
-      return 0.0
+      return ψ
    end
 
    # Calculate θ
@@ -78,7 +78,7 @@ function deflection!(ψx::U, ψy::U, θx::S, θy::S, ϵ::T, θϵ::T, m::Int64, n
 
    # Handle origin
    if dr == 0.0
-      return 0.0, 0.0
+      return ψx, ψy
    end
 
    # Calculate θ
@@ -136,7 +136,7 @@ function jacobian!(ψxx::U, ψyy::U, ψxy::U, θx::S, θy::S, ϵ::T, θϵ::T, m:
 
    # Handle origin
    if dr == 0.0
-      return 0.0, 0.0, 0.0
+      return ψxx, ψyy, ψxy
    end
 
    # Calculate θ

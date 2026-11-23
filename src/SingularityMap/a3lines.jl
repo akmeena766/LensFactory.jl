@@ -22,7 +22,7 @@ function _a3lines!(na3::Int64, ra3::T, e::T, de::S, q::S; buffer::Int64=10) wher
             dot1 = dot1 +        q[l, i, j] * de[l, i, j]
             dot2 = dot2 + sign * q[l, k, j] * de[l, k, j]
          end
-         if dot1 * dot2 ≤ 0.0
+         if dot1 * dot2 ≤ 0.0 && dot1 != dot2
             na3 = na3 + 1
             ra3[1, na3] = float(i) - dot1 / (dot2 - dot1)
             ra3[2, na3] = float(j)
@@ -44,7 +44,7 @@ function _a3lines!(na3::Int64, ra3::T, e::T, de::S, q::S; buffer::Int64=10) wher
             dot1 = dot1 +        q[l, i, j] * de[l, i, j]
             dot2 = dot2 + sign * q[l, i, k] * de[l, i, k]
          end
-         if dot1 * dot2 ≤ 0.0
+         if dot1 * dot2 ≤ 0.0 && dot1 != dot2
             na3 = na3 + 1
             ra3[1, na3] = float(i)
             ra3[2, na3] = float(j) - dot1 / (dot2 - dot1)
