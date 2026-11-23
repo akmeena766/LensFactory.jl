@@ -13,6 +13,16 @@ using ..Cosmology
 using ..Lenses
 using ..LFUtils
 
+import ..Lenses: get_potential
+import ..Lenses: get_deflection
+import ..Lenses: get_jacobian
+import ..Lenses: get_time_delay
+import ..Lenses: get_magnification_image
+import ..Lenses: get_magnification_source
+import ..Lenses: get_image
+import ..Lenses: get_critical_curve
+import ..Lenses: get_caustic
+import ..Lenses: plot_image_plane
 
 # --------------------------------------------------------------------------------------------------
 # Function to export
@@ -26,14 +36,6 @@ export get_magnification_source
 export get_image
 export get_critical_curve
 export get_caustic
-
-
-# --------------------------------------------------------------------------------------------------
-# Plotting functions (see ../../ext folder for functions)
-# --------------------------------------------------------------------------------------------------
-export plot_image_plane
-
-function plot_image_plane end
 
 
 # --------------------------------------------------------------------------------------------------
@@ -90,12 +92,7 @@ function _distances(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abstrac
    return D_ij, adis_ij, adis_is
 end
 
-
-# --------------------------------------------------------------------------------------------------
-# Main functions
-# --------------------------------------------------------------------------------------------------
-# Core method with precomputed distance ratios (used by the lens-modeling likelihood)
-function get_potential(lens::Lenses.AbstractLens, θx::Real, θy::Real, adis_ij::Matrix{Float64}, adis_is::Vector{Float64})
+function _get_potential(lens::Lenses.AbstractLens, θx::Real, θy::Real, adis_ij::Matrix{Float64}, adis_is::Vector{Float64})
    # Initialize zero potential value
    ψ = 0.0
 
@@ -129,7 +126,134 @@ function get_potential(lens::Lenses.AbstractLens, θx::Real, θy::Real, adis_ij:
    return ψ
 end
 
+function _get_deflection(lens::Lenses.AbstractLens, θx::Real, θy::Real, adis_ij::Matrix{Float64}, adis_is::Vector{Float64})
+   # Initialize zero-valued deflection components
+   ψx = 0.0
+   ψy = 0.0
 
+   # Get the number of lens planes
+   n_p = lens.n_p
+
+   # Temporary deflection vector for each lens plane
+   ψ_vec = zeros(2, n_p)
+   
+   for ni in 1:n_p
+      # Position vector in 1-st plane
+      θx_i = θx
+      θy_i = θy
+
+      # Get the position vector in i-th plane
+      for nj in 1:ni-1
+         θx_i = θx_i - adis_ij[nj, ni] * ψ_vec[1, nj]
+         θy_i = θy_i - adis_ij[nj, ni] * ψ_vec[2, nj]
+      end
+
+      # Deflection vector at (θx_i, θy_i) in i-th plane
+      ψ_vec[1, ni], ψ_vec[2, ni] = Lenses.get_deflection(lens._plane_[ni], θx_i, θy_i)
+
+      # Final deflection vector
+      ψx = ψx + adis_is[ni] * ψ_vec[1, ni]
+      ψy = ψy + adis_is[ni] * ψ_vec[2, ni]
+   end
+   return ψx, ψy
+end
+
+
+function _get_jacobian(lens::Lenses.AbstractLens, θx::Real, θy::Real, adis_ij::Matrix{Float64}, adis_is::Vector{Float64})
+   # Initialize zero valued deformation tensor components
+   ψrr = zeros(2, 2)
+
+   # Get the number of lens planes
+   n_p = lens.n_p
+
+   # Temporary deflection vector for each lens plane
+   ψ_vec = zeros(2, n_p)
+   U_vec = zeros(2, 2, n_p)
+   A_vec = zeros(2, 2, n_p)
+
+   for ni in 1:n_p
+      # Initialize A matrix in 1-st lens plane
+      A_vec[:, :, ni] = [1.0 0.0; 0.0 1.0]
+
+      # Position in the 1-st lens plane
+      θx_i = θx
+      θy_i = θy
+
+      for nj in 1:ni-1
+         θx_i = θx_i - adis_ij[nj, ni] * ψ_vec[1, nj]
+         θy_i = θy_i - adis_ij[nj, ni] * ψ_vec[2, nj]
+         A_vec[:, :, ni] .-= adis_ij[nj, ni] .* (U_vec[:, :, nj] * A_vec[:, :, nj])
+      end
+
+      # Deflection vector at (θ_xi, θ_yi) in i-th plane
+      ψ_vec[1, ni], ψ_vec[2, ni] = Lenses.get_deflection(lens._plane_[ni], θx_i, θy_i)
+
+      # U-matrix for i-th lens plane
+      (U_vec[1, 1, ni],), (U_vec[2, 2, ni],), (U_vec[1, 2, ni],) = Lenses.get_jacobian(lens._plane_[ni], θx_i, θy_i)
+      U_vec[2, 1, ni] = U_vec[1, 2, ni]
+
+      ψrr .+= adis_is[ni] .* (U_vec[:, :, ni] * A_vec[:, :, ni])
+   end
+   return ψrr[1, 1], ψrr[2, 2], ψrr[1, 2], ψrr[2, 1]
+end
+
+function _get_time_delay(lens::Lenses.AbstractLens, θx::Real, θy::Real, β::NTuple{2, Real}, adis_ij::Matrix{Float64}, D_ij::Matrix{Float64})
+   # Initialize zero-valued time delay function
+   ϕ = 0.0
+
+   # Number of planes covered by the distance matrix (allows truncation at the source)
+   n_p = size(D_ij, 1) - 2
+
+   # Temporary deflection vector for each lens plane
+   ψ_vec = zeros(2, n_p)
+
+   # Get constant factor array
+   constant_factor = zeros(n_p)
+   for ni in 1:n_p
+      constant_factor[ni] = ( (1.0 + lens.z_d[ni]) / CONST_C ) * (D_ij[1, ni+1] * D_ij[1, ni+2] / D_ij[ni+1, ni+2]) * ANGLE_ARCSEC^2
+   end
+
+   # Loop over all planes
+   for ni in 1:n_p
+      # Position vector in 1-st plane
+      θx_i = θx
+      θy_i = θy
+      θx_j = θx
+      θy_j = θy
+
+      # Get the position vector in i-th plane
+      for nj in 1:ni-1
+         θx_i = θx_i - adis_ij[nj, ni]   * ψ_vec[1, nj]
+         θy_i = θy_i - adis_ij[nj, ni]   * ψ_vec[2, nj]
+         if ni < n_p
+            θx_j = θx_j - adis_ij[nj, ni+1] * ψ_vec[1, nj]
+            θy_j = θy_j - adis_ij[nj, ni+1] * ψ_vec[2, nj]
+         end
+      end   
+
+      # Potential and deflection at (θ_xi, θ_yi) in i-th plane
+      ψ = Lenses.get_potential(lens._plane_[ni], θx_i, θy_i)
+      ψ_vec[1, ni], ψ_vec[2, ni] = Lenses.get_deflection(lens._plane_[ni], θx_i, θy_i)
+
+      # Get the position vector in i+1-th plane
+      if ni < n_p
+         θx_j = θx_j - adis_ij[ni, ni+1] * ψ_vec[1, ni]
+         θy_j = θy_j - adis_ij[ni, ni+1] * ψ_vec[2, ni]
+      else
+         θx_j = β[1]
+         θy_j = β[2]
+      end
+
+      # Time delay factor (without a reference point)
+      ϕ = ϕ + constant_factor[ni] * (0.5 * ((θx_i-θx_j)^2 + (θy_i-θy_j)^2) - (D_ij[ni+1, ni+2] / D_ij[1, ni+2]) * ψ[1])
+   end
+   return ϕ
+end
+
+
+# --------------------------------------------------------------------------------------------------
+# Main functions
+# --------------------------------------------------------------------------------------------------
 """
     get_potential(cosmology::Cosmology.AbstractCosmology, 
                   lens::Lenses.AbstractLens, 
@@ -138,8 +262,7 @@ end
 function get_potential(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::Real, θy::Real, z_s::Real)
    # Get distance and distance ratios
    D_ij, adis_ij, adis_is = _distances(cosmology, lens, z_s)
-
-   return get_potential(lens, θx, θy, adis_ij, adis_is)
+   return _get_potential(lens, θx, θy, adis_ij, adis_is)
 end
 
 """
@@ -203,40 +326,6 @@ function get_potential(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abst
 end
 
 
-# Core method with precomputed distance ratios (used by the lens-modeling likelihood)
-function get_deflection(lens::Lenses.AbstractLens, θx::Real, θy::Real, adis_ij::Matrix{Float64}, adis_is::Vector{Float64})
-   # Initialize zero-valued deflection components
-   ψx = 0.0
-   ψy = 0.0
-
-   # Get the number of lens planes
-   n_p = lens.n_p
-
-   # Temporary deflection vector for each lens plane
-   ψ_vec = zeros(2, n_p)
-   
-   for ni in 1:n_p
-      # Position vector in 1-st plane
-      θx_i = θx
-      θy_i = θy
-
-      # Get the position vector in i-th plane
-      for nj in 1:ni-1
-         θx_i = θx_i - adis_ij[nj, ni] * ψ_vec[1, nj]
-         θy_i = θy_i - adis_ij[nj, ni] * ψ_vec[2, nj]
-      end
-
-      # Deflection vector at (θx_i, θy_i) in i-th plane
-      ψ_vec[1, ni], ψ_vec[2, ni] = Lenses.get_deflection(lens._plane_[ni], θx_i, θy_i)
-
-      # Final deflection vector
-      ψx = ψx + adis_is[ni] * ψ_vec[1, ni]
-      ψy = ψy + adis_is[ni] * ψ_vec[2, ni]
-   end
-   return ψx, ψy
-end
-
-
 """
     get_deflection(cosmology::Cosmology.AbstractCosmology, 
                    lens::Lenses.AbstractLens, 
@@ -245,8 +334,7 @@ end
 function get_deflection(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::Real, θy::Real, z_s::Real)
    # Get distance and distance ratios
    D_ij, adis_ij, adis_is = _distances(cosmology, lens, z_s)
-
-   return get_deflection(lens, θx, θy, adis_ij, adis_is)
+   return _get_deflection(lens, θx, θy, adis_ij, adis_is)
 end
 
 """
@@ -310,46 +398,6 @@ function get_deflection(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abs
 end
 
 
-# Core method with precomputed distance ratios (used by the lens-modeling likelihood)
-function get_jacobian(lens::Lenses.AbstractLens, θx::Real, θy::Real, adis_ij::Matrix{Float64}, adis_is::Vector{Float64})
-   # Initialize zero valued deformation tensor components
-   ψrr = zeros(2, 2)
-
-   # Get the number of lens planes
-   n_p = lens.n_p
-
-   # Temporary deflection vector for each lens plane
-   ψ_vec = zeros(2, n_p)
-   U_vec = zeros(2, 2, n_p)
-   A_vec = zeros(2, 2, n_p)
-
-   for ni in 1:n_p
-      # Initialize A matrix in 1-st lens plane
-      A_vec[:, :, ni] = [1.0 0.0; 0.0 1.0]
-
-      # Position in the 1-st lens plane
-      θx_i = θx
-      θy_i = θy
-
-      for nj in 1:ni-1
-         θx_i = θx_i - adis_ij[nj, ni] * ψ_vec[1, nj]
-         θy_i = θy_i - adis_ij[nj, ni] * ψ_vec[2, nj]
-         A_vec[:, :, ni] .-= adis_ij[nj, ni] .* (U_vec[:, :, nj] * A_vec[:, :, nj])
-      end
-
-      # Deflection vector at (θ_xi, θ_yi) in i-th plane
-      ψ_vec[1, ni], ψ_vec[2, ni] = Lenses.get_deflection(lens._plane_[ni], θx_i, θy_i)
-
-      # U-matrix for i-th lens plane
-      (U_vec[1, 1, ni],), (U_vec[2, 2, ni],), (U_vec[1, 2, ni],) = Lenses.get_jacobian(lens._plane_[ni], θx_i, θy_i)
-      U_vec[2, 1, ni] = U_vec[1, 2, ni]
-
-      ψrr .+= adis_is[ni] .* (U_vec[:, :, ni] * A_vec[:, :, ni])
-   end
-   return ψrr[1, 1], ψrr[2, 2], ψrr[1, 2], ψrr[2, 1]
-end
-
-
 """
     get_jacobian(cosmology::Cosmology.AbstractCosmology, 
                  lens::Lenses.AbstractLens, 
@@ -358,8 +406,7 @@ end
 function get_jacobian(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::Real, θy::Real, z_s::Real)
    # Get distance and distance ratios
    D_ij, adis_ij, adis_is = _distances(cosmology, lens, z_s)
-   
-   return get_jacobian(lens, θx, θy, adis_ij, adis_is)
+   return _get_jacobian(lens, θx, θy, adis_ij, adis_is)
 end
 
 
@@ -439,60 +486,6 @@ function get_jacobian(cosmology::Cosmology.AbstractCosmology, lens::Lenses.Abstr
 end
 
 
-function get_time_delay(lens::Lenses.AbstractLens, θx::Real, θy::Real, β::NTuple{2, Real}, adis_ij::Matrix{Float64}, D_ij::Matrix{Float64})
-   # Initialize zero-valued time delay function
-   ϕ = 0.0
-
-   # Number of planes covered by the distance matrix (allows truncation at the source)
-   n_p = size(D_ij, 1) - 2
-
-   # Temporary deflection vector for each lens plane
-   ψ_vec = zeros(2, n_p)
-
-   # Get constant factor array
-   constant_factor = zeros(n_p)
-   for ni in 1:n_p
-      constant_factor[ni] = ( (1.0 + lens.z_d[ni]) / CONST_C ) * (D_ij[1, ni+1] * D_ij[1, ni+2] / D_ij[ni+1, ni+2]) * ANGLE_ARCSEC^2
-   end
-
-   # Loop over all planes
-   for ni in 1:n_p
-      # Position vector in 1-st plane
-      θx_i = θx
-      θy_i = θy
-      θx_j = θx
-      θy_j = θy
-
-      # Get the position vector in i-th plane
-      for nj in 1:ni-1
-         θx_i = θx_i - adis_ij[nj, ni]   * ψ_vec[1, nj]
-         θy_i = θy_i - adis_ij[nj, ni]   * ψ_vec[2, nj]
-         if ni < n_p
-            θx_j = θx_j - adis_ij[nj, ni+1] * ψ_vec[1, nj]
-            θy_j = θy_j - adis_ij[nj, ni+1] * ψ_vec[2, nj]
-         end
-      end   
-
-      # Potential and deflection at (θ_xi, θ_yi) in i-th plane
-      ψ = Lenses.get_potential(lens._plane_[ni], θx_i, θy_i)
-      ψ_vec[1, ni], ψ_vec[2, ni] = Lenses.get_deflection(lens._plane_[ni], θx_i, θy_i)
-
-      # Get the position vector in i+1-th plane
-      if ni < n_p
-         θx_j = θx_j - adis_ij[ni, ni+1] * ψ_vec[1, ni]
-         θy_j = θy_j - adis_ij[ni, ni+1] * ψ_vec[2, ni]
-      else
-         θx_j = β[1]
-         θy_j = β[2]
-      end
-
-      # Time delay factor (without a reference point)
-      ϕ = ϕ + constant_factor[ni] * (0.5 * ((θx_i-θx_j)^2 + (θy_i-θy_j)^2) - (D_ij[ni+1, ni+2] / D_ij[1, ni+2]) * ψ[1])
-   end
-   return ϕ
-end
-
-
 """
     get_time_delay(cosmology::Cosmology.AbstractCosmology, 
                    lens::Lenses.AbstractLens, 
@@ -501,8 +494,7 @@ end
 function get_time_delay(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::Real, θy::Real, z_s::Real, β::NTuple{2, Real})
    # Get distance matrix
    D_ij, adis_ij, adis_is = _distances(cosmology, lens, z_s)
-
-   return get_time_delay(lens, θx, θy, β, adis_ij, D_ij)
+   return _get_time_delay(lens, θx, θy, β, adis_ij, D_ij)
 end
 
 

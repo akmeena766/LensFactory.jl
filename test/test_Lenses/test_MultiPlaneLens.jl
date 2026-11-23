@@ -21,7 +21,7 @@
 
    # ---- Potential --------------------------------------------------------------------------------
    @testset "potential: core vs cosmology, scalar vs array" begin
-      ψ_c = MultiPlane.get_potential(lens, θx, θy, adis_ij, adis_is)
+      ψ_c = MultiPlane._get_potential(lens, θx, θy, adis_ij, adis_is)
       ψ_w = MultiPlane.get_potential(cosmo, lens, θx, θy, zs)
       @test ψ_c ≈ ψ_w
       @test isfinite(ψ_w)
@@ -34,7 +34,7 @@
 
    # ---- Deflection -------------------------------------------------------------------------------
    @testset "deflection: core vs cosmology wrapper" begin
-      αx_c, αy_c = MultiPlane.get_deflection(lens, θx, θy, adis_ij, adis_is)
+      αx_c, αy_c = MultiPlane._get_deflection(lens, θx, θy, adis_ij, adis_is)
       αx_w, αy_w = MultiPlane.get_deflection(cosmo, lens, θx, θy, zs)
       @test αx_c ≈ αx_w
       @test αy_c ≈ αy_w
@@ -53,7 +53,7 @@
 
    # ---- Jacobian (deformation tensor) ------------------------------------------------------------
    @testset "jacobian: core vs cosmology, scalar vs array" begin
-      j_c = MultiPlane.get_jacobian(lens, θx, θy, adis_ij, adis_is)     # (ψxx, ψyy, ψxy, ψyx)
+      j_c = MultiPlane._get_jacobian(lens, θx, θy, adis_ij, adis_is)     # (ψxx, ψyy, ψxy, ψyx)
       j_w = MultiPlane.get_jacobian(cosmo, lens, θx, θy, zs)
       @test length(j_w) == 4
       @test all(j_c .≈ j_w)

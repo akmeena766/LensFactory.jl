@@ -47,6 +47,8 @@ xt2, yt2 = 1.0, 0.0
    include("./test_Lenses/test_Lenses_MultiPixelLens.jl")
    include("./test_Lenses/test_Lenses_MultiPJELens.jl")
    include("./test_Lenses/test_Lenses_CompositeLens.jl")
+   
+   include("./test_Lenses/test_MultiPlaneLens.jl")
 end
 
 # ------- Testing module-level API functions in src/Lenses/Lenses.jl -------------------------------

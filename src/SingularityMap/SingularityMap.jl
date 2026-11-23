@@ -249,8 +249,6 @@ end
     from_lens(lens::Lenses.AbstractLens, θx::T, θy::T; 
               adis:: Real         = 1.0,
               buffer::Int64       = 10,
-              adaptive::Bool      = false,
-              resolution::Float64 = 0.001,
               A4::Bool            = false,
               D4::Bool            = false) where T<:Matrix{Float64}
 Calculate singularity map for a given lens model.
@@ -263,8 +261,6 @@ Calculate singularity map for a given lens model.
 # Keyword Arguments
 - `adis = 1.0`         : Distance ratio
 - `buffer = 10`        : Buffer at the edge to ignore
-- `adaptive = false`   : Whether to use adaptive grid
-- `resolution = 0.001` : Resolution of the grid (in arcseconds)
 - `A4 = false`         : Whether to compute A4 points
 - `D4 = false`         : Whether to compute D4 points
 
@@ -280,8 +276,6 @@ if `D4 = true`:
 function from_lens(lens::Lenses.AbstractLens, θx::T, θy::T;
                    adis::Real          = 1.0,
                    buffer::Int64       = 10,                   
-                   adaptive::Bool      = false,
-                   resolution::Float64 = 0.001,
                    A4::Bool            = false,
                    D4::Bool            = false) where T<:Matrix{Float64}
    # Dimensions

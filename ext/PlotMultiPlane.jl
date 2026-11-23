@@ -1,5 +1,5 @@
 """
-    LensFactory.MultiPlane.plot_image_plane(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::ROA, θy::ROA, zs::RV)
+    LensFactory.Lenses.plot_image_plane(cosmology::Cosmology.AbstractCosmology, lens::Lenses.AbstractLens, θx::ROA, θy::ROA, zs::RV)
 
 # Arguments
 - `cosmology::Cosmology.AbstractCosmology` -- Cosmology
@@ -25,7 +25,7 @@
 - `fig`: A Makie figure object containing the image plane plot.
 - `ax`: The axis object of the plot for further customization.
 """
-function LensFactory.MultiPlane.plot_image_plane(cosmology::Cosmology.AbstractCosmology, 
+function LensFactory.Lenses.plot_image_plane(cosmology::Cosmology.AbstractCosmology, 
                            lens::Lenses.AbstractLens, θx::Matrix{<:RV}, θy::Matrix{<:RV}, zs::RV;
                            two_panel::Bool=false,
                            plot_critical::Bool=true,
