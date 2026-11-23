@@ -38,7 +38,7 @@ function _common(ddf::Array{Float64, 3}, θx::T, θy::T;
                  adis::Real = 1.0, 
                  buffer::Int64 = 10,
                  A4::Bool      = false,
-                 D4::Bool      = false) where T<:Matrix{Float64}
+                 D4::Bool      = false) where T<:Matrix{<:Real}
    # -----------------------------------------------------------------------------------------------
    # Common qunatities
    # -----------------------------------------------------------------------------------------------
@@ -230,7 +230,7 @@ function from_jacobian(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T;
                        adis::Real    = 1.0,
                        buffer::Int64 = 10,
                        A4::Bool      = false,
-                       D4::Bool      = false) where T<:Matrix{Float64}
+                       D4::Bool      = false) where T<:Matrix{<:Real}
    # Dimensions
    nx, ny = size(θx)
 
