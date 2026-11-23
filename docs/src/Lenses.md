@@ -12,8 +12,9 @@ and
     Keeping in mind that most of the astrophysical scenario (primarily strong lensing by galaxies or 
     galaxy clusters), the Einstein angle is ~[0.1, 50] arcseconds, the default input coordinate 
     units are arcseconds. This is not suitable for microlensing studies requiring micro- to 
-    milli-arcsecond resolutions, and users should use the `Microlens` (yet to be implemented) module
-    in such cases.
+    milli-arcsecond resolutions, and users should use the 
+    [`MicroLensFactory.jl`](https://github.com/akmeena766/MicroLensFactory.jl) 
+    package in such cases.
     
     In addition, potential, deflection, and jacobian are calculate assuming
     that the source is at infinity, i.e., ``a_{\rm dis} = D_{ds} / D_s = 1``. Hence, various 
