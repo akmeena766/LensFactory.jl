@@ -10,15 +10,15 @@ function _extrema!(nex::Int64, rex::Matrix{Float64}, de::Array{Float64, 3})
    k21::Int64 = 0
    k22::Int64 = 0
 
-   is11 = zeros(Int64, round(Int64, nx*ny/8))
-   is12 = zeros(Int64, round(Int64, nx*ny/8))
-   is21 = zeros(Int64, round(Int64, nx*ny/8))
-   is22 = zeros(Int64, round(Int64, nx*ny/8))
+   is11 = zeros(Int64, round(Int64, 2*nx*ny))
+   is12 = zeros(Int64, round(Int64, 2*nx*ny))
+   is21 = zeros(Int64, round(Int64, 2*nx*ny))
+   is22 = zeros(Int64, round(Int64, 2*nx*ny))
 
-   xex1 = zeros(Float64, 2, round(Int64, nx*ny/8))
-   yex1 = zeros(Float64, 2, round(Int64, nx*ny/8))
-   xex2 = zeros(Float64, 2, round(Int64, nx*ny/8))
-   yex2 = zeros(Float64, 2, round(Int64, nx*ny/8))
+   xex1 = zeros(Float64, 2, round(Int64, 2*nx*ny))
+   yex1 = zeros(Float64, 2, round(Int64, 2*nx*ny))
+   xex2 = zeros(Float64, 2, round(Int64, 2*nx*ny))
+   yex2 = zeros(Float64, 2, round(Int64, 2*nx*ny))
 
    ax1, ax2 = axes(de, 2)[4:end-3], axes(de, 3)[4:end-3]
    @inbounds for j in ax2
