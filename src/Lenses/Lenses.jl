@@ -58,6 +58,7 @@ export get_meshgrid
 export get_critical_density
 export get_potential
 export get_deflection
+export get_deformation
 export get_jacobian
 export get_time_delay
 export get_magnification_image

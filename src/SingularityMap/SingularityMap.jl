@@ -35,7 +35,7 @@ include("./d4points.jl")
 # This is the common function that will be used by both from_jacobian and from_lens
 # --------------------------------------------------------------------------------------------------
 function _common(ddf::Array{Float64, 3}, θx::T, θy::T; 
-                 adis::Float64 = 1.0, 
+                 adis::Real = 1.0, 
                  buffer::Int64 = 10,
                  A4::Bool      = false,
                  D4::Bool      = false) where T<:Matrix{Float64}
@@ -198,7 +198,7 @@ end
 
 """
     from_jacobian(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T;
-                  adis::Float64 = 1.0,
+                  adis::Real    = 1.0,
                   buffer::Int64 = 10,
                   A4::Bool      = false,
                   D4::Bool      = false) where T<:Matrix{Float64}
@@ -227,7 +227,7 @@ if `D4 = true`:
    - D4: Umbilic singularities (both Hyperbolic and elliptic)
 """
 function from_jacobian(ψxx::T, ψyy::T, ψxy::T, θx::T, θy::T; 
-                       adis::Float64 = 1.0,
+                       adis::Real    = 1.0,
                        buffer::Int64 = 10,
                        A4::Bool      = false,
                        D4::Bool      = false) where T<:Matrix{Float64}
@@ -247,7 +247,7 @@ end
 
 """
     from_lens(lens::Lenses.AbstractLens, θx::T, θy::T; 
-              adis:: Float64      = 1.0,
+              adis:: Real         = 1.0,
               buffer::Int64       = 10,
               adaptive::Bool      = false,
               resolution::Float64 = 0.001,
@@ -278,7 +278,7 @@ if `D4 = true`:
    - D4: Umbilic singularities (both Hyperbolic and elliptic)
 """
 function from_lens(lens::Lenses.AbstractLens, θx::T, θy::T;
-                   adis::Float64       = 1.0,
+                   adis::Real          = 1.0,
                    buffer::Int64       = 10,                   
                    adaptive::Bool      = false,
                    resolution::Float64 = 0.001,

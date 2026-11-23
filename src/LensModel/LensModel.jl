@@ -1094,7 +1094,7 @@ distribution.
 function get_deflection(data_jld2::JLD2.JLDFile, θx::T, θy::T;
                         burn_in::Float64  = 0.2, 
                         thin::Int64       = 1, 
-                        with_errors::Bool = false) where T <: Union{ROA, Vector{Int64}}
+                        with_errors::Bool = false) where T <: Union{Real, ROA}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))
@@ -1263,7 +1263,7 @@ end
 
 
 """
-    get_magnification_image(data_jld2::JLD2.JLDFile, θx::T, θy::T, z_s::Float64; 
+    get_magnification_image(data_jld2::JLD2.JLDFile, θx::T, θy::T, z_s::Real; 
                             burn_in::Float64  = 0.2, 
                             thin::Int64       = 1, 
                             with_errors::Bool = false) where T <: Union{RV, ROA}
@@ -1297,10 +1297,10 @@ This preserves the correlations between lens and cosmological parameters in the 
    - `μ_samples::Vector`: Magnification for each posterior sample (best fit excluded), where each
       element has the same shape as `θx`.
 """
-function get_magnification_image(data_jld2::JLD2.JLDFile, θx::T, θy::T, z_s::Float64;
+function get_magnification_image(data_jld2::JLD2.JLDFile, θx::T, θy::T, z_s::Real;
                                  burn_in::Float64  = 0.2,
                                  thin::Int64       = 1,
-                                 with_errors::Bool = false) where T <: Union{RV, ROA}
+                                 with_errors::Bool = false) where T <: Union{Real, ROA}
    # Check if the input coordinates are of the same size
    if size(θx) != size(θy)
       throw(ArgumentError("Input coordinates must be of the same size."))

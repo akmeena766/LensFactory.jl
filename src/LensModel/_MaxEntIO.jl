@@ -1,7 +1,7 @@
 # --------------------------------------------------------------------------------------------------
 # Internal functions to read maximum entropy method
 # --------------------------------------------------------------------------------------------------
-function _generate_map(map_dict::Dict, FOV::Union{Vector{<:Real}, NTuple{2, <:Real}}, pixel_scale::Real)
+function _generate_map(map_dict::Dict, FOV::NTuple{2, <:Real}, pixel_scale::Real)
    # Get map type
    map_type = Symbol(map_dict[:type])
 
@@ -68,8 +68,8 @@ function _maxent(lens_dict::Dict, params::Vector{Parameter}, observation::Observ
       FOV = observation.FOV
       pixel_scale = observation.pixel_scale
    else
-      FOV = lens_dict[:lens1][:FOV]
-      pixel_scale = lens_dict[:lens1][:pixel_scale]
+      FOV = _parse_FOV(lens_dict[:lens1][:FOV])
+      pixel_scale = Float64(lens_dict[:lens1][:pixel_scale])
    end
 
    # Generate inital map

@@ -221,7 +221,7 @@ end
 
 
 # --------------------------------------------------------------------------------------------------
-# Helpers
+# Internal functions
 # --------------------------------------------------------------------------------------------------
 # Efficient in-place conversion of Dict keys from String to Symbol
 # Uses multiple dispatch to avoid type checking overhead
@@ -265,6 +265,18 @@ end
    end
 
    return AstrometricOps.gnomonic_offsets_arcsec(ref_ra, ref_dec, x, y)
+end
+
+
+# FOV given as a single number (square field) or as [FOV_x, FOV_y] --> (FOV_x, FOV_y)
+function _parse_FOV(FOV)::NTuple{2, Float64}
+   if FOV isa Real
+      return (Float64(FOV), Float64(FOV))
+   elseif FOV isa Union{AbstractVector, Tuple} && length(FOV) == 2
+      return (Float64(FOV[1]), Float64(FOV[2]))
+   else
+      error("Unknown FOV: ** $FOV **. Give a single number or a list of two numbers.")
+   end
 end
 
 
@@ -369,16 +381,8 @@ function _observation(dict::Dict,  cosmo::Cosmology.AbstractCosmology)
    ref_point = obs_dict[:reference]
    ref = (Float64(ref_point[1]), Float64(ref_point[2]))
 
-   # Make sure that FOV size is a single value or tuple
-   # If it is a single value --> Create a square grid based on that
-   FOV = obs_dict[:FOV]
-   if FOV isa Union{Int64,Float64}
-      FOV = (Float64(FOV), Float64(FOV))
-   elseif FOV isa Vector
-      FOV = (Float64(FOV[1]), Float64(FOV[2]))
-   else
-      error("Unknown type of FOV. Allowed types are Int64, Float64, Vector.")
-   end
+   # Get FOV
+   FOV = _parse_FOV(obs_dict[:FOV])
 
    # Angular diameter distance to the lens - computed once here so it is not recalculated
    z_d = Float64(obs_dict[:z_d])
