@@ -149,6 +149,24 @@ function get_meshgrid(θx::Real, θy::Real, dθ::Real)
 end
 
 
+# --------------------------------------------------------------------------------------------------
+# 
+# --------------------------------------------------------------------------------------------------
+function get_critical_density(D_d::Real, adis::Real; unit::Symbol=:kg_m2)
+   # Calculate Σ_cr in kg/m^2 based type of input parameters
+   Σ_cr = (CONST_C^2 / (4.0 * π * CONST_G)) * (1.0 / (D_d * adis))
+
+   # Convert to the requested unit
+   if unit == :kg_m2
+      return Σ_cr
+   elseif unit == :msun_pc2
+      return Σ_cr * ( DIST_PC^2 / MASS_SUN )
+   elseif unit == :msun_arcsec2
+      return Σ_cr * ( D_d^2 * ANGLE_ARCSEC^2 / MASS_SUN )
+   else
+      throw(ArgumentError("Invalid unit: $unit. Must be ':kg_m2' or ':msun_pc2' or ':msun_arcsec2'."))
+   end
+end
 """
     get_critical_density(D_d::Real, D_ds::Real, D_s::Real; 
                          unit::Symbol=:kg_m2) --> Real
@@ -172,19 +190,8 @@ Calculate the critical surface density,
 - `Σ_cr::Real`: Critical surface density in the requested unit
 """
 function get_critical_density(D_d::Real, D_ds::Real, D_s::Real; unit::Symbol=:kg_m2)
-   # Calculate Σ_cr in kg/m^2 based type of input parameters
-   Σ_cr = (CONST_C^2 / (4.0 * π * CONST_G)) * (D_s / (D_d * D_ds))
-   
-   # Convert to the requested unit
-   if unit == :kg_m2
-      return Σ_cr
-   elseif unit == :msun_pc2
-      return Σ_cr * ( DIST_PC^2 / MASS_SUN )
-   elseif unit == :msun_arcsec2
-      return Σ_cr * ( D_d^2 * ANGLE_ARCSEC^2 / MASS_SUN )
-   else
-      throw(ArgumentError("Invalid unit: $unit. Must be ':kg_m2' or ':msun_pc2' or ':msun_arcsec2'."))
-   end
+   adis = D_ds / D_s
+   return get_critical_density(D_d, adis; unit=unit)
 end
 
 

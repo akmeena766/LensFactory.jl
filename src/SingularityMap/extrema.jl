@@ -112,7 +112,7 @@ function _maxima!(nmax::Int64, rmax::T, e1::T, nex::Int64, rex::T) where T <: Ma
    half_y = 0.5 * ny
 
    ntemp = 0
-   rtemp = zeros(Float64, 2, round(Int64, nx*ny/8))
+   rtemp = zeros(Float64, 2, round(Int64, 2*nx*ny))
    @inbounds for ii in 1:nex
       i0 = round(Int64, rex[1, ii])
       j0 = round(Int64, rex[2, ii])
@@ -178,7 +178,7 @@ function _minima!(nmin::Int64, rmin::T, e1::T, nex::Int64, rex::T) where T <: Ma
    half_y = 0.5 * ny
 
    ntemp = 0
-   rtemp = zeros(Float64, 2, round(Int64, nx*ny/8))
+   rtemp = zeros(Float64, 2, round(Int64, 2*nx*ny))
    @inbounds for ii in 1:nex
       i0 = round(Int64, rex[1, ii])
       j0 = round(Int64, rex[2, ii])

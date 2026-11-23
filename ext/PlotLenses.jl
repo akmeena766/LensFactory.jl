@@ -327,15 +327,15 @@ end
 - `ax`: The axis object of the plot for further customization.
 """
 function LensFactory.Lenses.plot_surface_density(lens::Lenses.AbstractLens, θx::Matrix{<:RV}, θy::Matrix{<:RV}, adis::Float64; 
-                              D_d::Float64 = NaN,
-                              unit::Symbol = :kg_m2,
+                              D_d::Float64               = NaN,
+                              unit::Symbol               = :kg_m2,
                               figure_size::NTuple{2, RV} = (500, 400),
-                              heatmap_kws::NamedTuple = (colormap=:cubehelix, colorrange=(0, 6)),
-                              plot_contour::Bool = false,
-                              contour_kws::NamedTuple = (levels=0.5:0.2:1.5, labels=false),
-                              save_plot::Bool = false,
-                              plot_name::String = "surface_density.png",
-                              resolution::Int = 2)
+                              heatmap_kws::NamedTuple    = (colormap=:cubehelix, colorrange=(0, 6)),
+                              plot_contour::Bool         = false,
+                              contour_kws::NamedTuple    = (levels=0.5:0.2:1.5, labels=false),
+                              save_plot::Bool            = false,
+                              plot_name::String          = "surface_density.png",
+                              resolution::Int            = 2)
    # Get jacobian and rescale according to adis
    ψxx, ψyy, _ = Lenses.get_jacobian(lens, θx, θy)
    ψxx .*= adis
@@ -357,7 +357,7 @@ function LensFactory.Lenses.plot_surface_density(lens::Lenses.AbstractLens, θx:
    if unit == :convergence
       Σ_cr = 1.0
    else
-      Σ_cr = Lenses.get_critical_density(D_d=D_d, adis=adis, unit=unit)
+      Σ_cr = Lenses.get_critical_density(D_d, adis; unit=unit)
    end
 
    # Get surface density

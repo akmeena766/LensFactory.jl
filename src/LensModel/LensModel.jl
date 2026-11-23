@@ -1601,8 +1601,8 @@ function predict_image(data_jld2::JLD2.JLDFile, θx::T, θy::T, z_s::Float64;
    
    # Print model predicted source position
    if unit == :RA_DEC
-      # Convert RA/DEC to arcseconds relative to the reference position
-      βx_model, βy_model = AstrometricOps.gnomonic_offsets_arcsec(RA_REF, DEC_REF, βx_model, βy_model)
+      # Convert arcseconds to RA/DEC
+      βx_model, βy_model = AstrometricOps.gnomonic_offsets_radec(RA_REF, DEC_REF, βx_model, βy_model)
    end
    println("-"^length(header))
    content = @sprintf("(βx_model, βy_model) = (%3.6f, %3.6f)", βx_model, βy_model)

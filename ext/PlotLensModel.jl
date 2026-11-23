@@ -106,7 +106,7 @@ function _ellipse(ex::RV, ey::RV, eθ::RV; x0::RV=0.0, y0::RV=0.0, n::Int64=100)
    y = ey .* sin.(t)
 
    # Rotate
-   θ_rad = deg2rad(eθ)
+   θ_rad = eθ
    x_rot = x .* cos(θ_rad) - y .* sin(θ_rad)
    y_rot = x .* sin(θ_rad) + y .* cos(θ_rad)
 
