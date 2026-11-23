@@ -1,13 +1,29 @@
 module LFUtils
 
-include("./AstrometricOps.jl")
-include("./ContourFinder.jl")
-include("./IntersectionFinder.jl")
-include("./PolygonOps.jl")
+# --------------------------------------------------------------------------------------------------
+# Julia inbuilt functions to import
+# --------------------------------------------------------------------------------------------------
 
+
+# --------------------------------------------------------------------------------------------------
+# LensFactory modules to use
+# --------------------------------------------------------------------------------------------------
+using ..Constants
+
+
+# --------------------------------------------------------------------------------------------------
+# Modules to export
+# --------------------------------------------------------------------------------------------------
+include("./AstrometricOps.jl")
 export AstrometricOps
+
+include("./ContourFinder.jl")
 export ContourFinder
+
+include("./IntersectionFinder.jl")
 export IntersectionFinder
+
+include("./PolygonOps.jl")
 export PolygonOps
 
 end
